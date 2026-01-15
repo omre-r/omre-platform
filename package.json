@@ -1,0 +1,30 @@
+{
+  "name": "omre-platform",
+  "version": "1.0.0",
+  "description": "This repository hosts the OMRÉ platform, a system designed for iterative development across multiple semesters.\r The platform focuses on scalable architecture, evolving features, and real-world business workflows rather than one-off implementations.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omre-r/omre-platform.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/omre-r/omre-platform/issues"
+  },
+  "homepage": "https://github.com/omre-r/omre-platform#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "mongodb": "^7.0.0"
+  }
+}
