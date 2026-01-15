@@ -1,0 +1,9 @@
+# Server environment variables (example only)
+
+PORT=3001
+
+# MongoDB
+MONGO_URI=
+
+# Auth
+JWT_SECRET=
