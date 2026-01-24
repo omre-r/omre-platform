@@ -1,0 +1,32 @@
+/* Navbar container styling and customization */
+.navbar {
+    box-sizing: border-box;
+    width: 100%; 
+    height: 64px;
+    padding: 0 2rem;
+    background-color: #0a0a0a;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Logo image styling for the size */
+.logo-image {
+    height: 45px;
+    width: 65px;
+}
+
+/* Navigation links styling and spacing */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+/* Nav link item styling, each link will have this specific styling in the navbar for login*/
+.nav-item {
+    color: #b07a63;
+    font-size: 0.95rem;
+    opacity: 0.95;
+}
