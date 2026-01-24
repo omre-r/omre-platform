@@ -14,6 +14,7 @@ const Navbar = () => {
       <nav className="nav-links">
         {/* !! Add links to respective pages later !! */}
         <Link to="/Auth" className="nav-item">AUTH</Link>
+        <Link to="/AdminDashboard" className="nav-item">ADMIN DASHBOARD</Link>
       </nav>
     </header>
   );
