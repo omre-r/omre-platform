@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
+import ForgotPassword from "./pages/ForgotPassword";
 
 import './App.css'
 
@@ -19,6 +20,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/Auth" element={<Auth />} />
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
       </Routes>
     </Router>
     </div>
