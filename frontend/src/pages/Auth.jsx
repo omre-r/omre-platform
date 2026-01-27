@@ -279,8 +279,8 @@ export default function Auth() {
                     <Button color="#F5F5F5" style={luxuryBodyStyle}
                         variation="primary"
                         marginTop="-.1rem"
-                        backgroundColor="rgba(82, 18, 0, 0.72)"
-                        border="1px solid rgba(0, 0, 0, 0.55)"
+                        //backgroundColor="rgba(82, 18, 0, 0.72)"
+                        border="1px solid rgba(245, 245, 245, 0.85)"
                         loadingText=""
                     >
                         Login
@@ -293,8 +293,8 @@ export default function Auth() {
                     <Button color="#F5F5F5" style={luxuryBodyStyle}
                         variation="primary"
                         marginTop="-.1rem"
-                        backgroundColor="rgba(82, 18, 0, 0.72)"
-                        border="1px solid rgba(0, 0, 0, 0.55)"
+                        //backgroundColor="rgba(82, 18, 0, 0.72)"
+                        border="1px solid rgba(245, 245, 245, 0.85)"
                         loadingText=""
                         onClick={() => handleSignUpSubmit()}
                     >
