@@ -1,5 +1,3 @@
-import React from "react";
-
 // React Router DOM to navigate between different pages
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 

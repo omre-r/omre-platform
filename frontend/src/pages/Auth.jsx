@@ -3,7 +3,13 @@ import { useState } from "react";
 
 // Iporting the Navbar component for consistent navigation across pages
 import Navbar from "../components/Navbar";
+
 import { Card, View, Flex, Heading, Text, TextField, Button, ToggleButton, ThemeProvider, Link, Grid } from "@aws-amplify/ui-react";
+
+// Importing AWS Amplify Auth module to handle authentication actions
+// These functions will be used to sign up, confirm sign up and log in users
+// will be used on form submit
+import { signUp, confirmSignUp, signIn, signOut} from "aws-amplify/auth";
 
 // Importing our custom made theme that will change customization of odd UI components like toggle button and text fields
 //import { omreTheme } from "../theme/omreTheme.js";
@@ -41,6 +47,15 @@ export default function Auth() {
     // State variable for selected fragrance notes during signup, will be a list of strings
     const [selectedNotes, setSelectedNotes] = useState([]);
 
+    // come back to these later for confirm sign up and verification code
+    const [verificationCode, setVerificationCode] = useState("");
+    const [pendingEmail, setPendingEmail] = useState("");
+    const [authUI, setAuthUI] = useState("");
+
+    // Get feedback from auth actions
+    const [authError, setAuthError] = useState("");
+    const [authSuccess, setAuthSuccess] = useState("");
+
     // Takes toggled note vanilla lets say and adds/removes it from selectedNotes array
     // Can be used for all notes by passing in different note strings
     const toggleNote = (note) => {
@@ -55,7 +70,52 @@ export default function Auth() {
         });
     };
 
+    // Handles sign up form submission
+    async function handleSignUpSubmit() {
+        // clear previous messages so we can show new ones to test
+        setAuthError("");
+        setAuthSuccess("");
 
+        // Check to make sure all is filled out within the sign up form
+        if (!email || !password || !confirmPassword || !firstname || !lastname) {
+            setAuthError("Please fill out all required fields.");
+            return;
+        }
+
+        // Basic validation to check if password and confirm password match
+        if (password !== confirmPassword) {
+            setAuthError("Passwords do not match.");
+            return;
+        }
+
+        // This creates a comma separated string of selected notes for easy display or submission
+        const favoriteNotesString = selectedNotes.join(", ");
+
+        try {
+            // Call the signUp function from Amplify Auth
+            // {isSignUpComplete, userId, nextStep } these are returned from the signUp function
+            const {isSignUpComplete, userId, nextStep } = await signUp({
+                username: email, // email will be treated as username
+                password: password,
+                options: {
+                    userAttributes: {
+                        // Standard attributes are email, given_name and family_name for first and last name and custom attribute for scent profile
+                        email,
+                        given_name: firstname,
+                        family_name: lastname,
+                        "custom:favorite_notes": favoriteNotesString || "", // custom attribute for favorite notes
+                    }
+                }
+            });
+            console.log("Sign up successful: ", isSignUpComplete, userId, nextStep);
+            setAuthSuccess("Sign up successful! Check email for verification code.");
+        } catch (error) {
+            console.error("Sign up error:", error);
+            setAuthError(error?.message || "Sign up failed.");
+            // Add other error handling as needed like:
+            // User already exists, weak password, invalid email, etc.
+        }
+    }
 
     return (
     // Uncomment below when re-enabling theme !!!
@@ -109,6 +169,20 @@ export default function Auth() {
                         {/* Display the appropriate description based on login/signup mode */}
                         {isLogin ? "Access your curated collection." : "Join OMRÉ and define your essence."}
                     </Text>
+
+                    {/* Display authentication error or success messages below the heading */}
+                    {authError && (
+                    <Text color="red">
+                        {authError}
+                    </Text>
+                    )}
+                    {authSuccess && (
+                    <Text 
+                    color="green">
+                        {authSuccess}
+                    </Text>
+                    )}
+
                     {!isLogin && (
                         <Grid templateColumns="1fr 1fr" gap="0.75rem" marginTop="-.2rem">
                             <TextField
@@ -200,19 +274,35 @@ export default function Auth() {
                         </>
                     )}
 
-                    {/* Button to submit form */}
+                    {/* Button to submit for login */}
+                    {isLogin && (
                     <Button color="#F5F5F5" style={luxuryBodyStyle}
                         variation="primary"
                         marginTop="-.1rem"
                         backgroundColor="rgba(82, 18, 0, 0.72)"
                         border="1px solid rgba(0, 0, 0, 0.55)"
                         loadingText=""
-                        // Remove alert later, just for testing
-                        onClick={() => alert(isLogin ? "Logging in..." : "Signing up...")}
+                    >
+                        Login
+                    </Button>
+                    )}
+
+
+                    {/* Button to submit sign up */}
+                    {!isLogin && (
+                    <Button color="#F5F5F5" style={luxuryBodyStyle}
+                        variation="primary"
+                        marginTop="-.1rem"
+                        backgroundColor="rgba(82, 18, 0, 0.72)"
+                        border="1px solid rgba(0, 0, 0, 0.55)"
+                        loadingText=""
+                        onClick={() => handleSignUpSubmit()}
                     >
                         {/* Button text based on login/signup mode */}
-                        {isLogin ? "Login" : "Sign Up"}
+                        Sign Up
                     </Button>
+                    )}
+
                     {/* Toggle button to switch between login and signup modes */}
                     <ToggleButton color="#F5F5F5" style={luxuryBodyStyle}
                         backgroundColor="rgba(82, 18, 0, 0.72)"
@@ -224,7 +314,10 @@ export default function Auth() {
                         {/* Toggle text based on login/signup mode */}
                         {isLogin ? "Join OMRÉ" : "Login to OMRÉ"}
                     </ToggleButton>
-                    {isLogin && (<Link href="/ForgotPassword" style={luxuryBodyStyle} color="#F5F5F5">
+                    {isLogin && (
+                        <Link href="/ForgotPassword" 
+                        style={luxuryBodyStyle} 
+                        color="#F5F5F5">
                         Forgot Password?
                     </Link>
                     )}
