@@ -66,3 +66,5 @@ export default function AdminDashboard() {
         </>
     );
 };
+
+// 1. Admins will be directed to this dashboard upon logging in, we still login from the same login page as users.
