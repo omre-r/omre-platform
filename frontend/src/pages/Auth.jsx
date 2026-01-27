@@ -278,7 +278,7 @@ export default function Auth() {
                     {isLogin && (
                     <Button color="#F5F5F5" style={luxuryBodyStyle}
                         variation="primary"
-                        marginTop="-.1rem"
+                        marginTop=".9rem"
                         //backgroundColor="rgba(82, 18, 0, 0.72)"
                         border="1px solid rgba(245, 245, 245, 0.85)"
                         loadingText=""
@@ -304,12 +304,16 @@ export default function Auth() {
                     )}
 
                     {/* Toggle button to switch between login and signup modes */}
-                    <ToggleButton color="#F5F5F5" style={luxuryBodyStyle}
+                    <ToggleButton 
+                        color="#F5F5F5" 
+                        style={luxuryBodyStyle}
                         backgroundColor="rgba(82, 18, 0, 0.72)"
                         isPressed={!isLogin}
                         // Toggle the mode on click
                         onClick={() => setMode(isLogin ? "signup" : "login")}
                         alignSelf="center"
+                        marginTop=".8rem"
+                        marginBottom=".5rem"
                         >
                         {/* Toggle text based on login/signup mode */}
                         {isLogin ? "Join OMRÉ" : "Login to OMRÉ"}
