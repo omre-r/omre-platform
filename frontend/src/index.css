@@ -84,7 +84,7 @@ h1 {
   darker background when active, border color the same as others, text white
 */
 .amplify-togglebutton[aria-pressed="true"] {
-  background-color: rgba(151, 33, 0, 0.292) !important;
+  background-color: rgba(151, 33, 0, 0.699) !important;
   border-color: rgba(245, 245, 245, 0.55) !important;
   color: #ffffff !important;
 }
