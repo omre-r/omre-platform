@@ -4,7 +4,7 @@ import { useState } from "react";
 // Iporting the Navbar component for consistent navigation across pages
 import Navbar from "../components/Navbar";
 
-import { Card, View, Flex, Heading, Text, TextField, Button, ToggleButton, ThemeProvider, Link, Grid } from "@aws-amplify/ui-react";
+import { Card, View, Flex, Heading, Text, TextField, Button, ToggleButton, Link, Grid } from "@aws-amplify/ui-react";
 
 // Importing AWS Amplify Auth module to handle authentication actions
 // These functions will be used to sign up, confirm sign up and log in users
@@ -49,8 +49,10 @@ export default function Auth() {
 
     // come back to these later for confirm sign up and verification code
     const [verificationCode, setVerificationCode] = useState("");
-    const [pendingEmail, setPendingEmail] = useState("");
+
+    // Use this function to show different UI for verification code
     const [authUI, setAuthUI] = useState("");
+    const [verifyEmail, setVerifyEmail] = useState("");
 
     // Get feedback from auth actions
     const [authError, setAuthError] = useState("");
@@ -107,13 +109,55 @@ export default function Auth() {
                     }
                 }
             });
-            console.log("Sign up successful: ", isSignUpComplete, userId, nextStep);
-            setAuthSuccess("Sign up successful! Check email for verification code.");
+            // Set the email for verification step
+            setVerifyEmail(email);
+
+            // Switch to verification code UI
+            setAuthUI("verify");
+
+            // Show success message, optional for now
+            // setAuthSuccess("Sign up successful! Check email for verification code.");
         } catch (error) {
-            console.error("Sign up error:", error);
             setAuthError(error?.message || "Sign up failed.");
             // Add other error handling as needed like:
             // User already exists, weak password, invalid email, etc.
+        }
+    }
+
+    async function handleVerifyCode() {
+        // clear previous messages so we can show new ones to test
+        setAuthError("");
+        setAuthSuccess("");
+
+        // Ensure we have the email to verify against if user refreshes
+        if (!verifyEmail) {
+            setAuthError("Missing email to verify. Please sign up again.");
+            return;
+        }
+
+        
+        // Basic validation to ensure verification code is entered
+        if (!verificationCode) {
+            setAuthError("Please enter the verification code.");
+            return;
+        }
+
+        try {
+            // Call confirmSignUp function from Amplify Auth
+            // This confirms the user's email with the provided verification code
+            const result = await confirmSignUp({
+                username: verifyEmail,
+                confirmationCode: verificationCode,
+            });
+            setAuthSuccess("Email verified successfully! You can now log in."); // Success message
+            setAuthUI(""); // Clear authUI to show normal login/signup UI
+            setMode("login"); // Switch to login mode after successful verification
+            setEmail(verifyEmail); // Pre-fill email field for convenience
+            setVerificationCode(""); // Clear verification code field
+        }
+        catch (error) {
+            // Handle errors during verification
+            setAuthError(error?.message || "Verification failed.");
         }
     }
 
@@ -141,19 +185,74 @@ export default function Auth() {
         >
             {/* Card container inside the view */}
             <Card
-                variation="elevated"
+                variation="elevated" // Elevated card style for better visibility
                 height="auto" // Height will adjust for the sign up mode
-                width="30rem"
-                margin="1rem auto"
-                padding="2rem"
-                marginTop={isLogin ? "-30rem" : "-5rem"}
-                backgroundColor="rgba(0, 0, 0, 0.75)"
+                width="30rem" // Fixed width for consistency
+                margin="1rem auto" // Centering the card
+                padding="2rem" // Padding inside the card
+                marginTop={isLogin ? "-25rem" : "0rem"} // Adjust margin top based on mode
+                backgroundColor="rgba(0, 0, 0, 0.75)" // Semi-transparent dark background for luxury feel
                 // Subtle border to make the card stand out against the background
-                border="1px solid rgba(151, 33, 0, 0.72)"
-                borderRadius="8px"
+                border="1px solid rgba(151, 33, 0, 0.72)" // Luxurious border color, MAY CHANGE LATER
+                borderRadius="8px" // Rounded corners for a softer look
             >
                 {/* All of this below is within the card */}
-                <Flex direction="column">
+                <Flex 
+                direction="column"
+                >
+                    {authUI === "verify" ? (
+                        <>
+                            <Heading
+                            level={3} 
+                            color="#F5F5F5" 
+                            style={luxuryHeadingStyle}
+                            marginTop="-.2rem"
+                            >
+                            Verify Your Email
+                            </Heading>
+                            <Text
+                            color="#F5F5F5" 
+                            style={luxuryBodyStyle}
+                            marginTop="-1.2rem"
+                            >
+                            Please enter verification code!
+                            </Text>
+                            {/* This is the verification error and success messages */}
+                            {authError && (
+                            <Text color="red">
+                                {authError}
+                            </Text>
+                            )}
+                            {authSuccess && (
+                            <Text 
+                            color="green">
+                                {authSuccess}
+                            </Text>
+                            )}
+
+                            <TextField
+                                color="#F5F5F5"
+                                style={luxuryBodyStyle}
+                                label="Verification Code"
+                                type="text"
+                                placeholder="Enter verification code"
+                                required
+                                marginTop="-.2rem"
+                                value={verificationCode}
+                                onChange={(e) => setVerificationCode(e.target.value)}
+                            />
+                            <Button
+                                variation="primary"
+                                marginTop="1rem"
+                                onClick={handleVerifyCode}
+                                >
+                                Verify
+                            </Button>
+                        </>
+                    ) : 
+                    (
+                    <>
+                    {/* Heading and description text */}
                     <Heading level={3} 
                     color="#F5F5F5" 
                     style={luxuryHeadingStyle}
@@ -170,7 +269,7 @@ export default function Auth() {
                         {isLogin ? "Access your curated collection." : "Join OMRÉ and define your essence."}
                     </Text>
 
-                    {/* Display authentication error or success messages below the heading */}
+                    {/* Display authentication error or success messages below the heading for creating and getting verification code */}
                     {authError && (
                     <Text color="red">
                         {authError}
@@ -212,7 +311,9 @@ export default function Auth() {
 
 
                     {/* Textfield for email */}
-                    <TextField color="#F5F5F5" style={luxuryBodyStyle}
+                    <TextField 
+                        color="#F5F5F5" 
+                        style={luxuryBodyStyle}
                         label="Email"
                         type="email"
                         placeholder="Enter your email"
@@ -287,7 +388,6 @@ export default function Auth() {
                     </Button>
                     )}
 
-
                     {/* Button to submit sign up */}
                     {!isLogin && (
                     <Button color="#F5F5F5" style={luxuryBodyStyle}
@@ -319,7 +419,7 @@ export default function Auth() {
                         {isLogin ? "Join OMRÉ" : "Login to OMRÉ"}
                     </ToggleButton>
                     {isLogin && (
-                        <Link href="/ForgotPassword" 
+                    <Link href="/ForgotPassword" 
                         style={luxuryBodyStyle} 
                         color="#F5F5F5">
                         Forgot Password?
@@ -340,6 +440,8 @@ export default function Auth() {
                             Confirm Password: {confirmPassword}<br></br>
                             Notes: {selectedNotes.join(", ")}
                         </Text> */}
+                    </>
+                    )}
                 </Flex>
             </Card>
         </View>
@@ -352,7 +454,6 @@ export default function Auth() {
 
 // Notes on future improvements:
 // 1. Obviously connection to backend for authentication
-// 2. Form validation for email format, password strength, matching passwords
+// 2. Form validation for email format, password strength, matching passwords 
 // 3. Better error handling and user feedback on failed login/signup attempts
-// 4. Fixing the theme issues with text fields and toggle buttons as noted in OmreTheme.js
 // 7. Possibly make the scent part expandable/collapsible to save space
