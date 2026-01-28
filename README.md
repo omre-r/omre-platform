@@ -25,6 +25,9 @@ Mongoose (ODM): https://mongoosejs.com/
 #Authentication:
 JSON Web Tokens (JWT): Used for user authentication and protected routes - Tokens are signed using a secret stored in environment variables
 
+#Hosting/Deployment
+AWS
+
 #Docs: 
 JWT: https://www.jwt.io/
 Jsonwebtoken (NODE LIBRARY): https://github.com/auth0/node-jsonwebtoken
