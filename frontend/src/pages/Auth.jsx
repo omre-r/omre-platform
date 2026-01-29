@@ -14,7 +14,7 @@ import { Card, View, Flex, Heading, Text, TextField, Button, ToggleButton, Link,
 // Importing AWS Amplify Auth module to handle authentication actions
 // These functions will be used to sign up, confirm sign up and log in users
 // will be used on form submit
-import { signUp, confirmSignUp, signIn, signOut} from "aws-amplify/auth";
+import { signUp, confirmSignUp, signIn} from "aws-amplify/auth";
 
 // Importing our custom made theme that will change customization of odd UI components like toggle button and text fields
 //import { omreTheme } from "../theme/omreTheme.js";
