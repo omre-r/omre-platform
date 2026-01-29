@@ -4,6 +4,11 @@ import { useState } from "react";
 // Iporting the Navbar component for consistent navigation across pages
 import Navbar from "../components/Navbar";
 
+
+// This will allow us on form submission to navigate to another page
+import { useNavigate } from "react-router-dom";
+
+// These imports contain UI components from AWS Amplify for styling and building the authentication interface
 import { Card, View, Flex, Heading, Text, TextField, Button, ToggleButton, Link, Grid } from "@aws-amplify/ui-react";
 
 // Importing AWS Amplify Auth module to handle authentication actions
@@ -34,6 +39,9 @@ const luxuryBodyStyle = {
 
 
 export default function Auth() {
+    // Access the navigate function and below we will be sent to the home page after login function 
+    const navigate = useNavigate();
+
     const [mode, setMode] = useState("login"); // == Either "login" or "signup" mode, we will manually set it to login for now
     const isLogin = mode === "login"; // Boolean to check if current mode is login, will show login ui if true
 
@@ -50,8 +58,10 @@ export default function Auth() {
     // come back to these later for confirm sign up and verification code
     const [verificationCode, setVerificationCode] = useState("");
 
-    // Use this function to show different UI for verification code
+    // Use this function to show different UI for verification code, will set it
     const [authUI, setAuthUI] = useState("");
+    const isVerify = authUI === "verify"; // Check if is verify
+
     const [verifyEmail, setVerifyEmail] = useState("");
 
     // Get feedback from auth actions
@@ -161,10 +171,36 @@ export default function Auth() {
         }
     }
 
+    async function handleSignIn() {
+        // Clear previous messages so we can show new ones to test
+        setAuthError("");
+        setAuthSuccess("");
+
+        // Make sure all fields are filled in
+        if (!email || !password) {
+            setAuthError("Please fill out all required fields.");
+            return;
+        }
+        
+        try {
+            // Call the signIn function from Amplify Auth
+            await signIn({
+                username: email,
+                password: password, 
+                // options: If ever needed, I dont think so though
+            });
+            navigate("/"); // On success it will navigate us back to the home page
+        }
+        catch (error) {
+            // Make a user not confirmed exception
+            // Like if they did not verify their email they cannot login
+
+            // Handle errors during verification
+            setAuthError(error?.message || "Verification failed.");
+        }
+    }
+
     return (
-    // Uncomment below when re-enabling theme !!!
-    // Custom theme that will help change aspects of text field and toggle button
-    //<ThemeProvider theme={omreTheme}>
     <>
         {/* Navbar that enables navigation across pages */}
         <Navbar />
@@ -190,7 +226,9 @@ export default function Auth() {
                 width="30rem" // Fixed width for consistency
                 margin="1rem auto" // Centering the card
                 padding="2rem" // Padding inside the card
-                marginTop={isLogin ? "-25rem" : "0rem"} // Adjust margin top based on mode
+                marginTop={ isVerify ? "-41rem" : // isVerify, then we will have the margin top be -41 for proper view
+                    isLogin ? "-25rem" : "0rem" // else if its login it will be -25, if not will be 0
+                }
                 backgroundColor="rgba(0, 0, 0, 0.75)" // Semi-transparent dark background for luxury feel
                 // Subtle border to make the card stand out against the background
                 border="1px solid rgba(151, 33, 0, 0.72)" // Luxurious border color, MAY CHANGE LATER
@@ -200,13 +238,14 @@ export default function Auth() {
                 <Flex 
                 direction="column"
                 >
+                    {/* If we are in the verify state condition */}
                     {authUI === "verify" ? (
                         <>
                             <Heading
                             level={3} 
                             color="#F5F5F5" 
                             style={luxuryHeadingStyle}
-                            marginTop="-.2rem"
+                            marginTop="0rem"
                             >
                             Verify Your Email
                             </Heading>
@@ -254,19 +293,19 @@ export default function Auth() {
                     <>
                     {/* Heading and description text */}
                     <Heading level={3} 
-                    color="#F5F5F5" 
-                    style={luxuryHeadingStyle}
-                    marginTop="-.2rem"
-                    >
-                        {/* Display the appropriate heading based on login/signup mode */}
-                        {isLogin ? "Return to Your Scent." : "Define Your Essence."}  
+                        color="#F5F5F5" 
+                        style={luxuryHeadingStyle}
+                        marginTop="-.2rem"
+                        >
+                            {/* Display the appropriate heading based on login/signup mode */}
+                            {isLogin ? "Return to Your Scent." : "Define Your Essence."}  
                     </Heading>
                     <Text 
-                    color="#F5F5F5" 
-                    style={luxuryBodyStyle}
-                    marginTop="-1.2rem">
-                        {/* Display the appropriate description based on login/signup mode */}
-                        {isLogin ? "Access your curated collection." : "Join OMRÉ and define your essence."}
+                        color="#F5F5F5" 
+                        style={luxuryBodyStyle}
+                        marginTop="-1.2rem">
+                            {/* Display the appropriate description based on login/signup mode */}
+                            {isLogin ? "Access your curated collection." : "Join OMRÉ and define your essence."}
                     </Text>
 
                     {/* Display authentication error or success messages below the heading for creating and getting verification code */}
@@ -383,6 +422,8 @@ export default function Auth() {
                         //backgroundColor="rgba(82, 18, 0, 0.72)"
                         border="1px solid rgba(245, 245, 245, 0.85)"
                         loadingText=""
+                        // On click will sign the user in with the function above!
+                        onClick={() => handleSignIn()}
                     >
                         Login
                     </Button>
@@ -446,8 +487,6 @@ export default function Auth() {
             </Card>
         </View>
     </>
-    // Uncomment below when re-enabling theme !!!
-    //</ThemeProvider>
   );
 }
 
@@ -456,4 +495,6 @@ export default function Auth() {
 // 1. Obviously connection to backend for authentication
 // 2. Form validation for email format, password strength, matching passwords 
 // 3. Better error handling and user feedback on failed login/signup attempts
-// 7. Possibly make the scent part expandable/collapsible to save space
+// 7. Remove scent choice part and make it part of its own page
+// 8. User did not verify exception in login function
+// 9. Fix margin top when on verify screen
