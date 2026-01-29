@@ -1,9 +1,11 @@
-import React from 'react';
+import {React, useState }from 'react';
 
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background.png";
 
-import { Card, View, Flex, Link, Text, TextField, Button } from "@aws-amplify/ui-react";
+import { Card, View, Flex, Link, Text, TextField, Button, Heading } from "@aws-amplify/ui-react";
+
+import {resetPassword, confirmResetPassword} from "aws-amplify/auth";
 
 // Custom styles for heading and body text to enhance the luxurious feel using a imported font from google 
 const luxuryHeadingStyle = {
@@ -21,6 +23,75 @@ const luxuryBodyStyle = {
 };
 
 const ForgotPassword = () => {
+    const [authUI, setAuthUI] = useState("");
+    const isVerify = authUI === "verify"; // Check if is verify to show the verify screen
+    const [email, setEmail] = useState("");
+    const [verificationCode, setVerificationCode] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+
+    // Get feedback from auth actions
+    const [authError, setAuthError] = useState("");
+    const [authSuccess, setAuthSuccess] = useState("");
+
+    // Function for sending the reset code
+    async function handleSendResetCode() {
+        //Make sure error is cleared
+        setAuthError("");
+        setAuthSuccess("");
+
+        // If email is not entered
+        if (!email) {
+            setAuthError("Please enter your email!");
+            return;
+        }
+        try {
+            await resetPassword({
+                username: email // Username is always email in our db 
+            })
+            // On success
+            setAuthUI("verify"); // change to the verify screen
+            setAuthSuccess("Verification code sent. Check your email.");
+        }
+        catch (error) {
+            setAuthError(error?.message || "Verification failed.");
+        }
+    }
+
+    async function handleNewPassword() {
+        // Reset messages
+        setAuthError("");
+        setAuthSuccess("");
+
+        // Fill out everything that is require
+        if (!email || !verificationCode || !newPassword || !confirmPassword) {
+            setAuthError("Please fill out all required fields.");
+            return;
+        }
+
+        // If passwords are not the same
+        if (newPassword !== confirmPassword) {
+            setAuthError("Passwords do not match.");
+            return;
+        }
+
+        try {
+            await confirmResetPassword({
+                username: email,
+                confirmationCode: verificationCode,
+                newPassword: newPassword,
+            });
+            // On success
+            setAuthSuccess("Password reset successfully.");
+            // will keep on verify for now to see the success or error message
+            setAuthUI("");  
+            // Possibly route back to the home page eventuall, easy change !!!
+        }
+        catch(error) {
+            setAuthError(error?.message || "Failed to reset password.");
+        }
+    }
+
     return (
         <>
             <Navbar />
@@ -44,13 +115,83 @@ const ForgotPassword = () => {
                         width="30rem"
                         margin="1rem auto"
                         padding="2rem"
-                        marginTop="-33rem"
+                        marginTop= { isVerify ? "-25rem" : "-30rem" }
                         backgroundColor="rgba(0, 0, 0, 0.75)"
                         // Subtle border to make the card stand out against the background
                         border="1px solid rgba(151, 33, 0, 0.72)"
                         borderRadius="8px"
                         >   
                         <Flex direction="column">
+                            {/* If we are in the verify state condition where we are entering the code  */}
+                            {authUI === "verify" ? (
+                            <>
+                            <Heading level={3} 
+                                color="#F5F5F5" 
+                                style={luxuryHeadingStyle}
+                                marginTop="-.2rem"
+                                marginBottom="1rem"
+                                >
+                                Enter information to reset password.
+                            </Heading>
+                            
+                            {/* This is the verification error and success messages */}
+                            {authError && (
+                            <Text color="red">
+                                {authError}
+                            </Text>
+                            )}
+                            {authSuccess && (
+                            <Text 
+                            color="green">
+                                {authSuccess}
+                            </Text>
+                            )}
+
+                            <TextField
+                                color="#F5F5F5"
+                                style={luxuryBodyStyle}
+                                label="Verification Code"
+                                type="text"
+                                placeholder="Enter verification code"
+                                required
+                                marginTop="-.2rem"
+                                value={verificationCode}
+                                onChange={(e) => setVerificationCode(e.target.value)}
+                            />
+                            <TextField
+                                color="#F5F5F5"
+                                style={luxuryBodyStyle}
+                                label="Enter new password"
+                                type="password"
+                                placeholder="Enter new password"
+                                required
+                                marginTop="-.2rem"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                            />
+                            <TextField
+                                color="#F5F5F5"
+                                style={luxuryBodyStyle}
+                                label="Confirm new password"
+                                type="password"
+                                placeholder="Confirm new password"
+                                required
+                                marginTop="-.2rem"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
+                            <Button
+                                variation="primary"
+                                marginTop="1rem"
+                                onClick={handleNewPassword}
+                                >
+                                Submit
+                            </Button>
+                            </>
+                            ) : 
+                            // Regular reset password screen below 
+                            (
+                            <>
                             <Text 
                                 style={luxuryHeadingStyle} 
                                 color="#F5F5F5"
@@ -63,11 +204,23 @@ const ForgotPassword = () => {
                                 style={luxuryBodyStyle} 
                                 color="#F5F5F5"
                                 textAlign="center"
-                                marginBottom="2.5rem"
                                 marginTop="-2.5rem"
                             >
                                 We will send you an email to reset your password.
                             </Text>
+
+                            {authError && (
+                            <Text color="red">
+                                {authError}
+                            </Text>
+                            )}
+                            {authSuccess && (
+                            <Text 
+                            color="green">
+                                {authSuccess}
+                            </Text>
+                            )}
+
                             <TextField 
                                 color="#F5F5F5" 
                                 style={luxuryBodyStyle}
@@ -75,7 +228,9 @@ const ForgotPassword = () => {
                                 type="email"
                                 placeholder="Enter your email"
                                 required
-                                marginTop="-2rem"
+                                marginTop="-0rem"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                             />
                             <Button 
                                 style={luxuryBodyStyle}
@@ -85,8 +240,10 @@ const ForgotPassword = () => {
                                 borderRadius="8px"
                                 marginTop="2rem"
                                 type="submit"
+                                // On click will use the send reset code function 
+                                onClick={() => handleSendResetCode()}
                             >
-                                Send Reset Link
+                                Send Reset Code
                             </Button>
                             {/* Link to navigate back to login page */} 
                             <Link 
@@ -97,6 +254,8 @@ const ForgotPassword = () => {
                                 >
                                 Need to login?
                             </Link>
+                            </>
+                            )}
                         </Flex>
                     </Card>
                 </View>
