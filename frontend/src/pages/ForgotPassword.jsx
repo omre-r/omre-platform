@@ -1,20 +1,26 @@
+/*
+IMPORT LIST --------------------------------------------------------------------------------------------------
+Explaining only necessary imports
+    - Components brought in from amplfiy UI to use
+    - functions reset password and confirmResetPassword from amplify/auth
+*/ 
 import {useState }from 'react';
-
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background.png";
-
 import { Card, View, Flex, Link, Text, TextField, Button, Heading } from "@aws-amplify/ui-react";
-
 import {resetPassword, confirmResetPassword} from "aws-amplify/auth";
 
-// Custom styles for heading and body text to enhance the luxurious feel using a imported font from google 
+/*
+Custom Styles ------------------------------------------------------------------------------------------------
+- Custom heading and body style using downloaded font
+- Will be used through out to edit aspects of cards
+*/
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 800,
   fontSize: "2.5rem",
   letterSpacing: "0.5px",
 };
-
 const luxuryBodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 400,
@@ -22,35 +28,37 @@ const luxuryBodyStyle = {
   letterSpacing: "0.3px",
 };
 
+// Forgot Password -----------------------------------------------------------------------------------------
+// If user has forgot password will go throough the process of sending a reset code to their email and then 
+// entering that reset code with new password and new password confirmation, after submitted will take 
+// user back to normal AuthUI
 const ForgotPassword = () => {
+    // Variables and UI checks -------------------------------------------------------------------
     const [authUI, setAuthUI] = useState("");
-    const isVerify = authUI === "verify"; // Check if is verify to show the verify screen
+    const isVerify = authUI === "verify";
     const [email, setEmail] = useState("");
     const [verificationCode, setVerificationCode] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    // Get feedback from auth actions
+    // Feedback Messages ------------------------------------------------------------------------
     const [authError, setAuthError] = useState("");
     const [authSuccess, setAuthSuccess] = useState("");
 
-    // Function for sending the reset code
+    // Function to send reset code -------------------------------------------------------
+    // user enters email (username), if no error will send and change ui to verification mode
     async function handleSendResetCode() {
-        //Make sure error is cleared
         setAuthError("");
         setAuthSuccess("");
-
-        // If email is not entered
         if (!email) {
             setAuthError("Please enter your email!");
             return;
         }
         try {
             await resetPassword({
-                username: email // Username is always email in our db 
+                username: email 
             })
-            // On success
-            setAuthUI("verify"); // change to the verify screen
+            setAuthUI("verify");
             setAuthSuccess("Verification code sent. Check your email.");
         }
         catch (error) {
@@ -58,34 +66,28 @@ const ForgotPassword = () => {
         }
     }
 
+    // Function to handle new password ---------------------------------------------------------------
+    // Fill out all required fields with email, verification code sent, and new password
+    // Has validation to check that passwords match
     async function handleNewPassword() {
-        // Reset messages
         setAuthError("");
         setAuthSuccess("");
-
-        // Fill out everything that is require
         if (!email || !verificationCode || !newPassword || !confirmPassword) {
             setAuthError("Please fill out all required fields.");
             return;
         }
-
-        // If passwords are not the same
         if (newPassword !== confirmPassword) {
             setAuthError("Passwords do not match.");
             return;
         }
-
         try {
             await confirmResetPassword({
                 username: email,
                 confirmationCode: verificationCode,
                 newPassword: newPassword,
             });
-            // On success
             setAuthSuccess("Password reset successfully.");
-            // will bring us back to the reset password screen so we can see success message
             setAuthUI("");  
-            // Possibly route back to the home page eventuall, easy change !!!
         }
         catch(error) {
             setAuthError(error?.message || "Failed to reset password.");
@@ -100,7 +102,6 @@ const ForgotPassword = () => {
                     width="100%"
                     padding="1rem"
                     style={{
-                        // Setting the luxury background image with proper sizing and positioning
                         backgroundImage: `url(${LuxuryBackground})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
@@ -111,18 +112,19 @@ const ForgotPassword = () => {
                 >   
                     <Card
                         variation="elevated"
-                        height="auto" // Height will adjust for the sign up mode
+                        height="auto" 
                         width="30rem"
                         margin="1rem auto"
                         padding="2rem"
                         marginTop= { isVerify ? "-25rem" : "-30rem" }
                         backgroundColor="rgba(0, 0, 0, 0.75)"
-                        // Subtle border to make the card stand out against the background
                         border="1px solid rgba(151, 33, 0, 0.72)"
                         borderRadius="8px"
                         >   
                         <Flex direction="column">
-                            {/* If we are in the verify state condition where we are entering the code  */}
+
+                            {/* UI for new password and verification ----------------------------------------------- */}
+                            {/* Confirm verify code and enter information for new password  */}
                             {authUI === "verify" ? (
                             <>
                             <Heading level={3} 
@@ -133,8 +135,7 @@ const ForgotPassword = () => {
                                 >
                                 Enter information to reset password.
                             </Heading>
-                            
-                            {/* This is the verification error and success messages */}
+
                             {authError && (
                             <Text color="red">
                                 {authError}
@@ -189,16 +190,17 @@ const ForgotPassword = () => {
                             </Button>
                             </>
                             ) : 
-                            // Regular reset password screen below 
                             (
                             <>
+                            {/* Normal Forgot Password UI -------------------------------------------------- */}
+                            {/* Will send reset code to email if correct information entered */}
                             <Text 
                                 style={luxuryHeadingStyle} 
                                 color="#F5F5F5"
                                 textAlign="center"
                                 marginBottom="1.5rem"
                             >
-                                Forgot Password?
+                            Forgot Password?
                             </Text>
                             <Text 
                                 style={luxuryBodyStyle} 
@@ -206,7 +208,7 @@ const ForgotPassword = () => {
                                 textAlign="center"
                                 marginTop="-2.5rem"
                             >
-                                We will send you an email to reset your password.
+                            We will send you an email to reset your password.
                             </Text>
 
                             {authError && (
@@ -239,12 +241,10 @@ const ForgotPassword = () => {
                                 borderColor="rgba(0,0,0,0.45)"
                                 borderRadius="8px"
                                 marginTop="2rem"
-                                // On click will use the send reset code function 
                                 onClick={() => handleSendResetCode()}
                             >
                                 Send Reset Code
                             </Button>
-                            {/* Link to navigate back to login page */} 
                             <Link 
                                 href="/Auth" 
                                 style={luxuryBodyStyle} color="#F5F5F5"
