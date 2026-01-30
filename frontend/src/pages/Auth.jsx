@@ -1,39 +1,31 @@
-// Importing useState hook from React for managing component state
+/*
+IMPORT LIST ------------------------------------------------------------
+Explaining only necessary imports
+- useNavigate will let us redirect to other pages after finishing an action such as logging in
+- @aws-amplify/ui-react components to build out layout
+- aws-amplify/auth to handle authentication actions to sign up, confirm sign up, and sign in, they are used on form submit
+- useAuth from authContext, will call refreshAuth from authContext to refresh page after logging in updating ui
+*/ 
 import { useState } from "react";
-
-// Iporting the Navbar component for consistent navigation across pages
 import Navbar from "../components/Navbar";
-
-
-// This will allow us on form submission to navigate to another page
 import { useNavigate } from "react-router-dom";
-
-// These imports contain UI components from AWS Amplify for styling and building the authentication interface
 import { Card, View, Flex, Heading, Text, TextField, Button, ToggleButton, Link, Grid } from "@aws-amplify/ui-react";
-
-// Importing AWS Amplify Auth module to handle authentication actions
-// These functions will be used to sign up, confirm sign up and log in users
-// will be used on form submit
 import { signUp, confirmSignUp, signIn} from "aws-amplify/auth";
-
-// Importing our custom made theme that will change customization of odd UI components like toggle button and text fields
-//import { omreTheme } from "../theme/omreTheme.js";
-
-// Importing AI generated luxury background image so no source
 import LuxuryBackground from "../assets/Luxury Background.png";
-
-// Import this so that when we reload our page after logging in it will refresh and show the sign out and possibly admin dashboard if admin
 import { useAuth } from "../context/AuthContext";
 
 
-// Custom styles for heading and body text to enhance the luxurious feel using a imported font from google 
+/*
+Custom Styles ----------------------------------------------------
+- Custom heading and body style using downloaded font
+- Will be used through out to edit aspects of cards
+*/
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 800,
   fontSize: "2.5rem",
   letterSpacing: "0.5px",
 };
-
 const luxuryBodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 400,
@@ -43,184 +35,166 @@ const luxuryBodyStyle = {
 
 
 export default function Auth() {
-    // Access the navigate function and below we will be sent to the home page after login function 
+    // Routing between pages ----------------------------------------------------
     const navigate = useNavigate();
 
-    const [mode, setMode] = useState("login"); // == Either "login" or "signup" mode, we will manually set it to login for now
-    const isLogin = mode === "login"; // Boolean to check if current mode is login, will show login ui if true
+    // UI Modes ----------------------------------------------------
+    // Mode will drive the main form, login vs sign up modes
+    // AuthUI is a mode for email confirmation that comes after signin up
+    const [mode, setMode] = useState("login");
+    const isLogin = mode === "login";
+    const [authUI, setAuthUI] = useState("");
+    const isVerify = authUI === "verify";
 
-    // State variables for form inputs (not yet connected to any backend logic)
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
+    // Form fields ----------------------------------------------------
+    // Shared between login and sign up
     const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    // Sign up only
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [firstname, setFirstName] = useState("");
     const [lastname, setLastName] = useState("");
+    const [selectedNotes, setSelectedNotes] = useState([]); // MAY NOT BE SIGN UP ONLY LATER !!!
 
-    // State variable for selected fragrance notes during signup, will be a list of strings
-    const [selectedNotes, setSelectedNotes] = useState([]);
-
-    // come back to these later for confirm sign up and verification code
+    // Verification ----------------------------------------------
+    // sets the code and email when submitting sign up
     const [verificationCode, setVerificationCode] = useState("");
-
-    // Use this function to show different UI for verification code, will set it
-    const [authUI, setAuthUI] = useState("");
-    const isVerify = authUI === "verify"; // Check if is verify
-
     const [verifyEmail, setVerifyEmail] = useState("");
 
-    // Get feedback from auth actions
+    // Feedback ---------------------------------------------------
+    // Recieving the error or success messages when creating an account, verifying, or signing in. 
     const [authError, setAuthError] = useState("");
     const [authSuccess, setAuthSuccess] = useState("");
 
-    // Be able to call refresh auth from AuthContext
+    // Auth Context ---------------------------------------------------
+    // Syncs authorization app wide after signing in, will refresh after signing in so user can log out or acess admin page
     const { refreshAuth } = useAuth();
 
-    // Takes toggled note vanilla lets say and adds/removes it from selectedNotes array
-    // Can be used for all notes by passing in different note strings
+
+    // Toggle Note -----------------------------------------------------------
+    // Once note is toggled you take that note and add/remove it from selectedNotes array
+    // Can toggle multiple notes
+    // Toggles a note in selectedNotes
+
     const toggleNote = (note) => {
-        // prev is previous state of selectedNotes
         setSelectedNotes((prev) => {
-            // If note is already selected, remove it
             if (prev.includes(note)) 
-                // This filters out the note to remove it
                 return prev.filter((n) => n !== note);
-            // Otherwise, add the note to the array
             return [...prev, note];
         });
     };
 
-    // Handles sign up form submission
+    // Handle Sign Up ---------------------------------------------------------------
+    // Initially clear previous messages if testing before
+    // Make sure that everything is filled out for sign up form and that passwords match
+    // Creates a comma separated string of the selected notes, will be sent to backend with other user information
     async function handleSignUpSubmit() {
-        // clear previous messages so we can show new ones to test
         setAuthError("");
         setAuthSuccess("");
-
-        // Check to make sure all is filled out within the sign up form
         if (!email || !password || !confirmPassword || !firstname || !lastname) {
             setAuthError("Please fill out all required fields.");
             return;
         }
-
-        // Basic validation to check if password and confirm password match
         if (password !== confirmPassword) {
             setAuthError("Passwords do not match.");
             return;
         }
-
-        // This creates a comma separated string of selected notes for easy display or submission
         const favoriteNotesString = selectedNotes.join(", ");
-
         try {
-            // Call the signUp function from Amplify Auth
+            // Calling sign up function from Amplify Auth
             // {isSignUpComplete, userId, nextStep } these are returned from the signUp function
+            // Email is treated as the username
+            // UserAttributes are very simple, custom attribute is the custom favorite notes string
             const {isSignUpComplete, userId, nextStep } = await signUp({
-                username: email, // email will be treated as username
+                username: email,
                 password: password,
                 options: {
                     userAttributes: {
-                        // Standard attributes are email, given_name and family_name for first and last name and custom attribute for scent profile
                         email,
                         given_name: firstname,
                         family_name: lastname,
-                        "custom:favorite_notes": favoriteNotesString || "", // custom attribute for favorite notes
+                        "custom:favorite_notes": favoriteNotesString || "",
                     }
                 }
             });
-            // Set the email for verification step
+            // Set the email for verification step and switch to the verify UI so we can confirm verification code
             setVerifyEmail(email);
-
-            // Switch to verification code UI
             setAuthUI("verify");
-
-            // Show success message, optional for now
-            // setAuthSuccess("Sign up successful! Check email for verification code.");
+            setAuthSuccess("Sign up successful! Check email for verification code.");
         } catch (error) {
             setAuthError(error?.message || "Sign up failed.");
-            // Add other error handling as needed like:
-            // User already exists, weak password, invalid email, etc.
         }
     }
 
+
+
+    // Handling verification --------------------------------------------------------------------
+    // Ensure we have the email to verify against if user refreshes and basic validation to make sure verification code is entered.
+    // Call confirmSignUp function from Amplify Auth, confirms user email with sent verification code
+    // After success clear authUI and go send user to the login mode, their email will be initially set for login
     async function handleVerifyCode() {
-        // clear previous messages so we can show new ones to test
         setAuthError("");
         setAuthSuccess("");
-
-        // Ensure we have the email to verify against if user refreshes
         if (!verifyEmail) {
             setAuthError("Missing email to verify. Please sign up again.");
             return;
         }
-
-        
-        // Basic validation to ensure verification code is entered
         if (!verificationCode) {
             setAuthError("Please enter the verification code.");
             return;
         }
-
         try {
-            // Call confirmSignUp function from Amplify Auth
-            // This confirms the user's email with the provided verification code
             const result = await confirmSignUp({
                 username: verifyEmail,
                 confirmationCode: verificationCode,
             });
-            setAuthSuccess("Email verified successfully! You can now log in."); // Success message
-            setAuthUI(""); // Clear authUI to show normal login/signup UI
-            setMode("login"); // Switch to login mode after successful verification
-            setEmail(verifyEmail); // Pre-fill email field for convenience
-            setVerificationCode(""); // Clear verification code field
+            setAuthSuccess("Email verified successfully! You can now log in.");
+            setAuthUI("");
+            setMode("login");
+            setEmail(verifyEmail);
+            setVerificationCode(""); 
         }
         catch (error) {
-            // Handle errors during verification
             setAuthError(error?.message || "Verification failed.");
         }
     }
 
+    // Handling user sign in -------------------------------------------------------------
+    // When signing in make sure that all user fields are required to be entered
+    // After call the amplify sign in function using their email (username) and password to sign them in
+    // After success call refreshAuth function from AuthContext to show proper user authorization if admin, will navigate back to the homepage 
     async function handleSignIn() {
-        // Clear previous messages so we can show new ones to test
         setAuthError("");
         setAuthSuccess("");
-
-        // Make sure all fields are filled in
         if (!email || !password) {
             setAuthError("Please fill out all required fields.");
             return;
         }
-        
         try {
-            // Call the signIn function from Amplify Auth
             await signIn({
                 username: email,
                 password: password, 
-                // options: If ever needed, I dont think so though
             });
-
-            // Refresh the page after logging in to show the authorizations needed such as signing out and admin dashboard
             await refreshAuth();
-            navigate("/"); // On success it will navigate us back to the home page
+            navigate("/");
         }
         catch (error) {
-            // Make a user not confirmed exception
-            // Like if they did not verify their email they cannot login
-
-            // Handle errors during verification
             setAuthError(error?.message || "Verification failed.");
         }
     }
 
     return (
     <>
-        {/* Navbar that enables navigation across pages */}
+        {/* Navbar ------------------------------------------------------ */}
         <Navbar />
-        {/* Auth container which is the view */}
+        
+        {/* View, where the cards and all information will be held in ---------------------------------------- */}
         <View
             height="150vh"
             width="100%"
             padding="1rem"
             style={{
-                // Setting the luxury background image with proper sizing and positioning
                 backgroundImage: `url(${LuxuryBackground})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
@@ -229,26 +203,29 @@ export default function Auth() {
             justifyContent="center"
             alignItems="center"
         >
-            {/* Card container inside the view */}
+
+            {/* Card ----------------------------------------------------------------- */}
+            {/* will contain necessary information to login, signing up, and verification */}
+            {/* For marginTop if isVerify, then we will have the margin top be -41 for proper view, else if its login it will be -25, if not will be 0 */}
+            {/* For background went for a darker semi transparent, border is a reddish bronze color with some transparency, border radius to have rounded corners */}
             <Card
-                variation="elevated" // Elevated card style for better visibility
-                height="auto" // Height will adjust for the sign up mode
-                width="30rem" // Fixed width for consistency
-                margin="1rem auto" // Centering the card
-                padding="2rem" // Padding inside the card
-                marginTop={ isVerify ? "-41rem" : // isVerify, then we will have the margin top be -41 for proper view
-                    isLogin ? "-25rem" : "0rem" // else if its login it will be -25, if not will be 0
+                variation="elevated" 
+                height="auto"
+                width="30rem"
+                margin="1rem auto" 
+                padding="2rem" 
+                marginTop={ isVerify ? "-41rem" : 
+                    isLogin ? "-25rem" : "0rem" 
                 }
-                backgroundColor="rgba(0, 0, 0, 0.75)" // Semi-transparent dark background for luxury feel
-                // Subtle border to make the card stand out against the background
-                border="1px solid rgba(151, 33, 0, 0.72)" // Luxurious border color, MAY CHANGE LATER
-                borderRadius="8px" // Rounded corners for a softer look
+                backgroundColor="rgba(0, 0, 0, 0.75)" 
+                border="1px solid rgba(151, 33, 0, 0.72)" 
+                borderRadius="8px"
             >
-                {/* All of this below is within the card */}
                 <Flex 
                 direction="column"
                 >
-                    {/* If we are in the verify state condition */}
+                    {/* Verify UI ------------------------------------------------------------- */}
+                    {/* Will display success or error messages as well handle submitting the verification code */}
                     {authUI === "verify" ? (
                         <>
                             <Heading
@@ -266,7 +243,6 @@ export default function Auth() {
                             >
                             Please enter verification code!
                             </Text>
-                            {/* This is the verification error and success messages */}
                             {authError && (
                             <Text color="red">
                                 {authError}
@@ -298,35 +274,39 @@ export default function Auth() {
                                 Verify
                             </Button>
                         </>
-                    ) : 
-                    (
-                    <>
-                    {/* Heading and description text */}
+                    ) 
+                    : 
+                    (<>
+                    
+                    {/* Sign up or Login UI --------------------------------------------------------------- */}
+                    {/* Based on whichever mode will display proper UI pertaining to it */}
+                    {/* Will display success or error messages below text and heading */}
+                    {/* Farther below is the scent selection that will be sent above to create a string of user chosen scents */}
                     <Heading level={3} 
                         color="#F5F5F5" 
                         style={luxuryHeadingStyle}
                         marginTop="-.2rem"
                         >
-                            {/* Display the appropriate heading based on login/signup mode */}
-                            {isLogin ? "Return to Your Scent." : "Define Your Essence."}  
+                        {isLogin ? "Return to Your Scent." : "Define Your Essence."}  
                     </Heading>
+
                     <Text 
                         color="#F5F5F5" 
                         style={luxuryBodyStyle}
                         marginTop="-1.2rem">
-                            {/* Display the appropriate description based on login/signup mode */}
-                            {isLogin ? "Access your curated collection." : "Join OMRÉ and define your essence."}
+                        {isLogin ? "Access your curated collection." : "Join OMRÉ and define your essence."}
                     </Text>
 
-                    {/* Display authentication error or success messages below the heading for creating and getting verification code */}
-                    {authError && (
-                    <Text color="red">
+                    {authError && ( 
+                    <Text 
+                        color="red">
                         {authError}
                     </Text>
                     )}
+
                     {authSuccess && (
                     <Text 
-                    color="green">
+                        color="green">
                         {authSuccess}
                     </Text>
                     )}
@@ -358,8 +338,6 @@ export default function Auth() {
                         </Grid>
                     )}
 
-
-                    {/* Textfield for email */}
                     <TextField 
                         color="#F5F5F5" 
                         style={luxuryBodyStyle}
@@ -371,7 +349,7 @@ export default function Auth() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
-                    {/* Textfield for password */}
+
                     <TextField color="#F5F5F5" style={luxuryBodyStyle}
                         label="Password"
                         type="password"
@@ -381,8 +359,7 @@ export default function Auth() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    {/* Textfield for confirm password, if we are not in login mode it will toggle 
-                    and make the confirm password textfield visible */}
+
                     {!isLogin && (
                         <>
                         <TextField
@@ -397,60 +374,50 @@ export default function Auth() {
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
                         <Heading level={3} 
-                        color="#F5F5F5" 
-                        style={luxuryBodyStyle}
-                        >
-                        {"Which notes are you drawn to?"}
-                    </Heading>
+                            color="#F5F5F5" 
+                            style={luxuryBodyStyle}
+                            >
+                            {"Which notes are you drawn to?"}
+                        </Heading>
 
-                    {/* This section allows users to select their favorite notes and lets them toggle them creating a string above */}
-                    {/* If isPressed it will make selected notes include that note */}
-                    {/* Toggle note then takes that note sends it to the function and adds it to the list */}
-                    
-                    <Grid
-                    templateColumns="repeat(2, 1fr)"
-                    gap="0.5rem"
-                    marginBottom="1rem"
-                    >
-                    <ToggleButton isPressed={selectedNotes.includes("Vanilla")} onClick={() => toggleNote("Vanilla")}>Vanilla</ToggleButton>
-                    <ToggleButton isPressed={selectedNotes.includes("Rose")} onClick={() => toggleNote("Rose")}>Rose</ToggleButton>
-                    <ToggleButton isPressed={selectedNotes.includes("Oud")} onClick={() => toggleNote("Oud")}>Oud</ToggleButton>
-                    <ToggleButton isPressed={selectedNotes.includes("Bergamot")} onClick={() => toggleNote("Bergamot")}>Bergamot</ToggleButton>
-                    <ToggleButton isPressed={selectedNotes.includes("Sandalwood")} onClick={() => toggleNote("Sandalwood")}>Sandalwood</ToggleButton>
-                    <ToggleButton isPressed={selectedNotes.includes("Jasmine")} onClick={() => toggleNote("Jasmine")}>Jasmine</ToggleButton>
-                    <ToggleButton isPressed={selectedNotes.includes("Cedarwood")} onClick={() => toggleNote("Cedarwood")}>Cedarwood</ToggleButton>
-                    <ToggleButton isPressed={selectedNotes.includes("Amber")} onClick={() => toggleNote("Amber")}>Amber</ToggleButton>
-                    </Grid>
+                        <Grid
+                            templateColumns="repeat(2, 1fr)"
+                            gap="0.5rem"
+                            marginBottom="1rem"
+                        >
+                            <ToggleButton isPressed={selectedNotes.includes("Vanilla")} onClick={() => toggleNote("Vanilla")}>Vanilla</ToggleButton>
+                            <ToggleButton isPressed={selectedNotes.includes("Rose")} onClick={() => toggleNote("Rose")}>Rose</ToggleButton>
+                            <ToggleButton isPressed={selectedNotes.includes("Oud")} onClick={() => toggleNote("Oud")}>Oud</ToggleButton>
+                            <ToggleButton isPressed={selectedNotes.includes("Bergamot")} onClick={() => toggleNote("Bergamot")}>Bergamot</ToggleButton>
+                            <ToggleButton isPressed={selectedNotes.includes("Sandalwood")} onClick={() => toggleNote("Sandalwood")}>Sandalwood</ToggleButton>
+                            <ToggleButton isPressed={selectedNotes.includes("Jasmine")} onClick={() => toggleNote("Jasmine")}>Jasmine</ToggleButton>
+                            <ToggleButton isPressed={selectedNotes.includes("Cedarwood")} onClick={() => toggleNote("Cedarwood")}>Cedarwood</ToggleButton>
+                            <ToggleButton isPressed={selectedNotes.includes("Amber")} onClick={() => toggleNote("Amber")}>Amber</ToggleButton>
+                        </Grid>
                         </>
                     )}
 
-                    {/* Button to submit for login */}
                     {isLogin && (
                     <Button color="#F5F5F5" style={luxuryBodyStyle}
                         variation="primary"
                         marginTop=".9rem"
-                        //backgroundColor="rgba(82, 18, 0, 0.72)"
                         border="1px solid rgba(245, 245, 245, 0.85)"
                         loadingText=""
-                        // On click will sign the user in with the function above!
                         onClick={() => handleSignIn()}
                     >
-                        Login
+                    Login
                     </Button>
                     )}
 
-                    {/* Button to submit sign up */}
                     {!isLogin && (
                     <Button color="#F5F5F5" style={luxuryBodyStyle}
                         variation="primary"
                         marginTop="-.1rem"
-                        //backgroundColor="rgba(82, 18, 0, 0.72)"
                         border="1px solid rgba(245, 245, 245, 0.85)"
                         loadingText=""
                         onClick={() => handleSignUpSubmit()}
                     >
-                        {/* Button text based on login/signup mode */}
-                        Sign Up
+                    Sign Up
                     </Button>
                     )}
 
@@ -460,37 +427,22 @@ export default function Auth() {
                         style={luxuryBodyStyle}
                         backgroundColor="rgba(82, 18, 0, 0.72)"
                         isPressed={!isLogin}
-                        // Toggle the mode on click
                         onClick={() => setMode(isLogin ? "signup" : "login")}
                         alignSelf="center"
                         marginTop=".8rem"
                         marginBottom=".5rem"
                         >
-                        {/* Toggle text based on login/signup mode */}
                         {isLogin ? "Join OMRÉ" : "Login to OMRÉ"}
                     </ToggleButton>
+
                     {isLogin && (
                     <Link href="/ForgotPassword" 
                         style={luxuryBodyStyle} 
                         color="#F5F5F5">
                         Forgot Password?
                     </Link>
-                    )}
 
-                        
-                        {/* Placeholder text to test that my functions are working properly 
-                        for setting email password and confirm password */}
-                        {/* <Text
-                            color="#F5F5F5" 
-                            style={luxuryBodyStyle}
-                            alignSelf="center"
-                            marginTop="1rem"
-                        >
-                            Email: {email}<br></br>
-                            Password: {password}<br></br>
-                            Confirm Password: {confirmPassword}<br></br>
-                            Notes: {selectedNotes.join(", ")}
-                        </Text> */}
+                    )}
                     </>
                     )}
                 </Flex>
@@ -502,9 +454,4 @@ export default function Auth() {
 
 
 // Notes on future improvements:
-// 1. Obviously connection to backend for authentication
-// 2. Form validation for email format, password strength, matching passwords 
-// 3. Better error handling and user feedback on failed login/signup attempts
-// 7. Remove scent choice part and make it part of its own page
-// 8. User did not verify exception in login function
-// 9. Fix margin top when on verify screen
+// TODO: Remove scent choice part and make it part of its own page

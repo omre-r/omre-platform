@@ -1,8 +1,5 @@
-// Importing UI components from AWS Amplify UI React library
 import { Card, View, Flex, Link, Text, TextField, Button } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-
-// importing the Navbar component for consistent navigation across pages
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background.png";
 
@@ -29,7 +26,6 @@ export default function AdminDashboard() {
                     width="100%"
                     padding="1rem"
                     style={{
-                        // Setting the luxury background image with proper sizing and positioning
                         backgroundImage: `url(${LuxuryBackground})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
@@ -40,13 +36,12 @@ export default function AdminDashboard() {
                 >   
                     <Card
                         variation="elevated"
-                        height="auto" // Height will adjust for the sign up mode
+                        height="auto"
                         width="30rem"
                         margin="1rem auto"
                         padding="2rem"
                         marginTop="-33rem"
                         backgroundColor="rgba(0, 0, 0, 0.75)"
-                        // Subtle border to make the card stand out against the background
                         border="1px solid rgba(151, 33, 0, 0.72)"
                         borderRadius="8px"
                         >   
