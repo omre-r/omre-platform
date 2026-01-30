@@ -22,6 +22,10 @@ import { signUp, confirmSignUp, signIn} from "aws-amplify/auth";
 // Importing AI generated luxury background image so no source
 import LuxuryBackground from "../assets/Luxury Background.png";
 
+// Import this so that when we reload our page after logging in it will refresh and show the sign out and possibly admin dashboard if admin
+import { useAuth } from "../context/AuthContext";
+
+
 // Custom styles for heading and body text to enhance the luxurious feel using a imported font from google 
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -67,6 +71,9 @@ export default function Auth() {
     // Get feedback from auth actions
     const [authError, setAuthError] = useState("");
     const [authSuccess, setAuthSuccess] = useState("");
+
+    // Be able to call refresh auth from AuthContext
+    const { refreshAuth } = useAuth();
 
     // Takes toggled note vanilla lets say and adds/removes it from selectedNotes array
     // Can be used for all notes by passing in different note strings
@@ -189,6 +196,9 @@ export default function Auth() {
                 password: password, 
                 // options: If ever needed, I dont think so though
             });
+
+            // Refresh the page after logging in to show the authorizations needed such as signing out and admin dashboard
+            await refreshAuth();
             navigate("/"); // On success it will navigate us back to the home page
         }
         catch (error) {
