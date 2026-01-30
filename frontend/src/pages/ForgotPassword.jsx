@@ -1,4 +1,4 @@
-import {React, useState }from 'react';
+import {useState }from 'react';
 
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background.png";
@@ -83,7 +83,7 @@ const ForgotPassword = () => {
             });
             // On success
             setAuthSuccess("Password reset successfully.");
-            // will keep on verify for now to see the success or error message
+            // will bring us back to the reset password screen so we can see success message
             setAuthUI("");  
             // Possibly route back to the home page eventuall, easy change !!!
         }
@@ -239,7 +239,6 @@ const ForgotPassword = () => {
                                 borderColor="rgba(0,0,0,0.45)"
                                 borderRadius="8px"
                                 marginTop="2rem"
-                                type="submit"
                                 // On click will use the send reset code function 
                                 onClick={() => handleSendResetCode()}
                             >
