@@ -105,13 +105,22 @@ async function createTables() {
         )
     `);
 
+    /*
+    Status may change, but for now it can be:
+        -ordered
+        -complete
+        -canceled
+    */
     await pool.query(`
         CREATE TABLE IF NOT EXISTS orders(
             id VARCHAR(100) PRIMARY KEY,
-            customerid VARCHAR(100)
+            orderid VARCHAR(100),
+            customerid VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
-            items JSONB
+            items JSONB,
             total DECIMAL(10, 2),
+            status VARCHAR(100) DEFAULT "ordered",
+            cancelreason VARCHAR(500)
         )
     `);
 }
@@ -395,5 +404,67 @@ class Reviews{
         return formattedQuery
     }
 }
+
+class Orders{
+            // id VARCHAR(100) PRIMARY KEY,
+            // orderid VARCHAR(100),
+            // customerid VARCHAR(100),
+            // created TIMESTAMPTZ DEFAULT NOW(),
+            // items JSONB,
+            // total DECIMAL(10, 2),
+            // status VARCHAR(100) DEFAULT "ordered"
+    static getOrdersInstance(){
+        ordersInstance = ordersInstance ? ordersInstance : new Orders() ;
+        return ordersInstance
+    }
+
+    async createOrder(options){
+        const {orderid, customerid, items, total} = options;
+        const id = uuidv4();
+
+        const query = `INSERT INTO orders (id, orderid, customerid, items, total) VALUES ($1, $2, $3, $4, $5, $6, $7);`;
+        try{
+            await pool.query(query, [id, orderid, customerid, items, total]);
+        }catch(err){
+            console.error(err)
+            return null
+        }
+        return {success: true}
+    }
+    async cancelOrder(id){
+        const query = `UPDATE orders SET status = "canceled" WHERE id = $1`;
+        try{
+            await pool.query(query, [id]);
+        }catch(err){
+            console.error(err)
+            return null
+        }
+        return {success: true}
+    }
+    async completeOrder(id){
+        const query = `UPDATE orders SET status = "complete" WHERE id = $1`;
+        try{
+            await pool.query(query, [id]);
+        }catch(err){
+            console.error(err)
+            return null
+        }
+        return {success: true}
+    }
+
+    async getOrder(id){
+        const query = `SELECT * FROM orders WHERE id = $1`
+        let order;
+
+        try{
+            const res = await pool.query(query, [id]);
+            order = res.rows[0]
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true, data: {order}}
+    }
+}
     
-module.exports = {Users, Products, Reviews}
+module.exports = {Users, Products, Reviews, Orders}
