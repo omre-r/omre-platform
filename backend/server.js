@@ -18,11 +18,23 @@ app.get("/", controllers.getServerHTML);
 const placeholder = () => {}
 
 // users
-app.get("/users/:id", placeholder)
 app.put("/users/:id/login", placeholder)
 app.put("/users/:id/password", placeholder)
+
+app.get("/users/:id", placeholder)
+
 app.get("/users", placeholder);
 app.post("/users", placeholder);
+
+// products
+app.get("/products/:id", placeholder)
+app.put("/products/:id", placeholder)
+app.delete("/products/:id", placeholder)
+
+app.get("/products/active", placeholder);
+
+app.post("/products", placeholder);
+app.get("/products", placeholder);
 
 
 
