@@ -1,9 +1,10 @@
 const pg = require("pg")
 const { Pool } = pg
 
-const dotenv = require("dotenv");
 const { v4: uuidv4 } = require("uuid");
+const bcrypt = require("bcrypt")
 
+const dotenv = require("dotenv");
 dotenv.config({path: "../.env"});
 
 const DB_USERNAME = process.env.DB_USERNAME;
@@ -134,11 +135,12 @@ class Users{
     async createUser(options){
         const {email, password, firstname, lastname, role} = options;
         const id = uuidv4();
-        let result;
+        const hashedPass = bcrypt.hash(password, 10);
 
+        let result;
         const query = `INSERT INTO users (id, email, password, firstname, lastname, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, password, firstname, lastname, role;`;
         try{
-            result = await pool.query(query, [id, email, password, firstname, lastname, role]);
+            result = await pool.query(query, [id, email, hashedPass, firstname, lastname, role]);
         }catch(err){
             console.error(err)
             return null
@@ -175,24 +177,34 @@ class Users{
         return {success: true, data: {user}}
     }
 
-    async updateLogin(id){
-        const query = `UPDATE users SET lastlogin = NOW() WHERE id = $1`
-
+    async validateLogin(options){
+        const {email, password} = options;
+        
+        let user;
+        const checkPassQuery = `SELECT password FROM users WHERE email = $1 RETURNING id, email, firstname, lastname, role`;
+        const updateLoginQuery = `UPDATE users SET lastlogin = NOW() WHERE id = $1`
         try{
-            await pool.query(query, [id])
+            user = (await pool.query(checkPassQuery, [email]))?.rows?.[0];
+            if (!user) return null;
+
+            const matches = await bcrypt.compare(password, user["password"])
+            if (!matches) return {success: false};
+
+            await pool.query(updateLoginQuery, [user["id"]]);
         }catch(err){
             console.error(err);
             return null;
         }
-        return {success: true}
+        return {success: true, data: {user}};
     }
 
     async changePassword(options){
-        const {id, password} = options
-        const query = `UPDATE users SET password = $1 WHERE id = $2`
+        const {id, password} = options;
+
+        const query = `UPDATE users SET password = $1 WHERE id = $2`;
         try{
-            //will hash soon
-            await pool.query(query, [password, id])
+            const hashedPass = bcrypt.hash(password, 10);
+            await pool.query(query, [hashedPass, id]);
         }catch(err){
             console.error(err);
             return null
