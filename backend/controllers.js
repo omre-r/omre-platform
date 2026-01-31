@@ -22,17 +22,6 @@ function handleError(fn){
 // // users
 // app.put("/users/login/:id", placeholder)
 
-
-// // reviews
-// app.get("/reviews/product/:productid", placeholder)
-// app.get("/reviews/user/:customerid", placeholder)
-
-// app.put("/reviews/:id", placeholder)
-
-// app.post("/reviews", placeholder)
-// app.get("/reviews", placeholder)
-
-
 // // orders
 // app.put("/orders/cancel/:id", placeholder)
 // app.put("/orders/complete/:id", placeholder)
@@ -89,6 +78,8 @@ async function createUser(req, res){
   }
   return res.json(res);
 }
+
+
 
 //products
 
@@ -149,6 +140,58 @@ async function getProducts(req, res) {
   return res.json(result)
 }
 
+
+
+// reviews
+
+// path: GET /reviews/product/:productid
+async function getProductReviews(req, res) {
+  const {productid} = req.params;
+  const result = await reviews.getProductReviews(productid);
+  if (!result){
+    res.status(500).json({success: false, message: "Failed to get product reviews"});
+  }
+  res.json(result);
+}
+
+// path: GET /reviews/user/:customerid
+async function getUserReviews(req, res) {
+  const {customerid} = req.params;
+  const result = await reviews.getUserReviews(customerid);
+  if (!result){
+    res.status(500).json({success: false, message: "Failed to get user's reviews"});
+  }
+  res.json(result);
+}
+
+// path: PUT /reviews/:id
+async function updateReview(req, res) {
+  const {productid} = req.params;
+  const result = await reviews.updateProduct(productid, req.body);
+  if (!result){
+    res.status(500).json({success: false, message: "Failed to update product review"});
+  }
+  res.json(result);
+}
+
+// path: GET /reviews
+async function getReviews(req, res) {
+  const result = await reviews.getReviews();
+  if (!result){
+    res.status(500).json({success: false, message: "Failed to get reviews"});
+  }
+  res.json(result);
+}
+
+//TODO: images need special handling
+// path: POST /reviews
+async function createReview(req, res) {
+  const result = await reviews.createReview(req.body);
+  if (!result){
+    res.status(500).json({success: false, message: "Failed to create review"});
+  }
+  res.json(result);
+}
 
 
 
