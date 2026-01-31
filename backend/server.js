@@ -15,6 +15,17 @@ app.use(express.json());
 
 app.get("/", controllers.getServerHTML);
 
+const placeholder = () => {}
+
+// users
+app.get("/users/:id", placeholder)
+app.put("/users/:id/login", placeholder)
+app.put("/users/:id/password", placeholder)
+app.get("/users", placeholder);
+app.post("/users", placeholder);
+
+
+
 //starting server
 app.listen(PORT || 3001, () => {
   console.log(`Server running on port ${PORT}`);
