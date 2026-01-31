@@ -21,23 +21,6 @@ function handleError(fn){
 
 // // users
 // app.put("/users/login/:id", placeholder)
-// app.put("/users/password/:id", placeholder)
-
-// app.get("/users/:id", placeholder)
-
-// app.get("/users", placeholder);
-// app.post("/users", placeholder);
-
-
-// // products
-// app.get("/products/:id", placeholder)
-// app.put("/products/:id", placeholder)
-// app.delete("/products/:id", placeholder)
-
-// app.get("/products/active", placeholder);
-
-// app.post("/products", placeholder);
-// app.get("/products", placeholder);
 
 
 // // reviews
@@ -97,6 +80,7 @@ async function getUsers(req, res){
   }
   return res.json(res);
 }
+
 // path: POST /users
 async function createUser(req, res){
   const result = await users.createUser(req.body);
@@ -106,8 +90,64 @@ async function createUser(req, res){
   return res.json(res);
 }
 
+//products
 
+// path: GET /products/:id
+async function getProduct(req, res) {
+  const {id} = req.params;
+  const result = await products.getProduct(id);
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to get product"});
+  }
+  result.json(result)
+}
 
+// path: PUT /products/:id
+async function updateProduct(req, res) {
+  const {id} = req.params;
+  const result = await products.updateProduct(id, req.body);
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to update product"});
+  }
+  result.json(result)
+}
+
+// path: DELETE /products/:id
+async function deleteProduct(req, res) {
+  const {id} = req.params;
+  const result = await products.deleteProduct(id);
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to delete product"});
+  }
+  result.json(result)
+}
+
+// path: GET /products/active
+async function getActiveProducts(req, res) {
+  const result = await products.getActiveProducts();
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to get active products"});
+  }
+  return res.json(result)
+}
+
+// path: POST /products
+async function createProduct(req, res) {
+  const result = await products.createProduct(req.body);
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to create product"});
+  }
+  return res.json(result)
+}
+
+// path: GET /products
+async function getProducts(req, res) {
+  const result = await products.getProducts();
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to get products"});
+  }
+  return res.json(result)
+}
 
 
 
