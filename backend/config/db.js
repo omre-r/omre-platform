@@ -71,6 +71,14 @@ async function createTables() {
             notes JSONB
         )
     `)
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS reviews(
+            id VARCHAR(100),
+            created DATETIME,
+            message VARCHAR(500),
+            rating SMALLINT,
+        )
+    `)
 }
 
 connectToDB()
