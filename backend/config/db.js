@@ -79,7 +79,9 @@ async function createTables() {
             price DECIMAL(10, 2),
             images JSONB,
             quantity INT,
-            notes JSONB
+            notes JSONB,
+            isfeatured BOOLEAN,
+            ishidden BOOLEAN
         )
     `);
     await pool.query(`
@@ -118,7 +120,7 @@ class Users{
             console.error(err)
             return null
         }
-        return {"success": true}
+        return {success: true}
     }
     
     //rate limiting (ex: max 200) not needed yet
@@ -133,7 +135,7 @@ class Users{
             console.error(err);
             return null;
         }
-        return {"success": true, "data": users}
+        return {success: true, data: {users}}
     }
 
     async getUser(id){
@@ -147,7 +149,7 @@ class Users{
             console.error(err);
             return null;
         }
-        return {"success": true, "data": user}
+        return {success: true, data: {user}}
     }
 
     async updateLogin(id){
@@ -159,9 +161,8 @@ class Users{
             console.error(err);
             return null;
         }
-        return {"success": true}
+        return {success: true}
     }
-
 
     async changePassword(options){
         const {id, password} = options
@@ -173,8 +174,29 @@ class Users{
             console.error(err);
             return null
         }
-        return {"success": true}
+        return {success: true}
     }   
 }
 
-module.exports = {Users}
+class Products{
+    static getProductsInstance(){
+        productsInstance = productsInstance ? productsInstance : new Products() ;
+        return productsInstance;
+    }
+
+    async createProduct(options){
+        const {type, name, variation, price, images, quantity, notes, isfeatured, ishidden} = options;
+        const id = uuidv4();
+
+        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`;
+        try{
+            await pool.query(query, [id, type, name, variation, price, images, quantity, notes, isfeatured, ishidden]);
+        }catch(err){
+            console.error(err)
+            return null
+        }
+        return {success: true}
+    }
+    
+}
+module.exports = {Users, Products}
