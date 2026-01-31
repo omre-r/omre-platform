@@ -1,5 +1,8 @@
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
+const upload = multer({storage: multer.memoryStorage()});
+
 const controllers = require("./controllers.js"); 
 
 const dotenv = require("dotenv");
@@ -10,14 +13,14 @@ const PORT = process.env.PORT
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
 
 app.get("/", controllers.getServerHTML);
 
-const placeholder = () => {}
 
 // users
-app.put("/users/login/:id", placeholder)
+app.put("/users/login/:id", controllers.validateLogin)
 app.put("/users/password/:id", controllers.changePassword)
 
 app.get("/users/:id", controllers.getUser)
@@ -33,7 +36,7 @@ app.delete("/products/:id", controllers.deleteProduct)
 
 app.get("/products/active", controllers.getActiveProducts);
 
-app.post("/products", controllers.createProduct);
+app.post("/products", upload.array("images", 3), controllers.createProduct);
 app.get("/products", controllers.getProducts);
 
 
@@ -43,7 +46,7 @@ app.get("/reviews/user/:customerid", controllers.getUserReviews)
 
 app.put("/reviews/:id", controllers.updateReview)
 
-app.post("/reviews", controllers.createReview)
+app.post("/reviews", upload.array("images", 3), controllers.createReview)
 app.get("/reviews", controllers.getReviews)
 
 

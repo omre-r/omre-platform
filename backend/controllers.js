@@ -19,7 +19,7 @@ function handleError(fn){
 }
 
 
-// // users
+// users
 // app.put("/users/login/:id", placeholder)
 
 // path: GET /
@@ -28,7 +28,15 @@ function getServerHTML(req, res){
 };
 
 
-// users
+// path: PUT /users/login/:id
+async function validateLogin(req, res) {
+  const options = {email, password};
+  const result = await users.validateLogin(options);
+  if (!result){
+    return res.status(500).json({success: false,  message: "Failed to validate login"});
+  }    
+  return res.json(result);
+}
 
 // path: PUT /users/password/:id
 async function changePassword(req, res){
@@ -116,6 +124,8 @@ async function getActiveProducts(req, res) {
 
 // path: POST /products
 async function createProduct(req, res) {
+  //TODO: make images S3 urls
+
   const result = await products.createProduct(req.body);
   if (!result){
     return res.status(500).json({success: false, message: "Failed to create product"});
@@ -178,6 +188,7 @@ async function getReviews(req, res) {
 //TODO: images need special handling
 // path: POST /reviews
 async function createReview(req, res) {
+  //TODO: make images S3 urls
   const result = await reviews.createReview(req.body);
   if (!result){
     res.status(500).json({success: false, message: "Failed to create review"});
@@ -244,6 +255,7 @@ function handleOtherService(fn){
 */
 getServerHTML = handleError(getServerHTML);
 
+validateLogin = handleError(validateLogin);
 changePassword = handleError(changePassword);
 getUser = handleError(getUser);
 getUsers = handleError(getUsers);
@@ -271,7 +283,7 @@ createOrder = handleError(getReviews);
 
 module.exports = {
   getServerHTML,
-  changePassword, getUser, getUsers, createUser,
+  validateLogin, changePassword, getUser, getUsers, createUser,
   getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview,
   cancelOrder, completeOrder, getOrder, createOrder
