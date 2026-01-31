@@ -2,6 +2,8 @@ const pg = require("pg")
 const { Pool } = pg
 
 const dotenv = require("dotenv");
+const { v4: uuidv4 } = require("uuid");
+
 dotenv.config({path: "../.env"});
 
 const DB_USERNAME = process.env.DB_USERNAME;
@@ -12,6 +14,15 @@ const DB_NAME = process.env.DB_NAME;
 
 let pool = null;
 let reconnectInterval = null;
+
+connectToDB()
+reconnectInterval = setInterval(connectToDB, 2000);
+
+let usersInstance = null;
+let productsInstance = null;
+let reviewsInstance = null;
+let ordersInstance = null;
+
 async function connectToDB(){
     if (pool) return
     try{
@@ -50,7 +61,7 @@ async function createTables() {
             lastlogin DATETIME,
             role VARCHAR(10) 
         )
-    `)
+    `);
     /* 
     instance of 'notes' entry:
     {
@@ -70,7 +81,7 @@ async function createTables() {
             quantity INT,
             notes JSONB
         )
-    `)
+    `);
     await pool.query(`
         CREATE TABLE IF NOT EXISTS reviews(
             id VARCHAR(100),
@@ -78,7 +89,7 @@ async function createTables() {
             message VARCHAR(500),
             rating SMALLINT,
         )
-    `)
+    `);
     await pool.query(`
         CREATE TABLE IF NOT EXISTS orders(
             id VARCHAR(100),
@@ -87,12 +98,15 @@ async function createTables() {
             items JSONB
             total DECIMAL(10, 2),
         )
-    `)
+    `);
 }
 
-connectToDB()
-reconnectInterval = setInterval(connectToDB, 2000);
+class Users{
+    static getUsersInstance(){
+        usersInstance = usersInstance ? usersInstance : new Users() ;
+        return usersInstance;
+    }
 
+}
 
-//will soon export classes
-module.exports = {nothing: "nothing"}
+module.exports = {Users}
