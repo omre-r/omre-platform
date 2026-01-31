@@ -113,7 +113,7 @@ class Users{
         const {email, password, firstname, lastname, role} = options;
         const id = uuidv4();
 
-        const query = `INSERT INTO users (id, email, password, firstname, lastname, role) VALUES (?, ?, ?, ?, ?, ?);`;
+        const query = `INSERT INTO users (id, email, password, firstname, lastname, role) VALUES ($1, $2, $3, $4, $5, $6);`;
         try{
             await pool.query(query, [id, email, password, firstname, lastname, role]);
         }catch(err){
@@ -139,7 +139,7 @@ class Users{
     }
 
     async getUser(id){
-        const query = `SELECT (id, email, firstname, lastname, role, created) FROM users WHERE id = ?`
+        const query = `SELECT (id, email, firstname, lastname, role, created) FROM users WHERE id = $1`
         let user;
 
         try{
@@ -153,7 +153,7 @@ class Users{
     }
 
     async updateLogin(id){
-        const query = `UPDATE users SET lastlogin = NOW() WHERE id = ?`
+        const query = `UPDATE users SET lastlogin = NOW() WHERE id = $1`
 
         try{
             await pool.query(query, [id])
@@ -166,7 +166,7 @@ class Users{
 
     async changePassword(options){
         const {id, password} = options
-        const query = `UPDATE users SET password = ? WHERE id = ?`
+        const query = `UPDATE users SET password = $1 WHERE id = $2`
         try{
             //will hash soon
             await pool.query(query, [password, id])
@@ -178,21 +178,17 @@ class Users{
     }   
 }
 
+/*
+Methods are designed based on flows. A user will modify different fields
+in different situations (changePassword / updateLogin), but a product is 
+likely updated in a single setting. Therefore, a single updateProduct is provided.
+*/
 class Products{
+    static modifiableFields = ["type", "name", "variation", "price", "images", "quantity", "notes"];
     static getProductsInstance(){
         productsInstance = productsInstance ? productsInstance : new Products() ;
         return productsInstance;
     }
-
-        // CREATE TABLE IF NOT EXISTS products(
-        //     id VARCHAR(100),
-        //     type VARCHAR(100),
-        //     name VARCHAR(1000),
-        //     variation VARCHAR(200),
-        //     price DECIMAL(10, 2),
-        //     images JSONB,
-        //     quantity INT,
-        //     notes JSONB
 
     async createProduct(options){
         const {type, name, variation, price, images, quantity, notes, isfeatured, ishidden} = options;
@@ -248,7 +244,7 @@ class Products{
     }
 
     async getProduct(id){
-        const query = `SELECT * FROM products WHERE id = ?`
+        const query = `SELECT * FROM products WHERE id = $1;`;
         let product;
 
         try{
@@ -261,10 +257,37 @@ class Products{
         return {success: true, data: {product}}
     }
 
-    
-    async updateProduct(options) {
-        
-        
+    /*
+    Expects object of fields in need of updating
+    Ex) options === {type: "10ml spray", price: 35.85}
+    */
+    async updateProduct(id, options) {
+        const fields = Object.keys(options);
+        const query = this.formatUpdateQuery(fields);
+        if (!query) return null;
+
+        try{
+            await pool.query(formattedQuery, [...fields.map(f => options[f]), id])
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true}
+    }
+
+    formatUpdateQuery(fields){
+        if (fields.length === 0) return null;
+
+        let formattedQuery = `UPDATE products SET `;
+        let i;
+        for (i = 0; i < fields.length; i++){
+            if (!modifiableFields.includes(fields[i])) return null;
+
+            formattedQuery += `${fields[i]} = $${i + 1}`
+            if (i !== fields.length - 1) formattedQuery += ', ';
+        }
+        formattedQuery += ` WHERE id = $${i + 1};`
+        return formattedQuery
     }
 }
 module.exports = {Users, Products}
