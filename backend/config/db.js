@@ -184,6 +184,16 @@ class Products{
         return productsInstance;
     }
 
+        // CREATE TABLE IF NOT EXISTS products(
+        //     id VARCHAR(100),
+        //     type VARCHAR(100),
+        //     name VARCHAR(1000),
+        //     variation VARCHAR(200),
+        //     price DECIMAL(10, 2),
+        //     images JSONB,
+        //     quantity INT,
+        //     notes JSONB
+
     async createProduct(options){
         const {type, name, variation, price, images, quantity, notes, isfeatured, ishidden} = options;
         const id = uuidv4();
@@ -198,5 +208,63 @@ class Products{
         return {success: true}
     }
     
+    async deleteProduct(id){
+        const query = `DELETE FROM products WHERE id = $1`
+        try{
+            await pool.query(query, [id]);
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true}
+    }
+
+    async getProducts(){
+        const query = `SELECT * FROM products;`
+        let products;
+
+        try{
+            const res = await pool.query(query);
+            products = res.rows;
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true, data: {products}}
+    }
+
+    async getActiveProducts(){
+        const query = `SELECT * FROM products WHERE ishidden IS FALSE;`
+        let products;
+
+        try{
+            const res = await pool.query(query);
+            products = res.rows;
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true, data: {products}}
+    }
+
+    async getProduct(id){
+        const query = `SELECT * FROM products WHERE id = ?`
+        let product;
+
+        try{
+            const res = await pool.query(query, [id]);
+            product = res.rows[0]
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true, data: {product}}
+    }
+
+    
+    async updateProduct(options) {
+        
+        
+    }
 }
 module.exports = {Users, Products}
