@@ -87,6 +87,8 @@ async function createTables() {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS reviews(
             id VARCHAR(100),
+            customerid VARCHAR(100),
+            productid VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
             message VARCHAR(500),
             rating SMALLINT,
@@ -290,4 +292,45 @@ class Products{
         return formattedQuery
     }
 }
-module.exports = {Users, Products}
+
+class Reviews{
+            // id VARCHAR(100),
+            // customerid
+            // created TIMESTAMPTZ DEFAULT NOW(),
+            // message VARCHAR(500),
+            // rating SMALLINT,
+
+    static getReviewsInstance(){
+        reviewsInstance = reviewsInstance ? reviewsInstance : new Reviews() ;
+        return reviewsInstance;
+    }
+
+    async createReview(options){
+        const {customerid, productid, message, rating} = options;
+        const id = uuidv4();
+
+        const query = `INSERT INTO reviews (id, customerid, productid, message, rating) VALUES ($1, $2, $3, $4, $5);`;
+        try{
+            await pool.query(query, [id, customerid, productid, message, rating]);
+        }catch(err){
+            console.error(err)
+            return null
+        }
+        return {success: true}
+    }
+    
+    async getProductReviews(productid){
+        const query = `SELECT * FROM reviews WHERE productid = $1`;
+        let reviews;
+
+        try{
+            const res = await pool.query(query, [productid]);
+            reviews = res.rows;
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true, data: {reviews}}
+    }}
+    
+module.exports = {Users, Products, Reviews}
