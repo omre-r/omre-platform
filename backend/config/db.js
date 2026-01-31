@@ -167,7 +167,7 @@ class Users{
 
         try{
             const res = await pool.query(query, [id]);
-            user = res.rows[0]
+            user = res.rows?.[0]
         }catch(err){
             console.error(err);
             return null;
