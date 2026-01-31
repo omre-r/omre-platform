@@ -36,6 +36,14 @@ app.get("/products/active", placeholder);
 app.post("/products", placeholder);
 app.get("/products", placeholder);
 
+// reviews
+app.get("/reviews/product/:productid", placeholder)
+app.get("/reviews/user/:customerid", placeholder)
+
+app.put("/reviews/:id", placeholder)
+
+app.post("/reviews", placeholder)
+app.get("/reviews", placeholder)
 
 
 //starting server
