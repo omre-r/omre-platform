@@ -46,9 +46,9 @@ async function createTables() {
             password VARCHAR(100),
             firstname VARCHAR(100),
             lastname VARCHAR(100),
-            created DATETIME,
+            created TIMESTAMPTZ DEFAULT NOW(),
             lastlogin DATETIME,
-            role VARCHAR(10)
+            role VARCHAR(10) 
         )
     `)
     /* 
@@ -74,9 +74,18 @@ async function createTables() {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS reviews(
             id VARCHAR(100),
-            created DATETIME,
+            created TIMESTAMPTZ DEFAULT NOW(),
             message VARCHAR(500),
             rating SMALLINT,
+        )
+    `)
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS orders(
+            id VARCHAR(100),
+            customerid VARCHAR(100)
+            created TIMESTAMPTZ DEFAULT NOW(),
+            items JSONB
+            total DECIMAL(10, 2),
         )
     `)
 }
