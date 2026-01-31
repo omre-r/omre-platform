@@ -51,7 +51,26 @@ async function createTables() {
             role VARCHAR(10)
         )
     `)
-    
+    /* 
+    instance of 'notes' entry:
+    {
+        top: ["Cognac"],
+        heart: ["Cinnamon" "Oak"],
+        base: ["Praline", "Vanilla"],
+    }
+    */
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS products(
+            id VARCHAR(100),
+            type VARCHAR(100),
+            name VARCHAR(1000),
+            variation VARCHAR(200),
+            price DECIMAL(10, 2),
+            images JSONB,
+            quantity INT,
+            notes JSONB
+        )
+    `)
 }
 
 connectToDB()
