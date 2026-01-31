@@ -134,15 +134,16 @@ class Users{
     async createUser(options){
         const {email, password, firstname, lastname, role} = options;
         const id = uuidv4();
+        let result;
 
-        const query = `INSERT INTO users (id, email, password, firstname, lastname, role) VALUES ($1, $2, $3, $4, $5, $6);`;
+        const query = `INSERT INTO users (id, email, password, firstname, lastname, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, password, firstname, lastname, role;`;
         try{
-            await pool.query(query, [id, email, password, firstname, lastname, role]);
+            result = await pool.query(query, [id, email, password, firstname, lastname, role]);
         }catch(err){
             console.error(err)
             return null
         }
-        return {success: true}
+        return {success: true, data: {user: result.rows?.[0]}}
     }
     
     //rate limiting (ex: max 200) not needed yet
@@ -216,14 +217,15 @@ class Products{
         const {type, name, variation, price, images, quantity, notes, isfeatured, ishidden} = options;
         const id = uuidv4();
 
-        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`;
+        let result;
+        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;`;
         try{
-            await pool.query(query, [id, type, name, variation, price, images, quantity, notes, isfeatured, ishidden]);
+            result = await pool.query(query, [id, type, name, variation, price, images, quantity, notes, isfeatured, ishidden]);
         }catch(err){
             console.error(err)
             return null
         }
-        return {success: true}
+        return {success: true, data: {product: result.rows?.[0]}}
     }
     
     async deleteProduct(id){
@@ -324,14 +326,15 @@ class Reviews{
         const {customerid, productid, message, rating, images, responses} = options;
         const id = uuidv4();
 
-        const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images, responses) VALUES ($1, $2, $3, $4, $5, $6, $7);`;
+        let result;
+        const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images, responses) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`;
         try{
-            await pool.query(query, [id, customerid, productid, message, rating, images, responses]);
+            result = await pool.query(query, [id, customerid, productid, message, rating, images, responses]);
         }catch(err){
             console.error(err)
             return null
         }
-        return {success: true}
+        return {success: true, data: {review: result.rows?.[0]}}
     }
     
     async getProductReviews(productid){
@@ -406,13 +409,6 @@ class Reviews{
 }
 
 class Orders{
-            // id VARCHAR(100) PRIMARY KEY,
-            // orderid VARCHAR(100),
-            // customerid VARCHAR(100),
-            // created TIMESTAMPTZ DEFAULT NOW(),
-            // items JSONB,
-            // total DECIMAL(10, 2),
-            // status VARCHAR(100) DEFAULT "ordered"
     static getOrdersInstance(){
         ordersInstance = ordersInstance ? ordersInstance : new Orders() ;
         return ordersInstance
@@ -422,14 +418,15 @@ class Orders{
         const {orderid, customerid, items, total} = options;
         const id = uuidv4();
 
-        const query = `INSERT INTO orders (id, orderid, customerid, items, total) VALUES ($1, $2, $3, $4, $5, $6, $7);`;
+        let result;
+        const query = `INSERT INTO orders (id, orderid, customerid, items, total) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`;
         try{
-            await pool.query(query, [id, orderid, customerid, items, total]);
+            result = await pool.query(query, [id, orderid, customerid, items, total]);
         }catch(err){
             console.error(err)
             return null
         }
-        return {success: true}
+        return {success: true, data: {order: result.rows?.[0]}}
     }
     async cancelOrder(id, cancelreason){
         const query = `UPDATE orders SET status = "canceled", cancelreason = $1 WHERE id = $2`;
