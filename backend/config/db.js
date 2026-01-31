@@ -107,6 +107,34 @@ class Users{
         return usersInstance;
     }
 
+    async createUser(options){
+        const {email, password, firstname, lastname, role} = options;
+        const id = uuidv4();
+
+        const query = `INSERT INTO users (id, email, password, firstname, lastname, role) VALUES (?, ?, ?, ?, ?, ?);`;
+        try{
+            await pool.query(query, [id, email, password, firstname, lastname, role]);
+        }catch(err){
+            console.error(err)
+            return null
+        }
+        return {"success": true}
+    }
+    
+    //rate limiting (ex: max 200) not needed yet
+    async getAllUsers(){
+        const query = `SELECT (id, email, firstname, lastname, role, created)`
+        let users;
+
+        try{
+            const res = await pool.query(query);
+            users = res.rows
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {"success": true, "data": users}
+    }
 }
 
 module.exports = {Users}
