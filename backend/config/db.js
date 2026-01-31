@@ -52,7 +52,7 @@ async function connectToDB(){
 async function createTables() {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS users(
-            id VARCHAR(100),
+            id VARCHAR(100) PRIMARY KEY,
             email VARCHAR(500),
             password VARCHAR(100),
             firstname VARCHAR(100),
@@ -72,7 +72,7 @@ async function createTables() {
     */
     await pool.query(`
         CREATE TABLE IF NOT EXISTS products(
-            id VARCHAR(100),
+            id VARCHAR(100) PRIMARY KEY,
             type VARCHAR(100),
             name VARCHAR(1000),
             variation VARCHAR(200),
@@ -84,19 +84,30 @@ async function createTables() {
             ishidden BOOLEAN
         )
     `);
+    /*
+    instance of 'responses' entry (client/admin only. Can change this preference):
+    [
+        {isAdmin: true, "message": "Thank you..."},
+        {isAdmin: false, "I appreciate..."},
+        {isAdmin: false, "btw I think..."}
+    ]
+    */
     await pool.query(`
         CREATE TABLE IF NOT EXISTS reviews(
-            id VARCHAR(100),
+            id VARCHAR(100) PRIMARY KEY,
             customerid VARCHAR(100),
             productid VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
             message VARCHAR(500),
             rating SMALLINT,
+            images JSONB,
+            responses JSONB
         )
     `);
+
     await pool.query(`
         CREATE TABLE IF NOT EXISTS orders(
-            id VARCHAR(100),
+            id VARCHAR(100) PRIMARY KEY,
             customerid VARCHAR(100)
             created TIMESTAMPTZ DEFAULT NOW(),
             items JSONB
@@ -294,24 +305,19 @@ class Products{
 }
 
 class Reviews{
-            // id VARCHAR(100),
-            // customerid
-            // created TIMESTAMPTZ DEFAULT NOW(),
-            // message VARCHAR(500),
-            // rating SMALLINT,
-
+    static modifiableFields = ["responses"] //we may allow edits at some point, but just this for now
     static getReviewsInstance(){
         reviewsInstance = reviewsInstance ? reviewsInstance : new Reviews() ;
         return reviewsInstance;
     }
 
     async createReview(options){
-        const {customerid, productid, message, rating} = options;
+        const {customerid, productid, message, rating, images, responses} = options;
         const id = uuidv4();
 
-        const query = `INSERT INTO reviews (id, customerid, productid, message, rating) VALUES ($1, $2, $3, $4, $5);`;
+        const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images, responses) VALUES ($1, $2, $3, $4, $5, $6, $7);`;
         try{
-            await pool.query(query, [id, customerid, productid, message, rating]);
+            await pool.query(query, [id, customerid, productid, message, rating, images, responses]);
         }catch(err){
             console.error(err)
             return null
@@ -359,6 +365,34 @@ class Reviews{
             return null;
         }
         return {success: true, data: {reviews}}
+    }
+
+    async updateReview(id, options){
+        const fields = Object.keys(options);
+        const query = this.formatUpdateQuery(fields);
+        if (!query) return null;
+
+        try{
+            await pool.query(formattedQuery, [...fields.map(f => options[f]), id])
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true}
+    }
+    formatUpdateQuery(fields){
+        if (fields.length === 0) return null;
+
+        let formattedQuery = `UPDATE reviews SET `;
+        let i;
+        for (i = 0; i < fields.length; i++){
+            if (!modifiableFields.includes(fields[i])) return null;
+
+            formattedQuery += `${fields[i]} = $${i + 1}`
+            if (i !== fields.length - 1) formattedQuery += ', ';
+        }
+        formattedQuery += ` WHERE id = $${i + 1};`
+        return formattedQuery
     }
 }
     
