@@ -28,13 +28,32 @@ async function connectToDB(){
             newPool.end();
             return;
         }
+
+        console.log("Successfully connected to DB!");
         pool = newPool
         clearInterval(reconnectInterval);
-        console.log("Successfully connected to DB!");
+        createTables()
     }catch(err){
         console.log("Failed to connect to AWS RDS database.");
     }
 }
+
+async function createTables() {
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS users(
+            id VARCHAR(100),
+            email VARCHAR(500),
+            password VARCHAR(100),
+            firstname VARCHAR(100),
+            lastname VARCHAR(100),
+            created DATETIME,
+            lastlogin DATETIME,
+            role VARCHAR(10)
+        )
+    `)
+    
+}
+
 connectToDB()
 reconnectInterval = setInterval(connectToDB, 2000);
 
