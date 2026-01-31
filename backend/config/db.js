@@ -123,7 +123,7 @@ class Users{
     
     //rate limiting (ex: max 200) not needed yet
     async getAllUsers(){
-        const query = `SELECT (id, email, firstname, lastname, role, created)`
+        const query = `SELECT (id, email, firstname, lastname, role, created) FROM users`
         let users;
 
         try{
@@ -135,6 +135,46 @@ class Users{
         }
         return {"success": true, "data": users}
     }
+
+    async getUser(id){
+        const query = `SELECT (id, email, firstname, lastname, role, created) FROM users WHERE id = ?`
+        let user;
+
+        try{
+            const res = await pool.query(query, [id]);
+            user = res.rows[0]
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {"success": true, "data": user}
+    }
+
+    async updateLogin(id){
+        const query = `UPDATE users SET lastlogin = NOW() WHERE id = ?`
+
+        try{
+            await pool.query(query, [id])
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {"success": true}
+    }
+
+
+    async changePassword(options){
+        const {id, password} = options
+        const query = `UPDATE users SET password = ? WHERE id = ?`
+        try{
+            //will hash soon
+            await pool.query(query, [password, id])
+        }catch(err){
+            console.error(err);
+            return null
+        }
+        return {"success": true}
+    }   
 }
 
 module.exports = {Users}
