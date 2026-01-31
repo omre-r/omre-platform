@@ -431,10 +431,10 @@ class Orders{
         }
         return {success: true}
     }
-    async cancelOrder(id){
-        const query = `UPDATE orders SET status = "canceled" WHERE id = $1`;
+    async cancelOrder(id, cancelreason){
+        const query = `UPDATE orders SET status = "canceled", cancelreason = $1 WHERE id = $2`;
         try{
-            await pool.query(query, [id]);
+            await pool.query(query, [id, cancelreason]);
         }catch(err){
             console.error(err)
             return null
