@@ -22,14 +22,6 @@ function handleError(fn){
 // // users
 // app.put("/users/login/:id", placeholder)
 
-// // orders
-// app.put("/orders/cancel/:id", placeholder)
-// app.put("/orders/complete/:id", placeholder)
-
-// app.post("/orders", placeholder)
-// app.get("/orders", placeholder)
-
-
 // path: GET /
 function getServerHTML(req, res){
     res.send("Welcome to the server!");
@@ -195,7 +187,61 @@ async function createReview(req, res) {
 
 
 
+// orders
 
+//path: PUT /orders/cancel/:id
+async function cancelOrder(req, res) {
+  const {id} = req.params;
+  const {cancelreason} = req.body;
+  const result = await orders.cancelOrder(id, cancelreason);
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to cancel order"});
+  }
+  return res.json(result);
+}
+
+//path: PUT /orders/complete/:id
+async function completeOrder(req, res) {
+  const {id} = req.params;
+  const result = await orders.completeOrder(id);
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to complete order"});
+  }
+  return res.json(result);
+}
+
+// path: GET /orders/:id
+async function getOrder(req, res) {
+  const {id} = req.params;
+  const result = await orders.getOrder(id);
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to get order"});
+  }
+  return res.json(result);
+}
+
+// path: POST /orders
+async function createOrder(req, res) {
+  const result = await orders.createOrder(req.body);
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to create order"});
+  }
+  return res.json(result);
+}
+
+
+
+/* 
+Though probably not needed, we can use wrappers down the line that
+cater to some group flow. For example: 
+
+function handleOtherService(fn){
+  return (...args) => {
+    process();
+    return handleError(fn)(...args);
+  }
+}
+*/
 getServerHTML = handleError(getServerHTML);
 
 changePassword = handleError(changePassword);
@@ -203,5 +249,30 @@ getUser = handleError(getUser);
 getUsers = handleError(getUsers);
 createUser = handleError(createUser);
 
+getProduct = handleError(getProduct);
+updateProduct = handleError(updateProduct);
+deleteProduct = handleError(deleteProduct);
+getActiveProducts = handleError(getActiveProducts);
+createProduct = handleError(createProduct);
+getProducts = handleError(getProducts);
 
-module.exports = {getServerHTML};
+getProductReviews = handleError(getProductReviews);
+getUserReviews = handleError(getUserReviews);
+updateReview = handleError(updateReview);
+getReviews = handleError(getReviews);
+createReview = handleError(createReview);
+
+cancelOrder = handleError(createOrder)
+completeOrder = handleError(completeOrder);
+getOrder = handleError(getOrder);
+createOrder = handleError(getReviews);
+
+
+
+module.exports = {
+  getServerHTML,
+  changePassword, getUser, getUsers, createUser,
+  getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts,
+  getProductReviews, getUserReviews, updateReview, getReviews, createReview,
+  cancelOrder, completeOrder, getOrder, createOrder
+};
