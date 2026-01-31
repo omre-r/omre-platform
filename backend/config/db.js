@@ -320,7 +320,7 @@ class Reviews{
     }
     
     async getProductReviews(productid){
-        const query = `SELECT * FROM reviews WHERE productid = $1`;
+        const query = `SELECT * FROM reviews WHERE productid = $1 ORDER BY created DESC`;
         let reviews;
 
         try{
@@ -331,6 +331,35 @@ class Reviews{
             return null;
         }
         return {success: true, data: {reviews}}
-    }}
+    }
+
+    async getUserReviews(customerid){
+        const query = `SELECT * FROM reviews WHERE customerid = $1 ORDER BY created DESC`;
+        let reviews;
+
+        try{
+            const res = await pool.query(query, [customerid]);
+            reviews = res.rows;
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true, data: {reviews}}
+    }
+
+    async getReviews(){
+        const query = `SELECT * FROM reviews ORDER BY created DESC`;
+        let reviews;
+
+        try{
+            const res = await pool.query(query);
+            reviews = res.rows;
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true, data: {reviews}}
+    }
+}
     
 module.exports = {Users, Products, Reviews}
