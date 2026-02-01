@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt")
 
 const dotenv = require("dotenv");
-dotenv.config({path: "../.env"});
+dotenv.config();
 
 const DB_USERNAME = process.env.DB_USERNAME;
 const DB_PASSWORD = process.env.DB_PASSWORD;
@@ -59,7 +59,7 @@ async function createTables() {
             firstname VARCHAR(100),
             lastname VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
-            lastlogin DATETIME,
+            lastlogin TIMESTAMPTZ,
             role VARCHAR(10) 
         )
     `);
@@ -120,7 +120,7 @@ async function createTables() {
             created TIMESTAMPTZ DEFAULT NOW(),
             items JSONB,
             total DECIMAL(10, 2),
-            status VARCHAR(100) DEFAULT "ordered",
+            status VARCHAR(100) DEFAULT 'ordered',
             cancelreason VARCHAR(500)
         )
     `);
