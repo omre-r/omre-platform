@@ -1,0 +1,7 @@
+# Copy this file to terraform.tfvars and update the values
+# cp terraform.tfvars.example terraform.tfvars
+
+aws_region   = "us-east-1"
+project_name = "omre"
+db_password  = "CHANGE_ME_StrongPassword123!"  # CHANGE THIS - min 8 chars, include upper, lower, number, symbol
+admin_email  = "ayman@omrefragrances.com"
