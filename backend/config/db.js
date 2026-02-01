@@ -203,7 +203,7 @@ class Users{
 
         const query = `UPDATE users SET password = $1 WHERE id = $2`;
         try{
-            const hashedPass = bcrypt.hash(password, 10);
+            const hashedPass = await bcrypt.hash(password, 10);
             await pool.query(query, [hashedPass, id]);
         }catch(err){
             console.error(err);

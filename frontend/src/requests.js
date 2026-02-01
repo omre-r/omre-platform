@@ -45,11 +45,11 @@ async function getUsersReq() {
     return data.data.users;
 }
 
-async function createUserReq(userInfo) {
+async function createUserReq({email, password, firstname, lastname, role}){
     const response = await fetch(backendURL + `/users`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(userInfo)
+        body: JSON.stringify({email, password, firstname, lastname, role})
     });
     const data = await response.json();
     if (!data.success){
@@ -60,7 +60,7 @@ async function createUserReq(userInfo) {
 
 
 // products
-async function getProductReq(id) {
+async function getProductReq(id){
     const response = await fetch(backendURL + `/products/${id}`);
     const data = await response.json();
     if (!data.success){
@@ -69,11 +69,11 @@ async function getProductReq(id) {
     return data.data.product;
 }
 
-async function updateProductReq(id, newProductInfo) {
+async function updateProductReq(id, updatedFields){
     const response = await fetch(backendURL + `/products/${id}`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(newProductInfo)
+        body: JSON.stringify(updatedFields)
     });
     const data = await response.json();
     if (!data.success){
@@ -82,7 +82,7 @@ async function updateProductReq(id, newProductInfo) {
     return data;
 }
 
-async function deleteProductReq(id) {
+async function deleteProductReq(id){
     const response = await fetch(backendURL + `/products/${id}`, {
         method: "DELETE",
     });
@@ -93,7 +93,7 @@ async function deleteProductReq(id) {
     return data;
 }
 
-async function getActiveProductsReq() {
+async function getActiveProductsReq(){
     const response = await fetch(backendURL + `/products/active`);
     const data = await response.json();
     if (!data.success){
@@ -101,12 +101,18 @@ async function getActiveProductsReq() {
     }
     return data.data.products;
 }
-
-async function createProductReq(productInfo) {
+//images are a list of File objects
+async function createProductReq({type, name, variation, price, images, quantity, notes, isfeatured, ishidden}){
+    const normalFields = JSON.stringify({type, name, variation, price, quantity, notes, isfeatured, ishidden});
+    const fd = new FormData()
+    fd.append("normalFields", normalFields)
+    for (img of images){
+        fd.append("images", f)
+    }
     const response = await fetch(backendURL + `/products`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(productInfo)
+        body: fd
     });
     const data = await response.json();
     if (!data.success){
