@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt")
 
 const dotenv = require("dotenv");
-dotenv.config({path: "../.env"});
+dotenv.config();
 
 const DB_USERNAME = process.env.DB_USERNAME;
 const DB_PASSWORD = process.env.DB_PASSWORD;
@@ -59,7 +59,7 @@ async function createTables() {
             firstname VARCHAR(100),
             lastname VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
-            lastlogin DATETIME,
+            lastlogin TIMESTAMPTZ,
             role VARCHAR(10) 
         )
     `);
@@ -120,7 +120,7 @@ async function createTables() {
             created TIMESTAMPTZ DEFAULT NOW(),
             items JSONB,
             total DECIMAL(10, 2),
-            status VARCHAR(100) DEFAULT "ordered",
+            status VARCHAR(100) DEFAULT 'ordered',
             cancelreason VARCHAR(500)
         )
     `);
@@ -203,7 +203,7 @@ class Users{
 
         const query = `UPDATE users SET password = $1 WHERE id = $2`;
         try{
-            const hashedPass = bcrypt.hash(password, 10);
+            const hashedPass = await bcrypt.hash(password, 10);
             await pool.query(query, [hashedPass, id]);
         }catch(err){
             console.error(err);
@@ -430,10 +430,10 @@ class Orders{
         const {orderid, customerid, items, total} = options;
         const id = uuidv4();
 
-        let result;
-        const query = `INSERT INTO orders (id, orderid, customerid, items, total) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`;
+        let order;
+        const query = `INSERT INTO orders (id, orderid, customerid, items, total) VALUES ($1, $2, $3, $4, $5) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, orderid, customerid, items, total]);
+            order = await pool.query(query, [id, orderid, customerid, items, total]);
         }catch(err){
             console.error(err)
             return null
