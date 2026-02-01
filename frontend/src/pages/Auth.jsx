@@ -4,13 +4,14 @@ Explaining only necessary imports
 - useNavigate will let us redirect to other pages after finishing an action such as logging in
 - @aws-amplify/ui-react components to build out layout
 - aws-amplify/auth to handle authentication actions to sign up, confirm sign up, and sign in, they are used on form submit
+- 2/1 resendSignUpCode was added, if a user signs up but does not verify they will have to reenter sign up code when signing in for first time
 - useAuth from authContext, will call refreshAuth from authContext to refresh page after logging in updating ui
 */ 
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import { Card, View, Flex, Heading, Text, TextField, Button, ToggleButton, Link, Grid } from "@aws-amplify/ui-react";
-import { signUp, confirmSignUp, signIn} from "aws-amplify/auth";
+import { signUp, confirmSignUp, signIn, resendSignUpCode} from "aws-amplify/auth";
 import LuxuryBackground from "../assets/Luxury Background.png";
 import { useAuth } from "../context/AuthContext";
 
@@ -172,16 +173,41 @@ export default function Auth() {
             return;
         }
         try {
-            await signIn({
+            const result = await signIn({
                 username: email,
                 password: password, 
             });
+            // How to make conditional where if user is not verified they will have to resend verification and reconfirm
+            // What would this line of code look like? Have to do more research
+            // if (result) ... {
+            // setVerifyEmail(email);
+            // setAuthUI("verify");
+            // await handleResendCode;
+            // return;
+            // }
+
             await refreshAuth();
             navigate("/");
         }
         catch (error) {
             setAuthError(error?.message || "Verification failed.");
         }
+    }
+
+    // Handling verification if user tries to sign in when unverified -----------------------------------
+    async function handleResendCode(email) {
+        setAuthError("");
+        setAuthSuccess("");
+        try {
+            await resendSignUpCode({ 
+                username: email,  
+            });
+            setAuthSuccess("New verification code sent. Check your email.");
+        }
+        catch (error) {
+            setAuthError(error?.message || "Resend verification failed.");
+        }
+
     }
 
     return (
@@ -455,3 +481,8 @@ export default function Auth() {
 
 // Notes on future improvements:
 // TODO: Remove scent choice part and make it part of its own page
+
+// TODO: When signing up make sure that verification is done, can sign up, leave verification page and sign in. 
+// Made HandleResendCode helper, will be send to the specific email but need to figure out how conditonal
+// will look for HandleSignIn so we can see that this person is not verified and force them to verify
+// as well maybe on verify ui make a button to resend verification code. 
