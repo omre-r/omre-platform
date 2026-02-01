@@ -70,10 +70,19 @@ async function getProductReq(id){
 }
 
 async function updateProductReq(id, updatedFields){
+    const copy = {...updatedFields}
+    const fd = new FormData()
+    if (Object.hasOwn(copy, "images")){
+        for (let img of copy["images"]){
+            fd.append("images", img);
+        }
+        delete copy.images
+    }
+    fd.append("normalFields", JSON.stringify(copy));
+
     const response = await fetch(backendURL + `/products/${id}`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(updatedFields)
+        body: fd
     });
     const data = await response.json();
     if (!data.success){
@@ -101,17 +110,17 @@ async function getActiveProductsReq(){
     }
     return data.data.products;
 }
+
 //images are a list of File objects
 async function createProductReq({type, name, variation, price, images, quantity, notes, isfeatured, ishidden}){
     const normalFields = JSON.stringify({type, name, variation, price, quantity, notes, isfeatured, ishidden});
     const fd = new FormData()
     fd.append("normalFields", normalFields)
-    for (img of images){
-        fd.append("images", f)
+    for (let img of images){
+        fd.append("images", img)
     }
     const response = await fetch(backendURL + `/products`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
         body: fd
     });
     const data = await response.json();
@@ -147,14 +156,15 @@ async function getUserReviewsReq(customerid){
     if (!data.success){
         throw new Error(data.message || "req failed");
     }
-    return data.data.reviewsl
+    return data.data.reviews;
 }
 
-async function updateReviewReq(id, newReviewInfo){
+//as of now, can only update "responses"
+async function updateReviewReq(id, updatedFields){
     const response = await fetch(backendURL + `/reviews/${id}`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(newReviewInfo)
+        body: JSON.stringify(updatedFields)
     });
     const data = await response.json()
     if (!data.success){
@@ -163,11 +173,16 @@ async function updateReviewReq(id, newReviewInfo){
     return data
 }
 
-async function createReviewReq(reviewInfo){
+async function createReviewReq({customerid, productid, message, rating, images, responses}){
+    const normalFields = JSON.stringify({customerid, productid, message, rating, responses});
+    const fd = new FormData()
+    fd.append("normalFields", normalFields)
+    for (let img of images){
+        fd.append("images", img)
+    }
     const response = await fetch(backendURL + `/reviews`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(reviewInfo)
+        body: fd
     });
     const data = await response.json()
     if (!data.success){
@@ -214,9 +229,13 @@ async function getOrderReq(id){
     return data.data.order;
 }
 
-async function createOrderReq(){
-    const response = await fetch(backendURL + `/orders`);
-    const data = await response.json()
+async function createOrderReq({orderid, customerid, items, total}){
+    const response = await fetch(backendURL + `/orders`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({orderid, customerid, items, total})
+    });
+    const data = await response.json();
     if (!data.success){
         throw new Error(data.message || "req failed");
     }
