@@ -85,6 +85,17 @@ async function createUser(req, res){
   return res.json(result);
 }
 
+// path: DELETE /users/:id
+async function deleteUser(req, res) {
+  const {id} = req.params;
+  const result = await users.deleteUser(id);
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to delete user"});
+  }
+  return res.json(result)
+}
+
+
 
 
 //products
@@ -274,6 +285,7 @@ changePassword = handleError(changePassword);
 getUser = handleError(getUser);
 getUsers = handleError(getUsers);
 createUser = handleError(createUser);
+deleteUser = handleError(deleteUser);
 
 getProduct = handleError(getProduct);
 updateProduct = handleError(updateProduct);
@@ -297,7 +309,7 @@ createOrder = handleError(getReviews);
 
 module.exports = {
   getServerHTML,
-  validateLogin, changePassword, getUser, getUsers, createUser,
+  validateLogin, changePassword, getUser, getUsers, createUser, deleteUser,
   getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview,
   cancelOrder, completeOrder, getOrder, createOrder

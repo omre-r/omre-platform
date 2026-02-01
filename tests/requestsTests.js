@@ -1,5 +1,5 @@
 const   {
-    validateLoginReq, changePasswordReq, getUserReq, getUsersReq, createUserReq,
+    validateLoginReq, changePasswordReq, getUserReq, getUsersReq, createUserReq, deleteUserReq,
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, 
     cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq
@@ -95,6 +95,15 @@ async function testUserFlow(){
     retrievedUser4 = await validateLoginReq(createdUser4.id, createdUser4.email, "8")
     console.log("Retrieved users (new login): ", retrievedUser1, retrievedUser2, retrievedUser3, retrievedUser4)
 
+    //delete users 
+    await deleteUserReq(createdUser1.id);
+    await deleteUserReq(createdUser2.id);
+    await deleteUserReq(createdUser3.id);
+    await deleteUserReq(createdUser4.id);
+    console.log("Deleting users");
+
+    //get all users
+    console.log("Getting all users: ", await getUsersReq())
 }
 
 
