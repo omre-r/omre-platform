@@ -1,8 +1,14 @@
 import { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { Card, View, Flex, Link, Text, TextField, Button, Tabs } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background.png";
+
+import UsersPanel from "../AdminComponents/UsersPanel";
+import ProductsPanel from "../AdminComponents/ProductsPanel";
+//import OrdersPanel from "../AdminComponents/OrdersPanel";
 
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -25,13 +31,17 @@ export default function AdminDashboard() {
     const productsMode = activeTab === "products";
     const ordersMode = activeTab === "orders";
 
-    const [usersArray, setUsersArray] = useState([]);
-    const [loadingUsers, setLoadingUsers] = useState("");
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [loadingSelectedUser, setLoadingSelectedUser] = useState("");
 
-    const [authError, setAuthError] = useState("");
-    const [authSuccess, setAuthSuccess] = useState("");
+    // Checks to make sure admin dash cannot be reached from searchbar ------------------------------------
+    // Will navigate back to home page or sign in if not admin
+    const { loadingAuth, isAuthenticated, isAdmin } = useAuth();
+    const navigate = useNavigate();
+    if (!isAdmin) {
+        navigate("/");
+    }
+    if (!isAuthenticated) {
+        navigate("/Auth");
+    }
 
     return (
         <>
@@ -111,24 +121,11 @@ export default function AdminDashboard() {
                                 border="1px solid rgba(151, 33, 0, 0.72)"
                                 borderRadius="8px"
                             >   
-                            {usersMode && (
-                                <Text 
-                                    color="#000000" 
-                                    style={luxuryBodyStyle}
-                                    marginTop="-1.2rem">
-                                    Users panel
-                                </Text>
-                            )}
+                            {usersMode && <UsersPanel />}
 
-                            {productsMode && (
-                                <Text 
-                                    color="#000000" 
-                                    style={luxuryBodyStyle}
-                                    marginTop="-1.2rem">
-                                    Products panel
-                                </Text>
-                            )}
+                            {productsMode && <ProductsPanel />}
 
+                            {/* Come back to this one later */}
                             {ordersMode && (
                                 <Text 
                                     color="#000000" 
