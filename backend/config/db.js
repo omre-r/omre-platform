@@ -187,7 +187,7 @@ class Users{
             if (!user) return null;
 
             const matches = await bcrypt.compare(password, user.password)
-            if (!matches) return {success: false};
+            if (!matches) return {success: true};
 
             await pool.query(updateLoginQuery, [user.id]);
         }catch(err){

@@ -73,5 +73,29 @@ async function testUserFlow(){
     retrievedUser3 = await validateLoginReq(createdUser3.id, createdUser3.email, user3.password)
     retrievedUser4 = await validateLoginReq(createdUser4.id, createdUser4.email, user4.password)
     console.log("Retrieved users (correct login): ", retrievedUser1, retrievedUser2, retrievedUser3, retrievedUser4)
+
+    //All users change passwords
+    await changePasswordReq(createdUser1.id, "8");
+    await changePasswordReq(createdUser1.id, "8");
+    await changePasswordReq(createdUser1.id, "8");
+    await changePasswordReq(createdUser1.id, "8");
+    console.log("Changing password");
+
+    //All users login AFTER changing passwords
+    retrievedUser1 = await validateLoginReq(createdUser1.id, createdUser1.email, user1.password)
+    retrievedUser2 = await validateLoginReq(createdUser2.id, createdUser2.email, user2.password)
+    retrievedUser3 = await validateLoginReq(createdUser3.id, createdUser3.email, user3.password)
+    retrievedUser4 = await validateLoginReq(createdUser4.id, createdUser4.email, user4.password)
+    console.log("Retrieved users (old login): ", retrievedUser1, retrievedUser2, retrievedUser3, retrievedUser4)
+
+    //All users login with changed passwords
+    retrievedUser1 = await validateLoginReq(createdUser1.id, createdUser1.email, "8")
+    retrievedUser2 = await validateLoginReq(createdUser2.id, createdUser2.email, "8")
+    retrievedUser3 = await validateLoginReq(createdUser3.id, createdUser3.email, "8")
+    retrievedUser4 = await validateLoginReq(createdUser4.id, createdUser4.email, "8")
+    console.log("Retrieved users (new login): ", retrievedUser1, retrievedUser2, retrievedUser3, retrievedUser4)
+
 }
+
+
 testUserFlow()
