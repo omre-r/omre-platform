@@ -1,5 +1,17 @@
 const backendURL = "http://localhost:3000"
 
+function handleError(fn){
+  return async (...args) => {
+    try{
+      return await fn(...args)
+    }catch(err){
+      console.error(err)
+      return null
+    }
+  }
+}
+
+
 // users
 async function validateLoginReq(id, email, password){
     const response = await fetch(backendURL + `/users/login/${id}`, {
@@ -240,4 +252,36 @@ async function createOrderReq({orderid, customerid, items, total}){
         throw new Error(data.message || "req failed");
     }
     return data.data.order;
+}
+
+validateLoginReq = handleError(validateLoginReq);
+changePasswordReq = handleError(changePasswordReq);
+getUserReq = handleError(getUsersReq);
+getUsersReq = handleError(getUsersReq);
+createUserReq = handleError(createUserReq);
+
+getProductReq = handleError(getProductReq);
+updateProductReq = handleError(updateProductReq);
+deleteProductReq = handleError(deleteProductReq);
+getActiveProductsReq = handleError(getActiveProductsReq);
+createProductReq = handleError(createProductReq);
+getProductsReq = handleError(getProductsReq);
+
+getProductReviewsReq = handleError(getProductReviewsReq);
+getUserReviewsReq = handleError(getUserReviewsReq);
+updateReviewReq = handleError(updateReviewReq);
+createReviewReq = handleError(createReviewReq);
+getReviewsReq = handleError(getReviewsReq);
+
+cancelOrderReq = handleError(cancelOrderReq);
+completeOrderReq = handleError(completeOrderReq);
+getOrderReq = handleError(getOrderReq);
+createOrderReq = handleError(createOrderReq)
+
+
+export {
+    validateLoginReq, changePasswordReq, getUserReq, getUsersReq, createUserReq,
+    getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
+    getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, 
+    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq
 }
