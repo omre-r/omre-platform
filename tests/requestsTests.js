@@ -56,10 +56,6 @@ async function testUserFlow(){
     //get user 2
     console.log("Getting user 2", await getUserReq(createdUser2.id))
 
-    // //delete user 2
-    // await (createdUser2.id)
-    // console.log("Deleting user 2")
-
     // All users login with wrong credentials
     let retrievedUser1 = await validateLoginReq(createdUser1.id, createdUser1.email, "no")
     let retrievedUser2 = await validateLoginReq(createdUser2.id, createdUser2.email, "dewjrdncw")
@@ -106,7 +102,59 @@ async function testUserFlow(){
     console.log("Getting all users: ", await getUsersReq())
 }
 
+async function testProductFlow(){
+    //async function createProductReq({type, name, variation, price, images, quantity, notes, isfeatured, ishidden}){
+    const product1 = {
+        type: "mens_cologne",
+        name: "Cinnamon Cologne",
+        variation: "30ml spray",
+        price: 35.34,
+        images: [new Blob([]), new Blob([]), new Blob([])],
+        quantity: 20,
+        notes: {
+            top: ["Cinammon"],
+            heart: ["Cherries"],
+            base: []
+        },
+        isfeatured: true,
+        ishidden: false
+    }
+    const product2 = {
+        type: "womens_perfume",
+        name: "Vanilla Perfume",
+        variation: "30ml spray",
+        price: 99.99,
+        images: [],
+        quantity: 50,
+        notes: {
+            top: ["Vanilla", "Raspberry"],
+            heart: ["Graphe", "Blueberry"],
+            base: []
+        },
+        isfeatured: true,
+        ishidden: false
+    }
+    const product3 = {
+        type: "unisex_fragrance",
+        name: "Popular fragrance inspired by someone",
+        variation: "5ml mini",
+        price: 25.25,
+        images: [new Blob([])],
+        quantity: 5,
+        notes: {
+            top: ["Gold"],
+            heart: ["Ice cream"],
+            base: []
+        },
+        isfeatured: true,
+        ishidden: true
+    }
+
+    console.log("Get all products: ", await getProductsReq());
+    console.log("Get active products: ", await getActiveProductsReq());
+
+}
 
 
-
-testUserFlow()
+// testUserFlow()
+testProductFlow()
