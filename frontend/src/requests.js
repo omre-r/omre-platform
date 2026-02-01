@@ -57,11 +57,11 @@ async function getUsersReq() {
     return data.data.users;
 }
 
-async function createUserReq({email, password, firstname, lastname, role}){
+async function createUserReq({email, password, firstname, lastname, role, preferrednotes}){
     const response = await fetch(backendURL + `/users`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({email, password, firstname, lastname, role})
+        body: JSON.stringify({email, password, firstname, lastname, role, preferrednotes})
     });
     const data = await response.json();
     if (!data.success){

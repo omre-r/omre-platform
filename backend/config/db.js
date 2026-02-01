@@ -60,7 +60,8 @@ async function createTables() {
             lastname VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
             lastlogin TIMESTAMPTZ,
-            role VARCHAR(10) 
+            role VARCHAR(10),
+            preferrednotes JSONB
         )
     `);
     /* 
@@ -133,14 +134,14 @@ class Users{
     }
 
     async createUser(options){
-        const {email, password, firstname, lastname, role} = options;
+        const {email, password, firstname, lastname, role, preferrednotes} = options;
         const id = uuidv4();
         const hashedPass = await bcrypt.hash(password, 10);
 
         let result;
-        const query = `INSERT INTO users (id, email, password, firstname, lastname, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, password, firstname, lastname, role;`;
+        const query = `INSERT INTO users (id, email, password, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, firstname, lastname, role, preferrednotes, created, lastlogin;`;
         try{
-            result = await pool.query(query, [id, email, hashedPass, firstname, lastname, role]);
+            result = await pool.query(query, [id, email, hashedPass, firstname, lastname, role, JSON.stringify(preferrednotes)]);
         }catch(err){
             console.error(err)
             return null
@@ -161,7 +162,7 @@ class Users{
     
     //rate limiting (ex: max 200) not needed yet
     async getUsers(){
-        const query = `SELECT id, email, firstname, lastname, role, created FROM users`
+        const query = `SELECT id, email, firstname, lastname, role, preferrednotes, created, lastlogin FROM users`
         let users;
 
         try{
@@ -176,7 +177,7 @@ class Users{
 
     async getUser(id){
 
-        const query = `SELECT id, email, firstname, lastname, role, created FROM users WHERE id = $1`
+        const query = `SELECT id, email, firstname, lastname, role, preferrednotes, created, lastlogin FROM users WHERE id = $1`
         let user;
 
         try{
@@ -239,9 +240,9 @@ class Products{
         const id = uuidv4();
 
         let result;
-        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;`;
+        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, type, name, variation, price, images, quantity, notes, isfeatured, ishidden]);
+            result = await pool.query(query, [id, type, name, variation, price, JSON.stringify(images), quantity, JSON.stringify(notes), isfeatured, ishidden]);
         }catch(err){
             console.error(err)
             return null

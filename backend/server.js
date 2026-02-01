@@ -32,11 +32,11 @@ app.post("/users", controllers.createUser);
 
 
 // products
+app.get("/products/active", controllers.getActiveProducts);
+
 app.get("/products/:id", controllers.getProduct)
 app.put("/products/:id", upload.array("images", 10), controllers.updateProduct)
 app.delete("/products/:id", controllers.deleteProduct)
-
-app.get("/products/active", controllers.getActiveProducts);
 
 app.post("/products", upload.array("images", 10), controllers.createProduct);
 app.get("/products", controllers.getProducts);

@@ -15,28 +15,32 @@ async function testUserFlow(){
         password: "crzy8123",
         firstname: "murad",
         lastname: "saleh",
-        role: "user"
+        role: "user",
+        preferrednotes: ["ice cream", "vanilla"]
     }
     const user2 = {
         email: "ahadkidwai45@gmail.com",
         password: "123",
         firstname: "ahad",
         lastname: "kidwai",
-        role: "user"
+        role: "user",
+        preferrednotes: ["ice cream", "vanilla"]
     }
     const user3 = {
         email: "aymannazir28@gmail.com",
         password: "321",
         firstname: "ayman",
         lastname: "nazir",
-        role: "user"
+        role: "user",
+        preferrednotes: ["ice cream", "vanilla"]
     }
     const user4 = {
         email: "zanechriste88@gmail.com",
         password: "helloworld",
         firstname: "zane",
         lastname: "christe",
-        role: "user"
+        role: "user",
+        preferrednotes: ["ice cream", "vanilla"]
     }
 
     let allUsers
@@ -53,7 +57,7 @@ async function testUserFlow(){
     //get all users
     console.log("Getting all users: ", await getUsersReq())
 
-    //get user 2
+    //get a single user
     console.log("Getting user 2", await getUserReq(createdUser2.id))
 
     // All users login with wrong credentials
@@ -149,12 +153,40 @@ async function testProductFlow(){
         isfeatured: true,
         ishidden: true
     }
-
+    // checks
     console.log("Get all products: ", await getProductsReq());
     console.log("Get active products: ", await getActiveProductsReq());
 
+    //create 4 products
+    const createdProduct1 =  await createProductReq(product1);
+    const createdProduct2 =  await createProductReq(product2);
+    const createdProduct3 =  await createProductReq(product3);
+    console.log("Created products", createdProduct1, createdProduct2, createdProduct3)
+
+    //checks
+    console.log("Get all products: ", await getProductsReq());
+    console.log("Get active products: ", await getActiveProductsReq());
+
+    // get a single product
+    console.log("Get product 2", await getProductReq(createdProduct1.id))
+
+    //delete products
+    console.log("Deleting products");
+    await deleteProductReq(createdProduct1.id);
+    await deleteProductReq(createdProduct2.id);
+    await deleteProductReq(createdProduct3.id);
+
+    //checks
+    console.log("Get all products: ", await getProductsReq());
+    console.log("Get active products: ", await getActiveProductsReq());
 }
 
+
+// async function testFlows() {
+//     await testUserFlow()
+//     await testProductFlow()
+// }
+// testFlows()
 
 // testUserFlow()
 testProductFlow()
