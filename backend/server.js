@@ -31,7 +31,7 @@ app.post("/users", controllers.createUser);
 
 // products
 app.get("/products/:id", controllers.getProduct)
-app.put("/products/:id", controllers.createProduct)
+app.put("/products/:id", controllers.updateProduct)
 app.delete("/products/:id", controllers.deleteProduct)
 
 app.get("/products/active", controllers.getActiveProducts);
