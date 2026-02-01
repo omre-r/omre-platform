@@ -55,6 +55,71 @@ async function createUserReq(userInfo) {
     if (!data.success){
         throw new Error(data.message || "req failed");
     }
-    return data.data.user
+    return data.data.user;
 }
 
+
+// products
+async function getProductReq(id) {
+    const response = await fetch(backendURL + `/products/${id}`);
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.product;
+}
+
+async function updateProductReq(id, newProductInfo) {
+    const response = await fetch(backendURL + `/products/${id}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(newProductInfo)
+    });
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
+
+async function deleteProductReq(id) {
+    const response = await fetch(backendURL + `/products/${id}`, {
+        method: "DELETE",
+    });
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
+
+async function getActiveProductsReq() {
+    const response = await fetch(backendURL + `/products/active`);
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.products;
+}
+
+async function createProductReq(productInfo) {
+    const response = await fetch(backendURL + `/products`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(productInfo)
+    });
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.product;
+}
+
+async function getProductsReq() {
+    const response = await fetch(backendURL + `/products`);
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.products;
+}

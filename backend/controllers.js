@@ -169,7 +169,7 @@ async function getUserReviews(req, res) {
 // path: PUT /reviews/:id
 async function updateReview(req, res) {
   const {productid} = req.params;
-  const result = await reviews.updateProduct(productid, req.body);
+  const result = await reviews.updateReview(productid, req.body);
   if (!result){
     res.status(500).json({success: false, message: "Failed to update product review"});
   }
