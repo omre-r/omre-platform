@@ -135,7 +135,7 @@ class Users{
     async createUser(options){
         const {email, password, firstname, lastname, role} = options;
         const id = uuidv4();
-        const hashedPass = bcrypt.hash(password, 10);
+        const hashedPass = await bcrypt.hash(password, 10);
 
         let result;
         const query = `INSERT INTO users (id, email, password, firstname, lastname, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, password, firstname, lastname, role;`;
@@ -149,8 +149,8 @@ class Users{
     }
     
     //rate limiting (ex: max 200) not needed yet
-    async getAllUsers(){
-        const query = `SELECT (id, email, firstname, lastname, role, created) FROM users`
+    async getUsers(){
+        const query = `SELECT id, email, firstname, lastname, role, created FROM users`
         let users;
 
         try{
@@ -164,7 +164,8 @@ class Users{
     }
 
     async getUser(id){
-        const query = `SELECT (id, email, firstname, lastname, role, created) FROM users WHERE id = $1`
+
+        const query = `SELECT id, email, firstname, lastname, role, created FROM users WHERE id = $1`
         let user;
 
         try{
@@ -177,30 +178,27 @@ class Users{
         return {success: true, data: {user}}
     }
 
-    async validateLogin(options){
-        const {email, password} = options;
-        
+    async validateLogin(email, password){        
         let user;
-        const checkPassQuery = `SELECT password FROM users WHERE email = $1 RETURNING id, email, firstname, lastname, role`;
-        const updateLoginQuery = `UPDATE users SET lastlogin = NOW() WHERE id = $1`
+        const checkPassQuery = `SELECT * FROM users WHERE email = $1`;
+        const updateLoginQuery = `UPDATE users SET lastlogin = NOW() WHERE id = $1`;
         try{
             user = (await pool.query(checkPassQuery, [email]))?.rows?.[0];
             if (!user) return null;
 
-            const matches = await bcrypt.compare(password, user["password"])
+            const matches = await bcrypt.compare(password, user.password)
             if (!matches) return {success: false};
 
-            await pool.query(updateLoginQuery, [user["id"]]);
+            await pool.query(updateLoginQuery, [user.id]);
         }catch(err){
             console.error(err);
             return null;
         }
+        delete user.password
         return {success: true, data: {user}};
     }
 
-    async changePassword(options){
-        const {id, password} = options;
-
+    async changePassword(id, password){
         const query = `UPDATE users SET password = $1 WHERE id = $2`;
         try{
             const hashedPass = await bcrypt.hash(password, 10);

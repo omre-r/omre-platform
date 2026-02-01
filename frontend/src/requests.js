@@ -1,4 +1,4 @@
-const backendURL = "http://localhost:3000"
+const backendURL = "http://localhost:5001"
 
 function handleError(fn){
   return async (...args) => {
@@ -256,7 +256,7 @@ async function createOrderReq({orderid, customerid, items, total}){
 
 validateLoginReq = handleError(validateLoginReq);
 changePasswordReq = handleError(changePasswordReq);
-getUserReq = handleError(getUsersReq);
+getUserReq = handleError(getUserReq);
 getUsersReq = handleError(getUsersReq);
 createUserReq = handleError(createUserReq);
 

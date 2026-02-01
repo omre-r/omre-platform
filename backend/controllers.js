@@ -6,6 +6,8 @@ const products = Products.getProductsInstance()
 const reviews = Reviews.getReviewsInstance()
 const orders = Orders.getOrdersInstance()
 
+console.log(users.getUser)
+
 const randomUrls = [
   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTX4EbLlkmCJhmk4LI_PxiTc7OrHEkFE_wjeA&s",
   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvJZONCNGXEDHPopTA9pSMayySwNu9c8qfdA&s",
@@ -36,8 +38,8 @@ function getServerHTML(req, res){
 
 // path: PUT /users/login/:id
 async function validateLogin(req, res) {
-  const options = {email, password};
-  const result = await users.validateLogin(options);
+  const {email, password} = req.body;
+  const result = await users.validateLogin(email, password);
   if (!result){
     return res.status(500).json({success: false,  message: "Failed to validate login"});
   }    
@@ -48,9 +50,7 @@ async function validateLogin(req, res) {
 async function changePassword(req, res){
   const {id} = req.params;
   const {password} = req.body;
-
-  const options = {id, password};
-  const result = await users.changePassword(options);
+  const result = await users.changePassword(id, password);
   if (!result){
     return res.status(500).json({success: false,  message: "Failed to change password"});
   }    
@@ -64,7 +64,7 @@ async function getUser(req, res){
   if (!result){
     return res.status(500).json({success: false, message: "Failed to get user"});
   }
-  return res.json(res);
+  return res.json(result);
 }
 
 // path: GET /users
@@ -73,7 +73,7 @@ async function getUsers(req, res){
   if (!result){
     return res.status(500).json({success: false, message: "Failed to get users"});
   }
-  return res.json(res);
+  return res.json(result);
 }
 
 // path: POST /users
@@ -82,7 +82,7 @@ async function createUser(req, res){
   if (!result){
     return res.status(500).json({success: false, message: "Failed to create user"});
   }
-  return res.json(res);
+  return res.json(result);
 }
 
 
@@ -96,7 +96,7 @@ async function getProduct(req, res) {
   if (!result){
     return res.status(500).json({success: false, message: "Failed to get product"});
   }
-  result.json(result)
+  return res.json(result)
 }
 
 // path: PUT /products/:id
@@ -109,7 +109,7 @@ async function updateProduct(req, res) {
   if (!result){
     return res.status(500).json({success: false, message: "Failed to update product"});
   }
-  result.json(result)
+  return res.json(result)
 }
 
 // path: DELETE /products/:id
@@ -119,7 +119,7 @@ async function deleteProduct(req, res) {
   if (!result){
     return res.status(500).json({success: false, message: "Failed to delete product"});
   }
-  result.json(result)
+  return res.json(result)
 }
 
 // path: GET /products/active
@@ -164,7 +164,7 @@ async function getProductReviews(req, res) {
   if (!result){
     res.status(500).json({success: false, message: "Failed to get product reviews"});
   }
-  res.json(result);
+  return res.json(result);
 }
 
 // path: GET /reviews/user/:customerid
@@ -174,7 +174,7 @@ async function getUserReviews(req, res) {
   if (!result){
     res.status(500).json({success: false, message: "Failed to get user's reviews"});
   }
-  res.json(result);
+  return res.json(result);
 }
 
 // path: PUT /reviews/:id
@@ -184,7 +184,7 @@ async function updateReview(req, res) {
   if (!result){
     res.status(500).json({success: false, message: "Failed to update product review"});
   }
-  res.json(result);
+  return res.json(result);
 }
 
 // path: GET /reviews
@@ -193,7 +193,7 @@ async function getReviews(req, res) {
   if (!result){
     res.status(500).json({success: false, message: "Failed to get reviews"});
   }
-  res.json(result);
+  return res.json(result);
 }
 
 //TODO: images need special handling
@@ -207,7 +207,7 @@ async function createReview(req, res) {
   if (!result){
     res.status(500).json({success: false, message: "Failed to create review"});
   }
-  res.json(result);
+  return res.json(result);
 }
 
 
