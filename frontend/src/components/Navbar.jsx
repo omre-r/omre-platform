@@ -65,8 +65,7 @@ const Navbar = () => {
           </Button>
         )}
 
-         {!loadingAuth && isAuthenticated && isAdmin && (  
-        // {!loadingAuth && isAuthenticated && ( 
+        {!loadingAuth && isAuthenticated && isAdmin && (  
           <Link to="/AdminDashboard" className="nav-item">ADMIN DASHBOARD</Link>
         )}
         
