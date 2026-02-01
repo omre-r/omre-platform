@@ -179,3 +179,40 @@ async function getReviewsReq(){
     return data.data.reviews;
 }
 
+
+// orders
+async function cancelOrderReq(id) {
+    const response = await fetch(backendURL + `/orders/cancel/${id}`);
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
+
+async function completeOrderReq(id) {
+    const response = await fetch(backendURL + `/orders/complete/${id}`);
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
+
+async function getOrderReq(id){
+    const response = await fetch(backendURL + `/orders/${id}`);
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.order;
+}
+
+async function createOrderReq(){
+    const response = await fetch(backendURL + `/orders`);
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.order;
+}
