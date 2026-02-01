@@ -123,3 +123,59 @@ async function getProductsReq() {
     }
     return data.data.products;
 }
+
+
+// reviews
+async function getProductReviewsReq(productid){
+    const response = await fetch(backendURL + `/reviews/product/${productid}`);
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.reviews;
+}
+
+async function getUserReviewsReq(customerid){
+    const response = await fetch(backendURL + `/reviews/product/${customerid}`);
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.reviewsl
+}
+
+async function updateReviewReq(id, newReviewInfo){
+    const response = await fetch(backendURL + `/reviews/${id}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(newReviewInfo)
+    });
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data
+}
+
+async function createReviewReq(reviewInfo){
+    const response = await fetch(backendURL + `/reviews`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(reviewInfo)
+    });
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data
+}
+
+async function getReviewsReq(){
+    const response = await fetch(backendURL + `/reviews`);
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.reviews;
+}
+
