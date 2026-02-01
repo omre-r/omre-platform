@@ -76,10 +76,10 @@ async function testUserFlow(){
 
     //All users change passwords
     await changePasswordReq(createdUser1.id, "8");
-    await changePasswordReq(createdUser1.id, "8");
-    await changePasswordReq(createdUser1.id, "8");
-    await changePasswordReq(createdUser1.id, "8");
-    console.log("Changing password");
+    await changePasswordReq(createdUser2.id, "8");
+    await changePasswordReq(createdUser3.id, "8");
+    await changePasswordReq(createdUser4.id, "8");
+    console.log("Changing passwords");
 
     //All users login AFTER changing passwords
     retrievedUser1 = await validateLoginReq(createdUser1.id, createdUser1.email, user1.password)
@@ -96,6 +96,8 @@ async function testUserFlow(){
     console.log("Retrieved users (new login): ", retrievedUser1, retrievedUser2, retrievedUser3, retrievedUser4)
 
 }
+
+
 
 
 testUserFlow()
