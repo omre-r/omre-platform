@@ -6,6 +6,12 @@ const products = Products.getProductsInstance()
 const reviews = Reviews.getReviewsInstance()
 const orders = Orders.getOrdersInstance()
 
+const randomUrls = [
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTX4EbLlkmCJhmk4LI_PxiTc7OrHEkFE_wjeA&s",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvJZONCNGXEDHPopTA9pSMayySwNu9c8qfdA&s",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsgLo9vC_jTky9f4O_iksW-Uq2Yz5OP9aaog&s"
+]
+
 function handleError(fn){
   return async (...args) => {
     try{
@@ -96,7 +102,10 @@ async function getProduct(req, res) {
 // path: PUT /products/:id
 async function updateProduct(req, res) {
   const {id} = req.params;
-  const result = await products.updateProduct(id, req.body);
+  const normalFields = JSON.parse(req.body.normalFields)
+  const images = req.files.map(() => randomUrls[Math.floor(Math.random()*3)]);
+
+  const result = await products.updateProduct(id, {...normalFields, images});
   if (!result){
     return res.status(500).json({success: false, message: "Failed to update product"});
   }
@@ -125,8 +134,10 @@ async function getActiveProducts(req, res) {
 // path: POST /products
 async function createProduct(req, res) {
   //TODO: make images S3 urls
+  const normalFields = JSON.parse(req.body.normalFields)
+  const images = req.files.map(() => randomUrls[Math.floor(Math.random()*3)]);
 
-  const result = await products.createProduct(req.body);
+  const result = await products.createProduct({...normalFields, images});
   if (!result){
     return res.status(500).json({success: false, message: "Failed to create product"});
   }
@@ -189,7 +200,10 @@ async function getReviews(req, res) {
 // path: POST /reviews
 async function createReview(req, res) {
   //TODO: make images S3 urls
-  const result = await reviews.createReview(req.body);
+  const normalFields = JSON.parse(req.body.normalFields)
+  const images = req.files.map(() => randomUrls[Math.floor(Math.random()*3)]);
+
+  const result = await reviews.createReview({...normalFields, images});
   if (!result){
     res.status(500).json({success: false, message: "Failed to create review"});
   }

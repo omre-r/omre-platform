@@ -430,10 +430,10 @@ class Orders{
         const {orderid, customerid, items, total} = options;
         const id = uuidv4();
 
-        let result;
-        const query = `INSERT INTO orders (id, orderid, customerid, items, total) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`;
+        let order;
+        const query = `INSERT INTO orders (id, orderid, customerid, items, total) VALUES ($1, $2, $3, $4, $5) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, orderid, customerid, items, total]);
+            order = await pool.query(query, [id, orderid, customerid, items, total]);
         }catch(err){
             console.error(err)
             return null
