@@ -147,6 +147,17 @@ class Users{
         }
         return {success: true, data: {user: result.rows?.[0]}}
     }
+
+    async deleteUser(id){
+        const query = `DELETE FROM users WHERE id = $1`
+        try{
+            await pool.query(query, [id]);
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true}
+    }
     
     //rate limiting (ex: max 200) not needed yet
     async getUsers(){

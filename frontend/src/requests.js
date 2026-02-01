@@ -70,6 +70,16 @@ async function createUserReq({email, password, firstname, lastname, role}){
     return data.data.user;
 }
 
+async function deleteUserReq(id){
+    const response = await fetch(backendURL + `/users/${id}`, {
+        method: "DELETE",
+    });
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
 
 // products
 async function getProductReq(id){
@@ -259,6 +269,7 @@ changePasswordReq = handleError(changePasswordReq);
 getUserReq = handleError(getUserReq);
 getUsersReq = handleError(getUsersReq);
 createUserReq = handleError(createUserReq);
+deleteUserReq = handleError(deleteUserReq);
 
 getProductReq = handleError(getProductReq);
 updateProductReq = handleError(updateProductReq);
@@ -280,7 +291,7 @@ createOrderReq = handleError(createOrderReq)
 
 
 export {
-    validateLoginReq, changePasswordReq, getUserReq, getUsersReq, createUserReq,
+    validateLoginReq, changePasswordReq, getUserReq, getUsersReq, createUserReq, deleteUserReq,
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, 
     cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq
