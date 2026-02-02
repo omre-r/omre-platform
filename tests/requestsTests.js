@@ -5,9 +5,6 @@ const   {
     cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq
 } = require("../frontend/src/requests.js")
 
-
-// Testing a user flow
-
 async function testUserFlow(){
     //email, password, firstname, lastname, role
     const user1 = {
@@ -283,13 +280,62 @@ async function testReviewsFlow() {
     await deleteProductReq(product.id);
 }
 
+async function testOrdersFlow() {
+    const user =  await createUserReq({
+        email: "salehm0529@gmail.com",
+        password: "crzy8123",
+        firstname: "murad",
+        lastname: "saleh",
+        role: "user",
+        preferrednotes: ["ice cream", "vanilla"]
+    });
 
-// async function testFlows() {
-//     await testUserFlow()
-//     await testProductFlow()
-// }
-// testFlows()
+    const product =  await createProductReq({
+        type: "mens_cologne",
+        name: "Cinnamon Cologne",
+        variation: "30ml spray",
+        price: 35.34,
+        images: [new Blob([]), new Blob([]), new Blob([])],
+        quantity: 20,
+        notes: {
+            top: ["Cinammon"],
+            heart: ["Cherries"],
+            base: []
+        },
+        isfeatured: true,
+        ishidden: false
+    });
+    const order = {
+        customerid: user.id,
+        items: [{productid: product.id, quantity: 3}],
+        total: 33.75
+    }
+    const createdOrder = await createOrderReq(order);
+    console.log("Created order", createdOrder);
 
-// testUserFlow()
-// testProductFlow()
-testReviewsFlow()
+    console.log("Get order", await getOrderReq(createdOrder.id))
+
+    console.log("Mark order completed")
+    await completeOrderReq(createdOrder.id)
+
+    console.log("Get order", await getOrderReq(createdOrder.id))
+
+    console.log("Mark order canceled")
+    await cancelOrderReq(createdOrder.id, "I want to buy something else")
+
+    console.log("Get order", await getOrderReq(createdOrder.id))
+
+    console.log("Deleted orders");
+    await deleteOrderReq(createdOrder.id);
+
+    console.log("Get order", await getOrderReq(createdOrder.id))    
+}
+
+async function testFlows() {
+    await testUserFlow()
+    await testProductFlow()
+    await testReviewsFlow()
+    await testOrdersFlow()
+}
+
+testFlows()

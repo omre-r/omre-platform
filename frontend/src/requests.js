@@ -235,8 +235,12 @@ async function deleteReviewReq(id){
 }
 
 // orders
-async function cancelOrderReq(id) {
-    const response = await fetch(backendURL + `/orders/cancel/${id}`);
+async function cancelOrderReq(id, cancelreason) {
+    const response = await fetch(backendURL + `/orders/cancel/${id}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({cancelreason})
+    });
     const data = await response.json()
     if (!data.success){
         throw new Error(data.message || "req failed");
@@ -245,7 +249,9 @@ async function cancelOrderReq(id) {
 }
 
 async function completeOrderReq(id) {
-    const response = await fetch(backendURL + `/orders/complete/${id}`);
+    const response = await fetch(backendURL + `/orders/complete/${id}`, {
+        method: "PUT",
+    });
     const data = await response.json()
     if (!data.success){
         throw new Error(data.message || "req failed");
@@ -262,11 +268,11 @@ async function getOrderReq(id){
     return data.data.order;
 }
 
-async function createOrderReq({orderid, customerid, items, total}){
+async function createOrderReq({customerid, items, total}){
     const response = await fetch(backendURL + `/orders`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({orderid, customerid, items, total})
+        body: JSON.stringify({customerid, items, total})
     });
     const data = await response.json();
     if (!data.success){

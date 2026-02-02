@@ -116,7 +116,6 @@ async function createTables() {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS orders(
             id VARCHAR(100) PRIMARY KEY,
-            orderid VARCHAR(100),
             customerid VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
             items JSONB,
@@ -447,18 +446,18 @@ class Orders{
     }
 
     async createOrder(options){
-        const {orderid, customerid, items, total} = options;
+        const {customerid, items, total} = options;
         const id = uuidv4();
 
         let order;
-        const query = `INSERT INTO orders (id, orderid, customerid, items, total) VALUES ($1, $2, $3, $4, $5) RETURNING *;`;
+        const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
         try{
-            order = await pool.query(query, [id, orderid, customerid, items, total]);
+            order = await pool.query(query, [id, customerid, JSON.stringify(items), total]);
         }catch(err){
             console.error(err)
             return null
         }
-        return {success: true, data: {order: result.rows?.[0]}}
+        return {success: true, data: {order: order.rows?.[0]}}
     }
 
     async deleteOrder(id){
@@ -473,9 +472,9 @@ class Orders{
     }
 
     async cancelOrder(id, cancelreason){
-        const query = `UPDATE orders SET status = "canceled", cancelreason = $1 WHERE id = $2`;
+        const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2`;
         try{
-            await pool.query(query, [id, cancelreason]);
+            await pool.query(query, [cancelreason, id]);
         }catch(err){
             console.error(err)
             return null
@@ -483,7 +482,7 @@ class Orders{
         return {success: true}
     }
     async completeOrder(id){
-        const query = `UPDATE orders SET status = "complete" WHERE id = $1`;
+        const query = `UPDATE orders SET status = 'complete' WHERE id = $1`;
         try{
             await pool.query(query, [id]);
         }catch(err){
