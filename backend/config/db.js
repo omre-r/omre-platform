@@ -89,9 +89,9 @@ async function createTables() {
     /*
     instance of 'responses' entry (client/admin only. Can change this preference):
     [
-        {isAdmin: true, "message": "Thank you..."},
-        {isAdmin: false, "I appreciate..."},
-        {isAdmin: false, "btw I think..."}
+        {isadmin: true, "message": "Thank you..."},
+        {isadmin: false, "message":  "I appreciate..."},
+        {isadmin: false, "message":  "btw I think..."}
     ]
     */
     await pool.query(`
@@ -417,7 +417,7 @@ class Reviews{
         if (!query) return null;
 
         try{
-            await pool.query(query, [...fields.map(f => options[f]), id])
+            await pool.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
         }catch(err){
             console.error(err);
             return null;

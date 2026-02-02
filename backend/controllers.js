@@ -189,8 +189,8 @@ async function getUserReviews(req, res) {
 
 // path: PUT /reviews/:id
 async function updateReview(req, res) {
-  const {productid} = req.params;
-  const result = await reviews.updateReview(productid, req.body);
+  const {id} = req.params;
+  const result = await reviews.updateReview(id, req.body);
   if (!result){
     res.status(500).json({success: false, message: "Failed to update product review"});
   }
@@ -223,7 +223,7 @@ async function createReview(req, res) {
 // path: DELETE /reviews/:id
 async function deleteReview(req, res) {
   const {id} = req.params;
-  const result = await users.deleteReview(id);
+  const result = await reviews.deleteReview(id);
   if (!result){
     return res.status(500).json({success: false, message: "Failed to delete review"});
   }
@@ -276,7 +276,7 @@ async function createOrder(req, res) {
 // path: DELETE /orders/:id
 async function deleteOrder(req, res) {
   const {id} = req.params;
-  const result = await users.deleteOrder(id);
+  const result = await orders.deleteOrder(id);
   if (!result){
     return res.status(500).json({success: false, message: "Failed to delete order"});
   }
