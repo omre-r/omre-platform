@@ -195,6 +195,7 @@ async function updateReviewReq(id, updatedFields){
     return data
 }
 
+
 async function createReviewReq({customerid, productid, message, rating, images}){
     const normalFields = JSON.stringify({customerid, productid, message, rating});
     const fd = new FormData()
@@ -222,6 +223,16 @@ async function getReviewsReq(){
     return data.data.reviews;
 }
 
+async function deleteReviewReq(id){
+    const response = await fetch(backendURL + `/reviews/${id}`, {
+        method: "DELETE",
+    });
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
 
 // orders
 async function cancelOrderReq(id) {
@@ -264,6 +275,17 @@ async function createOrderReq({orderid, customerid, items, total}){
     return data.data.order;
 }
 
+async function deleteOrderReq(id){
+    const response = await fetch(backendURL + `/orders/${id}`, {
+        method: "DELETE",
+    });
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
+
 validateLoginReq = handleError(validateLoginReq);
 changePasswordReq = handleError(changePasswordReq);
 getUserReq = handleError(getUserReq);
@@ -283,16 +305,18 @@ getUserReviewsReq = handleError(getUserReviewsReq);
 updateReviewReq = handleError(updateReviewReq);
 createReviewReq = handleError(createReviewReq);
 getReviewsReq = handleError(getReviewsReq);
+deleteReviewReq = handleError(deleteReviewReq);
 
 cancelOrderReq = handleError(cancelOrderReq);
 completeOrderReq = handleError(completeOrderReq);
 getOrderReq = handleError(getOrderReq);
-createOrderReq = handleError(createOrderReq)
+createOrderReq = handleError(createOrderReq);
+deleteOrderReq = handleError(deleteOrderReq);
 
 
 export {
     validateLoginReq, changePasswordReq, getUserReq, getUsersReq, createUserReq, deleteUserReq,
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
-    getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, 
-    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq
+    getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
+    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq
 }
