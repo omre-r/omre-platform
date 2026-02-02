@@ -47,6 +47,8 @@ app.get("/reviews/product/:productid", controllers.getProductReviews)
 app.get("/reviews/user/:customerid", controllers.getUserReviews)
 
 app.put("/reviews/:id", controllers.updateReview)
+app.delete("/reviews/:id", controllers.deleteReview)
+
 
 app.post("/reviews", upload.array("images", 10), controllers.createReview)
 app.get("/reviews", controllers.getReviews)
@@ -57,6 +59,7 @@ app.put("/orders/cancel/:id", controllers.cancelOrder)
 app.put("/orders/complete/:id", controllers.completeOrder)
 
 app.get("/orders/:id", controllers.getOrder)
+app.delete("/orders/:id", controllers.deleteOrder)
 
 app.post("/orders", controllers.createOrder)
 

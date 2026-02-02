@@ -220,6 +220,15 @@ async function createReview(req, res) {
   return res.json(result);
 }
 
+// path: DELETE /reviews/:id
+async function deleteReview(req, res) {
+  const {id} = req.params;
+  const result = await users.deleteReview(id);
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to delete review"});
+  }
+  return res.json(result)
+}
 
 
 // orders
@@ -264,6 +273,15 @@ async function createOrder(req, res) {
   return res.json(result);
 }
 
+// path: DELETE /orders/:id
+async function deleteOrder(req, res) {
+  const {id} = req.params;
+  const result = await users.deleteOrder(id);
+  if (!result){
+    return res.status(500).json({success: false, message: "Failed to delete order"});
+  }
+  return res.json(result)
+}
 
 
 /* 
@@ -298,11 +316,13 @@ getUserReviews = handleError(getUserReviews);
 updateReview = handleError(updateReview);
 getReviews = handleError(getReviews);
 createReview = handleError(createReview);
+deleteReview = handleError(deleteReview);
 
 cancelOrder = handleError(createOrder)
 completeOrder = handleError(completeOrder);
 getOrder = handleError(getOrder);
 createOrder = handleError(getReviews);
+deleteOrder = handleError(deleteOrder);
 
 
 
@@ -310,6 +330,6 @@ module.exports = {
   getServerHTML,
   validateLogin, changePassword, getUser, getUsers, createUser, deleteUser,
   getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts,
-  getProductReviews, getUserReviews, updateReview, getReviews, createReview,
-  cancelOrder, completeOrder, getOrder, createOrder
+  getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
+  cancelOrder, completeOrder, getOrder, createOrder, deleteOrder
 };

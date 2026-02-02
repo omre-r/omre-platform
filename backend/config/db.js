@@ -357,6 +357,18 @@ class Reviews{
         }
         return {success: true, data: {review: result.rows?.[0]}}
     }
+
+    async deleteReview(id){
+        const query = `DELETE FROM reviews WHERE id = $1`
+        try{
+            await pool.query(query, [id]);
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true}
+    }
+
     
     async getProductReviews(productid){
         const query = `SELECT * FROM reviews WHERE productid = $1 ORDER BY created DESC`;
@@ -448,6 +460,18 @@ class Orders{
         }
         return {success: true, data: {order: result.rows?.[0]}}
     }
+
+    async deleteOrder(id){
+        const query = `DELETE FROM orders WHERE id = $1`
+        try{
+            await pool.query(query, [id]);
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true}
+    }
+
     async cancelOrder(id, cancelreason){
         const query = `UPDATE orders SET status = "canceled", cancelreason = $1 WHERE id = $2`;
         try{

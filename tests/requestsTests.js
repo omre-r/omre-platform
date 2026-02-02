@@ -1,8 +1,8 @@
 const   {
     validateLoginReq, changePasswordReq, getUserReq, getUsersReq, createUserReq, deleteUserReq,
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
-    getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, 
-    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq
+    getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
+    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq
 } = require("../frontend/src/requests.js")
 
 
