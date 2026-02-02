@@ -350,7 +350,7 @@ class Reviews{
         let result;
         const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, customerid, productid, message, rating, images]);
+            result = await pool.query(query, [id, customerid, productid, message, rating, JSON.stringify(images)]);
         }catch(err){
             console.error(err)
             return null
@@ -375,7 +375,6 @@ class Reviews{
     async getUserReviews(customerid){
         const query = `SELECT * FROM reviews WHERE customerid = $1 ORDER BY created DESC`;
         let reviews;
-
         try{
             const res = await pool.query(query, [customerid]);
             reviews = res.rows;
