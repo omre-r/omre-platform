@@ -6,8 +6,6 @@ const products = Products.getProductsInstance()
 const reviews = Reviews.getReviewsInstance()
 const orders = Orders.getOrdersInstance()
 
-console.log(users.getUser)
-
 const randomUrls = [
   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTX4EbLlkmCJhmk4LI_PxiTc7OrHEkFE_wjeA&s",
   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvJZONCNGXEDHPopTA9pSMayySwNu9c8qfdA&s",
@@ -115,8 +113,9 @@ async function updateProduct(req, res) {
   const {id} = req.params;
   const normalFields = JSON.parse(req.body.normalFields)
   const images = req.files.map(() => randomUrls[Math.floor(Math.random()*3)]);
+  const options = normalFields.images ? {...normalFields, images} : normalFields 
 
-  const result = await products.updateProduct(id, {...normalFields, images});
+  const result = await products.updateProduct(id, options);
   if (!result){
     return res.status(500).json({success: false, message: "Failed to update product"});
   }

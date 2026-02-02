@@ -98,12 +98,12 @@ async function updateProductReq(id, updatedFields){
         for (let img of copy["images"]){
             fd.append("images", img);
         }
-        delete copy.images
+        copy.images = []
     }
     fd.append("normalFields", JSON.stringify(copy));
 
     const response = await fetch(backendURL + `/products/${id}`, {
-        method: "POST",
+        method: "PUT",
         body: fd
     });
     const data = await response.json();
@@ -195,8 +195,8 @@ async function updateReviewReq(id, updatedFields){
     return data
 }
 
-async function createReviewReq({customerid, productid, message, rating, images, responses}){
-    const normalFields = JSON.stringify({customerid, productid, message, rating, responses});
+async function createReviewReq({customerid, productid, message, rating, images}){
+    const normalFields = JSON.stringify({customerid, productid, message, rating});
     const fd = new FormData()
     fd.append("normalFields", normalFields)
     for (let img of images){
