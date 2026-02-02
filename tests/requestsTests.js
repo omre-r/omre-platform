@@ -168,7 +168,19 @@ async function testProductFlow(){
     console.log("Get active products: ", await getActiveProductsReq());
 
     // get a single product
-    console.log("Get product 2", await getProductReq(createdProduct1.id))
+    console.log("Get product 2", await getProductReq(createdProduct2.id))
+
+    const updatedFields1 = {variation: "95ML supersize", price: 1000, ishidden: true}
+    const updatedFields2 = {type: "mens_cologne", name: "smth else"}
+    const updatedFields3 = {images: []}
+
+    await updateProductReq(createdProduct1.id, updatedFields1);
+    await updateProductReq(createdProduct2.id, updatedFields2);
+    await updateProductReq(createdProduct3.id, updatedFields3);
+
+    //checks
+    console.log("Get all products: ", await getProductsReq());
+    console.log("Get active products: ", await getActiveProductsReq());
 
     //delete products
     console.log("Deleting products");
