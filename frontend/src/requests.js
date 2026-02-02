@@ -184,7 +184,7 @@ async function getUserReviewsReq(customerid){
 //as of now, can only update "responses"
 async function updateReviewReq(id, updatedFields){
     const response = await fetch(backendURL + `/reviews/${id}`, {
-        method: "POST",
+        method: "PUT",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(updatedFields)
     });

@@ -248,6 +248,37 @@ async function testReviewsFlow() {
     console.log("Get reviews: ", await getReviewsReq());
 
 
+    console.log("Adding admin responses: ")
+    let newResponses1 = [{isadmin: true, message: "Thank you! We strive for quality."}];
+    let newResponses2 = [{isadmin: true, message: "I see, we apologize for the misunderstaning."}];
+
+    await updateReviewReq(createdReview1.id, {responses: newResponses1});
+    await updateReviewReq(createdReview2.id, {responses: newResponses2});
+
+    console.log("Get Product reviews: ", await getProductReviewsReq(product.id));
+    console.log("Get User reviews: ", await getUserReviewsReq(user.id));
+    console.log("Get reviews: ", await getReviewsReq());
+
+    console.log("Adding review 2 rebuttal: ")
+    newResponses2 = [...newResponses2, {isadmin: false, message: "May I have a refund?"}];
+
+    await updateReviewReq(createdReview2.id, {responses: newResponses2});
+    
+    console.log("Get Product reviews: ", await getProductReviewsReq(product.id));
+    console.log("Get User reviews: ", await getUserReviewsReq(user.id));
+    console.log("Get reviews: ", await getReviewsReq());
+
+
+    console.log("Deleting reviews")
+    await deleteReviewReq(createdReview1.id);
+    await deleteReviewReq(createdReview2.id);
+
+    console.log("Get Product reviews: ", await getProductReviewsReq(product.id));
+    console.log("Get User reviews: ", await getUserReviewsReq(user.id));
+    console.log("Get reviews: ", await getReviewsReq());
+
+
+
     await deleteUserReq(user.id);
     await deleteProductReq(product.id);
 }
