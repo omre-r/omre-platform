@@ -103,7 +103,7 @@ async function createTables() {
             message VARCHAR(500),
             rating SMALLINT,
             images JSONB,
-            responses JSONB
+            responses JSONB DEFAULT '[]'::JSONB
         )
     `);
 
@@ -229,7 +229,7 @@ in different situations (changePassword / updateLogin), but a product is
 likely updated in a single setting. Therefore, a single updateProduct is provided.
 */
 class Products{
-    static modifiableFields = ["type", "name", "variation", "price", "images", "quantity", "notes"];
+    static modifiableFields = ["type", "name", "variation", "price", "images", "quantity", "notes", "ishidden", "isfeatured"];
     static getProductsInstance(){
         productsInstance = productsInstance ? productsInstance : new Products() ;
         return productsInstance;
@@ -311,9 +311,8 @@ class Products{
         const fields = Object.keys(options);
         const query = this.formatUpdateQuery(fields);
         if (!query) return null;
-
         try{
-            await pool.query(formattedQuery, [...fields.map(f => options[f]), id])
+            await pool.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
         }catch(err){
             console.error(err);
             return null;
@@ -327,7 +326,7 @@ class Products{
         let formattedQuery = `UPDATE products SET `;
         let i;
         for (i = 0; i < fields.length; i++){
-            if (!modifiableFields.includes(fields[i])) return null;
+            if (!Products.modifiableFields.includes(fields[i])) return null;
 
             formattedQuery += `${fields[i]} = $${i + 1}`
             if (i !== fields.length - 1) formattedQuery += ', ';
@@ -345,13 +344,13 @@ class Reviews{
     }
 
     async createReview(options){
-        const {customerid, productid, message, rating, images, responses} = options;
+        const {customerid, productid, message, rating, images} = options;
         const id = uuidv4();
 
         let result;
-        const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images, responses) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`;
+        const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, customerid, productid, message, rating, images, responses]);
+            result = await pool.query(query, [id, customerid, productid, message, rating, images]);
         }catch(err){
             console.error(err)
             return null
@@ -407,7 +406,7 @@ class Reviews{
         if (!query) return null;
 
         try{
-            await pool.query(formattedQuery, [...fields.map(f => options[f]), id])
+            await pool.query(query, [...fields.map(f => options[f]), id])
         }catch(err){
             console.error(err);
             return null;
@@ -420,7 +419,7 @@ class Reviews{
         let formattedQuery = `UPDATE reviews SET `;
         let i;
         for (i = 0; i < fields.length; i++){
-            if (!modifiableFields.includes(fields[i])) return null;
+            if (!Reviews.modifiableFields.includes(fields[i])) return null;
 
             formattedQuery += `${fields[i]} = $${i + 1}`
             if (i !== fields.length - 1) formattedQuery += ', ';

@@ -45,6 +45,7 @@ async function testUserFlow(){
 
     let allUsers
     //get all users
+
     console.log("Getting all users: ", await getUsersReq())
 
     //create 4 users
@@ -193,6 +194,64 @@ async function testProductFlow(){
     console.log("Get active products: ", await getActiveProductsReq());
 }
 
+async function testReviewsFlow() {
+    const user =  await createUserReq({
+        email: "salehm0529@gmail.com",
+        password: "crzy8123",
+        firstname: "murad",
+        lastname: "saleh",
+        role: "user",
+        preferrednotes: ["ice cream", "vanilla"]
+    });
+
+    const product =  await createProductReq({
+        type: "mens_cologne",
+        name: "Cinnamon Cologne",
+        variation: "30ml spray",
+        price: 35.34,
+        images: [new Blob([]), new Blob([]), new Blob([])],
+        quantity: 20,
+        notes: {
+            top: ["Cinammon"],
+            heart: ["Cherries"],
+            base: []
+        },
+        isfeatured: true,
+        ishidden: false
+    });
+
+    const review1 = {
+        customerid: user.id,
+        productid: product.id,
+        message: "This is the best cologne ever",
+        rating: 5,
+        images: [new Blob([])]
+    }
+    const review2 = {
+        customerid: user.id,
+        productid: product.id,
+        message: "The bottle contained no warning that it was not to be drunk from",
+        rating: 2,
+        images: [new Blob([])]
+    }
+
+    console.log("Get Product reviews: ", await getProductReviewsReq(product.id));
+    console.log("Get User reviews: ", await getUserReviewsReq(user.id));
+    console.log("Get reviews: ", await getReviewsReq());
+
+    const createdReview1 = await createReviewReq(review1)
+    const createdReview2 = await createReviewReq(review2)
+    console.log("Created reviews: ", createdReview1, createdReview2)
+
+    console.log("Get Product reviews: ", await getProductReviewsReq(product.id));
+    console.log("Get User reviews: ", await getUserReviewsReq(user.id));
+    console.log("Get reviews: ", await getReviewsReq());
+
+
+    await deleteUserReq(user.id);
+    await deleteProductReq(product.id);
+}
+
 
 // async function testFlows() {
 //     await testUserFlow()
@@ -201,4 +260,5 @@ async function testProductFlow(){
 // testFlows()
 
 // testUserFlow()
-testProductFlow()
+// testProductFlow()
+testReviewsFlow()
