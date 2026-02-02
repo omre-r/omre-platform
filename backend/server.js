@@ -23,18 +23,20 @@ app.get("/", controllers.getServerHTML);
 app.put("/users/login/:id", controllers.validateLogin)
 app.put("/users/password/:id", controllers.changePassword)
 
-app.get("/users/:id", controllers.getUser)
+app.get("/users/:id", controllers.getUser);
+app.delete("/users/:id", controllers.deleteUser);
 
 app.get("/users", controllers.getUsers);
 app.post("/users", controllers.createUser);
 
 
+
 // products
+app.get("/products/active", controllers.getActiveProducts);
+
 app.get("/products/:id", controllers.getProduct)
 app.put("/products/:id", upload.array("images", 10), controllers.updateProduct)
 app.delete("/products/:id", controllers.deleteProduct)
-
-app.get("/products/active", controllers.getActiveProducts);
 
 app.post("/products", upload.array("images", 10), controllers.createProduct);
 app.get("/products", controllers.getProducts);
@@ -45,6 +47,8 @@ app.get("/reviews/product/:productid", controllers.getProductReviews)
 app.get("/reviews/user/:customerid", controllers.getUserReviews)
 
 app.put("/reviews/:id", controllers.updateReview)
+app.delete("/reviews/:id", controllers.deleteReview)
+
 
 app.post("/reviews", upload.array("images", 10), controllers.createReview)
 app.get("/reviews", controllers.getReviews)
@@ -55,6 +59,7 @@ app.put("/orders/cancel/:id", controllers.cancelOrder)
 app.put("/orders/complete/:id", controllers.completeOrder)
 
 app.get("/orders/:id", controllers.getOrder)
+app.delete("/orders/:id", controllers.deleteOrder)
 
 app.post("/orders", controllers.createOrder)
 
