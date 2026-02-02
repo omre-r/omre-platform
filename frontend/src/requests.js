@@ -173,7 +173,7 @@ async function getProductReviewsReq(productid){
 }
 
 async function getUserReviewsReq(customerid){
-    const response = await fetch(backendURL + `/reviews/product/${customerid}`);
+    const response = await fetch(backendURL + `/reviews/user/${customerid}`);
     const data = await response.json()
     if (!data.success){
         throw new Error(data.message || "req failed");
@@ -210,7 +210,7 @@ async function createReviewReq({customerid, productid, message, rating, images})
     if (!data.success){
         throw new Error(data.message || "req failed");
     }
-    return data
+    return data.data.review
 }
 
 async function getReviewsReq(){
