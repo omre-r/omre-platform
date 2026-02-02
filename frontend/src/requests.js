@@ -1,4 +1,16 @@
-const backendURL = "http://localhost:3000"
+const backendURL = "http://localhost:5001"
+
+function handleError(fn){
+  return async (...args) => {
+    try{
+      return await fn(...args)
+    }catch(err){
+      console.error(err)
+      return null
+    }
+  }
+}
+
 
 // users
 async function validateLoginReq(id, email, password){
@@ -45,11 +57,11 @@ async function getUsersReq() {
     return data.data.users;
 }
 
-async function createUserReq({email, password, firstname, lastname, role}){
+async function createUserReq({email, password, firstname, lastname, role, preferrednotes}){
     const response = await fetch(backendURL + `/users`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({email, password, firstname, lastname, role})
+        body: JSON.stringify({email, password, firstname, lastname, role, preferrednotes})
     });
     const data = await response.json();
     if (!data.success){
@@ -58,6 +70,16 @@ async function createUserReq({email, password, firstname, lastname, role}){
     return data.data.user;
 }
 
+async function deleteUserReq(id){
+    const response = await fetch(backendURL + `/users/${id}`, {
+        method: "DELETE",
+    });
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
 
 // products
 async function getProductReq(id){
@@ -76,12 +98,12 @@ async function updateProductReq(id, updatedFields){
         for (let img of copy["images"]){
             fd.append("images", img);
         }
-        delete copy.images
+        copy.images = []
     }
     fd.append("normalFields", JSON.stringify(copy));
 
     const response = await fetch(backendURL + `/products/${id}`, {
-        method: "POST",
+        method: "PUT",
         body: fd
     });
     const data = await response.json();
@@ -151,7 +173,7 @@ async function getProductReviewsReq(productid){
 }
 
 async function getUserReviewsReq(customerid){
-    const response = await fetch(backendURL + `/reviews/product/${customerid}`);
+    const response = await fetch(backendURL + `/reviews/user/${customerid}`);
     const data = await response.json()
     if (!data.success){
         throw new Error(data.message || "req failed");
@@ -162,7 +184,7 @@ async function getUserReviewsReq(customerid){
 //as of now, can only update "responses"
 async function updateReviewReq(id, updatedFields){
     const response = await fetch(backendURL + `/reviews/${id}`, {
-        method: "POST",
+        method: "PUT",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(updatedFields)
     });
@@ -173,8 +195,9 @@ async function updateReviewReq(id, updatedFields){
     return data
 }
 
-async function createReviewReq({customerid, productid, message, rating, images, responses}){
-    const normalFields = JSON.stringify({customerid, productid, message, rating, responses});
+
+async function createReviewReq({customerid, productid, message, rating, images}){
+    const normalFields = JSON.stringify({customerid, productid, message, rating});
     const fd = new FormData()
     fd.append("normalFields", normalFields)
     for (let img of images){
@@ -188,7 +211,7 @@ async function createReviewReq({customerid, productid, message, rating, images, 
     if (!data.success){
         throw new Error(data.message || "req failed");
     }
-    return data
+    return data.data.review
 }
 
 async function getReviewsReq(){
@@ -200,10 +223,24 @@ async function getReviewsReq(){
     return data.data.reviews;
 }
 
+async function deleteReviewReq(id){
+    const response = await fetch(backendURL + `/reviews/${id}`, {
+        method: "DELETE",
+    });
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
 
 // orders
-async function cancelOrderReq(id) {
-    const response = await fetch(backendURL + `/orders/cancel/${id}`);
+async function cancelOrderReq(id, cancelreason) {
+    const response = await fetch(backendURL + `/orders/cancel/${id}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({cancelreason})
+    });
     const data = await response.json()
     if (!data.success){
         throw new Error(data.message || "req failed");
@@ -212,7 +249,9 @@ async function cancelOrderReq(id) {
 }
 
 async function completeOrderReq(id) {
-    const response = await fetch(backendURL + `/orders/complete/${id}`);
+    const response = await fetch(backendURL + `/orders/complete/${id}`, {
+        method: "PUT",
+    });
     const data = await response.json()
     if (!data.success){
         throw new Error(data.message || "req failed");
@@ -229,15 +268,61 @@ async function getOrderReq(id){
     return data.data.order;
 }
 
-async function createOrderReq({orderid, customerid, items, total}){
+async function createOrderReq({customerid, items, total}){
     const response = await fetch(backendURL + `/orders`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({orderid, customerid, items, total})
+        body: JSON.stringify({customerid, items, total})
     });
     const data = await response.json();
     if (!data.success){
         throw new Error(data.message || "req failed");
     }
     return data.data.order;
+}
+
+async function deleteOrderReq(id){
+    const response = await fetch(backendURL + `/orders/${id}`, {
+        method: "DELETE",
+    });
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
+
+validateLoginReq = handleError(validateLoginReq);
+changePasswordReq = handleError(changePasswordReq);
+getUserReq = handleError(getUserReq);
+getUsersReq = handleError(getUsersReq);
+createUserReq = handleError(createUserReq);
+deleteUserReq = handleError(deleteUserReq);
+
+getProductReq = handleError(getProductReq);
+updateProductReq = handleError(updateProductReq);
+deleteProductReq = handleError(deleteProductReq);
+getActiveProductsReq = handleError(getActiveProductsReq);
+createProductReq = handleError(createProductReq);
+getProductsReq = handleError(getProductsReq);
+
+getProductReviewsReq = handleError(getProductReviewsReq);
+getUserReviewsReq = handleError(getUserReviewsReq);
+updateReviewReq = handleError(updateReviewReq);
+createReviewReq = handleError(createReviewReq);
+getReviewsReq = handleError(getReviewsReq);
+deleteReviewReq = handleError(deleteReviewReq);
+
+cancelOrderReq = handleError(cancelOrderReq);
+completeOrderReq = handleError(completeOrderReq);
+getOrderReq = handleError(getOrderReq);
+createOrderReq = handleError(createOrderReq);
+deleteOrderReq = handleError(deleteOrderReq);
+
+
+export {
+    validateLoginReq, changePasswordReq, getUserReq, getUsersReq, createUserReq, deleteUserReq,
+    getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
+    getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
+    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq
 }

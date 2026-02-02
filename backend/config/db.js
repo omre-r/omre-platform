@@ -60,7 +60,8 @@ async function createTables() {
             lastname VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
             lastlogin TIMESTAMPTZ,
-            role VARCHAR(10) 
+            role VARCHAR(10),
+            preferrednotes JSONB
         )
     `);
     /* 
@@ -88,9 +89,9 @@ async function createTables() {
     /*
     instance of 'responses' entry (client/admin only. Can change this preference):
     [
-        {isAdmin: true, "message": "Thank you..."},
-        {isAdmin: false, "I appreciate..."},
-        {isAdmin: false, "btw I think..."}
+        {isadmin: true, "message": "Thank you..."},
+        {isadmin: false, "message":  "I appreciate..."},
+        {isadmin: false, "message":  "btw I think..."}
     ]
     */
     await pool.query(`
@@ -102,7 +103,7 @@ async function createTables() {
             message VARCHAR(500),
             rating SMALLINT,
             images JSONB,
-            responses JSONB
+            responses JSONB DEFAULT '[]'::JSONB
         )
     `);
 
@@ -115,7 +116,6 @@ async function createTables() {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS orders(
             id VARCHAR(100) PRIMARY KEY,
-            orderid VARCHAR(100),
             customerid VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
             items JSONB,
@@ -133,24 +133,35 @@ class Users{
     }
 
     async createUser(options){
-        const {email, password, firstname, lastname, role} = options;
+        const {email, password, firstname, lastname, role, preferrednotes} = options;
         const id = uuidv4();
-        const hashedPass = bcrypt.hash(password, 10);
+        const hashedPass = await bcrypt.hash(password, 10);
 
         let result;
-        const query = `INSERT INTO users (id, email, password, firstname, lastname, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, password, firstname, lastname, role;`;
+        const query = `INSERT INTO users (id, email, password, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, firstname, lastname, role, preferrednotes, created, lastlogin;`;
         try{
-            result = await pool.query(query, [id, email, hashedPass, firstname, lastname, role]);
+            result = await pool.query(query, [id, email, hashedPass, firstname, lastname, role, JSON.stringify(preferrednotes)]);
         }catch(err){
             console.error(err)
             return null
         }
         return {success: true, data: {user: result.rows?.[0]}}
     }
+
+    async deleteUser(id){
+        const query = `DELETE FROM users WHERE id = $1`
+        try{
+            await pool.query(query, [id]);
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true}
+    }
     
     //rate limiting (ex: max 200) not needed yet
-    async getAllUsers(){
-        const query = `SELECT (id, email, firstname, lastname, role, created) FROM users`
+    async getUsers(){
+        const query = `SELECT id, email, firstname, lastname, role, preferrednotes, created, lastlogin FROM users`
         let users;
 
         try{
@@ -164,7 +175,8 @@ class Users{
     }
 
     async getUser(id){
-        const query = `SELECT (id, email, firstname, lastname, role, created) FROM users WHERE id = $1`
+
+        const query = `SELECT id, email, firstname, lastname, role, preferrednotes, created, lastlogin FROM users WHERE id = $1`
         let user;
 
         try{
@@ -177,30 +189,27 @@ class Users{
         return {success: true, data: {user}}
     }
 
-    async validateLogin(options){
-        const {email, password} = options;
-        
+    async validateLogin(email, password){        
         let user;
-        const checkPassQuery = `SELECT password FROM users WHERE email = $1 RETURNING id, email, firstname, lastname, role`;
-        const updateLoginQuery = `UPDATE users SET lastlogin = NOW() WHERE id = $1`
+        const checkPassQuery = `SELECT * FROM users WHERE email = $1`;
+        const updateLoginQuery = `UPDATE users SET lastlogin = NOW() WHERE id = $1`;
         try{
             user = (await pool.query(checkPassQuery, [email]))?.rows?.[0];
             if (!user) return null;
 
-            const matches = await bcrypt.compare(password, user["password"])
-            if (!matches) return {success: false};
+            const matches = await bcrypt.compare(password, user.password)
+            if (!matches) return {success: true};
 
-            await pool.query(updateLoginQuery, [user["id"]]);
+            await pool.query(updateLoginQuery, [user.id]);
         }catch(err){
             console.error(err);
             return null;
         }
+        delete user.password
         return {success: true, data: {user}};
     }
 
-    async changePassword(options){
-        const {id, password} = options;
-
+    async changePassword(id, password){
         const query = `UPDATE users SET password = $1 WHERE id = $2`;
         try{
             const hashedPass = await bcrypt.hash(password, 10);
@@ -219,7 +228,7 @@ in different situations (changePassword / updateLogin), but a product is
 likely updated in a single setting. Therefore, a single updateProduct is provided.
 */
 class Products{
-    static modifiableFields = ["type", "name", "variation", "price", "images", "quantity", "notes"];
+    static modifiableFields = ["type", "name", "variation", "price", "images", "quantity", "notes", "ishidden", "isfeatured"];
     static getProductsInstance(){
         productsInstance = productsInstance ? productsInstance : new Products() ;
         return productsInstance;
@@ -230,9 +239,9 @@ class Products{
         const id = uuidv4();
 
         let result;
-        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;`;
+        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, type, name, variation, price, images, quantity, notes, isfeatured, ishidden]);
+            result = await pool.query(query, [id, type, name, variation, price, JSON.stringify(images), quantity, JSON.stringify(notes), isfeatured, ishidden]);
         }catch(err){
             console.error(err)
             return null
@@ -301,9 +310,8 @@ class Products{
         const fields = Object.keys(options);
         const query = this.formatUpdateQuery(fields);
         if (!query) return null;
-
         try{
-            await pool.query(formattedQuery, [...fields.map(f => options[f]), id])
+            await pool.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
         }catch(err){
             console.error(err);
             return null;
@@ -317,7 +325,7 @@ class Products{
         let formattedQuery = `UPDATE products SET `;
         let i;
         for (i = 0; i < fields.length; i++){
-            if (!modifiableFields.includes(fields[i])) return null;
+            if (!Products.modifiableFields.includes(fields[i])) return null;
 
             formattedQuery += `${fields[i]} = $${i + 1}`
             if (i !== fields.length - 1) formattedQuery += ', ';
@@ -335,19 +343,31 @@ class Reviews{
     }
 
     async createReview(options){
-        const {customerid, productid, message, rating, images, responses} = options;
+        const {customerid, productid, message, rating, images} = options;
         const id = uuidv4();
 
         let result;
-        const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images, responses) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`;
+        const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, customerid, productid, message, rating, images, responses]);
+            result = await pool.query(query, [id, customerid, productid, message, rating, JSON.stringify(images)]);
         }catch(err){
             console.error(err)
             return null
         }
         return {success: true, data: {review: result.rows?.[0]}}
     }
+
+    async deleteReview(id){
+        const query = `DELETE FROM reviews WHERE id = $1`
+        try{
+            await pool.query(query, [id]);
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true}
+    }
+
     
     async getProductReviews(productid){
         const query = `SELECT * FROM reviews WHERE productid = $1 ORDER BY created DESC`;
@@ -366,7 +386,6 @@ class Reviews{
     async getUserReviews(customerid){
         const query = `SELECT * FROM reviews WHERE customerid = $1 ORDER BY created DESC`;
         let reviews;
-
         try{
             const res = await pool.query(query, [customerid]);
             reviews = res.rows;
@@ -397,7 +416,7 @@ class Reviews{
         if (!query) return null;
 
         try{
-            await pool.query(formattedQuery, [...fields.map(f => options[f]), id])
+            await pool.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
         }catch(err){
             console.error(err);
             return null;
@@ -410,7 +429,7 @@ class Reviews{
         let formattedQuery = `UPDATE reviews SET `;
         let i;
         for (i = 0; i < fields.length; i++){
-            if (!modifiableFields.includes(fields[i])) return null;
+            if (!Reviews.modifiableFields.includes(fields[i])) return null;
 
             formattedQuery += `${fields[i]} = $${i + 1}`
             if (i !== fields.length - 1) formattedQuery += ', ';
@@ -427,23 +446,35 @@ class Orders{
     }
 
     async createOrder(options){
-        const {orderid, customerid, items, total} = options;
+        const {customerid, items, total} = options;
         const id = uuidv4();
 
         let order;
-        const query = `INSERT INTO orders (id, orderid, customerid, items, total) VALUES ($1, $2, $3, $4, $5) RETURNING *;`;
+        const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
         try{
-            order = await pool.query(query, [id, orderid, customerid, items, total]);
+            order = await pool.query(query, [id, customerid, JSON.stringify(items), total]);
         }catch(err){
             console.error(err)
             return null
         }
-        return {success: true, data: {order: result.rows?.[0]}}
+        return {success: true, data: {order: order.rows?.[0]}}
     }
-    async cancelOrder(id, cancelreason){
-        const query = `UPDATE orders SET status = "canceled", cancelreason = $1 WHERE id = $2`;
+
+    async deleteOrder(id){
+        const query = `DELETE FROM orders WHERE id = $1`
         try{
-            await pool.query(query, [id, cancelreason]);
+            await pool.query(query, [id]);
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return {success: true}
+    }
+
+    async cancelOrder(id, cancelreason){
+        const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2`;
+        try{
+            await pool.query(query, [cancelreason, id]);
         }catch(err){
             console.error(err)
             return null
@@ -451,7 +482,7 @@ class Orders{
         return {success: true}
     }
     async completeOrder(id){
-        const query = `UPDATE orders SET status = "complete" WHERE id = $1`;
+        const query = `UPDATE orders SET status = 'complete' WHERE id = $1`;
         try{
             await pool.query(query, [id]);
         }catch(err){
