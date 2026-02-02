@@ -318,10 +318,10 @@ getReviews = handleError(getReviews);
 createReview = handleError(createReview);
 deleteReview = handleError(deleteReview);
 
-cancelOrder = handleError(createOrder)
+cancelOrder = handleError(cancelOrder)
 completeOrder = handleError(completeOrder);
 getOrder = handleError(getOrder);
-createOrder = handleError(getReviews);
+createOrder = handleError(createOrder);
 deleteOrder = handleError(deleteOrder);
 
 
