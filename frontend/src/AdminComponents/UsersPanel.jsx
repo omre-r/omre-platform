@@ -39,12 +39,12 @@ export default function UsersPanel() {
             const response = await fetch(`${API_URL}/admin/users`);    
             const data = await response.json();
             setUsers(data.users);
+            setMessage("Success!");
         }
         catch (error) {
             setMessage(error?.message || "Error loading users.");
         }
         finally {
-            setMessage("Success!");
             setLoadingUsers(false);
         }
     }
@@ -60,12 +60,12 @@ export default function UsersPanel() {
             const response = await fetch(`${API_URL}/admin/users/${userId}`);
             const data = await response.json();
             setSelectedUser(data.user);
+            setMessage("Success!");
         }
         catch (error) {
             setMessage(error?.message || "Error viewing user.");
         }
         finally {
-            setMessage("Success!");
             setLoadingUser(false);
         }
     }
@@ -192,3 +192,6 @@ export default function UsersPanel() {
         </Flex>
     );
 }
+
+// To do list
+// TODO: Make the styling of the cards and information better eventually for the panels
