@@ -61,8 +61,8 @@ export default function AdminDashboard() {
                 >   
                     <Card
                         variation="elevated"
-                        height="30rem" // was "auto"
-                        width="80rem"
+                        height="auto" // was "auto"
+                        width="90rem"
                         margin="1rem auto"
                         padding="2rem"
                         marginTop="-30rem"

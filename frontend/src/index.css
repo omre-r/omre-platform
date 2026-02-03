@@ -96,3 +96,7 @@ button.amplify-togglebutton {
   font-size: 1.1rem;
   letter-spacing: 0.3px;
 }
+
+.amplify-switchfield label {
+  color: black !important;
+}
