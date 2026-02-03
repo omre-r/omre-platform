@@ -1,27 +1,71 @@
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
-const connectDB = require("./config/db");
+const multer = require("multer");
+const upload = multer({storage: multer.memoryStorage()});
 
+const controllers = require("./controllers.js"); 
+
+const dotenv = require("dotenv");
 dotenv.config();
-connectDB();
+
+const PORT = process.env.PORT
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
 
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    version: "health-v2",
-    port: process.env.PORT || 3001
-  });
-});
+app.get("/", controllers.getServerHTML);
+
+
+// users
+app.put("/users/login/:id", controllers.validateLogin)
+app.put("/users/password/:id", controllers.changePassword)
+
+app.get("/users/:id", controllers.getUser);
+app.delete("/users/:id", controllers.deleteUser);
+
+app.get("/users", controllers.getUsers);
+app.post("/users", controllers.createUser);
+
+
+
+// products
+app.get("/products/active", controllers.getActiveProducts);
+
+app.get("/products/:id", controllers.getProduct)
+app.put("/products/:id", upload.array("images", 10), controllers.updateProduct)
+app.delete("/products/:id", controllers.deleteProduct)
+
+app.post("/products", upload.array("images", 10), controllers.createProduct);
+app.get("/products", controllers.getProducts);
+
+
+// reviews
+app.get("/reviews/product/:productid", controllers.getProductReviews)
+app.get("/reviews/user/:customerid", controllers.getUserReviews)
+
+app.put("/reviews/:id", controllers.updateReview)
+app.delete("/reviews/:id", controllers.deleteReview)
+
+
+app.post("/reviews", upload.array("images", 10), controllers.createReview)
+app.get("/reviews", controllers.getReviews)
+
+
+// orders
+app.put("/orders/cancel/:id", controllers.cancelOrder)
+app.put("/orders/complete/:id", controllers.completeOrder)
+
+app.get("/orders/:id", controllers.getOrder)
+app.delete("/orders/:id", controllers.deleteOrder)
+
+app.post("/orders", controllers.createOrder)
+
+
 
 //starting server
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log('Server running on port ${PORT}');
-})
+app.listen(PORT || 3001, () => {
+  console.log(`Server running on port ${PORT}`);
+});
