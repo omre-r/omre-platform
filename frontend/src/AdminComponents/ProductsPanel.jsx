@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Card, Flex, Text, Button, View } from "@aws-amplify/ui-react";
+import { Card, Flex, Text, Button, View, TextField, SwitchField, Grid } from "@aws-amplify/ui-react";
 
 import {getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, getProductsReq, createProductReq} from'../requests.js';
 
@@ -13,27 +13,94 @@ const luxuryHeadingStyle = {
 };
 const luxuryBodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
-  fontWeight: 400,
-  fontSize: "1.3rem",   
-  letterSpacing: "0.3px",
+  fontWeight: 300,
+  fontSize: "1.0rem",   
+  letterSpacing: "0.2px",
+};
+
+// Form state for edit or adding ------------------
+const defaultProductDraft = {
+        type: '',
+        name: '',
+        variation: '',
+        price: '',
+        quantity: '',
+        notesTop: '',
+        notesHeart: '',
+        notesBase: '',
+        isfeatured: false,
+        isHidden: false,
+        images: []
 };
 
 export default function ProductsPanel() {
     const [products, setProducts] = useState([]);
     const [selectedProduct, setSelectedProduct] = useState(null);
+
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [loadingProduct, setLoadingProduct] = useState(false);
+
     const [msg, setMessage] = useState("");
 
     // UI mode switch ---------------------------------------
     // Will switch depending on viewing, editing, removing, or adding
-    const [activeMode, setActiveMode] = useState("none"); 
+    const [activeMode, setActiveMode] = useState("none"); // none, add, view, edit, remove 
+
+    const [draft, setDraft] = useState(defaultProductDraft);
+
+
+
+    /*
+    const MOCK_PRODUCTS = [
+    {
+        id: "mock-1",
+        name: "Noir Vanilla",
+        quantity: 42,
+        type: "womens_perfume",
+        variation: "30ml spray",
+        price: 99.99,
+        images: ["https://picsum.photos/seed/noir/400/400"],
+        notes: { top: ["Vanilla"], heart: ["Jasmine"], base: ["Amber"] },
+        isfeatured: true,
+        ishidden: false,
+    },
+    {
+        id: "mock-2",
+        name: "Cedar Ember",
+        quantity: 18,
+        type: "mens_cologne",
+        variation: "50ml spray",
+        price: 64.5,
+        images: ["https://picsum.photos/seed/cedar/400/400"],
+        notes: { top: ["Bergamot"], heart: ["Cedarwood"], base: ["Musk"] },
+        isfeatured: false,
+        ishidden: false,
+    },
+    {
+        id: "mock-3",
+        name: "Silk Citrus",
+        quantity: 0,
+        type: "unisex_fragrance",
+        variation: "5ml mini",
+        price: 19.0,
+        images: [],
+        notes: { top: ["Yuzu"], heart: ["Neroli"], base: ["Sandalwood"] },
+        isfeatured: false,
+        ishidden: true,
+    },
+    ];
+    */
 
     async function loadProducts() {
         setMessage("");
         setLoadingProducts(true);
         try {
-            // !!!!!!!!!!!!!!!!!!!!!!!!!
+            // For mock products
+            //setProducts(MOCK_PRODUCTS);
+            //setMessage("mock products.");
+            //return;
+            
+            // TODO: When I have proper backend implementation 
             const res = await getProductsReq();
             setProducts(res || [])
             setMessage("Success!");
@@ -50,9 +117,9 @@ export default function ProductsPanel() {
         setMessage("");
         setLoadingProduct(true);
         try {
-            setActiveMode("view")
-            const res = await getProductReq(productId)
-            setSelectedProduct(res)
+            setActiveMode("view");
+            const res = await getProductReq(productId);
+            setSelectedProduct(res);
             setMessage("Success!");
         }
         catch (error) {
@@ -61,6 +128,31 @@ export default function ProductsPanel() {
         finally {
             setLoadingProduct(false);
         }
+    }
+
+    async function removeProduct() {
+        if (!selectedProduct) {
+            return;
+        }
+        try {
+            const id = selectedProduct.id;
+            if (!id) {
+                setMessage("ID Error in removing products")
+                return;
+            }
+            await deleteProductReq(id)
+            setMessage({selectedProduct} + " has been deleted");
+            setSelectedProduct(null);
+            setActiveMode('none');
+            await loadProducts();
+        } 
+        catch (error) {
+            setMessage(error?.message || "Error removing product.");
+        }
+
+    }
+
+    async function addProduct() {
     }
 
     useEffect(() => {
@@ -75,9 +167,12 @@ export default function ProductsPanel() {
         </Text>);
     }
     
-    // FIGURE OUT LATER
     function getProductId(p) {
         return p?.productid || p?.product_id || p?.id;
+    }
+
+    function setDraftField(field, value) {
+
     }
 
     return (
@@ -97,15 +192,6 @@ export default function ProductsPanel() {
                     justifyContent="space-between" 
                     alignItems="center"
                     wrap="wrap">
-                       
-                    {/* {msg && ( 
-                        <Text 
-                            color="Black" 
-                            style={luxuryBodyStyle} 
-                            marginTop="0.5rem">
-                            {msg}
-                        </Text>
-                    )} */}
                     <Text 
                         style={luxuryHeadingStyle}>
                         Products
@@ -140,26 +226,40 @@ export default function ProductsPanel() {
                             onClick={() => {
                                 if (!selectedProduct) return;
                                 setActiveMode("edit");
+                                // Copy selectedProduct to the form state to edit
                             }}
                             >
                             Edit
                         </Button>
                     </Flex>
                 </Flex>
+                
+                {msg && (
+                <Text style={luxuryBodyStyle} marginTop="0.5rem" color="black">
+                    {msg}
+                </Text>
+                )}
+
                 <View overflow="auto" height="20rem" marginTop="1rem"> 
                     {products.map((prod) => (
                         <Button
-                            // FIGURE OUT LATER !!!!
                             key={getProductId(prod)}
                             variation="link"
                             justifyContent="flex-start"
                             width="100%"
                             onClick={() => {
+                                // For mock products
+                                //setSelectedProduct(prod);
+                                //setActiveMode("view");
+
+                                // TODO: fix this when backend is active  !!!!
                                 setSelectedProduct(prod);
-                                setActiveMode("view");
+                                viewProduct(prod.id)
                             }}
                             >
-                            {prod.name} — qty: {prod.quantity}
+                            <Text>
+                                {prod.name} — qty: {prod.quantity} {prod.quantity <= 5 && "(LOW!)"}
+                            </Text>
                         </Button>
                     ))}
                 </View>
@@ -177,96 +277,193 @@ export default function ProductsPanel() {
                     alignItems="center">
                     {activeMode === "add" &&
                     (
-                        <Text 
-                            style={luxuryBodyStyle}>
-                            add
-                        </Text>
+                        <Grid templateColumns="1fr 1fr" gap="0.3rem" marginTop="-.2rem">
+                            <Text 
+                                style={luxuryBodyStyle}>
+                                Add new product.
+                            </Text>
+                                <TextField 
+                                    style={luxuryBodyStyle}
+                                    placeholder="Type"
+                                    value={draft.type} 
+                                    onChange={(e) => setDraftField("type", e.target.value)} 
+                                />
+                                <TextField 
+                                    style={luxuryBodyStyle}
+                                    placeholder="Name"
+                                    value={draft.name} 
+                                    onChange={(e) => setDraftField("name", e.target.value)} 
+                                />
+                                <TextField 
+                                    style={luxuryBodyStyle}
+                                    placeholder="Variation"
+                                    value={draft.variation} 
+                                    onChange={(e) => setDraftField("variation", e.target.value)} 
+                                />
+                                <TextField 
+                                    style={luxuryBodyStyle}
+                                    placeholder="Price"
+                                    type="number"
+                                    value={draft.price} 
+                                    onChange={(e) => setDraftField("price", e.target.value)} 
+                                />
+                                <TextField 
+                                    style={luxuryBodyStyle}
+                                    placeholder="Quantity"
+                                    type="number"
+                                    value={draft.quantity} 
+                                    onChange={(e) => setDraftField("name", e.target.value)} 
+                                />
+                                <TextField 
+                                    style={luxuryBodyStyle}
+                                    placeholder="Notes Top"
+                                    value={draft.notesTop} 
+                                    onChange={(e) => setDraftField("notesTop", e.target.value)} 
+                                />
+                                <TextField 
+                                    style={luxuryBodyStyle}
+                                    placeholder="Notes Heart"
+                                    value={draft.notesHeart} 
+                                    onChange={(e) => setDraftField("notesHeart", e.target.value)} 
+                                />
+                                <TextField 
+                                    style={luxuryBodyStyle}
+                                    placeholder="Notes Base"
+                                    value={draft.notesBase} 
+                                    onChange={(e) => setDraftField("notesBase", e.target.value)} 
+                                />
+                                <SwitchField
+                                    style={luxuryBodyStyle}
+                                    label="Hidden?"
+                                    isChecked={draft.isHidden} 
+                                    onChange={(e) => setDraftField("isHidden", e.target.checked)} 
+                                />
+                                <SwitchField 
+                                    style={luxuryBodyStyle}
+                                    label="Featured"
+                                    isChecked={draft.isfeatured}
+                                    onChange={(e) => setDraftField("isFeatured", e.target.checked)} 
+                                />
+                                {/* 
+                                <View>
+                                    <Text style={luxuryBodyStyle}>Images</Text>
+                                    <input type="file" multiple onChange={onImagesSelected} />
+                                    <Text style={luxuryBodyStyle}>
+                                    Selected: {Array.isArray(draft.images) ? draft.images.length : 0}
+                                    </Text>
+                                </View>
+                                */}
+                            <Flex 
+                                direction="row" 
+                                gap="0.08rem" 
+                                wrap="wrap">
+                                <Button
+                                    style={luxuryBodyStyle}
+                                    onClick={() => {
+                                        addProduct()
+                                    }}
+                                >
+                                    Create
+                                </Button>
+                                <Button
+                                    style={luxuryBodyStyle}
+                                    setSelectedProduct
+                                    onClick={() => {
+                                        setActiveMode("view")
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                            </Flex>
+                        </Grid>
+                        
                     )}    
 
                     {activeMode === "remove" && //selectedProduct && 
                     (
-                        <Text 
-                            style={luxuryBodyStyle}>
-                            remove
-                        </Text>
+                        <Flex direction="column" gap="0.05rem" wrap="wrap">
+                            {/* All adding info will go here for the product */}
+                            <Flex direction="row" gap="0.05rem" wrap="wrap">
+                                <Button>
+                                    Hide
+                                </Button>
+                                <Button>
+                                    Delete
+                                </Button>
+                                <Button
+                                    setSelectedProduct
+                                    onClick={() => {
+                                        setSelectedProduct(null)
+                                        setActiveMode("view")
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                            </Flex>
+                        </Flex>
                     )}    
 
-                    {activeMode === "edit" && //selectedProduct && 
+                    {activeMode === "edit" && selectedProduct && 
                     (
-                        <Text 
-                            style={luxuryBodyStyle}>
-                            edit
-                        </Text>
+                        <Flex direction="column" gap="0.05rem" wrap="wrap">
+                                {/* All adding info will go here for the product */}
+                                <Flex direction="row" gap="0.05rem" wrap="wrap">
+                                    <Button>
+                                        Save Changes?
+                                    </Button>
+                                    <Button
+                                        setSelectedProduct
+                                        onClick={() => {
+                                            setActiveMode("view")
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </Flex>
+                            </Flex>
                     )}
 
-                    {activeMode === "view" && //selectedProduct && 
-                    (
+                    {activeMode === "none" && (
+                    <> 
+                    <Flex
+                        direction="column" 
+                        gap="0.05rem" 
+                        wrap="wrap">
+                            <Text 
+                                style={luxuryHeadingStyle}>
+                                Product Information
+                            </Text>
+                            <Text 
+                                style={luxuryBodyStyle}>
+                                Please select a product
+                            </Text>
+                        </Flex>
+                    </>
+                    )}
+
+                    {activeMode === "view" && selectedProduct &&  (
+                    <Flex direction="column" gap="0.05rem" wrap="wrap">
+                        <Text style={luxuryBodyStyle}>{selectedProduct.name}</Text>
+                        <Text style={luxuryBodyStyle}>Type: {selectedProduct.type}</Text>
+                        <Text style={luxuryBodyStyle}>Variation: {selectedProduct.variation}</Text>
+                        <Text style={luxuryBodyStyle}>Price: ${selectedProduct.price}</Text>
+                        <Text style={luxuryBodyStyle}>Quantity: {selectedProduct.quantity}</Text>
+                        <Text style={luxuryBodyStyle}>Featured: {selectedProduct.isfeatured ? "Yes" : "No"}</Text>
+                        <Text style={luxuryBodyStyle}>Hidden: {selectedProduct.ishidden ? "Yes" : "No"}</Text>
+                        <Text style={luxuryBodyStyle}>
+                            Notes: Top[{selectedProduct.notes?.top?.join(", ") || "—"}] / Heart[{selectedProduct.notes?.heart?.join(", ") || "—"}] / Base[{selectedProduct.notes?.base?.join(", ") || "—"}]
+                        </Text>
                         <Text 
                             style={luxuryBodyStyle}>
-                            edit
+                            Images: {selectedProduct.images.length ? selectedProduct.images.length : "None"}
                         </Text>
-                    )}    
+                    </Flex>
+                    )} 
                 </Flex>
             </Card>
         </Flex>
     );
 }
 
-//What are the exact function names you want me to call for: list, get by id, create, update, delete?
 
-//What product fields does the backend return? (ids + image fields + stock + featured + active)
-
-//For images: are we storing imageUrl directly, or are we doing upload to S3/Amplify and storing key/url?
-// We are gonna be storing imageURL, for now I upload images, if not will need 2 roundtrips uplload to s3 and store keys
-// treat as array of file objects 
-
-// Is remove product hard delete or soft delete (isActive=false)?
-// Called ishidden, get active products will hide is hidden.
-// isfeatured isnt used anywhere so far
-
-
-// Confirm data shape
-/*ex : 
-{
-  product_id: "string",
-  name: "string",
-  description: "string",
-  price: number,
-  imageUrl: "string",
-  stock: number,
-  isFeatured: boolean,
-  isActive: boolean,  // soft delete / hide
-  created_at: "string"
-}
-*/
-
-
-
-// server.js is basically api.js, what end points to hit directly 
-// handlers come from the controllers 
-
-// controllers.js has endpoints on top of each function, functions that handle endpoints
-// all wrapped in handle error, prevents server crashes
-// The functions comm with db
-
-// db.js
-// connects to database
-// creates tables
-// users table
-// products table
-// type in products will be men or womens fragrances
-// name is prodname
-// variation, 5ML spray or something else
-// price 
-// images, will be url's
-// Notes top heart and base
-// review table has a bunch of good information as well, responses only retaj can respond
-
-// request.js, 
-// do the function and fill in the variables
-
-
-// Ayman we import the function from AWS
-// Murad we have the functions in the files on the backend folder
-
-// local development will stick with murads functions 
+// TODO: front end option to select main image to display on website and then other images
