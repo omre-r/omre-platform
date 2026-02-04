@@ -25,7 +25,7 @@ function handleError(fn){
 }
 
 
-// users
+
 // app.put("/users/login/:id", placeholder)
 
 // path: GET /
@@ -33,6 +33,8 @@ function getServerHTML(req, res){
     res.send("Welcome to the server!");
 };
 
+
+// users
 
 // path: PUT /users/login/:id
 async function validateLogin(req, res) {
