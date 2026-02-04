@@ -66,6 +66,6 @@ app.post("/orders", controllers.createOrder)
 
 
 //starting server
-app.listen(PORT || 3001, () => {
+app.listen(PORT || 5001, () => {
   console.log(`Server running on port ${PORT}`);
 });
