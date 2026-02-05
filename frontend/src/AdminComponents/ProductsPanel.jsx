@@ -1,163 +1,314 @@
 import { useEffect, useState } from "react";
 import { Card, Flex, Text, Button, View, TextField, SwitchField, Grid } from "@aws-amplify/ui-react";
 
-import {getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, getProductsReq, createProductReq} from'../requests.js';
+import {getProductReq, updateProductReq, deleteProductReq, getProductsReq, createProductReq} from'../requests.js';
 
 
-// Custom Styling for fonts and amplify ui --------------------------------------
+// Custom Styling for fonts and amplify ui -------------------------------------- 
 const luxuryHeadingStyle = {
-  fontFamily: "'Cormorant Garamond', serif",
-  fontWeight: 600,
-  fontSize: "1.5rem",
-  letterSpacing: "0.5px",
+    fontFamily: "'Cormorant Garamond', serif",
+    fontWeight: 600,
+    fontSize: "1.5rem",
+    letterSpacing: "0.5px",
 };
 const luxuryBodyStyle = {
-  fontFamily: "'Cormorant Garamond', serif",
-  fontWeight: 300,
-  fontSize: "1.0rem",   
-  letterSpacing: "0.2px",
+    fontFamily: "'Cormorant Garamond', serif",
+    fontWeight: 300,
+    fontSize: "1.0rem",   
+    letterSpacing: "0.2px",
+};
+const compactStyle = {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontWeight: 200,
+    fontSize: "0.8rem",
+    letterSpacing: "0.1px",
+};
+const MODES = {
+    IDLE: "idle",
+    VIEW: "view",
+    ADD: "add",
+    EDIT: "edit",
+    REMOVE: "remove",
 };
 
-// Form state for edit or adding ------------------
+// Default Product Draft   ---------------------------------------
+// When adding we set our draft to start with this where it holds no information
+// When cancelling an add or finishing an add will set the draft to default after to remove any data being saved
 const defaultProductDraft = {
         type: '',
         name: '',
         variation: '',
         price: '',
         quantity: '',
-        notesTop: '',
-        notesHeart: '',
-        notesBase: '',
+        notes: {
+            top: [],
+            heart: [],
+            base: []
+        },
         isfeatured: false,
-        isHidden: false,
-        images: []
+        ishidden: false,
+        images: [], // Images are list of file products (Requests.js)
 };
 
+// Products Admin Panel ---------------------------------------------
+// Will give user the option to view, add, edit, and remove products from this dashboard
 export default function ProductsPanel() {
+
+    // Products states ----------------------------------------------------
     const [products, setProducts] = useState([]);
+    // Selected Product will be shown in right card
     const [selectedProduct, setSelectedProduct] = useState(null);
 
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [loadingProduct, setLoadingProduct] = useState(false);
-
-    const [msg, setMessage] = useState("");
+    const [message, setMessage] = useState("");
 
     // UI mode switch ---------------------------------------
     // Will switch depending on viewing, editing, removing, or adding
-    const [activeMode, setActiveMode] = useState("none"); // none, add, view, edit, remove 
+    const [activeMode, setActiveMode] = useState(MODES.IDLE);
 
+    // Set draft based on default draft or product editing and use that information --------------------------------
     const [draft, setDraft] = useState(defaultProductDraft);
 
+    // When editing or adding to draft, name and type cannot be left blank but other information can
+    const canSave = draft.type.trim() !== "" && draft.name.trim() !== "";
 
+    // Lets us handle inconsistent ID field names across backend -----------------------------------
+    function getProductId(product) {
+        return product.productid || product.product_id || product.id;
+    }
 
-    /*
-    const MOCK_PRODUCTS = [
-    {
-        id: "mock-1",
-        name: "Noir Vanilla",
-        quantity: 42,
-        type: "womens_perfume",
-        variation: "30ml spray",
-        price: 99.99,
-        images: ["https://picsum.photos/seed/noir/400/400"],
-        notes: { top: ["Vanilla"], heart: ["Jasmine"], base: ["Amber"] },
-        isfeatured: true,
-        ishidden: false,
-    },
-    {
-        id: "mock-2",
-        name: "Cedar Ember",
-        quantity: 18,
-        type: "mens_cologne",
-        variation: "50ml spray",
-        price: 64.5,
-        images: ["https://picsum.photos/seed/cedar/400/400"],
-        notes: { top: ["Bergamot"], heart: ["Cedarwood"], base: ["Musk"] },
-        isfeatured: false,
-        ishidden: false,
-    },
-    {
-        id: "mock-3",
-        name: "Silk Citrus",
-        quantity: 0,
-        type: "unisex_fragrance",
-        variation: "5ml mini",
-        price: 19.0,
-        images: [],
-        notes: { top: ["Yuzu"], heart: ["Neroli"], base: ["Sandalwood"] },
-        isfeatured: false,
-        ishidden: true,
-    },
-    ];
-    */
+    // Form Change Handler --------------------------------------------------------------------------
+    function setDraftField(field, value) {
+        setDraft(prevState => ({
+            ...prevState,
+            [field]: value
+        }));
+    }
 
+    // Takes product information and creates draft based on it ------------------------------------------------
+    function makeDraftFromProduct(product) {
+        return {
+            type: product.type ?? "",
+            name: product.name ?? "",
+            variation: product.variation ?? "",
+            price: product.price != null ? String(product.price) : "",
+            quantity: product.quantity != null ? String(product.quantity) : "",
+            notes: {
+                top: product.notes.top,
+                heart: product.notes.heart,
+                base: product.notes.base,
+            },
+            isfeatured: product.isfeatured,
+            ishidden: product.ishidden,
+            images: [] // Images are list of file products (Requests.js)
+        };
+    }
+
+    // For images uploaded when editing or creating ------------------------------------------------------  
+    function onImagesSelected(e) {
+        const files = Array.from(e.target.files || []);
+        setDraft(prev => ({
+            ...prev,
+            images: files
+        }));
+    }
+
+    // Form helper for #'s
+    function validateNumbers(price, quantity) {
+        if (!Number.isFinite(price) || price < 0) return "Price must be a valid number.";
+        if (!Number.isFinite(quantity) || quantity < 0) return "Quantity must be a valid number.";
+        return null;
+    }
+
+    function resetToIdle() {
+        setSelectedProduct(null);
+        setDraft(defaultProductDraft);
+        setActiveMode(MODES.IDLE);
+    }
+
+    // Left card  loading---------------------------------------------------------------
     async function loadProducts() {
         setMessage("");
         setLoadingProducts(true);
         try {
-            // For mock products
-            //setProducts(MOCK_PRODUCTS);
-            //setMessage("mock products.");
-            //return;
-            
-            // TODO: When I have proper backend implementation 
-            const res = await getProductsReq();
-            setProducts(res || [])
-            setMessage("Success!");
+            const prods = await getProductsReq();
+            setProducts(prods || [])
         }
         catch (error) {
-            setMessage(error?.message || "Error loading products.");
+            setMessage(error.message || "Error loading products.");
         }
         finally {
             setLoadingProducts(false);
         }
     }
 
+    // View product on the right card ----------------------------------------------------------
     async function viewProduct(productId) {
         setMessage("");
         setLoadingProduct(true);
         try {
-            setActiveMode("view");
-            const res = await getProductReq(productId);
-            setSelectedProduct(res);
-            setMessage("Success!");
+            setActiveMode(MODES.VIEW);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            const product = await getProductReq(productId);
+            setSelectedProduct(product);
         }
         catch (error) {
-            setMessage(error?.message || "Error viewing product.");
+            setMessage(error.message || "Error viewing product.");
         }
         finally {
             setLoadingProduct(false);
         }
     }
 
+    // Removing a product ---------------------------------------------------------------------------------
+    // get the product id of the select product and send the id to the backend deleteProductReq function
     async function removeProduct() {
+        setMessage("")
         if (!selectedProduct) {
             return;
         }
         try {
-            const id = selectedProduct.id;
+            const id = getProductId(selectedProduct);
             if (!id) {
                 setMessage("ID Error in removing products")
                 return;
             }
-            await deleteProductReq(id)
-            setMessage({selectedProduct} + " has been deleted");
-            setSelectedProduct(null);
-            setActiveMode('none');
+
+            await deleteProductReq(id);
+            setMessage("Deleted product: " + selectedProduct.name);
+            resetToIdle();
             await loadProducts();
         } 
         catch (error) {
-            setMessage(error?.message || "Error removing product.");
+            setMessage(error.message || "Error removing product.");
         }
-
     }
 
+    // Hide a product from website display -----------------------------------
+    // Gather the products id and check the status if it is hidden or not, will update status on button click
+    async function hideProduct() {
+        setMessage("")
+        try {
+            if (!selectedProduct) {
+                setMessage("No product selected");
+                return;
+            }
+            const id = getProductId(selectedProduct);
+            if (!id) {
+                setMessage("Product does not have id");
+                return;
+            }
+            // Check if product is hidden, will hide or unhide depending on which
+            const hiddenStatus = !selectedProduct.ishidden;
+
+            await updateProductReq(id, { ishidden: hiddenStatus });
+            setMessage(`${hiddenStatus ? "Hidden" : "Unhidden"}: ${selectedProduct.name}`);
+            await loadProducts();
+            resetToIdle();
+        }
+        catch(error) {
+            setMessage(error.message || "Error hiding product.");
+        }
+    }
+
+    // Adding a product to the backend ---------------------------------------------------------------------------
+    // Type and name of product must be required but other information is not mandatory at this point
     async function addProduct() {
+        setMessage("")
+        try {
+            if (!canSave) {
+                setMessage("Type and name are required.");
+                return;
+            }
+            // Pull info from draft 
+            const form = {
+                type: draft.type.trim(),
+                name: draft.name.trim(),
+                variation: draft.variation.trim(),
+                price: draft.price === "" ? 0 : Number(draft.price),
+                quantity: draft.quantity === "" ? 0 : Number(draft.quantity),
+                // To match the backend format of the notes, we have top, heart, and base
+                // which will be respectively their own scents.
+                notes: {
+                    top: draft.notes.top,
+                    heart: draft.notes.heart,
+                    base: draft.notes.base,
+                },
+                isfeatured: !!draft.isfeatured,
+                ishidden: !!draft.ishidden,
+                images: draft.images ?? [],
+            };
+            const validNums = validateNumbers(form.price, form.quantity)
+            if (validNums) {
+                setMessage(validNums);
+                return;
+            }
+            const newProduct = await createProductReq(form);
+            setMessage(`Created: ${newProduct.name}`);
+            resetToIdle();
+            await loadProducts();
+        }
+        catch(error) {
+            setMessage(error.message || "Error adding product.");
+        }
+    }
+
+    // When updating a products information ---------------------------------------------------------
+    // Gather the product id and create the form based on information already entered
+    async function updateProduct() {
+        setMessage("")
+        try {
+            if(!selectedProduct) {
+                return;
+            }
+            const id = getProductId(selectedProduct);
+            if (!id) {
+                setMessage("Product does not have id");
+                return;
+            }
+            if (!canSave) {
+                setMessage("Type and name are required.");
+                return;
+            }
+            // makeDraftFromProduct function will be called and that will be setting the draft with the existing info
+            const form = {
+                type: draft.type.trim(),
+                name: draft.name.trim(),
+                variation: draft.variation.trim(),
+                price: draft.price === "" ? 0 : Number(draft.price),
+                quantity: draft.quantity === "" ? 0 : Number(draft.quantity),
+                notes: {
+                    top: draft.notes.top,
+                    heart: draft.notes.heart,
+                    base: draft.notes.base,
+                },
+                isfeatured: !!draft.isfeatured,
+                ishidden: !!draft.ishidden,
+            };
+            const validNums = validateNumbers(form.price, form.quantity)
+            if (validNums) {
+                setMessage(validNums);
+                return;
+            }
+            // Only include images if user actually selected new files
+            if (draft.images.length > 0) {
+                form.images = draft.images;
+            }
+            await updateProductReq(id, form);
+            setMessage(`Updated: ${form.name}`);
+            await loadProducts();
+            resetToIdle();
+        }
+        catch(error) {
+            setMessage(error.message || "Error updating product.");
+        }
     }
 
     useEffect(() => {
         loadProducts();
     }, []);
+
 
     if (loadingProducts) {
         return (
@@ -167,21 +318,14 @@ export default function ProductsPanel() {
         </Text>);
     }
     
-    function getProductId(p) {
-        return p?.productid || p?.product_id || p?.id;
-    }
-
-    function setDraftField(field, value) {
-
-    }
-
     return (
         <Flex 
             direction="row" 
             gap="1rem" 
             height="100%">
 
-            {/* Left card holding emails ---------------------------------------------*/}
+            {/* Left card holding products ---------------------------------------------*/}
+            {/* Will be shown as a list where each product is clickable  */}
             <Card
                 width="45%" 
                 height="100%" 
@@ -201,46 +345,50 @@ export default function ProductsPanel() {
                         gap="0.75rem" 
                         wrap="wrap" 
                         justifyContent="flex-end">
+                        {/* Button : add mode -------------------------------------------------- */}
                         <Button 
                             style={luxuryBodyStyle}
                             onClick={() => {
+                                setActiveMode(MODES.ADD);
                                 setSelectedProduct(null);
-                                setActiveMode("add");
+                                setDraft(defaultProductDraft);
                             }}
                             >
                             Add
                         </Button>
+                        {/* Button : remove mode ---------------------------------------------------- */}
                         <Button 
                             style={luxuryBodyStyle}
                             disabled={!selectedProduct}
                             onClick={() => {
                                 if (!selectedProduct) return;
-                                setActiveMode("remove");
+                                setActiveMode(MODES.REMOVE);
                             }}
                             >
                             Remove
                         </Button>
+                        {/* Button : edit mode ------------------------------- */}
                         <Button 
                             style={luxuryBodyStyle}
                             disabled={!selectedProduct}
                             onClick={() => {
                                 if (!selectedProduct) return;
-                                setActiveMode("edit");
-                                // Copy selectedProduct to the form state to edit
+                                setActiveMode(MODES.EDIT);
+                                // Create draft from backend product information
+                                setDraft(makeDraftFromProduct(selectedProduct));
                             }}
                             >
                             Edit
                         </Button>
                     </Flex>
                 </Flex>
-                
-                {msg && (
+                {message && (
                 <Text style={luxuryBodyStyle} marginTop="0.5rem" color="black">
-                    {msg}
+                    {message}
                 </Text>
                 )}
-
                 <View overflow="auto" height="20rem" marginTop="1rem"> 
+                    {/* Below creating a list of all the products ---------------------------- */}
                     {products.map((prod) => (
                         <Button
                             key={getProductId(prod)}
@@ -248,13 +396,13 @@ export default function ProductsPanel() {
                             justifyContent="flex-start"
                             width="100%"
                             onClick={() => {
-                                // For mock products
-                                //setSelectedProduct(prod);
-                                //setActiveMode("view");
-
-                                // TODO: fix this when backend is active  !!!!
-                                setSelectedProduct(prod);
-                                viewProduct(prod.id)
+                                // On click we activate viewing that specific product based on the id
+                                const id = getProductId(prod);
+                                if (!id) {
+                                    setMessage("Product ID missing.");
+                                    return;
+                                }
+                                viewProduct(id);
                             }}
                             >
                             <Text>
@@ -265,7 +413,7 @@ export default function ProductsPanel() {
                 </View>
             </Card>
         
-            {/* Right card views, handles delete, or adds information ----------------------------------------- */}
+            {/* Right card views, edit, delete, or adds information ----------------------------------------- */}
             <Card
                 width="45%" 
                 height="100%" 
@@ -275,101 +423,155 @@ export default function ProductsPanel() {
                 <Flex 
                     justifyContent="space-between" 
                     alignItems="center">
-                    {activeMode === "add" &&
-                    (
-                        <Grid templateColumns="1fr 1fr" gap="0.3rem" marginTop="-.2rem">
-                            <Text 
-                                style={luxuryBodyStyle}>
-                                Add new product.
-                            </Text>
-                                <TextField 
-                                    style={luxuryBodyStyle}
-                                    placeholder="Type"
-                                    value={draft.type} 
-                                    onChange={(e) => setDraftField("type", e.target.value)} 
-                                />
-                                <TextField 
-                                    style={luxuryBodyStyle}
-                                    placeholder="Name"
-                                    value={draft.name} 
-                                    onChange={(e) => setDraftField("name", e.target.value)} 
-                                />
-                                <TextField 
-                                    style={luxuryBodyStyle}
-                                    placeholder="Variation"
-                                    value={draft.variation} 
-                                    onChange={(e) => setDraftField("variation", e.target.value)} 
-                                />
-                                <TextField 
-                                    style={luxuryBodyStyle}
-                                    placeholder="Price"
-                                    type="number"
-                                    value={draft.price} 
-                                    onChange={(e) => setDraftField("price", e.target.value)} 
-                                />
-                                <TextField 
-                                    style={luxuryBodyStyle}
-                                    placeholder="Quantity"
-                                    type="number"
-                                    value={draft.quantity} 
-                                    onChange={(e) => setDraftField("name", e.target.value)} 
-                                />
-                                <TextField 
-                                    style={luxuryBodyStyle}
-                                    placeholder="Notes Top"
-                                    value={draft.notesTop} 
-                                    onChange={(e) => setDraftField("notesTop", e.target.value)} 
-                                />
-                                <TextField 
-                                    style={luxuryBodyStyle}
-                                    placeholder="Notes Heart"
-                                    value={draft.notesHeart} 
-                                    onChange={(e) => setDraftField("notesHeart", e.target.value)} 
-                                />
-                                <TextField 
-                                    style={luxuryBodyStyle}
-                                    placeholder="Notes Base"
-                                    value={draft.notesBase} 
-                                    onChange={(e) => setDraftField("notesBase", e.target.value)} 
-                                />
-                                <SwitchField
-                                    style={luxuryBodyStyle}
-                                    label="Hidden?"
-                                    isChecked={draft.isHidden} 
-                                    onChange={(e) => setDraftField("isHidden", e.target.checked)} 
-                                />
-                                <SwitchField 
-                                    style={luxuryBodyStyle}
-                                    label="Featured"
-                                    isChecked={draft.isfeatured}
-                                    onChange={(e) => setDraftField("isFeatured", e.target.checked)} 
-                                />
-                                {/* 
-                                <View>
-                                    <Text style={luxuryBodyStyle}>Images</Text>
-                                    <input type="file" multiple onChange={onImagesSelected} />
-                                    <Text style={luxuryBodyStyle}>
-                                    Selected: {Array.isArray(draft.images) ? draft.images.length : 0}
-                                    </Text>
-                                </View>
-                                */}
+
+                    {loadingProduct && (
+                    <Flex direction="column" gap="0.25rem">
+                        <Text style={luxuryHeadingStyle}>Product Information</Text>
+                        <Text style={luxuryBodyStyle}>Loading Product...</Text>
+                    </Flex>
+                    )}
+
+                    {/* Add mode: Will pull up a blank draft to be filled out with information of a product they want to add */}
+                    {/* Edit mode: Will take existing product and show its information in the draft instead of being blank */}
+                    {(activeMode === MODES.ADD || activeMode === MODES.EDIT) && (
+                        <Grid 
+                            templateColumns="12rem 10rem"
+                            gap="0.3rem" 
+                            marginTop="-.2rem"
+                            >
+                            <TextField 
+                                style={compactStyle}
+                                placeholder="Type"
+                                value={draft.type} 
+                                onChange={(e) => setDraftField("type", e.target.value)} 
+                            />
+                            <TextField 
+                                style={compactStyle}
+                                placeholder="Name"
+                                value={draft.name} 
+                                onChange={(e) => setDraftField("name", e.target.value)} 
+                            />
+                            <TextField 
+                                style={compactStyle}
+                                placeholder="Variation"
+                                value={draft.variation} 
+                                onChange={(e) => setDraftField("variation", e.target.value)} 
+                            />
+                            <TextField 
+                                style={compactStyle}
+                                placeholder="Price"
+                                type="number"
+                                value={draft.price} 
+                                onChange={(e) => setDraftField("price", e.target.value)} 
+                            />
+                            <TextField 
+                                style={compactStyle}
+                                placeholder="Quantity"
+                                type="number"
+                                value={draft.quantity} 
+                                onChange={(e) => setDraftField("quantity", e.target.value)} 
+                            />
+                            {/* Entering Top, Heart, and Base notes ------------------------------------------------------------*/}
+                            <TextField
+                                style={compactStyle}
+                                placeholder="Notes Top (, separated)"
+                                // If array exists for top use it and separate by commas
+                                value={(draft.notes.top || []).join(", ")}   
+                                onChange={(e) => {
+                                    const arr = e.target.value
+                                    .split(",") 
+                                    .map(s => s.trim()) 
+                                    .filter(Boolean); // Will remove any empty strings entered
+                                    setDraft(prev => ({
+                                        ...prev,
+                                        notes: { ...prev.notes, top: arr }
+                                    }));
+                                }}
+                            />
+                            <TextField
+                                style={compactStyle}
+                                placeholder="Notes Heart (, separated)"
+                                value={(draft.notes.heart || []).join(", ")}   
+                                onChange={(e) => {
+                                    const arr = e.target.value
+                                    .split(",")
+                                    .map(s => s.trim())
+                                    .filter(Boolean);
+                                    setDraft(prev => ({
+                                        ...prev,
+                                        notes: { ...prev.notes, heart: arr }
+                                    }));
+                                }}
+                            />
+                            <TextField
+                                style={compactStyle}
+                                placeholder="Notes Base (, separated)"
+                                value={(draft.notes.base || []).join(", ")}   
+                                onChange={(e) => {
+                                    const arr = e.target.value
+                                    .split(",")
+                                    .map(s => s.trim())
+                                    .filter(Boolean);
+                                    setDraft(prev => ({
+                                        ...prev,
+                                        notes: { ...prev.notes, base: arr }
+                                    }));
+                                }}
+                            />
+                            {/* Hidden or featured switches -------------------- */}
+                            <SwitchField
+                                style={compactStyle}
+                                label="Hidden?"
+                                isChecked={draft.ishidden} 
+                                onChange={(e) => setDraftField("ishidden", e.target.checked)} 
+                            />
+                            <SwitchField 
+                                style={compactStyle}
+                                label="Featured"
+                                isChecked={draft.isfeatured}
+                                onChange={(e) => setDraftField("isfeatured", e.target.checked)} 
+                            />
+                            {/* Inputting image files ---------------------------------------------------- */}
+                            <View>
+                                <input type="file" multiple accept="image/*" onChange={onImagesSelected} />
+                                <Text style={compactStyle}>
+                                    {/* Making sure it is array, will display images length or 0 if nothing has been uploaded */}
+                                    Selected: {draft.images.length}
+                                </Text>
+                            </View>
                             <Flex 
                                 direction="row" 
                                 gap="0.08rem" 
                                 wrap="wrap">
+                                {/* Save button --------------------------------------------------- */}
                                 <Button
-                                    style={luxuryBodyStyle}
+                                    style={compactStyle}
                                     onClick={() => {
-                                        addProduct()
+                                        if (!canSave) {
+                                            setMessage("Please fill out type and name information.");
+                                            return;
+                                        }
+                                        if (activeMode === MODES.ADD) addProduct();
+                                        else updateProduct();
+                                        
                                     }}
                                 >
-                                    Create
+                                    Save
                                 </Button>
+                                {/* Cancel button ------------------------------------------------------------------- */}
                                 <Button
-                                    style={luxuryBodyStyle}
-                                    setSelectedProduct
+                                    style={compactStyle}
                                     onClick={() => {
-                                        setActiveMode("view")
+                                        if (activeMode === MODES.EDIT && selectedProduct) {
+                                            // Context : If you are editing the selected product, just take the products orignal
+                                            // info and set it back as draft as if no changes were made
+                                            setDraft(makeDraftFromProduct(selectedProduct)); 
+                                            setActiveMode(MODES.VIEW);
+                                            return;
+                                        }
+                                        // If adding a product and cancel just to default and return to no active mode
+                                        setMessage("");
+                                        resetToIdle();
                                     }}
                                 >
                                     Cancel
@@ -378,52 +580,36 @@ export default function ProductsPanel() {
                         </Grid>
                         
                     )}    
-
-                    {activeMode === "remove" && //selectedProduct && 
+                    {/* Removal mode -------------------------------------------------- */}
+                    {activeMode === MODES.REMOVE && selectedProduct && 
                     (
                         <Flex direction="column" gap="0.05rem" wrap="wrap">
-                            {/* All adding info will go here for the product */}
                             <Flex direction="row" gap="0.05rem" wrap="wrap">
-                                <Button>
-                                    Hide
+                                <Button
+                                    onClick={() => hideProduct()}>
+                                    {selectedProduct.ishidden ? "Unhide" : "Hide"}
                                 </Button>
-                                <Button>
+                                <Button
+                                onClick={() => removeProduct()}>
                                     Delete
                                 </Button>
                                 <Button
-                                    setSelectedProduct
                                     onClick={() => {
-                                        setSelectedProduct(null)
-                                        setActiveMode("view")
+                                        setMessage("");
+                                        if (selectedProduct) {
+                                            setActiveMode(MODES.VIEW);
+                                            return;
+                                        }
+                                        setActiveMode(MODES.IDLE)
                                     }}
                                 >
                                     Cancel
                                 </Button>
                             </Flex>
                         </Flex>
-                    )}    
-
-                    {activeMode === "edit" && selectedProduct && 
-                    (
-                        <Flex direction="column" gap="0.05rem" wrap="wrap">
-                                {/* All adding info will go here for the product */}
-                                <Flex direction="row" gap="0.05rem" wrap="wrap">
-                                    <Button>
-                                        Save Changes?
-                                    </Button>
-                                    <Button
-                                        setSelectedProduct
-                                        onClick={() => {
-                                            setActiveMode("view")
-                                        }}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </Flex>
-                            </Flex>
-                    )}
-
-                    {activeMode === "none" && (
+                    )}   
+                    {/* Base mode when no product is selected ----------------------------------------------- */}
+                    {activeMode === MODES.IDLE && (
                     <> 
                     <Flex
                         direction="column" 
@@ -440,9 +626,9 @@ export default function ProductsPanel() {
                         </Flex>
                     </>
                     )}
-
-                    {activeMode === "view" && selectedProduct &&  (
-                    <Flex direction="column" gap="0.05rem" wrap="wrap">
+                    {/* View product ------------------------------------------------- */}
+                    {activeMode === MODES.VIEW && selectedProduct &&  !loadingProduct && (
+                    <Flex direction="column" gap="0.1rem" wrap="wrap" textAlign="center">
                         <Text style={luxuryBodyStyle}>{selectedProduct.name}</Text>
                         <Text style={luxuryBodyStyle}>Type: {selectedProduct.type}</Text>
                         <Text style={luxuryBodyStyle}>Variation: {selectedProduct.variation}</Text>
@@ -451,11 +637,12 @@ export default function ProductsPanel() {
                         <Text style={luxuryBodyStyle}>Featured: {selectedProduct.isfeatured ? "Yes" : "No"}</Text>
                         <Text style={luxuryBodyStyle}>Hidden: {selectedProduct.ishidden ? "Yes" : "No"}</Text>
                         <Text style={luxuryBodyStyle}>
-                            Notes: Top[{selectedProduct.notes?.top?.join(", ") || "—"}] / Heart[{selectedProduct.notes?.heart?.join(", ") || "—"}] / Base[{selectedProduct.notes?.base?.join(", ") || "—"}]
+                            {/* Display the selected products Top, Heart, and Base notes in one line */}
+                            Notes: Top[{selectedProduct.notes.top.join(", ") || "—"}] / Heart[{selectedProduct.notes.heart.join(", ") || "—"}] / Base[{selectedProduct.notes.base?.join(", ") || "—"}]
                         </Text>
                         <Text 
                             style={luxuryBodyStyle}>
-                            Images: {selectedProduct.images.length ? selectedProduct.images.length : "None"}
+                            Images: {Array.isArray(selectedProduct.images) ? selectedProduct.images.length : 0}
                         </Text>
                     </Flex>
                     )} 
@@ -464,6 +651,7 @@ export default function ProductsPanel() {
         </Flex>
     );
 }
+
 
 
 // TODO: front end option to select main image to display on website and then other images

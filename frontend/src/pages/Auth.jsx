@@ -124,7 +124,7 @@ export default function Auth() {
             setAuthUI("verify");
             setAuthSuccess("Sign up successful! Check email for verification code.");
         } catch (error) {
-            setAuthError(error?.message || "Sign up failed.");
+            setAuthError(error.message || "Sign up failed.");
         }
     }
 
@@ -157,7 +157,7 @@ export default function Auth() {
             setVerificationCode(""); 
         }
         catch (error) {
-            setAuthError(error?.message || "Verification failed.");
+            setAuthError(error.message || "Verification failed.");
         }
     }
 
@@ -190,7 +190,7 @@ export default function Auth() {
             navigate("/");
         }
         catch (error) {
-            setAuthError(error?.message || "Verification failed.");
+            setAuthError(error.message || "Sign in failed.");
         }
     }
 
@@ -205,7 +205,7 @@ export default function Auth() {
             setAuthSuccess("New verification code sent. Check your email.");
         }
         catch (error) {
-            setAuthError(error?.message || "Resend verification failed.");
+            setAuthError(error.message || "Resend verification failed.");
         }
 
     }
