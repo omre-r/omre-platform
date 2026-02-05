@@ -62,7 +62,7 @@ export default function AdminDashboard() {
                     <Card
                         variation="elevated"
                         height="auto" // was "auto"
-                        width="90rem"
+                        width="70rem"
                         margin="1rem auto"
                         padding="2rem"
                         marginTop="-30rem"
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
                             {/* Depending on which button is clicked will show appropriate mode */}
                             <Card
                                 height="25rem" // was "auto"
-                                width="60rem"
+                                width="80rem"
                                 margin="1rem auto"
                                 padding="2rem"
                                 backgroundColor="rgb(255, 255, 255)"
