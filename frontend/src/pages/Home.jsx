@@ -3,7 +3,7 @@ import { View, Card, Flex, Text } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import Navbar from "../components/Navbar";
 
-import LuxuryBackground from "../assets/Luxury Background.png";
+import LuxuryBackground from "../assets/Luxury Background2.png";
 
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -44,14 +44,14 @@ export default function Home() {
                 margin="1rem auto"
                 padding="2rem"
                 marginTop="-50rem"
-                backgroundColor="rgba(0, 0, 0, 0.75)"
-                border="1px solid rgba(151, 33, 0, 0.72)"
-                borderRadius="8px"
+                backgroundColor="#f6f1ecbc"
+                border="none"
+                box-shadow="0 14px 36px rgba(75, 15, 15, 0.15)"
             >   
                 <Flex direction="column">
                     <Text 
                         style={luxuryHeadingStyle} 
-                        color="#F5F5F5"
+                        color="#2B1E1A"
                         textAlign="center"
                         marginBottom="1.5rem"
                     >

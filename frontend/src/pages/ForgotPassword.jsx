@@ -6,7 +6,7 @@ Explaining only necessary imports
 */ 
 import {useState }from 'react';
 import Navbar from "../components/Navbar";
-import LuxuryBackground from "../assets/Luxury Background.png";
+import LuxuryBackground from "../assets/Luxury Background2.png";
 import { Card, View, Flex, Link, Text, TextField, Button, Heading } from "@aws-amplify/ui-react";
 import {resetPassword, confirmResetPassword} from "aws-amplify/auth";
 
@@ -117,9 +117,9 @@ const ForgotPassword = () => {
                         margin="1rem auto"
                         padding="2rem"
                         marginTop= { isVerify ? "-25rem" : "-30rem" }
-                        backgroundColor="rgba(0, 0, 0, 0.75)"
-                        border="1px solid rgba(151, 33, 0, 0.72)"
-                        borderRadius="8px"
+                        backgroundColor="#f6f1ecbc"
+                        border="none"
+                        box-shadow="0 14px 36px rgba(75, 15, 15, 0.15)"
                         >   
                         <Flex direction="column">
 
@@ -128,7 +128,7 @@ const ForgotPassword = () => {
                             {authUI === "verify" ? (
                             <>
                             <Heading level={3} 
-                                color="#F5F5F5" 
+                                color="#2B1E1A" 
                                 style={luxuryHeadingStyle}
                                 marginTop="-.2rem"
                                 marginBottom="1rem"
@@ -149,7 +149,7 @@ const ForgotPassword = () => {
                             )}
 
                             <TextField
-                                color="#F5F5F5"
+                                color="#2B1E1A"
                                 style={luxuryBodyStyle}
                                 label="Verification Code"
                                 type="text"
@@ -160,7 +160,7 @@ const ForgotPassword = () => {
                                 onChange={(e) => setVerificationCode(e.target.value)}
                             />
                             <TextField
-                                color="#F5F5F5"
+                                color="#2B1E1A"
                                 style={luxuryBodyStyle}
                                 label="Enter new password"
                                 type="password"
@@ -171,7 +171,7 @@ const ForgotPassword = () => {
                                 onChange={(e) => setNewPassword(e.target.value)}
                             />
                             <TextField
-                                color="#F5F5F5"
+                                color="#2B1E1A"
                                 style={luxuryBodyStyle}
                                 label="Confirm new password"
                                 type="password"
@@ -196,7 +196,7 @@ const ForgotPassword = () => {
                             {/* Will send reset code to email if correct information entered */}
                             <Text 
                                 style={luxuryHeadingStyle} 
-                                color="#F5F5F5"
+                                color="#2B1E1A"
                                 textAlign="center"
                                 marginBottom="1.5rem"
                             >
@@ -204,7 +204,7 @@ const ForgotPassword = () => {
                             </Text>
                             <Text 
                                 style={luxuryBodyStyle} 
-                                color="#F5F5F5"
+                                color="#2B1E1A"
                                 textAlign="center"
                                 marginTop="-2.5rem"
                             >
@@ -224,7 +224,7 @@ const ForgotPassword = () => {
                             )}
 
                             <TextField 
-                                color="#F5F5F5" 
+                                color="#2B1E1A" 
                                 style={luxuryBodyStyle}
                                 label="Email"
                                 type="email"
@@ -236,9 +236,7 @@ const ForgotPassword = () => {
                             />
                             <Button 
                                 style={luxuryBodyStyle}
-                                backgroundColor="rgba(82, 18, 0, 0.92)"
-                                color="#F5F5F5"
-                                borderColor="rgba(0,0,0,0.45)"
+                                color="#2B1E1A"
                                 borderRadius="8px"
                                 marginTop="2rem"
                                 onClick={() => handleSendResetCode()}
@@ -247,7 +245,7 @@ const ForgotPassword = () => {
                             </Button>
                             <Link 
                                 href="/Auth" 
-                                style={luxuryBodyStyle} color="#F5F5F5"
+                                style={luxuryBodyStyle} color="#2B1E1A"
                                 textAlign="center"
                                 marginTop="1.5rem"
                                 >

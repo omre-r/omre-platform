@@ -13,7 +13,6 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import "../styles/Navbar.css";
 import { useAuth } from "../context/AuthContext";
-import {Button} from "@aws-amplify/ui-react";
 
 const luxuryBodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -48,25 +47,28 @@ const Navbar = () => {
       {/* Link to auth is shown if loadingAuth false & is not authenticated */}
       <nav className="nav-links">
         {!loadingAuth && !isAuthenticated && (
-          <Link to="/Auth" className="nav-item">AUTH</Link>
+          <Link to="/Auth" 
+          className="nav-item"
+          style={luxuryBodyStyle} >Sign In</Link>
+        )}
+
+        {!loadingAuth && isAuthenticated && isAdmin && (  
+          <Link to="/AdminDashboard" 
+          className="nav-item"
+          style={luxuryBodyStyle}>Admin Dashboard</Link>
         )}
 
         {/* If loadingAuth is false (complete) and user is authenticated, will have ability to log out */}
         {!loadingAuth && isAuthenticated && (
-          <Button 
+          <Link 
             color="#F5F5F5" 
             style={luxuryBodyStyle}                       
-            variation="primary"                                                   
-            border="1px solid rgba(245, 245, 245, 0.85)"                     
+            variation="primary"                                                                
             loadingText=""                                           
             onClick={() => handleLogout()}           
             >
             Sign Out
-          </Button>
-        )}
-
-        {!loadingAuth && isAuthenticated && isAdmin && (  
-          <Link to="/AdminDashboard" className="nav-item">ADMIN DASHBOARD</Link>
+          </Link>
         )}
         
       </nav>

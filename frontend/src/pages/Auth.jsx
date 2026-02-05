@@ -12,7 +12,7 @@ import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import { Card, View, Flex, Heading, Text, TextField, Button, ToggleButton, Link, Grid } from "@aws-amplify/ui-react";
 import { signUp, confirmSignUp, signIn, resendSignUpCode} from "aws-amplify/auth";
-import LuxuryBackground from "../assets/Luxury Background.png";
+import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useAuth } from "../context/AuthContext";
 
 
@@ -240,12 +240,12 @@ export default function Auth() {
                 width="30rem"
                 margin="1rem auto" 
                 padding="2rem" 
-                marginTop={ isVerify ? "-41rem" : 
-                    isLogin ? "-25rem" : "0rem" 
+                marginTop={ isVerify ? "-38rem" : 
+                    isLogin ? "-25rem" : "2rem" 
                 }
-                backgroundColor="rgba(0, 0, 0, 0.75)" 
-                border="1px solid rgba(151, 33, 0, 0.72)" 
-                borderRadius="8px"
+                backgroundColor="#f6f1ecbc" 
+                border="none"
+                box-shadow="0 14px 36px rgba(75, 15, 15, 0.15)"
             >
                 <Flex 
                 direction="column"
@@ -256,14 +256,14 @@ export default function Auth() {
                         <>
                             <Heading
                             level={3} 
-                            color="#F5F5F5" 
+                            color="#2B1E1A" 
                             style={luxuryHeadingStyle}
                             marginTop="0rem"
                             >
                             Verify Your Email
                             </Heading>
                             <Text
-                            color="#F5F5F5" 
+                            color="#2B1E1A" 
                             style={luxuryBodyStyle}
                             marginTop="-1.2rem"
                             >
@@ -282,7 +282,7 @@ export default function Auth() {
                             )}
 
                             <TextField
-                                color="#F5F5F5"
+                                color="#2B1E1A"
                                 style={luxuryBodyStyle}
                                 label="Verification Code"
                                 type="text"
@@ -294,6 +294,8 @@ export default function Auth() {
                             />
                             <Button
                                 variation="primary"
+                                color="#2B1E1A"
+                                style={luxuryBodyStyle}
                                 marginTop="1rem"
                                 onClick={handleVerifyCode}
                                 >
@@ -309,7 +311,7 @@ export default function Auth() {
                     {/* Will display success or error messages below text and heading */}
                     {/* Farther below is the scent selection that will be sent above to create a string of user chosen scents */}
                     <Heading level={3} 
-                        color="#F5F5F5" 
+                        color="#2B1E1A" 
                         style={luxuryHeadingStyle}
                         marginTop="-.2rem"
                         >
@@ -317,7 +319,7 @@ export default function Auth() {
                     </Heading>
 
                     <Text 
-                        color="#F5F5F5" 
+                        color="#2B1E1A" 
                         style={luxuryBodyStyle}
                         marginTop="-1.2rem">
                         {isLogin ? "Access your curated collection." : "Join OMRÉ and define your essence."}
@@ -340,7 +342,7 @@ export default function Auth() {
                     {!isLogin && (
                         <Grid templateColumns="1fr 1fr" gap="0.75rem" marginTop="-.2rem">
                             <TextField
-                                color="#F5F5F5"
+                                color="#2B1E1A"
                                 style={luxuryBodyStyle}
                                 label="Enter First Name"
                                 type="text"
@@ -351,7 +353,7 @@ export default function Auth() {
                                 onChange={(e) => setFirstName(e.target.value)}
                             />
                             <TextField
-                                color="#F5F5F5"
+                                color="#2B1E1A"
                                 style={luxuryBodyStyle}
                                 label="Enter Last Name"
                                 type="text"
@@ -365,7 +367,7 @@ export default function Auth() {
                     )}
 
                     <TextField 
-                        color="#F5F5F5" 
+                        color="#2B1E1A" 
                         style={luxuryBodyStyle}
                         label="Email"
                         type="email"
@@ -376,7 +378,7 @@ export default function Auth() {
                         onChange={(e) => setEmail(e.target.value)}
                     />
 
-                    <TextField color="#F5F5F5" style={luxuryBodyStyle}
+                    <TextField color="#2B1E1A" style={luxuryBodyStyle}
                         label="Password"
                         type="password"
                         placeholder="Enter your password"
@@ -389,7 +391,7 @@ export default function Auth() {
                     {!isLogin && (
                         <>
                         <TextField
-                            color="#F5F5F5"
+                            color="#2B1E1A"
                             style={luxuryBodyStyle}
                             label="Confirm Password"
                             type="password"
@@ -400,7 +402,7 @@ export default function Auth() {
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
                         <Heading level={3} 
-                            color="#F5F5F5" 
+                            color="#2B1E1A" 
                             style={luxuryBodyStyle}
                             >
                             {"Which notes are you drawn to?"}
@@ -424,7 +426,9 @@ export default function Auth() {
                     )}
 
                     {isLogin && (
-                    <Button color="#F5F5F5" style={luxuryBodyStyle}
+                    <Button 
+                        color="#2B1E1A" 
+                        style={luxuryBodyStyle}
                         variation="primary"
                         marginTop=".9rem"
                         border="1px solid rgba(245, 245, 245, 0.85)"
@@ -436,7 +440,9 @@ export default function Auth() {
                     )}
 
                     {!isLogin && (
-                    <Button color="#F5F5F5" style={luxuryBodyStyle}
+                    <Button 
+                        color="#2B1E1A" 
+                        style={luxuryBodyStyle}
                         variation="primary"
                         marginTop="-.1rem"
                         border="1px solid rgba(245, 245, 245, 0.85)"
@@ -449,9 +455,8 @@ export default function Auth() {
 
                     {/* Toggle button to switch between login and signup modes */}
                     <ToggleButton 
-                        color="#F5F5F5" 
+                        color="#2B1E1A" 
                         style={luxuryBodyStyle}
-                        backgroundColor="rgba(82, 18, 0, 0.72)"
                         isPressed={!isLogin}
                         onClick={() => setMode(isLogin ? "signup" : "login")}
                         alignSelf="center"
@@ -464,10 +469,9 @@ export default function Auth() {
                     {isLogin && (
                     <Link href="/ForgotPassword" 
                         style={luxuryBodyStyle} 
-                        color="#F5F5F5">
+                        color="#2B1E1A">
                         Forgot Password?
                     </Link>
-
                     )}
                     </>
                     )}
