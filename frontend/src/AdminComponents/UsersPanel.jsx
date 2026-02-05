@@ -94,103 +94,110 @@ export default function UsersPanel() {
 
             {/* Left card holding emails ---------------------------------------------*/}
             <Card
-                width="45%" 
+                flex="1.2" 
                 height="100%" 
                 padding="1rem" 
                 backgroundColor="whitesmoke"
                 >
                 <Flex 
-                    justifyContent="space-between" 
-                    alignItems="center">   
-                    <Text 
-                        style={luxuryHeadingStyle}>
-                        Users
-                    </Text>
-                    <Button 
-                        style={luxuryBodyStyle}
-                        onClick={loadUsers}>
-                        Refresh
-                    </Button>
-                </Flex>
-
-                {msg && (
-                    <Text 
-                        color="Black" 
-                        style={luxuryBodyStyle} 
-                        marginTop="0.5rem">
-                        {msg}
-                    </Text>
-                )}
-
-                <View 
-                    overflow="auto" 
-                    height="20rem"
-                    marginTop="1rem">
-                    {users.map((currentUser) => (
-                        <Button
-                            key={currentUser.user_id}
-                            variation="link"
-                            onClick={() => viewUser(currentUser.user_id)}
-                            justifyContent="flex-start"
-                            width="100%"
-                            >
-                            {currentUser.email}
-                        </Button>
-                    ))}
-                </View>
-            </Card>
-      
-            {/* Right card holding single specific user information ----------------------------------------- */}
-            <Card
-                width="45%" 
-                height="100%" 
-                padding="1rem" 
-                backgroundColor="whitesmoke"
-            >
-                <Flex 
-                    justifyContent="space-between" 
-                    alignItems="center">
-                    <Text 
-                        style={luxuryHeadingStyle}>
-                        User Information
-                    </Text>              
-                </Flex>
-                {/* No user selected, select user ------------------------------ */}
-                {!loadingUser && !selectedUser && (
-                    <Text 
-                        style={luxuryBodyStyle}>
-                        Please select a user
-                    </Text>
-                )}   
-                {/* If user selected, will display loading -------------------------- */}
-                {loadingUser && (
-                    <Text 
-                        style={luxuryBodyStyle}>
-                        Loading user information
-                    </Text>
-                )}   
-                {/* Loading is false and user has been selected ----------------- */}
-                {/* Show that users information in detail */}
-                {/* TODO: Check back on last login with Ayman */}
-                {!loadingUser && selectedUser && (
-                    <Flex
-                    direction="column"
-                    gap=".2rem" 
-                    >
-                        <Text>Email: {selectedUser.email}</Text>
-                        <Text>First Name: {selectedUser.first_name} </Text>
-                        <Text>Last Name: {selectedUser.last_name} </Text>
-                        <Text>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
-                        <Text>Admin Status: {selectedUser.is_admin ? "Yes" : "No"}</Text>
-                        <Text>Created: {selectedUser.created_at}</Text>
-                        <Text>Last Login: {selectedUser.last_login ? selectedUser.last_login : "--"}</Text>
+                    direction="column" 
+                    height="100%">
+                    <Flex 
+                        justifyContent="space-between" 
+                        alignItems="center">   
+                        <Text 
+                            style={luxuryHeadingStyle}>
+                            Users
+                        </Text>
                         <Button 
                             style={luxuryBodyStyle}
-                            onClick={() => setSelectedUser(null)}
-                            height="auto"
-                            width="auto">
-                            Close Info
+                            onClick={loadUsers}>
+                            Refresh
                         </Button>
+                    </Flex>
+
+                    {msg && (
+                        <Text 
+                            color="Black" 
+                            style={luxuryBodyStyle} 
+                            marginTop="0.5rem">
+                            {msg}
+                        </Text>
+                    )}
+
+                    <View 
+                        overflow="auto" 
+                        height="20rem"
+                        marginTop="1rem">
+                        {users.map((currentUser) => (
+                            <Button
+                                key={currentUser.user_id}
+                                variation="link"
+                                marginBottom=".5rem"
+                                border=".5px solid #111"
+                                borderRadius="6px"
+                                onClick={() => viewUser(currentUser.user_id)}
+                                justifyContent="flex-start"
+                                width="100%"
+                                >
+                                {currentUser.email}
+                            </Button>
+                        ))}
+                    </View>
+                    </Flex>
+                </Card>
+        
+                {/* Right card holding single specific user information ----------------------------------------- */}
+                <Card
+                    flex="1.0" 
+                    height="100%" 
+                    padding="1rem" 
+                    backgroundColor="whitesmoke"
+                >
+                    <Flex>
+                        <Text 
+                            width="100%"
+                            textAlign="center"
+                            style={luxuryHeadingStyle}>
+                            User Information
+                        </Text>              
+                    </Flex>
+                    {/* No user selected, select user ------------------------------ */}
+                    {!loadingUser && !selectedUser && (
+                        <Text 
+                            style={luxuryBodyStyle}>
+                            Please select a user
+                        </Text>
+                    )}   
+                    {/* If user selected, will display loading -------------------------- */}
+                    {loadingUser && (
+                        <Text 
+                            style={luxuryBodyStyle}>
+                            Loading user information
+                        </Text>
+                    )}   
+                    {/* Loading is false and user has been selected ----------------- */}
+                    {/* Show that users information in detail */}
+                    {/* TODO: Check back on last login with Ayman */}
+                    {!loadingUser && selectedUser && (
+                        <Flex
+                        direction="column"
+                        gap=".2rem" 
+                        >
+                            <Text>Email: {selectedUser.email}</Text>
+                            <Text>First Name: {selectedUser.first_name} </Text>
+                            <Text>Last Name: {selectedUser.last_name} </Text>
+                            <Text>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
+                            <Text>Admin Status: {selectedUser.is_admin ? "Yes" : "No"}</Text>
+                            <Text>Created: {selectedUser.created_at}</Text>
+                            <Text>Last Login: {selectedUser.last_login ? selectedUser.last_login : "--"}</Text>
+                            <Button 
+                                style={luxuryBodyStyle}
+                                onClick={() => setSelectedUser(null)}
+                                height="auto"
+                                width="auto">
+                                Close Info
+                            </Button>
                     </Flex>
                 )} 
             </Card>

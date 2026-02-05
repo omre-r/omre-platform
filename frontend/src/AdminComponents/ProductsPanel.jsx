@@ -7,14 +7,14 @@ import {getProductReq, updateProductReq, deleteProductReq, getProductsReq, creat
 // Custom Styling for fonts and amplify ui -------------------------------------- 
 const luxuryHeadingStyle = {
     fontFamily: "'Cormorant Garamond', serif",
-    fontWeight: 600,
+    fontWeight: 700,
     fontSize: "1.5rem",
     letterSpacing: "0.5px",
 };
 const luxuryBodyStyle = {
     fontFamily: "'Cormorant Garamond', serif",
-    fontWeight: 300,
-    fontSize: "1.0rem",   
+    fontWeight: 500,
+    fontSize: "1.2rem",   
     letterSpacing: "0.2px",
 };
 const compactStyle = {
@@ -327,103 +327,113 @@ export default function ProductsPanel() {
             {/* Left card holding products ---------------------------------------------*/}
             {/* Will be shown as a list where each product is clickable  */}
             <Card
-                width="45%" 
+                flex="1.2" 
                 height="100%" 
                 padding="1rem" 
                 backgroundColor="whitesmoke"
                 >
                 <Flex 
-                    justifyContent="space-between" 
-                    alignItems="center"
-                    wrap="wrap">
-                    <Text 
-                        style={luxuryHeadingStyle}>
-                        Products
-                    </Text>
+                    direction="column" 
+                    height="100%">
                     <Flex 
-                        direction="row"
-                        gap="0.75rem" 
-                        wrap="wrap" 
-                        justifyContent="flex-end">
-                        {/* Button : add mode -------------------------------------------------- */}
-                        <Button 
-                            style={luxuryBodyStyle}
-                            onClick={() => {
-                                setActiveMode(MODES.ADD);
-                                setSelectedProduct(null);
-                                setDraft(defaultProductDraft);
-                            }}
-                            >
-                            Add
-                        </Button>
-                        {/* Button : remove mode ---------------------------------------------------- */}
-                        <Button 
-                            style={luxuryBodyStyle}
-                            disabled={!selectedProduct}
-                            onClick={() => {
-                                if (!selectedProduct) return;
-                                setActiveMode(MODES.REMOVE);
-                            }}
-                            >
-                            Remove
-                        </Button>
-                        {/* Button : edit mode ------------------------------- */}
-                        <Button 
-                            style={luxuryBodyStyle}
-                            disabled={!selectedProduct}
-                            onClick={() => {
-                                if (!selectedProduct) return;
-                                setActiveMode(MODES.EDIT);
-                                // Create draft from backend product information
-                                setDraft(makeDraftFromProduct(selectedProduct));
-                            }}
-                            >
-                            Edit
-                        </Button>
+                        justifyContent="space-between" 
+                        alignItems="center"
+                        wrap="wrap">
+                        <Text 
+                            style={luxuryHeadingStyle}>
+                            Products
+                        </Text>
+                        <Flex 
+                            direction="row"
+                            gap="0.75rem" 
+                            wrap="wrap" 
+                            justifyContent="flex-end">
+                            {/* Button : add mode -------------------------------------------------- */}
+                            <Button 
+                                style={luxuryBodyStyle}
+                                onClick={() => {
+                                    setActiveMode(MODES.ADD);
+                                    setSelectedProduct(null);
+                                    setDraft(defaultProductDraft);
+                                }}
+                                >
+                                Add
+                            </Button>
+                            {/* Button : remove mode ---------------------------------------------------- */}
+                            <Button 
+                                style={luxuryBodyStyle}
+                                disabled={!selectedProduct}
+                                onClick={() => {
+                                    if (!selectedProduct) return;
+                                    setActiveMode(MODES.REMOVE);
+                                }}
+                                >
+                                Remove
+                            </Button>
+                            {/* Button : edit mode ------------------------------- */}
+                            <Button 
+                                style={luxuryBodyStyle}
+                                disabled={!selectedProduct}
+                                onClick={() => {
+                                    if (!selectedProduct) return;
+                                    setActiveMode(MODES.EDIT);
+                                    // Create draft from backend product information
+                                    setDraft(makeDraftFromProduct(selectedProduct));
+                                }}
+                                >
+                                Edit
+                            </Button>
+                        </Flex>
                     </Flex>
+
+                    {message && (
+                    <Text style={luxuryBodyStyle} marginTop="0.5rem" color="black">
+                        {message}
+                    </Text>
+                    )}
+                    <View overflow="auto" height="20rem" marginTop="1rem"> 
+                        {/* Below creating a list of all the products ---------------------------- */}
+                        {products.map((prod) => (
+                            <Button
+                                key={getProductId(prod)}
+                                style={luxuryBodyStyle}
+                                variation="link"
+                                justifyContent="flex-start"
+                                width="100%"
+                                marginBottom=".5rem"
+                                border=".5px solid #111"
+                                borderRadius="6px"
+                                onClick={() => {
+                                    // On click we activate viewing that specific product based on the id
+                                    const id = getProductId(prod);
+                                    if (!id) {
+                                        setMessage("Product ID missing.");
+                                        return;
+                                    }
+                                    viewProduct(id);
+                                }}
+                                >
+                                <Text>
+                                    {prod.name} — qty: {prod.quantity} {prod.quantity <= 5 && "(LOW!)"}
+                                </Text>
+                            </Button>
+                        ))}
+                    </View>
                 </Flex>
-                {message && (
-                <Text style={luxuryBodyStyle} marginTop="0.5rem" color="black">
-                    {message}
-                </Text>
-                )}
-                <View overflow="auto" height="20rem" marginTop="1rem"> 
-                    {/* Below creating a list of all the products ---------------------------- */}
-                    {products.map((prod) => (
-                        <Button
-                            key={getProductId(prod)}
-                            variation="link"
-                            justifyContent="flex-start"
-                            width="100%"
-                            onClick={() => {
-                                // On click we activate viewing that specific product based on the id
-                                const id = getProductId(prod);
-                                if (!id) {
-                                    setMessage("Product ID missing.");
-                                    return;
-                                }
-                                viewProduct(id);
-                            }}
-                            >
-                            <Text>
-                                {prod.name} — qty: {prod.quantity} {prod.quantity <= 5 && "(LOW!)"}
-                            </Text>
-                        </Button>
-                    ))}
-                </View>
             </Card>
         
             {/* Right card views, edit, delete, or adds information ----------------------------------------- */}
             <Card
-                width="45%" 
+                flex="1.0"  
                 height="100%" 
                 padding="1rem" 
-                backgroundColor="whitesmoke"
-            >
+                backgroundColor="whitesmoke">
                 <Flex 
-                    justifyContent="space-between" 
+                    direction="column"
+                    height="100%"
+                    width="100%"
+                    justifyContent="center"
                     alignItems="center">
-
                     {loadingProduct && (
                     <Flex direction="column" gap="0.25rem">
                         <Text style={luxuryHeadingStyle}>Product Information</Text>
@@ -532,51 +542,72 @@ export default function ProductsPanel() {
                                 onChange={(e) => setDraftField("isfeatured", e.target.checked)} 
                             />
                             {/* Inputting image files ---------------------------------------------------- */}
-                            <View>
-                                <input type="file" multiple accept="image/*" onChange={onImagesSelected} />
-                                <Text style={compactStyle}>
+                            <View
+                                columnSpan={2}>
+                                <input 
+                                    id="product-images" 
+                                    type="file" 
+                                    multiple accept="image/*" 
+                                    style={{display: "none"}} 
+                                    onChange={onImagesSelected}/>
+                                <Text 
+                                    style={compactStyle}
+                                    marginTop="-1rem">
                                     {/* Making sure it is array, will display images length or 0 if nothing has been uploaded */}
                                     Selected: {draft.images.length}
                                 </Text>
+                                <Button
+                                    style={compactStyle}
+                                    as="label"
+                                    htmlFor="product-images"
+                                    border="1px solid #111"
+                                    borderRadius="6px"
+                                    padding="0.35rem 0.75rem"
+                                >
+                                    Choose Images
+                                </Button>
                             </View>
-                            <Flex 
-                                direction="row" 
-                                gap="0.08rem" 
-                                wrap="wrap">
-                                {/* Save button --------------------------------------------------- */}
-                                <Button
-                                    style={compactStyle}
-                                    onClick={() => {
-                                        if (!canSave) {
-                                            setMessage("Please fill out type and name information.");
-                                            return;
-                                        }
-                                        if (activeMode === MODES.ADD) addProduct();
-                                        else updateProduct();
-                                        
-                                    }}
-                                >
-                                    Save
-                                </Button>
-                                {/* Cancel button ------------------------------------------------------------------- */}
-                                <Button
-                                    style={compactStyle}
-                                    onClick={() => {
-                                        if (activeMode === MODES.EDIT && selectedProduct) {
-                                            // Context : If you are editing the selected product, just take the products orignal
-                                            // info and set it back as draft as if no changes were made
-                                            setDraft(makeDraftFromProduct(selectedProduct)); 
-                                            setActiveMode(MODES.VIEW);
-                                            return;
-                                        }
-                                        // If adding a product and cancel just to default and return to no active mode
-                                        setMessage("");
-                                        resetToIdle();
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                            </Flex>
+                            <View 
+                                columnSpan={2}>
+                                <Flex 
+                                    direction="row" 
+                                    gap="0.08rem" 
+                                    justifyContent="center">
+                                    {/* Save button --------------------------------------------------- */}
+                                    <Button
+                                        style={compactStyle}
+                                        onClick={() => {
+                                            if (!canSave) {
+                                                setMessage("Please fill out type and name information.");
+                                                return;
+                                            }
+                                            if (activeMode === MODES.ADD) addProduct();
+                                            else updateProduct();
+                                            
+                                        }}
+                                    >
+                                        Save
+                                    </Button>
+                                    {/* Cancel button ------------------------------------------------------------------- */}
+                                    <Button
+                                        style={compactStyle}
+                                        onClick={() => {
+                                            if (activeMode === MODES.EDIT && selectedProduct) {
+                                                // Context : If you are editing the selected product, just take the products orignal
+                                                // info and set it back as draft as if no changes were made
+                                                setDraft(makeDraftFromProduct(selectedProduct)); 
+                                                setActiveMode(MODES.VIEW);
+                                                return;
+                                            }
+                                            // If adding a product and cancel just to default and return to no active mode
+                                            setMessage("");
+                                            resetToIdle();
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </Flex>
+                            </View>
                         </Grid>
                         
                     )}    
