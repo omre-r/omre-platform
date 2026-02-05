@@ -41,19 +41,17 @@ h1 {
 
 /* typed text */
 .amplify-input {
-  color: #f5f5f5 !important;
+  color: #2B1E1A !important;
 }
 
 /* placeholder text for when entering name or email or password */
 .amplify-input::placeholder {
-  color: rgba(245, 245, 245, 0.55) !important;
+  color: #9A8F87 !important;
   opacity: 1;
 }
 
-
-/* labels will all be white */
 .amplify-label {
-  color: rgba(245, 245, 245, 0.85) !important;
+  color: #2B1E1A !important;
 }
 
 /* label styling for the font and font size */
@@ -67,16 +65,17 @@ h1 {
 
 /* input background. made it a transparent brown */
 .amplify-field-group__control {
-  background-color: #3b1a126d !important;
+  background-color: #FAF7F3 !important;
+  border: 1px solid rgba(75, 15, 15, 0.25) !important;
 }
 
 /* Base toggle button edits
   text color white, border color the same as others
 */
 .amplify-togglebutton {
-  background-color: rgba(59, 26, 18, 0.55) !important;
-  color: #f5f5f5 !important;
-  border: 1px solid rgba(245, 245, 245, 0.55) !important;
+  background-color: #FAF7F3 !important;
+  color: #2B1E1A !important;
+  border: 1px solid rgba(75, 15, 15, 0.25) !important;
   transition: all 0.2s ease; /* smooth transition active states */
 }
 
@@ -84,9 +83,8 @@ h1 {
   darker background when active, border color the same as others, text white
 */
 .amplify-togglebutton[aria-pressed="true"] {
-  background-color: rgba(151, 33, 0, 0.699) !important;
-  border-color: rgba(245, 245, 245, 0.55) !important;
-  color: #ffffff !important;
+  background-color: #ded6cd !important;
+  border: 1px solid rgba(75, 15, 15, 0.25);
 }
 
 /* toggle button styling for the fonts */
@@ -99,4 +97,10 @@ button.amplify-togglebutton {
 
 .amplify-switchfield label {
   color: black !important;
+}
+
+.amplify-button {
+  border-radius: 6px !important;
+  border: 2px solid rgba(7, 1, 1, 0.25) !important;
+  color:"#2B1E1A" !important;
 }

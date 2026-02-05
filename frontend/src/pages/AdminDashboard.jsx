@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { Card, View, Flex, Link, Text, TextField, Button, Tabs } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import Navbar from "../components/Navbar";
-import LuxuryBackground from "../assets/Luxury Background.png";
+import LuxuryBackground from "../assets/Luxury Background2.png";
 
 import UsersPanel from "../AdminComponents/UsersPanel";
 import ProductsPanel from "../AdminComponents/ProductsPanel";
@@ -67,7 +67,6 @@ export default function AdminDashboard() {
                         padding="2rem"
                         marginTop="-30rem"
                         backgroundColor="rgba(0, 0, 0, 0.75)"
-                        border="1px solid rgba(151, 33, 0, 0.72)"
                         borderRadius="8px"
                         >   
                         {/* Flex holding the sidebar and the main content ---------------------------- */}
@@ -76,34 +75,31 @@ export default function AdminDashboard() {
                             {/* Sidebar flex showing tabs to choose from ---------------------------------- */}
                             <Flex direction="column" gap="6.0rem" alignItems="stretch">
                                 <Button 
+                                    color="#2B1E1A"
                                     justifyContent="center"
-                                    color="#F5F5F5" 
                                     style={luxuryBodyStyle}
                                     variation="primary"
                                     marginTop=".9rem"
-                                    border="1px solid rgba(245, 245, 245, 0.85)"
                                     onClick={() => setActiveTab("users")}
                                     >
                                     Users
                                 </Button>
                                 <Button 
                                     justifyContent="center"
-                                    color="#F5F5F5" 
+                                    color="#2B1E1A"
                                     style={luxuryBodyStyle}
                                     variation="primary"
                                     marginTop=".9rem"
-                                    border="1px solid rgba(245, 245, 245, 0.85)"
                                     onClick={() => setActiveTab("products")}
                                     >
                                     Products
                                 </Button>
                                 <Button 
                                     justifyContent="center"
-                                    color="#F5F5F5" 
+                                    color="#2B1E1A"
                                     style={luxuryBodyStyle}
                                     variation="primary"
                                     marginTop=".9rem"
-                                    border="1px solid rgba(245, 245, 245, 0.85)"
                                     onClick={() => setActiveTab("orders")}
                                     >
                                     Orders
@@ -118,7 +114,7 @@ export default function AdminDashboard() {
                                 margin="1rem auto"
                                 padding="2rem"
                                 backgroundColor="rgb(255, 255, 255)"
-                                border="1px solid rgba(151, 33, 0, 0.72)"
+                                border="1px solid rgba(0, 0, 0, 0.72)"
                                 borderRadius="8px"
                             >   
                             {usersMode && <UsersPanel />}
