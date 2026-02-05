@@ -37,12 +37,14 @@ export default function UsersPanel() {
         setLoadingUsers(true);
         try {
             const response = await fetch(`${API_URL}/admin/users`);    
+            if (!response.ok) {
+                throw new Error(`Issue with load response: ${response.status}`)
+            }
             const data = await response.json();
             setUsers(data.users);
-            setMessage("Success!");
         }
         catch (error) {
-            setMessage(error?.message || "Error loading users.");
+            setMessage(error.message || "Error loading users.");
         }
         finally {
             setLoadingUsers(false);
@@ -58,12 +60,14 @@ export default function UsersPanel() {
         setSelectedUser(null);
         try {
             const response = await fetch(`${API_URL}/admin/users/${userId}`);
+            if (!response.ok) {
+                throw new Error(`Issue with load response: ${response.status}`)
+            }
             const data = await response.json();
             setSelectedUser(data.user);
-            setMessage("Success!");
         }
         catch (error) {
-            setMessage(error?.message || "Error viewing user.");
+            setMessage(error.message || "Error viewing user.");
         }
         finally {
             setLoadingUser(false);
@@ -98,14 +102,6 @@ export default function UsersPanel() {
                 <Flex 
                     justifyContent="space-between" 
                     alignItems="center">   
-                    {msg && (
-                        <Text 
-                            color="Black" 
-                            style={luxuryBodyStyle} 
-                            marginTop="0.5rem">
-                            {msg}
-                        </Text>
-                    )}
                     <Text 
                         style={luxuryHeadingStyle}>
                         Users
@@ -116,6 +112,15 @@ export default function UsersPanel() {
                         Refresh
                     </Button>
                 </Flex>
+
+                {msg && (
+                    <Text 
+                        color="Black" 
+                        style={luxuryBodyStyle} 
+                        marginTop="0.5rem">
+                        {msg}
+                    </Text>
+                )}
 
                 <View 
                     overflow="auto" 
@@ -175,15 +180,15 @@ export default function UsersPanel() {
                         <Text>Email: {selectedUser.email}</Text>
                         <Text>First Name: {selectedUser.first_name} </Text>
                         <Text>Last Name: {selectedUser.last_name} </Text>
-                        <Text>Favorite Notes: {selectedUser.favorite_notes}</Text>
+                        <Text>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
                         <Text>Admin Status: {selectedUser.is_admin ? "Yes" : "No"}</Text>
                         <Text>Created: {selectedUser.created_at}</Text>
-                        <Text>Last Login: {selectedUser.last_login ? selectedUser.last_login : "Null"}</Text>
-
+                        <Text>Last Login: {selectedUser.last_login ? selectedUser.last_login : "--"}</Text>
                         <Button 
                             style={luxuryBodyStyle}
                             onClick={() => setSelectedUser(null)}
-                            height="50%">
+                            height="auto"
+                            width="auto">
                             Close Info
                         </Button>
                     </Flex>
@@ -195,3 +200,7 @@ export default function UsersPanel() {
 
 // To do list
 // TODO: Make the styling of the cards and information better eventually for the panels
+// TODO: if no users make a condition, IE users = 0 
+// TODO: Talk to Ayman about last login
+// TODO: Edit created_at date to look cleaner
+// TODO: Check that user information isnt missing like response.ok check with the data
