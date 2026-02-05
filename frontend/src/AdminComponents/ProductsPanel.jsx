@@ -95,9 +95,9 @@ export default function ProductsPanel() {
             price: product.price != null ? String(product.price) : "",
             quantity: product.quantity != null ? String(product.quantity) : "",
             notes: {
-                top: product.notes.top,
-                heart: product.notes.heart,
-                base: product.notes.base,
+                top: product.notes?.top ?? [],
+                heart: product.notes?.heart ?? [],
+                base: product.notes?.base ?? [],
             },
             isfeatured: product.isfeatured,
             ishidden: product.ishidden,
@@ -629,7 +629,7 @@ export default function ProductsPanel() {
                     {/* View product ------------------------------------------------- */}
                     {activeMode === MODES.VIEW && selectedProduct &&  !loadingProduct && (
                     <Flex direction="column" gap="0.1rem" wrap="wrap" textAlign="center">
-                        <Text style={luxuryBodyStyle}>{selectedProduct.name}</Text>
+                        <Text style={luxuryBodyStyle}>Name: {selectedProduct.name}</Text>
                         <Text style={luxuryBodyStyle}>Type: {selectedProduct.type}</Text>
                         <Text style={luxuryBodyStyle}>Variation: {selectedProduct.variation}</Text>
                         <Text style={luxuryBodyStyle}>Price: ${selectedProduct.price}</Text>
@@ -638,7 +638,7 @@ export default function ProductsPanel() {
                         <Text style={luxuryBodyStyle}>Hidden: {selectedProduct.ishidden ? "Yes" : "No"}</Text>
                         <Text style={luxuryBodyStyle}>
                             {/* Display the selected products Top, Heart, and Base notes in one line */}
-                            Notes: Top[{selectedProduct.notes.top.join(", ") || "—"}] / Heart[{selectedProduct.notes.heart.join(", ") || "—"}] / Base[{selectedProduct.notes.base?.join(", ") || "—"}]
+                            Notes: Top[{selectedProduct.notes?.top.join(", ") || "—"}] / Heart[{selectedProduct.notes?.heart.join(", ") || "—"}] / Base[{selectedProduct.notes?.base.join(", ") || "—"}]
                         </Text>
                         <Text 
                             style={luxuryBodyStyle}>
