@@ -33,6 +33,7 @@ async function connectToDB(){
             host: DB_HOST,
             port: DB_PORT,
             database: DB_NAME,
+            // Comment out if using local db
             ssl: {
                 rejectUnauthorized: false
             },
