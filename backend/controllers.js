@@ -375,7 +375,7 @@ getUploadURL = handleError(getUploadURL);
 
 module.exports = {
   getServerHTML,
-  validateLogin, changePassword, getUser, getUsers, createUser, deleteUser,
+  getUser, getUsers, createUser, deleteUser,
   getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, completeOrder, getOrder, createOrder, deleteOrder,
