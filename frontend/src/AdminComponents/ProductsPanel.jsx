@@ -245,6 +245,7 @@ export default function ProductsPanel() {
                 return;
             }
             const newProduct = await createProductReq(form);
+            console.log("createProductReq returned:", newProduct);
             setMessage(`Created: ${newProduct.name}`);
             resetToIdle();
             await loadProducts();
