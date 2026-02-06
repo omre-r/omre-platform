@@ -82,11 +82,17 @@ export default function Home() {
               border="1px solid rgba(151, 33, 0, 0.72)"
               borderRadius="8px"
             >
-              <Link to={`/fragrances/{prod.id}`}>
-                <View
-                  height="200px"
-                  backgroundColor="rgba(255,255,255,0.15)"
-                  borderRadius="10px"
+              <Link to={`/fragrances/${prod.id}`}>
+                <img
+                    src={prod.main_image_url}
+                    alt={prod.name}
+                    style={{
+                        width: "100%",
+                        height: "200px",
+                        objectFit: "cover",
+                        borderRadius: "10px",
+                        display: "block",
+                    }}
                 />
                 <Text style={bodyStyle} textAlign="center">
                   {prod.name}
