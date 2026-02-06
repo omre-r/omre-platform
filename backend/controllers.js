@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, DeleteObjectTaggingCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require("uuid");
 const {Users, Products, Reviews, Orders} = require("./config/db.js")
@@ -11,7 +11,7 @@ const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN;
 const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
 const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
 
-// working with images
+// working with images 
 const s3Client = new S3Client({ 
   region: 'us-east-1',
   credentials: {
@@ -139,13 +139,16 @@ async function getActiveProducts(req, res) {
 
 // path: POST /products
 async function createProduct(req, res) {
-  //TODO: make images S3 urls
-  const normalFields = JSON.parse(req.body.normalFields)
-  const images = req.files.map(() => randomUrls[Math.floor(Math.random()*3)]);
+  const result = await products.createProduct(req.body);
 
-  const result = await products.createProduct({...normalFields, images});
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to create product"});
+  /*this singular function does not follow the pattern of null return as it is being updated 
+  to include logic from Ayman's lambda function that he made following his own pattern.
+  TODO: No null returns from DB functions. They should return the error/success message themselves. 
+  */
+  if (!result.success){
+    const status = result.status;
+    delete result.status
+    return res.status(status).json(result);
   }
   return res.json(result)
 }
@@ -341,8 +344,6 @@ function handleOtherService(fn){
 */
 getServerHTML = handleError(getServerHTML);
 
-validateLogin = handleError(validateLogin);
-changePassword = handleError(changePassword);
 getUser = handleError(getUser);
 getUsers = handleError(getUsers);
 createUser = handleError(createUser);

@@ -32,10 +32,10 @@ app.post("/users", controllers.createUser);
 app.get("/products/active", controllers.getActiveProducts);
 
 app.get("/products/:id", controllers.getProduct)
-app.put("/products/:id", upload.array("images", 10), controllers.updateProduct)
+app.put("/products/:id", controllers.updateProduct)
 app.delete("/products/:id", controllers.deleteProduct)
 
-app.post("/products", upload.array("images", 10), controllers.createProduct);
+app.post("/products", controllers.createProduct);
 app.get("/products", controllers.getProducts);
 
 
@@ -47,7 +47,7 @@ app.put("/reviews/:id", controllers.updateReview)
 app.delete("/reviews/:id", controllers.deleteReview)
 
 
-app.post("/reviews", upload.array("images", 10), controllers.createReview)
+app.post("/reviews", controllers.createReview)
 app.get("/reviews", controllers.getReviews)
 
 
