@@ -293,12 +293,31 @@ class Products{
     }
 
     async getProduct(id){
-        const query = `SELECT * FROM products WHERE id = $1;`;
+        // Grabs product based on the actual ID
+        const productQuery = `SELECT * FROM products WHERE id = $1;`;
+        // Taking that id and getting the matching image (Could have used join probably but rusty)
+        const imagesQuery = `
+            SELECT id, product_id, image_url, is_main, display_order
+            FROM product_images
+            WHERE product_id = $1
+            ORDER BY display_order ASC;
+        `;
+
         let product;
+        let images;
 
         try{
-            const res = await pool.query(query, [id]);
+            // Execute the sql for the specific id given
+            const res = await pool.query(productQuery, [id]);
             product = res.rows[0]
+            const imagesRes = await pool.query(imagesQuery, [id]);
+            images = imagesRes.rows || [];
+
+            // Attatch the imagesQuery images to the actual products images!
+            product.images = images;
+            
+            // This line in ProductsPanel.jsx : Images: {Array.isArray(selectedProduct.images) ? selectedProduct.images.length : 0}
+            // Will properly display the selectedProducts length of images
         }catch(err){
             console.error(err);
             return null;
