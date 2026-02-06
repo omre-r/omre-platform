@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
-const upload = multer({storage: multer.memoryStorage()});
 
 const controllers = require("./controllers.js"); 
 
@@ -20,9 +19,6 @@ app.get("/", controllers.getServerHTML);
 
 
 // users
-app.put("/users/login/:id", controllers.validateLogin)
-app.put("/users/password/:id", controllers.changePassword)
-
 app.get("/users/:id", controllers.getUser);
 app.delete("/users/:id", controllers.deleteUser);
 
@@ -35,10 +31,10 @@ app.post("/users", controllers.createUser);
 app.get("/products/active", controllers.getActiveProducts);
 
 app.get("/products/:id", controllers.getProduct)
-app.put("/products/:id", upload.array("images", 10), controllers.updateProduct)
+app.put("/products/:id", controllers.updateProduct)
 app.delete("/products/:id", controllers.deleteProduct)
 
-app.post("/products", upload.array("images", 10), controllers.createProduct);
+app.post("/products", controllers.createProduct);
 app.get("/products", controllers.getProducts);
 
 
@@ -50,7 +46,7 @@ app.put("/reviews/:id", controllers.updateReview)
 app.delete("/reviews/:id", controllers.deleteReview)
 
 
-app.post("/reviews", upload.array("images", 10), controllers.createReview)
+app.post("/reviews", controllers.createReview)
 app.get("/reviews", controllers.getReviews)
 
 
@@ -64,6 +60,8 @@ app.delete("/orders/:id", controllers.deleteOrder)
 app.post("/orders", controllers.createOrder)
 
 
+// miscellaneous
+app.get("/uploadurl", controllers.getUploadURL)
 
 //starting server
 app.listen(PORT || 5001, () => {
