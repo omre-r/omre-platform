@@ -64,6 +64,8 @@ app.delete("/orders/:id", controllers.deleteOrder)
 app.post("/orders", controllers.createOrder)
 
 
+// miscellaneous
+app.get("/uploadurl", controllers.getUploadURL)
 
 //starting server
 app.listen(PORT || 5001, () => {
