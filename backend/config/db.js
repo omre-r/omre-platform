@@ -2,16 +2,31 @@ const pg = require("pg")
 const { Pool } = pg
 
 const { v4: uuidv4 } = require("uuid");
-const bcrypt = require("bcrypt")
+const { S3Client, DeleteObjectTaggingCommand } = require('@aws-sdk/client-s3');
 
 const dotenv = require("dotenv");
 dotenv.config();
+
 
 const DB_USERNAME = process.env.DB_USERNAME;
 const DB_PASSWORD = process.env.DB_PASSWORD;
 const DB_HOST = process.env.DB_HOST;
 const DB_PORT = process.env.DB_PORT;
 const DB_NAME = process.env.DB_NAME;
+
+const BUCKET_NAME = process.env.BUCKET_NAME;
+const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN;
+const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
+const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
+
+// working with images 
+const s3Client = new S3Client({ 
+  region: 'us-east-1',
+  credentials: {
+    secretAccessKey: S3_SECRET_ACCESS_KEY,
+    accessKeyId: S3_ACCESS_KEY_ID
+  }
+});
 
 let pool = null;
 let reconnectInterval = null;
@@ -33,11 +48,11 @@ async function connectToDB(){
             host: DB_HOST,
             port: DB_PORT,
             database: DB_NAME,
-            // Comment out if using local db
-            ssl: {
-                rejectUnauthorized: false
-            },
-            connectionTimeoutMillis: 10000
+            connectionTimeoutMillis: 2000,
+            //change if doing remote
+            // ssl: {
+            //     rejectUnauthorized: false
+            // }
         });
         await newPool.query("SELECT NOW()");
         if (pool){
@@ -59,11 +74,9 @@ async function createTables() {
         CREATE TABLE IF NOT EXISTS users(
             id VARCHAR(100) PRIMARY KEY,
             email VARCHAR(500),
-            password VARCHAR(100),
             firstname VARCHAR(100),
             lastname VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
-            lastlogin TIMESTAMPTZ,
             role VARCHAR(10),
             preferrednotes JSONB
         )
@@ -86,6 +99,7 @@ async function createTables() {
             images JSONB,
             quantity INT,
             notes JSONB,
+            description TEXT,
             isfeatured BOOLEAN,
             ishidden BOOLEAN
         )
@@ -136,15 +150,27 @@ class Users{
         return usersInstance;
     }
 
+    //modifications made to make it match Ayman's lambda function 'omre-cognito-post-confirmation'
     async createUser(options){
-        const {email, password, firstname, lastname, role, preferrednotes} = options;
-        const id = uuidv4();
-        const hashedPass = await bcrypt.hash(password, 10);
+        const {id, email, firstname, lastname, preferrednotes} = options;
+
+        const adminEmails = [
+            '@omrefragrances.com',
+            'zchriste16@gmail.com',
+            'contact@aymannazir.com',
+            'muradsaleh2022@gmail.com'
+        ];
+
+        //IMPORTANT: roles will mainly be decided via access tokens later, so the "role" field may be removed
+        // Check if admin (later, there may be a mapping of roles rather than a simple isAdmin check)
+        const isAdmin = adminEmails.some(admin => 
+            admin.startsWith('@') ? email.endsWith(admin) : email === admin
+        );   
 
         let result;
-        const query = `INSERT INTO users (id, email, password, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, firstname, lastname, role, preferrednotes, created, lastlogin;`;
+        const query = `INSERT INTO users (id, email, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, email, hashedPass, firstname, lastname, role, JSON.stringify(preferrednotes)]);
+            result = await pool.query(query, [id, email, firstname, lastname, isAdmin ? "admin" : "user", JSON.stringify(preferrednotes)]);
         }catch(err){
             console.error(err)
             return null
@@ -165,7 +191,7 @@ class Users{
     
     //rate limiting (ex: max 200) not needed yet
     async getUsers(){
-        const query = `SELECT id, email, firstname, lastname, role, preferrednotes, created, lastlogin FROM users`
+        const query = `SELECT * FROM users`
         let users;
 
         try{
@@ -179,10 +205,9 @@ class Users{
     }
 
     async getUser(id){
-
-        const query = `SELECT id, email, firstname, lastname, role, preferrednotes, created, lastlogin FROM users WHERE id = $1`
+        const query = `SELECT * FROM users WHERE id = $1`
+        
         let user;
-
         try{
             const res = await pool.query(query, [id]);
             user = res.rows?.[0]
@@ -192,38 +217,6 @@ class Users{
         }
         return {success: true, data: {user}}
     }
-
-    async validateLogin(email, password){        
-        let user;
-        const checkPassQuery = `SELECT * FROM users WHERE email = $1`;
-        const updateLoginQuery = `UPDATE users SET lastlogin = NOW() WHERE id = $1`;
-        try{
-            user = (await pool.query(checkPassQuery, [email]))?.rows?.[0];
-            if (!user) return null;
-
-            const matches = await bcrypt.compare(password, user.password)
-            if (!matches) return {success: true};
-
-            await pool.query(updateLoginQuery, [user.id]);
-        }catch(err){
-            console.error(err);
-            return null;
-        }
-        delete user.password
-        return {success: true, data: {user}};
-    }
-
-    async changePassword(id, password){
-        const query = `UPDATE users SET password = $1 WHERE id = $2`;
-        try{
-            const hashedPass = await bcrypt.hash(password, 10);
-            await pool.query(query, [hashedPass, id]);
-        }catch(err){
-            console.error(err);
-            return null
-        }
-        return {success: true}
-    }   
 }
 
 /*
@@ -232,24 +225,68 @@ in different situations (changePassword / updateLogin), but a product is
 likely updated in a single setting. Therefore, a single updateProduct is provided.
 */
 class Products{
-    static modifiableFields = ["type", "name", "variation", "price", "images", "quantity", "notes", "ishidden", "isfeatured"];
+    static modifiableFields = ["type", "name", "variation", "price", "images", "quantity", "notes", "description", "ishidden", "isfeatured"];
     static getProductsInstance(){
-        productsInstance = productsInstance ? productsInstance : new Products() ;
+        productsInstance = productsInstance ? productsInstance : new Products();
         return productsInstance;
     }
 
     async createProduct(options){
-        const {type, name, variation, price, images, quantity, notes, isfeatured, ishidden} = options;
+        const {type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden} = options;
         const id = uuidv4();
 
-        let result;
-        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;`;
-        try{
-            result = await pool.query(query, [id, type, name, variation, price, JSON.stringify(images), quantity, JSON.stringify(notes), isfeatured, ishidden]);
-        }catch(err){
-            console.error(err)
-            return null
+        // Validation
+        if (!name || name.trim() === '') {
+            return {success: false, status: 400, message: 'Product name is required'};
         }
+        if (!price || price <= 0) {
+            return {success: false, status: 400, message: 'Valid price is required'};
+        }
+        if (images.length === 0) {
+            return {success: false, status: 400, message: '1 image is required'};
+        }
+        if (images.length > 5) {
+            return {success: false, status: 400, message: 'Maximum of 10 images allowed'};
+        }
+        // Ensure all URLs are from CloudFront
+        const invalidUrls = images.filter(url => !url.startsWith(CLOUDFRONT_DOMAIN));
+        if (invalidUrls.length > 0) {
+            return  {success: false, status: 400, message: 'All image URLs must be valid CloudFront URLs' };
+        }  
+    
+        let result;
+        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;`;
+        try{
+            result = await pool.query(query, [id, type, name, variation, price, JSON.stringify(images), quantity, JSON.stringify(notes), description, isfeatured, ishidden]);
+        }catch(err){
+
+            console.error(err)
+            return {success: false, status: 500, message: 'Failed to create product' };
+        }
+
+        //remove tags
+        const tagRemovalResults = await Promise.all(
+            images.map(async (url) => {
+                try {
+                    const s3Key = url.replace(`${CLOUDFRONT_DOMAIN}/`, '');
+                    await s3Client.send(new DeleteObjectTaggingCommand({
+                        Bucket: BUCKET_NAME,
+                        Key: s3Key
+                    }));
+                    //console.log('Tag removed from:', s3Key);
+                    return { url, success: true };
+                } catch (error) {
+                    console.error('Failed to remove tag from:', url, error);
+                    // Don't fail the request - just log
+                    return { url, success: false, error: error.message };
+                }
+            })
+        );
+        const failedTagRemovals = tagRemovalResults.filter(r => !r.success);
+        if (failedTagRemovals.length > 0) {
+            console.warn('Some tags failed to remove:', failedTagRemovals);
+        }
+
         return {success: true, data: {product: result.rows?.[0]}}
     }
     

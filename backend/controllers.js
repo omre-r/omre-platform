@@ -1,17 +1,34 @@
-
+const { S3Client, PutObjectCommand, DeleteObjectTaggingCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { v4: uuidv4 } = require("uuid");
 const {Users, Products, Reviews, Orders} = require("./config/db.js")
 
+const dotenv = require("dotenv");
+dotenv.config();
+
+const BUCKET_NAME = process.env.BUCKET_NAME;
+const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN;
+const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
+const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
+
+// working with images 
+const s3Client = new S3Client({ 
+  region: 'us-east-1',
+  credentials: {
+    secretAccessKey: S3_SECRET_ACCESS_KEY,
+    accessKeyId: S3_ACCESS_KEY_ID
+  }
+});
+
+// access db resources
 const users = Users.getUsersInstance()
 const products = Products.getProductsInstance()
 const reviews = Reviews.getReviewsInstance()
 const orders = Orders.getOrdersInstance()
 
-const randomUrls = [
-  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTX4EbLlkmCJhmk4LI_PxiTc7OrHEkFE_wjeA&s",
-  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvJZONCNGXEDHPopTA9pSMayySwNu9c8qfdA&s",
-  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsgLo9vC_jTky9f4O_iksW-Uq2Yz5OP9aaog&s"
-]
 
+
+// General wrapper to prevent server crashing
 function handleError(fn){
   return async (...args) => {
     try{
@@ -24,8 +41,6 @@ function handleError(fn){
   };
 }
 
-
-// users
 // app.put("/users/login/:id", placeholder)
 
 // path: GET /
@@ -34,26 +49,7 @@ function getServerHTML(req, res){
 };
 
 
-// path: PUT /users/login/:id
-async function validateLogin(req, res) {
-  const {email, password} = req.body;
-  const result = await users.validateLogin(email, password);
-  if (!result){
-    return res.status(500).json({success: false,  message: "Failed to validate login"});
-  }    
-  return res.json(result);
-}
-
-// path: PUT /users/password/:id
-async function changePassword(req, res){
-  const {id} = req.params;
-  const {password} = req.body;
-  const result = await users.changePassword(id, password);
-  if (!result){
-    return res.status(500).json({success: false,  message: "Failed to change password"});
-  }    
-  return res.json(result);
-}
+// users
 
 // path: GET /users/:id
 async function getUser(req, res){
@@ -111,11 +107,7 @@ async function getProduct(req, res) {
 // path: PUT /products/:id
 async function updateProduct(req, res) {
   const {id} = req.params;
-  const normalFields = JSON.parse(req.body.normalFields)
-  const images = req.files.map(() => randomUrls[Math.floor(Math.random()*3)]);
-  const options = normalFields.images ? {...normalFields, images} : normalFields 
-
-  const result = await products.updateProduct(id, options);
+  const result = await products.updateProduct(id, req.body);
   if (!result){
     return res.status(500).json({success: false, message: "Failed to update product"});
   }
@@ -143,13 +135,16 @@ async function getActiveProducts(req, res) {
 
 // path: POST /products
 async function createProduct(req, res) {
-  //TODO: make images S3 urls
-  const normalFields = JSON.parse(req.body.normalFields)
-  const images = req.files.map(() => randomUrls[Math.floor(Math.random()*3)]);
+  const result = await products.createProduct(req.body);
 
-  const result = await products.createProduct({...normalFields, images});
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to create product"});
+  /*this singular function does not follow the pattern of null return as it is being updated 
+  to include logic from Ayman's lambda function that he made following his own pattern.
+  TODO: No null returns from DB functions. They should return the error/success message themselves. 
+  */
+  if (!result.success){
+    const status = result.status;
+    delete result.status
+    return res.status(status).json(result);
   }
   return res.json(result)
 }
@@ -209,11 +204,7 @@ async function getReviews(req, res) {
 //TODO: images need special handling
 // path: POST /reviews
 async function createReview(req, res) {
-  //TODO: make images S3 urls
-  const normalFields = JSON.parse(req.body.normalFields)
-  const images = req.files.map(() => randomUrls[Math.floor(Math.random()*3)]);
-
-  const result = await reviews.createReview({...normalFields, images});
+  const result = await reviews.createReview(req.body);
   if (!result){
     res.status(500).json({success: false, message: "Failed to create review"});
   }
@@ -283,6 +274,54 @@ async function deleteOrder(req, res) {
   return res.json(result)
 }
 
+// miscellaneous
+
+//This is ayman's code moved from Lambda and modified for this environment
+// path: GET /uploadurl
+async function getUploadURL(req, res) {
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  const PRESIGNED_URL_EXPIRATION = 1800; // 30 minutes
+
+  const { filename, contentType, fileSize } = req.query;
+    
+  // Validation
+  if (!filename || !contentType) {
+    return res.status(400).json({success: false, message: "Missing filename or content type"});
+  }
+  
+  if (!ALLOWED_TYPES.includes(contentType.toLowerCase())) {
+    return res.status(400).json({success: false, message: "Invalid file type. Allowed: jpg, jpeg, png, webp"});
+  }
+  
+  if (fileSize && fileSize > MAX_FILE_SIZE) {
+    return res.status(400).json({success: false, message: `File too large. Max size: ${MAX_FILE_SIZE / 1024 / 1024}MB`});
+  }
+  
+  // Generate unique S3 key
+  const timestamp = Date.now();
+  const randomId = uuidv4().split("-").join("");
+  const sanitizedFilename = filename.replace(/[^a-z0-9.]/gi, '-').toLowerCase();
+  const s3Key = `products/${timestamp}-${randomId}-${sanitizedFilename}`;
+      
+  // Create presigned URL with temporary tagging
+  const command = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: s3Key,
+    ContentType: contentType,
+    Tagging: 'status=temporary' // Auto-tag as temporary
+  });
+  
+  const uploadUrl = await getSignedUrl(s3Client, command, {
+    expiresIn: PRESIGNED_URL_EXPIRATION
+  });
+  
+  // Construct CloudFront public URL
+  const publicUrl = `${CLOUDFRONT_DOMAIN}/${s3Key}`;
+    
+  return res.json({success: true, data: {uploadUrl, publicUrl, expiresIn: PRESIGNED_URL_EXPIRATION}});
+};
+
 
 /* 
 Though probably not needed, we can use wrappers down the line that
@@ -297,8 +336,6 @@ function handleOtherService(fn){
 */
 getServerHTML = handleError(getServerHTML);
 
-validateLogin = handleError(validateLogin);
-changePassword = handleError(changePassword);
 getUser = handleError(getUser);
 getUsers = handleError(getUsers);
 createUser = handleError(createUser);
@@ -324,12 +361,15 @@ getOrder = handleError(getOrder);
 createOrder = handleError(createOrder);
 deleteOrder = handleError(deleteOrder);
 
+getUploadURL = handleError(getUploadURL);
+
 
 
 module.exports = {
   getServerHTML,
-  validateLogin, changePassword, getUser, getUsers, createUser, deleteUser,
+  getUser, getUsers, createUser, deleteUser,
   getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
-  cancelOrder, completeOrder, getOrder, createOrder, deleteOrder
+  cancelOrder, completeOrder, getOrder, createOrder, deleteOrder,
+  getUploadURL
 };

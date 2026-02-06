@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, Flex, Text, Button, View, TextField, SwitchField, Grid } from "@aws-amplify/ui-react";
 
-import {getProductReq, updateProductReq, deleteProductReq, getProductsReq, createProductReq} from'../requests.js';
+import {getProductReq, updateProductReq, deleteProductReq, getProductsReq, createProductReq, createProductFlowReq_LOCAL} from'../requests.js';
 
 
 // Custom Styling for fonts and amplify ui -------------------------------------- 
@@ -235,6 +235,7 @@ export default function ProductsPanel() {
                     heart: draft.notes.heart,
                     base: draft.notes.base,
                 },
+                description: "test description",
                 isfeatured: !!draft.isfeatured,
                 ishidden: !!draft.ishidden,
                 images: draft.images ?? [],
@@ -244,7 +245,7 @@ export default function ProductsPanel() {
                 setMessage(validNums);
                 return;
             }
-            const newProduct = await createProductReq(form);
+            const newProduct = await createProductFlowReq_LOCAL(form);
             console.log("createProductReq returned:", newProduct);
             setMessage(`Created: ${newProduct.name}`);
             resetToIdle();
