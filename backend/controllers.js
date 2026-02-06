@@ -51,27 +51,6 @@ function getServerHTML(req, res){
 
 // users
 
-// path: PUT /users/login/:id
-async function validateLogin(req, res) {
-  const {email, password} = req.body;
-  const result = await users.validateLogin(email, password);
-  if (!result){
-    return res.status(500).json({success: false,  message: "Failed to validate login"});
-  }    
-  return res.json(result);
-}
-
-// path: PUT /users/password/:id
-async function changePassword(req, res){
-  const {id} = req.params;
-  const {password} = req.body;
-  const result = await users.changePassword(id, password);
-  if (!result){
-    return res.status(500).json({success: false,  message: "Failed to change password"});
-  }    
-  return res.json(result);
-}
-
 // path: GET /users/:id
 async function getUser(req, res){
   const {id} = req.params;

@@ -55,11 +55,9 @@ async function createTables() {
         CREATE TABLE IF NOT EXISTS users(
             id VARCHAR(100) PRIMARY KEY,
             email VARCHAR(500),
-            password VARCHAR(100),
             firstname VARCHAR(100),
             lastname VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
-            lastlogin TIMESTAMPTZ,
             role VARCHAR(10),
             preferrednotes JSONB
         )
@@ -132,15 +130,25 @@ class Users{
         return usersInstance;
     }
 
+    //modifications made to make it match Ayman's lambda function 'omre-cognito-post-confirmation'
     async createUser(options){
-        const {email, password, firstname, lastname, role, preferrednotes} = options;
-        const id = uuidv4();
-        const hashedPass = await bcrypt.hash(password, 10);
+        const {id, email, firstname, lastname, preferrednotes} = options;
+
+        const adminEmails = [
+            '@omrefragrances.com',
+            'zchriste16@gmail.com',
+            'contact@aymannazir.com',
+            'muradsaleh2022@gmail.com'
+        ];
+        // Check if admin (later, there may be a mapping of roles rather than a simple isAdmin check)
+        const isAdmin = adminEmails.some(admin => 
+            admin.startsWith('@') ? email.endsWith(admin) : email === admin
+        );   
 
         let result;
-        const query = `INSERT INTO users (id, email, password, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, firstname, lastname, role, preferrednotes, created, lastlogin;`;
+        const query = `INSERT INTO users (id, email, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, email, hashedPass, firstname, lastname, role, JSON.stringify(preferrednotes)]);
+            result = await pool.query(query, [id, email, firstname, lastname, isAdmin ? "admin" : "user", JSON.stringify(preferrednotes)]);
         }catch(err){
             console.error(err)
             return null
@@ -161,7 +169,7 @@ class Users{
     
     //rate limiting (ex: max 200) not needed yet
     async getUsers(){
-        const query = `SELECT id, email, firstname, lastname, role, preferrednotes, created, lastlogin FROM users`
+        const query = `SELECT * FROM users`
         let users;
 
         try{
@@ -175,10 +183,9 @@ class Users{
     }
 
     async getUser(id){
-
-        const query = `SELECT id, email, firstname, lastname, role, preferrednotes, created, lastlogin FROM users WHERE id = $1`
+        const query = `SELECT * FROM users WHERE id = $1`
+        
         let user;
-
         try{
             const res = await pool.query(query, [id]);
             user = res.rows?.[0]
@@ -188,38 +195,6 @@ class Users{
         }
         return {success: true, data: {user}}
     }
-
-    async validateLogin(email, password){        
-        let user;
-        const checkPassQuery = `SELECT * FROM users WHERE email = $1`;
-        const updateLoginQuery = `UPDATE users SET lastlogin = NOW() WHERE id = $1`;
-        try{
-            user = (await pool.query(checkPassQuery, [email]))?.rows?.[0];
-            if (!user) return null;
-
-            const matches = await bcrypt.compare(password, user.password)
-            if (!matches) return {success: true};
-
-            await pool.query(updateLoginQuery, [user.id]);
-        }catch(err){
-            console.error(err);
-            return null;
-        }
-        delete user.password
-        return {success: true, data: {user}};
-    }
-
-    async changePassword(id, password){
-        const query = `UPDATE users SET password = $1 WHERE id = $2`;
-        try{
-            const hashedPass = await bcrypt.hash(password, 10);
-            await pool.query(query, [hashedPass, id]);
-        }catch(err){
-            console.error(err);
-            return null
-        }
-        return {success: true}
-    }   
 }
 
 /*
