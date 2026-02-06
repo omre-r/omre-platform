@@ -20,9 +20,6 @@ app.get("/", controllers.getServerHTML);
 
 
 // users
-app.put("/users/login/:id", controllers.validateLogin)
-app.put("/users/password/:id", controllers.changePassword)
-
 app.get("/users/:id", controllers.getUser);
 app.delete("/users/:id", controllers.deleteUser);
 
