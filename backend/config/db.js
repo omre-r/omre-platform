@@ -13,6 +13,9 @@ const DB_HOST = process.env.DB_HOST;
 const DB_PORT = process.env.DB_PORT;
 const DB_NAME = process.env.DB_NAME;
 
+const BUCKET_NAME = process.env.BUCKET_NAME;
+const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN;
+
 let pool = null;
 let reconnectInterval = null;
 
@@ -80,6 +83,7 @@ async function createTables() {
             images JSONB,
             quantity INT,
             notes JSONB,
+            description TEXT,
             isfeatured BOOLEAN,
             ishidden BOOLEAN
         )
@@ -140,6 +144,8 @@ class Users{
             'contact@aymannazir.com',
             'muradsaleh2022@gmail.com'
         ];
+
+        //IMPORTANT: roles will mainly be decided via access tokens later, so the "role" field may be removed
         // Check if admin (later, there may be a mapping of roles rather than a simple isAdmin check)
         const isAdmin = adminEmails.some(admin => 
             admin.startsWith('@') ? email.endsWith(admin) : email === admin
@@ -203,24 +209,68 @@ in different situations (changePassword / updateLogin), but a product is
 likely updated in a single setting. Therefore, a single updateProduct is provided.
 */
 class Products{
-    static modifiableFields = ["type", "name", "variation", "price", "images", "quantity", "notes", "ishidden", "isfeatured"];
+    static modifiableFields = ["type", "name", "variation", "price", "images", "quantity", "notes", "description", "ishidden", "isfeatured"];
     static getProductsInstance(){
-        productsInstance = productsInstance ? productsInstance : new Products() ;
+        productsInstance = productsInstance ? productsInstance : new Products();
         return productsInstance;
     }
 
     async createProduct(options){
-        const {type, name, variation, price, images, quantity, notes, isfeatured, ishidden} = options;
+        const {type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden} = options;
         const id = uuidv4();
 
-        let result;
-        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;`;
-        try{
-            result = await pool.query(query, [id, type, name, variation, price, JSON.stringify(images), quantity, JSON.stringify(notes), isfeatured, ishidden]);
-        }catch(err){
-            console.error(err)
-            return null
+        // Validation
+        if (!name || name.trim() === '') {
+            return {success: false, status: 400, message: 'Product name is required'};
         }
+        if (!price || price <= 0) {
+            return {success: false, status: 400, message: 'Valid price is required'};
+        }
+        if (images.length === 0) {
+            return {success: false, status: 400, message: '1 image is required'};
+        }
+        if (images.length > 5) {
+            return {success: false, status: 400, message: 'Maximum of 10 images allowed'};
+        }
+        // Ensure all URLs are from CloudFront
+        const invalidUrls = images.filter(url => !url.startsWith(CLOUDFRONT_DOMAIN));
+        if (invalidUrls.length > 0) {
+            return  {success: false, status: 400, message: 'All image URLs must be valid CloudFront URLs' };
+        }  
+    
+        let result;
+        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;`;
+        try{
+            result = await pool.query(query, [id, type, name, variation, price, JSON.stringify(images), quantity, JSON.stringify(notes), description, isfeatured, ishidden]);
+        }catch(err){
+
+            console.error(err)
+            return {success: false, status: 500, message: 'Failed to create product' };
+        }
+
+        //remove tags
+        const tagRemovalResults = await Promise.all(
+            images.map(async (url) => {
+                try {
+                    const s3Key = url.replace(`${CLOUDFRONT_DOMAIN}/`, '');
+                    await s3Client.send(new DeleteObjectTaggingCommand({
+                        Bucket: BUCKET_NAME,
+                        Key: s3Key
+                    }));
+                    console.log('Tag removed from:', s3Key);
+                    return { url, success: true };
+                } catch (error) {
+                    console.error('Failed to remove tag from:', url, error);
+                    // Don't fail the request - just log
+                    return { url, success: false, error: error.message };
+                }
+            })
+        );
+        const failedTagRemovals = tagRemovalResults.filter(r => !r.success);
+        if (failedTagRemovals.length > 0) {
+            console.warn('Some tags failed to remove:', failedTagRemovals);
+        }
+
         return {success: true, data: {product: result.rows?.[0]}}
     }
     
