@@ -49,6 +49,7 @@ async function connectToDB(){
         clearInterval(reconnectInterval);
         createTables()
     }catch(err){
+        console.error("CONNECTION ERROR:", err); // <--- Print the actual error!
         console.log("Failed to connect to AWS RDS database.");
     }
 }
