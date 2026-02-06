@@ -280,6 +280,7 @@ async function uploadImageToS3Req(uploadUrl, file) {
     body: file 
   });
   if (!response.ok) throw new Error(`Failed to upload ${file.name}`);
+  return response.ok
 }
 
 //SERVER BASED
@@ -386,5 +387,5 @@ export {
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq,
-    uploadImageToS3Req, getPresignedUrlReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq
+    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq
 }
