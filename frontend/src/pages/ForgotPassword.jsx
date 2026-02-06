@@ -184,6 +184,8 @@ const ForgotPassword = () => {
                             <Button
                                 variation="primary"
                                 marginTop="1rem"
+                                color="#2B1E1A"
+                                style={luxuryBodyStyle} 
                                 onClick={handleNewPassword}
                                 >
                                 Submit

@@ -33,7 +33,10 @@ async function connectToDB(){
             host: DB_HOST,
             port: DB_PORT,
             database: DB_NAME,
-            connectionTimeoutMillis: 2000
+            ssl: {
+                rejectUnauthorized: false
+            },
+            connectionTimeoutMillis: 10000
         });
         await newPool.query("SELECT NOW()");
         if (pool){
