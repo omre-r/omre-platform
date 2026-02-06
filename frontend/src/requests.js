@@ -162,6 +162,96 @@ async function getProductsReq() {
 }
 
 
+// AWS integration for product image upload and product creation
+
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];    //We are allowing upto 4 images types
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB max size per image allowed
+const MAX_IMAGES = 5;
+
+// Validates image count, type, and size
+function validateAllImages(files) {
+  if (files.length === 0) return { valid: false, errors: ['At least one image is required'] };
+  if (files.length > MAX_IMAGES) return { valid: false, errors: [`Maximum ${MAX_IMAGES} images allowed`] };
+  
+  const errors = [];
+  files.forEach((file, i) => {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      errors.push(`Image ${i + 1}: Invalid type. Allowed: JPG, PNG, WEBP`);
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      errors.push(`Image ${i + 1}: Too large. Max 5MB`);
+    }
+  });
+  return { valid: errors.length === 0, errors };
+}
+
+// Cloud function 1: Returns uploadUrl (S3) and publicUrl (CDN)
+
+async function getPresignedUrlReq(file) {
+  const response = await fetch("https://vsazml20a1.execute-api.us-east-1.amazonaws.com/prod/products/presigned-url", {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename: file.name, contentType: file.type, fileSize: file.size })
+  });
+  if (!response.ok) throw new Error('Failed to get upload URL');
+  return response.json();
+}
+
+// Direct upload to S3 bucket from frontend
+async function uploadImageToS3Req(uploadUrl, file) {
+  const response = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type },
+    body: file 
+  });
+  if (!response.ok) throw new Error(`Failed to upload ${file.name}`);
+}
+
+// CloudFunction 2: Saves product and public URLs to database.
+
+async function createProductAWSReq(productData) {
+  const response = await fetch("https://vsazml20a1.execute-api.us-east-1.amazonaws.com/prod/products", {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(productData)
+  });
+  const data = await response.json();
+  if (!response.ok || !data.success) throw new Error(data.message || 'Failed to create product');
+  return data;
+}
+
+
+// Orchestrates the full upload and save flow
+async function createProductAWSFlowReq({ name, price, description, imageFiles, mainImageIndex = 0, notes }, onProgress = null) { // <--- DELETED "export"
+  const validation = validateAllImages(imageFiles);
+  if (!validation.valid) throw new Error(validation.errors.join('\n'));
+
+  const uploadedUrls = [];
+  for (let i = 0; i < imageFiles.length; i++) {
+    if (onProgress) onProgress(`Uploading image ${i + 1} of ${imageFiles.length}...`);
+    const { uploadUrl, publicUrl } = await getPresignedUrlReq(imageFiles[i]);
+    await uploadImageToS3Req(uploadUrl, imageFiles[i]);
+    uploadedUrls.push(publicUrl);
+  }
+
+  if (onProgress) onProgress('Saving product...');
+  const images = uploadedUrls.map((url, i) => ({
+    url,
+    is_main: i === mainImageIndex,
+    display_order: i
+  }));
+
+  // Passing everything to Lambda 2
+  return await createProductAWSReq({
+    name: name.trim(),
+    price: parseFloat(price),
+    description: description?.trim() || null,
+    images,
+    notes // Lambda 2 will now receive the {top: [], heart: [], base: []} object
+  });
+}
+
 // reviews
 async function getProductReviewsReq(productid){
     const response = await fetch(backendURL + `/reviews/product/${productid}`);
@@ -319,10 +409,16 @@ getOrderReq = handleError(getOrderReq);
 createOrderReq = handleError(createOrderReq);
 deleteOrderReq = handleError(deleteOrderReq);
 
+createProductAWSFlowReq = handleError(createProductAWSFlowReq);  //added handle error
+
 
 export {
     validateLoginReq, changePasswordReq, getUserReq, getUsersReq, createUserReq, deleteUserReq,
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
-    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq
+    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq,
+    
+    //added extra exports
+    createProductAWSFlowReq,
+    validateAllImages
 }

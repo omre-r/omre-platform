@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Card, Flex, Text, Button, View, TextField, SwitchField, Grid } from "@aws-amplify/ui-react";
 
-import {getProductReq, updateProductReq, deleteProductReq, getProductsReq, createProductReq} from'../requests.js';
-
+import { 
+    getProductReq, updateProductReq, deleteProductReq, getProductsReq, 
+    createProductAWSFlowReq, validateAllImages 
+} from '../requests.js';
 
 // Custom Styling for fonts and amplify ui -------------------------------------- 
 const luxuryHeadingStyle = {
@@ -31,6 +33,7 @@ const MODES = {
     REMOVE: "remove",
 };
 
+
 // Default Product Draft   ---------------------------------------
 // When adding we set our draft to start with this where it holds no information
 // When cancelling an add or finishing an add will set the draft to default after to remove any data being saved
@@ -48,6 +51,7 @@ const defaultProductDraft = {
         isfeatured: false,
         ishidden: false,
         images: [], // Images are list of file products (Requests.js)
+        mainImageIndex: 0  //added 
 };
 
 // Products Admin Panel ---------------------------------------------
@@ -62,6 +66,8 @@ export default function ProductsPanel() {
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [loadingProduct, setLoadingProduct] = useState(false);
     const [message, setMessage] = useState("");
+
+    const [isSaving, setIsSaving] = useState(false);
 
     // UI mode switch ---------------------------------------
     // Will switch depending on viewing, editing, removing, or adding
@@ -110,7 +116,8 @@ export default function ProductsPanel() {
         const files = Array.from(e.target.files || []);
         setDraft(prev => ({
             ...prev,
-            images: files
+            images: files,
+            mainImageIndex: 0
         }));
     }
 
@@ -212,46 +219,38 @@ export default function ProductsPanel() {
         }
     }
 
-    // Adding a product to the backend ---------------------------------------------------------------------------
-    // Type and name of product must be required but other information is not mandatory at this point
+    // Adding a product request is created
     async function addProduct() {
-        setMessage("")
+        setMessage("");
+        if (!draft.name || !draft.type) {
+            setMessage("Type and name are required.");
+            return;
+        }
+
+        setIsSaving(true);
         try {
-            if (!canSave) {
-                setMessage("Type and name are required.");
-                return;
-            }
-            // Pull info from draft 
-            const form = {
-                type: draft.type.trim(),
-                name: draft.name.trim(),
-                variation: draft.variation.trim(),
-                price: draft.price === "" ? 0 : Number(draft.price),
-                quantity: draft.quantity === "" ? 0 : Number(draft.quantity),
-                // To match the backend format of the notes, we have top, heart, and base
-                // which will be respectively their own scents.
+            // Orchestrates the two-Lambda and S3 flow
+            const result = await createProductAWSFlowReq({
+                name: draft.name,
+                price: draft.price,
+                description: draft.variation,
+                imageFiles: draft.images,
+                mainImageIndex: draft.mainImageIndex || 0,
+                // NEW: Adding the fragrance notes to the AWS flow
                 notes: {
                     top: draft.notes.top,
                     heart: draft.notes.heart,
                     base: draft.notes.base,
-                },
-                isfeatured: !!draft.isfeatured,
-                ishidden: !!draft.ishidden,
-                images: draft.images ?? [],
-            };
-            const validNums = validateNumbers(form.price, form.quantity)
-            if (validNums) {
-                setMessage(validNums);
-                return;
-            }
-            const newProduct = await createProductReq(form);
-            console.log("createProductReq returned:", newProduct);
-            setMessage(`Created: ${newProduct.name}`);
+                }
+            }, (status) => setMessage(status));
+
+            setMessage(`Created successfully! ID: ${result.productId}`);
             resetToIdle();
             await loadProducts();
-        }
-        catch(error) {
+        } catch (error) {
             setMessage(error.message || "Error adding product.");
+        } finally {
+            setIsSaving(false);
         }
     }
 
@@ -568,15 +567,36 @@ export default function ProductsPanel() {
                                     Choose Images
                                 </Button>
                             </View>
+                            {/* Selector for Main Image */}
+                            {draft.images.length > 0 && (
+                                <View marginTop="0.5rem" columnSpan={2}>
+                                    <Text style={compactStyle}>Select Main Image:</Text>
+                                    <Flex direction="row" gap="0.5rem" wrap="wrap">
+                                        {draft.images.map((file, idx) => (
+                                            <Flex key={idx} alignItems="center" gap="0.2rem">
+                                                <input 
+                                                    type="radio" 
+                                                    name="mainImage" 
+                                                    checked={(draft.mainImageIndex || 0) === idx}
+                                                    onChange={() => setDraftField("mainImageIndex", idx)}
+                                                />
+                                                <Text style={compactStyle}>{idx + 1}</Text>
+                                            </Flex>
+                                        ))}
+                                    </Flex>
+                                </View>
+                            )}
                             <View 
                                 columnSpan={2}>
                                 <Flex 
                                     direction="row" 
                                     gap="0.08rem" 
                                     justifyContent="center">
-                                    {/* Save button --------------------------------------------------- */}
+                                    {/* Save button Updated */}
                                     <Button
                                         style={compactStyle}
+                                        isLoading={isSaving}
+                                        disabled={isSaving}
                                         onClick={() => {
                                             if (!canSave) {
                                                 setMessage("Please fill out type and name information.");
@@ -584,7 +604,6 @@ export default function ProductsPanel() {
                                             }
                                             if (activeMode === MODES.ADD) addProduct();
                                             else updateProduct();
-                                            
                                         }}
                                     >
                                         Save
