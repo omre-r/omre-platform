@@ -156,7 +156,7 @@ class Users{
         );   
 
         let result;
-        const query = `INSERT INTO users (id, email, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`;
+        const query = `INSERT INTO users (id, email, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
         try{
             result = await pool.query(query, [id, email, firstname, lastname, isAdmin ? "admin" : "user", JSON.stringify(preferrednotes)]);
         }catch(err){
