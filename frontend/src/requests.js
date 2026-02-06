@@ -13,32 +13,6 @@ function handleError(fn){
 
 
 // users
-async function validateLoginReq(id, email, password){
-    const response = await fetch(backendURL + `/users/login/${id}`, {
-        method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({email, password})
-    });
-    const data = await response.json();
-    if (!data.success){
-        throw new Error(data.message || "req failed");
-    }
-    return data.data?.user
-}
-
-async function changePasswordReq(id, password) {
-    const response = await fetch(backendURL + `/users/password/${id}`, {
-        method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({password})
-    });
-    const data = await response.json();
-    if (!data.success){
-        throw new Error(data.message || "req failed");
-    }
-    return data
-}
-
 async function getUserReq(id) {
     const response = await fetch(backendURL + `/users/${id}`);
     const data = await response.json();
@@ -57,11 +31,11 @@ async function getUsersReq() {
     return data.data.users;
 }
 
-async function createUserReq({email, password, firstname, lastname, role, preferrednotes}){
+async function createUserReq({id, email, firstname, lastname, preferrednotes}){
     const response = await fetch(backendURL + `/users`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({email, password, firstname, lastname, role, preferrednotes})
+        body: JSON.stringify({id, email, firstname, lastname, preferrednotes})
     });
     const data = await response.json();
     if (!data.success){
@@ -92,19 +66,10 @@ async function getProductReq(id){
 }
 
 async function updateProductReq(id, updatedFields){
-    const copy = {...updatedFields}
-    const fd = new FormData()
-    if (Object.hasOwn(copy, "images")){
-        for (let img of copy["images"]){
-            fd.append("images", img);
-        }
-        copy.images = []
-    }
-    fd.append("normalFields", JSON.stringify(copy));
-
     const response = await fetch(backendURL + `/products/${id}`, {
         method: "PUT",
-        body: fd
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(updatedFields)
     });
     const data = await response.json();
     if (!data.success){
@@ -133,17 +98,11 @@ async function getActiveProductsReq(){
     return data.data.products;
 }
 
-//images are a list of File objects
-async function createProductReq({type, name, variation, price, images, quantity, notes, isfeatured, ishidden}){
-    const normalFields = JSON.stringify({type, name, variation, price, quantity, notes, isfeatured, ishidden});
-    const fd = new FormData()
-    fd.append("normalFields", normalFields)
-    for (let img of images){
-        fd.append("images", img)
-    }
+async function createProductReq({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden}){
     const response = await fetch(backendURL + `/products`, {
         method: "POST",
-        body: fd
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden})
     });
     const data = await response.json();
     if (!data.success){
@@ -197,17 +156,12 @@ async function updateReviewReq(id, updatedFields){
 
 
 async function createReviewReq({customerid, productid, message, rating, images}){
-    const normalFields = JSON.stringify({customerid, productid, message, rating});
-    const fd = new FormData()
-    fd.append("normalFields", normalFields)
-    for (let img of images){
-        fd.append("images", img)
-    }
     const response = await fetch(backendURL + `/reviews`, {
         method: "POST",
-        body: fd
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({customerid, productid, message, rating, images})
     });
-    const data = await response.json()
+    const data = await response.json();
     if (!data.success){
         throw new Error(data.message || "req failed");
     }
@@ -292,8 +246,119 @@ async function deleteOrderReq(id){
     return data;
 }
 
-validateLoginReq = handleError(validateLoginReq);
-changePasswordReq = handleError(changePasswordReq);
+
+
+
+// miscellaneous
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];    //We are allowing upto 4 images types
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB max size per image allowed
+const MAX_IMAGES = 5;
+
+// Validates image count, type, and size
+function validateAllImages(files) {
+  if (files.length === 0) return { valid: false, errors: ['At least one image is required'] };
+  if (files.length > MAX_IMAGES) return { valid: false, errors: [`Maximum ${MAX_IMAGES} images allowed`] };
+  
+  const errors = [];
+  files.forEach((file, i) => {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      errors.push(`Image ${i + 1}: Invalid type. Allowed: JPG, PNG, WEBP`);
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      errors.push(`Image ${i + 1}: Too large. Max 5MB`);
+    }
+  });
+  return { valid: errors.length === 0, errors };
+}
+
+// Direct upload to S3 bucket from frontend
+async function uploadImageToS3Req(uploadUrl, file) {
+  const response = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type },
+    body: file 
+  });
+  if (!response.ok) throw new Error(`Failed to upload ${file.name}`);
+  return response.ok
+}
+
+//SERVER BASED
+
+//returns a temporary url to upload an image
+async function getPresignedUrlReq_LOCAL(file) {
+  const response = await fetch(backendURL + `/uploadurl?filename=${file.name}&contentType=${file.contentType}&fileSize=${file.fileSize}`);
+  if (!response.ok) throw new Error('Failed to get upload URL');
+  return response.json();
+}
+
+async function createProductFlowReq_LOCAL({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden}){
+    if (!validateAllImages(images).valid) throw new Error("invalid images");
+    const uploadUrls = await Promise.all(images.map(f => getPresignedUrlReq_LOCAL(f)));
+    const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, images[i])));
+    const urls = uploadUrls.map(data => data.publicUrl)
+
+    return await createProductReq({type, name, variation, price, images: urls, quantity, notes, description, isfeatured, ishidden})
+}
+
+
+//LAMBDA BASED 
+
+// Cloud function 1: Returns uploadUrl (S3) and publicUrl (CDN)
+async function getPresignedUrlReq(file) {
+  const response = await fetch("https://vsazml20a1.execute-api.us-east-1.amazonaws.com/prod/products/presigned-url", {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename: file.name, contentType: file.type, fileSize: file.size })
+  });
+  if (!response.ok) throw new Error('Failed to get upload URL');
+  return response.json();
+}
+// CloudFunction 2: Saves product and public URLs to database.
+async function createProductAWSReq(productData) {
+  const response = await fetch("https://vsazml20a1.execute-api.us-east-1.amazonaws.com/prod/products", {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(productData)
+  });
+  const data = await response.json();
+  if (!response.ok || !data.success) throw new Error(data.message || 'Failed to create product');
+  return data;
+}
+// Orchestrates the full upload and save flow
+async function createProductAWSFlowReq({ name, price, description, imageFiles, mainImageIndex = 0, notes }, onProgress = null) { // <--- DELETED "export"
+  const validation = validateAllImages(imageFiles);
+  if (!validation.valid) throw new Error(validation.errors.join('\n'));
+
+  const uploadedUrls = [];
+  for (let i = 0; i < imageFiles.length; i++) {
+    if (onProgress) onProgress(`Uploading image ${i + 1} of ${imageFiles.length}...`);
+    const { uploadUrl, publicUrl } = await getPresignedUrlReq(imageFiles[i]);
+    await uploadImageToS3Req(uploadUrl, imageFiles[i]);
+    uploadedUrls.push(publicUrl);
+  }
+
+  if (onProgress) onProgress('Saving product...');
+  const images = uploadedUrls.map((url, i) => ({
+    url,
+    is_main: i === mainImageIndex,
+    display_order: i
+  }));
+
+  // Passing everything to Lambda 2
+  return await createProductAWSReq({
+    name: name.trim(),
+    price: parseFloat(price),
+    description: description?.trim() || null,
+    images,
+    notes // Lambda 2 will now receive the {top: [], heart: [], base: []} object
+  });
+}
+
+
+
+
+
 getUserReq = handleError(getUserReq);
 getUsersReq = handleError(getUsersReq);
 createUserReq = handleError(createUserReq);
@@ -319,10 +384,19 @@ getOrderReq = handleError(getOrderReq);
 createOrderReq = handleError(createOrderReq);
 deleteOrderReq = handleError(deleteOrderReq);
 
+uploadImageToS3Req = handleError(uploadImageToS3Req);
+getPresignedUrlReq_LOCAL = handleError(getPresignedUrlReq);
+createProductFlowReq_LOCAL = handleError(createProductFlowReq_LOCAL)
+getPresignedUrlReq = handleError(getPresignedUrlReq);
+createProductAWSReq = handleError(createProductAWSReq);
+createProductAWSFlowReq = handleError(createProductAWSFlowReq);
+
+
 
 export {
-    validateLoginReq, changePasswordReq, getUserReq, getUsersReq, createUserReq, deleteUserReq,
+    getUserReq, getUsersReq, createUserReq, deleteUserReq,
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
-    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq
+    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq,
+    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq
 }

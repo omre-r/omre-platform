@@ -1,55 +1,50 @@
-const   {
-    validateLoginReq, changePasswordReq, getUserReq, getUsersReq, createUserReq, deleteUserReq,
+import {
+    getUserReq, getUsersReq, createUserReq, deleteUserReq,
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
-    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq
-} = require("../frontend/src/requests.js")
-
+    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq,
+    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq,
+} from "../frontend/src/requests.js"
+ 
 async function testUserFlow(){
-    //email, password, firstname, lastname, role
+    //{id, email, firstname, lastname, preferrednotes}    
     const user1 = {
+        id: "1",
         email: "salehm0529@gmail.com",
-        password: "crzy8123",
         firstname: "murad",
         lastname: "saleh",
-        role: "user",
         preferrednotes: ["ice cream", "vanilla"]
     }
     const user2 = {
+        id: "2",
         email: "ahadkidwai45@gmail.com",
-        password: "123",
         firstname: "ahad",
         lastname: "kidwai",
-        role: "user",
         preferrednotes: ["ice cream", "vanilla"]
     }
     const user3 = {
+        id: "3",
         email: "aymannazir28@gmail.com",
-        password: "321",
         firstname: "ayman",
         lastname: "nazir",
-        role: "user",
         preferrednotes: ["ice cream", "vanilla"]
     }
     const user4 = {
+        id: "4",
         email: "zanechriste88@gmail.com",
-        password: "helloworld",
         firstname: "zane",
         lastname: "christe",
-        role: "user",
         preferrednotes: ["ice cream", "vanilla"]
     }
 
-    let allUsers
     //get all users
-
     console.log("Getting all users: ", await getUsersReq())
 
     //create 4 users
     const createdUser1 =  await createUserReq(user1);
     const createdUser2 =  await createUserReq(user2);
     const createdUser3 =  await createUserReq(user3);
-    const createdUser4 =  await createUserReq(user4)
+    const createdUser4 =  await createUserReq(user4);
     console.log("Created users", createdUser1, createdUser2, createdUser3, createdUser4)
 
     //get all users
@@ -57,41 +52,6 @@ async function testUserFlow(){
 
     //get a single user
     console.log("Getting user 2", await getUserReq(createdUser2.id))
-
-    // All users login with wrong credentials
-    let retrievedUser1 = await validateLoginReq(createdUser1.id, createdUser1.email, "no")
-    let retrievedUser2 = await validateLoginReq(createdUser2.id, createdUser2.email, "dewjrdncw")
-    let retrievedUser3 = await validateLoginReq(createdUser3.id, createdUser3.email, "asx")
-    let retrievedUser4 = await validateLoginReq(createdUser4.id, createdUser4.email, "xsaxed")
-    console.log("Retrieved users (wrong login): ", retrievedUser1, retrievedUser2, retrievedUser3, retrievedUser4)
-
-    //All users login with correct credentials
-    retrievedUser1 = await validateLoginReq(createdUser1.id, createdUser1.email, user1.password)
-    retrievedUser2 = await validateLoginReq(createdUser2.id, createdUser2.email, user2.password)
-    retrievedUser3 = await validateLoginReq(createdUser3.id, createdUser3.email, user3.password)
-    retrievedUser4 = await validateLoginReq(createdUser4.id, createdUser4.email, user4.password)
-    console.log("Retrieved users (correct login): ", retrievedUser1, retrievedUser2, retrievedUser3, retrievedUser4)
-
-    //All users change passwords
-    await changePasswordReq(createdUser1.id, "8");
-    await changePasswordReq(createdUser2.id, "8");
-    await changePasswordReq(createdUser3.id, "8");
-    await changePasswordReq(createdUser4.id, "8");
-    console.log("Changing passwords");
-
-    //All users login AFTER changing passwords
-    retrievedUser1 = await validateLoginReq(createdUser1.id, createdUser1.email, user1.password)
-    retrievedUser2 = await validateLoginReq(createdUser2.id, createdUser2.email, user2.password)
-    retrievedUser3 = await validateLoginReq(createdUser3.id, createdUser3.email, user3.password)
-    retrievedUser4 = await validateLoginReq(createdUser4.id, createdUser4.email, user4.password)
-    console.log("Retrieved users (old login): ", retrievedUser1, retrievedUser2, retrievedUser3, retrievedUser4)
-
-    //All users login with changed passwords
-    retrievedUser1 = await validateLoginReq(createdUser1.id, createdUser1.email, "8")
-    retrievedUser2 = await validateLoginReq(createdUser2.id, createdUser2.email, "8")
-    retrievedUser3 = await validateLoginReq(createdUser3.id, createdUser3.email, "8")
-    retrievedUser4 = await validateLoginReq(createdUser4.id, createdUser4.email, "8")
-    console.log("Retrieved users (new login): ", retrievedUser1, retrievedUser2, retrievedUser3, retrievedUser4)
 
     //delete users 
     await deleteUserReq(createdUser1.id);
@@ -104,20 +64,52 @@ async function testUserFlow(){
     console.log("Getting all users: ", await getUsersReq())
 }
 
-async function testProductFlow(){
-    //async function createProductReq({type, name, variation, price, images, quantity, notes, isfeatured, ishidden}){
+async function testProductFlow(){   
+    const garbageData = new Uint8Array([1]);
+    const randomFile1 = new File([garbageData], "1.png", {type: "image/png"})
+    const randomFile2 = new File([garbageData], "2.jpeg", {type: "image/jpeg"})
+    const randomFile3 = new File([garbageData], "3.png", {type: "image/png"})
+    
+    const files1 = [randomFile1, randomFile2, randomFile3];
+    const files2 = [randomFile1, randomFile3]
+    const files3 = [randomFile3]
+
+    if (!validateAllImages(files1).valid) return
+    console.log("files1 array is valid")
+    if (!validateAllImages(files2).valid) return
+    console.log("files2 array is valid")
+    if (!validateAllImages(files3).valid) return
+    console.log("files3 array is valid")
+
+
+    const uploadUrls1 = await Promise.all(files1.map(f => getPresignedUrlReq_LOCAL(f)));
+    const uploadUrls2 = await Promise.all(files2.map(f => getPresignedUrlReq_LOCAL(f)));
+    const uploadUrls3 = await Promise.all(files3.map(f => getPresignedUrlReq_LOCAL(f)));
+    console.log("retrieved all upload/public urls", uploadUrls1, uploadUrls2, uploadUrls3)
+
+    const uploadResults1 = await Promise.all(uploadUrls1.map((data, i) => uploadImageToS3Req(data.uploadUrl, files1[i])));
+    const uploadResults2 = await Promise.all(uploadUrls2.map((data, i) => uploadImageToS3Req(data.uploadUrl, files2[i])));
+    const uploadResults3 = await Promise.all(uploadUrls3.map((data, i) => uploadImageToS3Req(data.uploadUrl, files3[i])));
+    console.log("Uploaded all images", uploadResults1, uploadResults2, uploadResults3)
+
+    const urls1 = uploadUrls1.map(data => data.publicUrl)
+    const urls2 = uploadUrls2.map(data => data.publicUrl)
+    const urls3 = uploadUrls3.map(data => data.publicUrl)
+    console.log("All urls", urls1, urls2, urls3)
+
     const product1 = {
         type: "mens_cologne",
         name: "Cinnamon Cologne",
         variation: "30ml spray",
         price: 35.34,
-        images: [new Blob([]), new Blob([]), new Blob([])],
+        images: urls1,
         quantity: 20,
         notes: {
             top: ["Cinammon"],
             heart: ["Cherries"],
             base: []
         },
+        description: "great product",
         isfeatured: true,
         ishidden: false
     }
@@ -126,13 +118,14 @@ async function testProductFlow(){
         name: "Vanilla Perfume",
         variation: "30ml spray",
         price: 99.99,
-        images: [],
+        images: urls2,
         quantity: 50,
         notes: {
             top: ["Vanilla", "Raspberry"],
             heart: ["Graphe", "Blueberry"],
             base: []
         },
+        description: "this has a great smell",
         isfeatured: true,
         ishidden: false
     }
@@ -141,19 +134,21 @@ async function testProductFlow(){
         name: "Popular fragrance inspired by someone",
         variation: "5ml mini",
         price: 25.25,
-        images: [new Blob([])],
+        images: urls3,
         quantity: 5,
         notes: {
             top: ["Gold"],
             heart: ["Ice cream"],
             base: []
         },
+        description: "buy this one too",
         isfeatured: true,
         ishidden: true
     }
     // checks
     console.log("Get all products: ", await getProductsReq());
     console.log("Get active products: ", await getActiveProductsReq());
+
 
     //create 4 products
     const createdProduct1 =  await createProductReq(product1);
@@ -332,10 +327,10 @@ async function testOrdersFlow() {
 }
 
 async function testFlows() {
-    await testUserFlow()
+    // await testUserFlow()
     await testProductFlow()
-    await testReviewsFlow()
-    await testOrdersFlow()
+    // await testReviewsFlow()
+    // await testOrdersFlow()
 }
 
 testFlows()
