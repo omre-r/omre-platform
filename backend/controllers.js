@@ -107,11 +107,7 @@ async function getProduct(req, res) {
 // path: PUT /products/:id
 async function updateProduct(req, res) {
   const {id} = req.params;
-  const normalFields = JSON.parse(req.body.normalFields)
-  const images = req.files.map(() => randomUrls[Math.floor(Math.random()*3)]);
-  const options = normalFields.images ? {...normalFields, images} : normalFields 
-
-  const result = await products.updateProduct(id, options);
+  const result = await products.updateProduct(id, req.body);
   if (!result){
     return res.status(500).json({success: false, message: "Failed to update product"});
   }
@@ -208,11 +204,7 @@ async function getReviews(req, res) {
 //TODO: images need special handling
 // path: POST /reviews
 async function createReview(req, res) {
-  //TODO: make images S3 urls
-  const normalFields = JSON.parse(req.body.normalFields)
-  const images = req.files.map(() => randomUrls[Math.floor(Math.random()*3)]);
-
-  const result = await reviews.createReview({...normalFields, images});
+  const result = await reviews.createReview(req.body);
   if (!result){
     res.status(500).json({success: false, message: "Failed to create review"});
   }

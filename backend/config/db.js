@@ -2,10 +2,11 @@ const pg = require("pg")
 const { Pool } = pg
 
 const { v4: uuidv4 } = require("uuid");
-const bcrypt = require("bcrypt")
+const { S3Client, DeleteObjectTaggingCommand } = require('@aws-sdk/client-s3');
 
 const dotenv = require("dotenv");
 dotenv.config();
+
 
 const DB_USERNAME = process.env.DB_USERNAME;
 const DB_PASSWORD = process.env.DB_PASSWORD;
@@ -15,6 +16,17 @@ const DB_NAME = process.env.DB_NAME;
 
 const BUCKET_NAME = process.env.BUCKET_NAME;
 const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN;
+const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
+const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
+
+// working with images 
+const s3Client = new S3Client({ 
+  region: 'us-east-1',
+  credentials: {
+    secretAccessKey: S3_SECRET_ACCESS_KEY,
+    accessKeyId: S3_ACCESS_KEY_ID
+  }
+});
 
 let pool = null;
 let reconnectInterval = null;
@@ -261,7 +273,7 @@ class Products{
                         Bucket: BUCKET_NAME,
                         Key: s3Key
                     }));
-                    console.log('Tag removed from:', s3Key);
+                    //console.log('Tag removed from:', s3Key);
                     return { url, success: true };
                 } catch (error) {
                     console.error('Failed to remove tag from:', url, error);
