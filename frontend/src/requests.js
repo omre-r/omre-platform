@@ -292,6 +292,15 @@ async function getPresignedUrlReq_LOCAL(file) {
   return response.json();
 }
 
+async function createProductFlowReq_LOCAL({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden}){
+    if (!validateAllImages(images).valid) throw new Error("invalid images");
+    const uploadUrls = await Promise.all(images.map(f => getPresignedUrlReq_LOCAL(f)));
+    const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, images[i])));
+    const urls = uploadUrls.map(data => data.publicUrl)
+
+    return await createProductReq({type, name, variation, price, images: urls, quantity, notes, description, isfeatured, ishidden})
+}
+
 
 //LAMBDA BASED 
 
@@ -377,6 +386,7 @@ deleteOrderReq = handleError(deleteOrderReq);
 
 uploadImageToS3Req = handleError(uploadImageToS3Req);
 getPresignedUrlReq_LOCAL = handleError(getPresignedUrlReq);
+createProductFlowReq_LOCAL = handleError(createProductFlowReq_LOCAL)
 getPresignedUrlReq = handleError(getPresignedUrlReq);
 createProductAWSReq = handleError(createProductAWSReq);
 createProductAWSFlowReq = handleError(createProductAWSFlowReq);
@@ -387,5 +397,5 @@ export {
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq,
-    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq
+    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq
 }
