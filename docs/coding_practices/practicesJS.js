@@ -71,7 +71,6 @@ async function getPreferences(){
     const response = await fetch("https://somerandomurlthatmayormaynotexist/preferences");
     const data = await response.json();
 
-    return data.data.preferences // This is better than holding "preferences" in "data.data"
+    return data.data.preferences // This is better than "return data.data"
 }
 
- 
