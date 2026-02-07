@@ -1,0 +1,42 @@
+🚀 Guide: Connect to OMRE Database (DBeaver)
+
+Prerequisite: Download and install DBeaver Community.
+
+================================================================================
+Step 1: Create Connection
+================================================================================
+1. Open DBeaver.
+2. Click the Plug Icon 🔌 (Top Left) or `Database` -> `New Database Connection`.
+3. Select PostgreSQL and click Next.
+
+================================================================================
+Step 2: Enter Credentials
+================================================================================
+Fill in the settings exactly as below:
+
+Setting     | Value
+------------|----------------------------------------------------------
+Host        | omre-db.cunwwukk4o57.us-east-1.rds.amazonaws.com
+Database    | omre_db
+Port        | 5432
+Username    | omre_admin
+Password    | Omre2026FragranceProto1!
+
+================================================================================
+Step 3: Test & Save
+================================================================================
+1. Click Test Connection (bottom left).
+   * If it says "Connected", you are good!
+2. Click Finish.
+
+================================================================================
+Step 4: Verify You See the Data
+================================================================================
+1. In the left sidebar ("Database Navigator"), expand:
+   `omre_db` > `Schemas` > `public` > `Tables`.
+2. You should see the `users` table.
+3. If not, right-click "Tables" and hit Refresh.
+
+================================================================================
+END OF GUIDE
+================================================================================

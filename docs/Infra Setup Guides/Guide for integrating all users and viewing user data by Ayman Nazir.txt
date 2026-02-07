@@ -1,0 +1,186 @@
+Example 1: Get All Users (for table)
+javascript// AdminDashboard.jsx ( JUST FOR REFERENCE )
+
+import { useEffect, useState } from 'react';
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+const API_URL = 'https://6180u0u9xf.execute-api.us-east-1.amazonaws.com/prod';   //(THIS API IS CONNECTED TO 2 LAMBDA FUNCTION WHICH HOSTS MY CODE FOR GETTING ALL USERS AND GETTING ALL DATA OF SINGLE USERS JUST BASED ON THE PATH YOU SEE DOWN BELOW WE CAN RUN ANY ONE OF THE TWO WHEN NEEDED)
+
+function AdminDashboard() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch all users on page load
+  useEffect(() => {
+    async function loadUsers() {
+      const response = await fetch(`${API_URL}/admin/users`);    
+      const data = await response.json();
+      setUsers(data.users);
+      setLoading(false);
+    }
+    loadUsers();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Name</th>
+          <th>Favorite Notes</th>
+          <th>Admin</th>
+        </tr>
+      </thead>
+      <tbody>
+        {users.map(user => (
+          <tr key={user.user_id} onClick={() => viewUser(user.user_id)}>
+            <td>{user.email}</td>
+            <td>{user.first_name} {user.last_name}</td>
+            <td>{user.favorite_notes || 'None'}</td>
+            <td>{user.is_admin ? 'Yes' : 'No'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+Example 2: Get Single User (when row clicked)
+javascript// Function to call when user clicks a row
+async function viewUser(userId) {
+  const response = await fetch(`${API_URL}/admin/users/${userId}`);
+  const data = await response.json();
+  
+  console.log(data.user);
+  // {
+  //   user_id: "9bf73db6-e44c-40d2-9aac-9a2e9828ff93",
+  //   email: "zanechriste@gmail.com",
+  //   first_name: "Zane",
+  //   last_name: "Christe",
+  //   favorite_notes: "Vanilla, Jasmine",
+  //   is_admin: false,
+  //   created_at: "2026-01-29T18:44:59.708Z"
+  // }
+  
+  // Show in modal or navigate to detail page
+  setSelectedUser(data.user);
+  setShowModal(true);
+}
+
+Example 3: Full component with modal
+javascriptimport { useEffect, useState } from 'react';
+
+const API_URL = 'https://6180u0u9xf.execute-api.us-east-1.amazonaws.com/prod';
+
+function AdminDashboard() {
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load all users
+  useEffect(() => {
+    async function loadUsers() {
+      const response = await fetch(`${API_URL}/admin/users`);
+      const data = await response.json();
+      setUsers(data.users);
+      setLoading(false);
+    }
+    loadUsers();
+  }, []);
+
+  // View single user
+  async function viewUser(userId) {
+    const response = await fetch(`${API_URL}/admin/users/${userId}`);
+    const data = await response.json();
+    setSelectedUser(data.user);
+  }
+
+  // Close modal
+  function closeModal() {
+    setSelectedUser(null);
+  }
+
+  if (loading) return <p>Loading users...</p>;
+
+  return (
+    <div>
+      <h1>Admin Dashboard</h1>
+      <p>Total Users: {users.length}</p>
+
+      {/* Users Table */}
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Name</th>
+            <th>Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map(user => (
+            <tr key={user.user_id} onClick={() => viewUser(user.user_id)}>
+              <td>{user.email}</td>
+              <td>{user.first_name} {user.last_name}</td>
+              <td>{user.is_admin ? 'Yes' : 'No'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* User Detail Modal */}
+      {selectedUser && (
+        <div className="modal">
+          <h2>User Details</h2>
+          <p><strong>Email:</strong> {selectedUser.email}</p>
+          <p><strong>Name:</strong> {selectedUser.first_name} {selectedUser.last_name}</p>
+          <p><strong>Favorite Notes:</strong> {selectedUser.favorite_notes || 'None'}</p>
+          <p><strong>Admin:</strong> {selectedUser.is_admin ? 'Yes' : 'No'}</p>
+          <p><strong>Created:</strong> {new Date(selectedUser.created_at).toLocaleDateString()}</p>
+          <button onClick={closeModal}>Close</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default AdminDashboard;
+
+What data comes back:
+GET /admin/users
+json{
+  "users": [
+    {
+      "user_id": "9bf73db6-e44c-40d2-9aac-9a2e9828ff93",
+      "email": "zanechriste@gmail.com",
+      "first_name": "Zane",
+      "last_name": "Christe",
+      "favorite_notes": "Vanilla, Jasmine",
+      "is_admin": false,
+      "created_at": "2026-01-29T18:44:59.708Z"
+    },
+    {
+      "user_id": "431e307b-c583-43c7-a40e-86f56d38cd81",
+      "email": "contact@aymannazir.com",
+      "first_name": "Ayman",
+      "last_name": "Nazir",
+      "favorite_notes": null,
+      "is_admin": true,
+      "created_at": "2026-01-31T18:51:16.576Z"
+    }
+  ]
+}
+GET /admin/users/{user_id}
+json{
+  "user": {
+    "user_id": "9bf73db6-e44c-40d2-9aac-9a2e9828ff93",
+    "email": "zanechriste@gmail.com",
+    "first_name": "Zane",
+    "last_name": "Christe",
+    "favorite_notes": "Vanilla, Jasmine",
+    "is_admin": false,
+    "created_at": "2026-01-29T18:44:59.708Z",
+    "last_login": null
+  }
+}
