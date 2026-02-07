@@ -488,12 +488,11 @@ export default function ProductsPanel() {
                                 style={compactStyle}
                                 placeholder="Notes Top (, separated)"
                                 // If array exists for top use it and separate by commas
-                                value={(draft.notes.top || []).join(", ")}   
+                                value={(draft.notes.top || []).join(",")}   
                                 onChange={(e) => {
                                     const arr = e.target.value
                                     .split(",") 
                                     .map(s => s.trim()) 
-                                    .filter(Boolean); // Will remove any empty strings entered
                                     setDraft(prev => ({
                                         ...prev,
                                         notes: { ...prev.notes, top: arr }
@@ -503,12 +502,11 @@ export default function ProductsPanel() {
                             <TextField
                                 style={compactStyle}
                                 placeholder="Notes Heart (, separated)"
-                                value={(draft.notes.heart || []).join(", ")}   
+                                value={(draft.notes.heart || []).join(",")}   
                                 onChange={(e) => {
                                     const arr = e.target.value
                                     .split(",")
                                     .map(s => s.trim())
-                                    .filter(Boolean);
                                     setDraft(prev => ({
                                         ...prev,
                                         notes: { ...prev.notes, heart: arr }
@@ -518,12 +516,11 @@ export default function ProductsPanel() {
                             <TextField
                                 style={compactStyle}
                                 placeholder="Notes Base (, separated)"
-                                value={(draft.notes.base || []).join(", ")}   
+                                value={(draft.notes.base || []).join(",")}   
                                 onChange={(e) => {
                                     const arr = e.target.value
                                     .split(",")
                                     .map(s => s.trim())
-                                    .filter(Boolean);
                                     setDraft(prev => ({
                                         ...prev,
                                         notes: { ...prev.notes, base: arr }
