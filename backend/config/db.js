@@ -2,7 +2,7 @@ const pg = require("pg")
 const { Pool } = pg
 
 const { v4: uuidv4 } = require("uuid");
-const { S3Client, DeleteObjectTaggingCommand } = require('@aws-sdk/client-s3');
+const { S3Client, DeleteObjectTaggingCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -284,9 +284,17 @@ class Products{
     }
     
     async deleteProduct(id){
-        const query = `DELETE FROM products WHERE id = $1`
+        const query = `DELETE FROM products WHERE id = $1 RETURNING *`
         try{
-            await pool.query(query, [id]);
+            const result = await pool.query(query, [id]);
+            const images = result?.rows?.[0]?.images;
+            for (let image of images){
+                const key = image.split("/")?.[1];
+                s3Client.send(new DeleteObjectCommand({
+                    Bucket: BUCKET_NAME,
+                    Key: key
+                }));
+            } 
         }catch(err){
             console.error(err);
             return {success: false, message: "Failed to delete product", status: 400}

@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand, DeleteObjectTaggingCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require("uuid");
 const {Users, Products, Reviews, Orders} = require("./config/db.js")
