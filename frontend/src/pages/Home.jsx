@@ -1,11 +1,13 @@
-// Database dev
 
+// Imports for all data and commands
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { View, Card, Flex, Text } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
+import { getProductsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 
-import LuxuryBackground from "../assets/Luxury Background.png";
+import LuxuryBackground from "../assets/Luxury Background2.png";
 
 // fonts //
 const headingStyle = {
@@ -13,7 +15,7 @@ const headingStyle = {
   fontWeight: 800,
   fontSize: "2.5rem",
   letterSpacing: "0.5px",
-  color: "#FFFFFF",
+  color: "#000000",
 };
 
 const bodyStyle = {
@@ -24,17 +26,36 @@ const bodyStyle = {
   color: "#FFFFFF",
 };
 
+// functions //
 export default function Home() {
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [message, setMessage] = useState("");
+// make sure it loads //
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const res = await getProductsReq();
+        setProducts(res);
+      } catch (err) {
+        console.error(err);
+        setMessage("Failed to load products.");
+      } finally {
+        setLoadingProducts(false);
+      }
+    }
+
+    loadProducts();
+  }, []);
+
   return (
     <>
-    {/* navigation bar */}
       <Navbar />
 
-      {/* here is the background setup details */}
       <View
         width="100%"
         height="100vh"
-        paddingTop="3rem" 
+        paddingTop="3rem"
         paddingLeft="3rem"
         paddingRight="3rem"
         paddingBottom="3rem"
@@ -42,148 +63,52 @@ export default function Home() {
           backgroundImage: `url(${LuxuryBackground})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
+
         }}
       >
-        {/* The fragrance heading at the top pf the page */}
         <Text style={headingStyle} marginBottom="5rem">
           Featured Fragrances
         </Text>
 
-        {/* individual product cardsfor featured products */}
-        <Flex>
-          <Card
-            variation="elevated"
-            height="auto"
-            width="18rem"
-            margin="1rem"
-            padding="2rem"
-            marginTop="0rem"
-            backgroundColor="rgba(0, 0, 0, 0.75)"
-            border="1px solid rgba(151, 33, 0, 0.72)"
-            borderRadius="8px"
-          >
-            <Link to="/fragrances/latte">
-            <View
-              height="200px"
-              backgroundColor="rgba(255,255,255,0.15)"
-              borderRadius="10px"
-            />
-            <Text style={bodyStyle} textAlign="center">
-              Latte - Inspired by Bianco
-            </Text>
-            <Text style={{ ...bodyStyle, fontWeight: 600 }} textAlign="center">
-              $35
-            </Text>
-            </Link>
-          </Card>
+        <Flex wrap="wrap">
+          {!loadingProducts && products.filter((prod) => prod.isfeatured === true).map((prod) => (
+            <Card
+              key={prod.id}
+              variation="elevated"
+              height="auto"
+              width="18rem"
+              margin="1rem"
+              padding="2rem"
+              backgroundColor="rgba(0, 0, 0, 0.75)"
+              border="1px solid rgba(151, 33, 0, 0.72)"
+              borderRadius="8px"
+            >
+              <Link to={`/fragrances/${prod.id}`}>
+                <img
+                    src={prod.images?.[0]}
+                    alt={prod.name}
+                    style={{
+                        width: "100%",
+                        height: "200px",
+                        objectFit: "cover",
+                        borderRadius: "10px",
+                        display: "block",
+                    }}
+                />
+                <Text style={bodyStyle} textAlign="center">
+                  {prod.name}
+                </Text>
+                <Text
+                  style={{ ...bodyStyle, fontWeight: 600 }}
+                  textAlign="center"
+                >
+                  {prod.price}
+                </Text>
+              </Link>
+            </Card>
+          ))}
+    </Flex>
 
-          <Card
-            variation="elevated"
-            height="auto"
-            width="18rem"
-            margin="1rem"
-            padding="2rem"
-            marginTop="0rem"
-            backgroundColor="rgba(0, 0, 0, 0.75)"
-            border="1px solid rgba(151, 33, 0, 0.72)"
-            borderRadius="8px"
-          >
-            <Link to="/fragrances/latte">
-           <View
-              height="200px"
-              backgroundColor="rgba(255,255,255,0.15)"
-              borderRadius="10px"
-            />
-            <Text style={bodyStyle} textAlign="center">
-              Latte - Inspired by Bianco
-            </Text>
-            <Text style={{ ...bodyStyle, fontWeight: 600 }} textAlign="center">
-              $35
-            </Text>
-            </Link>
-          </Card>
-
-          <Card
-            variation="elevated"
-            height="auto"
-            width="18rem"
-            margin="1rem"
-            padding="2rem"
-            marginTop="0rem"
-            backgroundColor="rgba(0, 0, 0, 0.75)"
-            border="1px solid rgba(151, 33, 0, 0.72)"
-            borderRadius="8px"
-          >
-            <Link to="/fragrances/latte">
-            <View
-              height="200px"
-              backgroundColor="rgba(255,255,255,0.15)"
-              borderRadius="10px"
-            />
-            <Text style={bodyStyle} textAlign="center">
-              Latte - Inspired by Bianco
-            </Text>
-            <Text style={{ ...bodyStyle, fontWeight: 600 }} textAlign="center">
-              $35
-            </Text>
-            </Link>
-          </Card>
-
-          <Card
-            variation="elevated"
-            height="auto"
-            width="18rem"
-            margin="1rem"
-            padding="2rem"
-            marginTop="0rem"
-            backgroundColor="rgba(0, 0, 0, 0.75)"
-            border="1px solid rgba(151, 33, 0, 0.72)"
-            borderRadius="8px"
-          >
-            <Link to="/fragrances/latte">
-            <View
-              height="200px"
-              backgroundColor="rgba(255,255,255,0.15)"
-              borderRadius="10px"
-            />
-            <Text style={bodyStyle} textAlign="center">
-              Latte - Inspired by Bianco
-            </Text>
-            <Text style={{ ...bodyStyle, fontWeight: 600 }} textAlign="center">
-              $35
-            </Text>
-            </Link>
-          </Card>
-
-          <Card
-            variation="elevated"
-            height="auto"
-            width="18rem"
-            margin="1rem"
-            padding="2rem"
-            marginTop="0rem"
-            backgroundColor="rgba(0, 0, 0, 0.75)"
-            border="1px solid rgba(151, 33, 0, 0.72)"
-            borderRadius="8px"
-          >
-            <Link to="/fragrances/latte">
-            <View
-              height="200px"
-              backgroundColor="rgba(255,255,255,0.15)"
-              borderRadius="10px"
-            />
-            <Text style={bodyStyle} textAlign="center">
-              Latte - Inspired by Bianco
-            </Text>
-            <Text style={{ ...bodyStyle, fontWeight: 600 }} textAlign="center">
-              $35
-            </Text>
-            </Link>
-          </Card>
-        </Flex>
-        
-
-        {/* link to get to the shop all section */}
         <Flex justifyContent="flex-end">
           <Link to="/fragrances">
             <View
