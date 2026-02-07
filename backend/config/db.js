@@ -65,6 +65,7 @@ async function connectToDB(){
         clearInterval(reconnectInterval);
         createTables()
     }catch(err){
+        //log err only when debugging
         console.log("Failed to connect to AWS RDS database.");
     }
 }
@@ -145,10 +146,6 @@ async function createTables() {
 }
 
 class Users{
-    static getUsersInstance(){
-        usersInstance = usersInstance ? usersInstance : new Users() ;
-        return usersInstance;
-    }
 
     //modifications made to make it match Ayman's lambda function 'omre-cognito-post-confirmation'
     async createUser(options){
@@ -173,7 +170,7 @@ class Users{
             result = await pool.query(query, [id, email, firstname, lastname, isAdmin ? "admin" : "user", JSON.stringify(preferrednotes)]);
         }catch(err){
             console.error(err)
-            return null
+            return {success: false, message: "Failed to create user", status: 400}
         }
         return {success: true, data: {user: result.rows?.[0]}}
     }
@@ -184,7 +181,7 @@ class Users{
             await pool.query(query, [id]);
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to delete user", status: 400}
         }
         return {success: true}
     }
@@ -199,7 +196,7 @@ class Users{
             users = res.rows
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to get users", status: 400}
         }
         return {success: true, data: {users}}
     }
@@ -213,7 +210,7 @@ class Users{
             user = res.rows?.[0]
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to get user", status: 400}
         }
         return {success: true, data: {user}}
     }
@@ -226,10 +223,6 @@ likely updated in a single setting. Therefore, a single updateProduct is provide
 */
 class Products{
     static modifiableFields = ["type", "name", "variation", "price", "images", "quantity", "notes", "description", "ishidden", "isfeatured"];
-    static getProductsInstance(){
-        productsInstance = productsInstance ? productsInstance : new Products();
-        return productsInstance;
-    }
 
     async createProduct(options){
         const {type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden} = options;
@@ -296,7 +289,7 @@ class Products{
             await pool.query(query, [id]);
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to delete product", status: 400}
         }
         return {success: true}
     }
@@ -310,7 +303,7 @@ class Products{
             products = res.rows;
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to get products", status: 400}
         }
         return {success: true, data: {products}}
     }
@@ -324,7 +317,7 @@ class Products{
             products = res.rows;
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to get active products", status: 400}
         }
         return {success: true, data: {products}}
     }
@@ -338,7 +331,7 @@ class Products{
             product = res.rows[0]
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to get product", status: 400}
         }
         return {success: true, data: {product}}
     }
@@ -355,7 +348,7 @@ class Products{
             await pool.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to update product", status: 400}
         }
         return {success: true}
     }
@@ -378,10 +371,6 @@ class Products{
 
 class Reviews{
     static modifiableFields = ["responses"] //we may allow edits at some point, but just this for now
-    static getReviewsInstance(){
-        reviewsInstance = reviewsInstance ? reviewsInstance : new Reviews() ;
-        return reviewsInstance;
-    }
 
     async createReview(options){
         const {customerid, productid, message, rating, images} = options;
@@ -393,7 +382,7 @@ class Reviews{
             result = await pool.query(query, [id, customerid, productid, message, rating, JSON.stringify(images)]);
         }catch(err){
             console.error(err)
-            return null
+            return {success: false, message: "Failed to create review", status: 400}
         }
         return {success: true, data: {review: result.rows?.[0]}}
     }
@@ -404,7 +393,7 @@ class Reviews{
             await pool.query(query, [id]);
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to delete review", status: 400}
         }
         return {success: true}
     }
@@ -419,7 +408,7 @@ class Reviews{
             reviews = res.rows;
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to get product reviews", status: 400}
         }
         return {success: true, data: {reviews}}
     }
@@ -432,7 +421,7 @@ class Reviews{
             reviews = res.rows;
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to get user reviews", status: 400}
         }
         return {success: true, data: {reviews}}
     }
@@ -446,7 +435,7 @@ class Reviews{
             reviews = res.rows;
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to get reviews", status: 400}
         }
         return {success: true, data: {reviews}}
     }
@@ -460,7 +449,7 @@ class Reviews{
             await pool.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to update review", status: 400}
         }
         return {success: true}
     }
@@ -481,11 +470,6 @@ class Reviews{
 }
 
 class Orders{
-    static getOrdersInstance(){
-        ordersInstance = ordersInstance ? ordersInstance : new Orders() ;
-        return ordersInstance
-    }
-
     async createOrder(options){
         const {customerid, items, total} = options;
         const id = uuidv4();
@@ -496,7 +480,7 @@ class Orders{
             order = await pool.query(query, [id, customerid, JSON.stringify(items), total]);
         }catch(err){
             console.error(err)
-            return null
+            return {success: false, message: "Failed to create order", status: 400}
         }
         return {success: true, data: {order: order.rows?.[0]}}
     }
@@ -507,7 +491,7 @@ class Orders{
             await pool.query(query, [id]);
         }catch(err){
             console.error(err);
-            return null;
+            return {success: false, message: "Failed to delete order", status: 400}
         }
         return {success: true}
     }
@@ -518,7 +502,7 @@ class Orders{
             await pool.query(query, [cancelreason, id]);
         }catch(err){
             console.error(err)
-            return null
+            return {success: false, message: "Failed to cancel order", status: 400}
         }
         return {success: true}
     }
@@ -528,7 +512,7 @@ class Orders{
             await pool.query(query, [id]);
         }catch(err){
             console.error(err)
-            return null
+            return {success: false, message: "Failed to complete order", status: 400}
         }
         return {success: true}
     }
