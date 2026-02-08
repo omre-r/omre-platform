@@ -34,11 +34,6 @@ let reconnectInterval = null;
 connectToDB()
 reconnectInterval = setInterval(connectToDB, 2000);
 
-let usersInstance = null;
-let productsInstance = null;
-let reviewsInstance = null;
-let ordersInstance = null;
-
 async function connectToDB(){
     if (pool) return
     try{

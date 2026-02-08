@@ -1,21 +1,53 @@
 const express = require("express");
 const cors = require("cors");
+const { CognitoJwtVerifier } = require('aws-jwt-verify');
 
 const controllers = require("./controllers.js"); 
 
 const dotenv = require("dotenv");
 dotenv.config();
 
+const COGNITO_POOL_ID = process.env.COGNITO_POOL_ID;
+const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
 const PORT = process.env.PORT
+const USE_ACCESS_TOKENS = true
+
+const verifier = CognitoJwtVerifier.create({
+  userPoolId: COGNITO_POOL_ID,
+  tokenUse: 'access',
+  clientId: COGNITO_CLIENT_ID
+});
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
+async function verifyToken(req, res, next){
+  if (!USE_ACCESS_TOKENS) return next();
+
+  const token = req.headers?.authorization?.split(" ")?.[1];
+  console.log("The token is", token);
+
+  if (!token || token.split(".").length !== 3){
+    return res.status(401).json({success: false, message: "Bad access token"});
+  }
+
+  try {
+    const payload = await verifier.verify(token);
+    console.log("The payload is", payload);
+    return res.status(401).json({success: false, message: "Bad access token"});
+
+    req.tokenPayload = payload;
+  } catch (err) {
+    console.error('Error verifying JWT:', err);
+    return res.status(401).json({success: false, message: "Bad access token"});
+  }
+  return next()
+}
+
 
 app.get("/", controllers.getServerHTML);
-
 
 // users
 app.get("/users/:id", controllers.getUser);
