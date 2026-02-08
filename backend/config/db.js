@@ -284,11 +284,17 @@ class Products{
             const result = await pool.query(query, [id]);
             const images = result?.rows?.[0]?.images;
             for (let image of images){
-                const key = image.split("/")?.[1];
-                s3Client.send(new DeleteObjectCommand({
-                    Bucket: BUCKET_NAME,
-                    Key: key
-                }));
+                const key = image.split("/").at(-1);
+                try{
+                    await s3Client.send(new DeleteObjectCommand({
+                        Bucket: BUCKET_NAME,
+                        Key: key
+                    }));
+                }catch(err){
+                    console.log("Got error saying tried to delete bucket even though its a file. Key is: ", key)
+                    console.log(err)
+                }
+
             } 
         }catch(err){
             console.error(err);
