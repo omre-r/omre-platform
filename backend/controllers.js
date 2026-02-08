@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand, DeleteObjectTaggingCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require("uuid");
 const {Users, Products, Reviews, Orders} = require("./config/db.js")
@@ -21,10 +21,10 @@ const s3Client = new S3Client({
 });
 
 // access db resources
-const users = Users.getUsersInstance()
-const products = Products.getProductsInstance()
-const reviews = Reviews.getReviewsInstance()
-const orders = Orders.getOrdersInstance()
+const users = new Users()
+const products = new Products()
+const reviews = new Reviews()
+const orders = new Orders()
 
 
 
@@ -55,8 +55,8 @@ function getServerHTML(req, res){
 async function getUser(req, res){
   const {id} = req.params;
   const result = await users.getUser(id);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to get user"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
@@ -64,8 +64,8 @@ async function getUser(req, res){
 // path: GET /users
 async function getUsers(req, res){
   const result = await users.getUsers();
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to get users"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
@@ -73,8 +73,8 @@ async function getUsers(req, res){
 // path: POST /users
 async function createUser(req, res){
   const result = await users.createUser(req.body);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to create user"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
@@ -83,8 +83,8 @@ async function createUser(req, res){
 async function deleteUser(req, res) {
   const {id} = req.params;
   const result = await users.deleteUser(id);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to delete user"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result)
 }
@@ -98,8 +98,8 @@ async function deleteUser(req, res) {
 async function getProduct(req, res) {
   const {id} = req.params;
   const result = await products.getProduct(id);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to get product"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result)
 }
@@ -108,8 +108,8 @@ async function getProduct(req, res) {
 async function updateProduct(req, res) {
   const {id} = req.params;
   const result = await products.updateProduct(id, req.body);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to update product"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result)
 }
@@ -118,8 +118,8 @@ async function updateProduct(req, res) {
 async function deleteProduct(req, res) {
   const {id} = req.params;
   const result = await products.deleteProduct(id);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to delete product"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result)
 }
@@ -127,8 +127,8 @@ async function deleteProduct(req, res) {
 // path: GET /products/active
 async function getActiveProducts(req, res) {
   const result = await products.getActiveProducts();
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to get active products"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result)
 }
@@ -137,14 +137,9 @@ async function getActiveProducts(req, res) {
 async function createProduct(req, res) {
   const result = await products.createProduct(req.body);
 
-  /*this singular function does not follow the pattern of null return as it is being updated 
-  to include logic from Ayman's lambda function that he made following his own pattern.
-  TODO: No null returns from DB functions. They should return the error/success message themselves. 
-  */
+  // this function includes logic from Ayman's lambda function that he made following his own pattern.
   if (!result.success){
-    const status = result.status;
-    delete result.status
-    return res.status(status).json(result);
+    return res.status(result.status).json(result);
   }
   return res.json(result)
 }
@@ -152,8 +147,8 @@ async function createProduct(req, res) {
 // path: GET /products
 async function getProducts(req, res) {
   const result = await products.getProducts();
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to get products"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result)
 }
@@ -166,8 +161,8 @@ async function getProducts(req, res) {
 async function getProductReviews(req, res) {
   const {productid} = req.params;
   const result = await reviews.getProductReviews(productid);
-  if (!result){
-    res.status(500).json({success: false, message: "Failed to get product reviews"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
@@ -176,8 +171,8 @@ async function getProductReviews(req, res) {
 async function getUserReviews(req, res) {
   const {customerid} = req.params;
   const result = await reviews.getUserReviews(customerid);
-  if (!result){
-    res.status(500).json({success: false, message: "Failed to get user's reviews"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
@@ -186,8 +181,8 @@ async function getUserReviews(req, res) {
 async function updateReview(req, res) {
   const {id} = req.params;
   const result = await reviews.updateReview(id, req.body);
-  if (!result){
-    res.status(500).json({success: false, message: "Failed to update product review"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
@@ -195,18 +190,17 @@ async function updateReview(req, res) {
 // path: GET /reviews
 async function getReviews(req, res) {
   const result = await reviews.getReviews();
-  if (!result){
-    res.status(500).json({success: false, message: "Failed to get reviews"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
 
-//TODO: images need special handling
 // path: POST /reviews
 async function createReview(req, res) {
   const result = await reviews.createReview(req.body);
-  if (!result){
-    res.status(500).json({success: false, message: "Failed to create review"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
@@ -215,8 +209,8 @@ async function createReview(req, res) {
 async function deleteReview(req, res) {
   const {id} = req.params;
   const result = await reviews.deleteReview(id);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to delete review"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result)
 }
@@ -229,8 +223,8 @@ async function cancelOrder(req, res) {
   const {id} = req.params;
   const {cancelreason} = req.body;
   const result = await orders.cancelOrder(id, cancelreason);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to cancel order"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
@@ -239,8 +233,8 @@ async function cancelOrder(req, res) {
 async function completeOrder(req, res) {
   const {id} = req.params;
   const result = await orders.completeOrder(id);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to complete order"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
@@ -249,8 +243,8 @@ async function completeOrder(req, res) {
 async function getOrder(req, res) {
   const {id} = req.params;
   const result = await orders.getOrder(id);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to get order"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
@@ -258,8 +252,8 @@ async function getOrder(req, res) {
 // path: POST /orders
 async function createOrder(req, res) {
   const result = await orders.createOrder(req.body);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to create order"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result);
 }
@@ -268,8 +262,8 @@ async function createOrder(req, res) {
 async function deleteOrder(req, res) {
   const {id} = req.params;
   const result = await orders.deleteOrder(id);
-  if (!result){
-    return res.status(500).json({success: false, message: "Failed to delete order"});
+  if (!result.success){
+    return res.status(result.status).json(result);
   }
   return res.json(result)
 }
