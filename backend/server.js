@@ -35,9 +35,6 @@ async function verifyToken(req, res, next){
 
   try {
     const payload = await verifier.verify(token);
-    console.log("The payload is", payload);
-    return res.status(401).json({success: false, message: "Bad access token"});
-
     req.tokenPayload = payload;
   } catch (err) {
     console.error('Error verifying JWT:', err);
@@ -50,11 +47,11 @@ async function verifyToken(req, res, next){
 app.get("/", controllers.getServerHTML);
 
 // users
-app.get("/users/:id", controllers.getUser);
-app.delete("/users/:id", controllers.deleteUser);
+app.get("/users/:id", verifyToken, controllers.getUser);
+app.delete("/users/:id", verifyToken, controllers.deleteUser);
 
-app.get("/users", controllers.getUsers);
-app.post("/users", controllers.createUser);
+app.get("/users", verifyToken, controllers.getUsers);
+app.post("/users", verifyToken, controllers.createUser);
 
 
 
@@ -62,10 +59,10 @@ app.post("/users", controllers.createUser);
 app.get("/products/active", controllers.getActiveProducts);
 
 app.get("/products/:id", controllers.getProduct)
-app.put("/products/:id", controllers.updateProduct)
-app.delete("/products/:id", controllers.deleteProduct)
+app.put("/products/:id", verifyToken, controllers.updateProduct)
+app.delete("/products/:id", verifyToken, controllers.deleteProduct)
 
-app.post("/products", controllers.createProduct);
+app.post("/products", verifyToken, controllers.createProduct);
 app.get("/products", controllers.getProducts);
 
 
@@ -73,26 +70,26 @@ app.get("/products", controllers.getProducts);
 app.get("/reviews/product/:productid", controllers.getProductReviews)
 app.get("/reviews/user/:customerid", controllers.getUserReviews)
 
-app.put("/reviews/:id", controllers.updateReview)
-app.delete("/reviews/:id", controllers.deleteReview)
+app.put("/reviews/:id", verifyToken, controllers.updateReview)
+app.delete("/reviews/:id", verifyToken, controllers.deleteReview)
 
 
-app.post("/reviews", controllers.createReview)
+app.post("/reviews", verifyToken, controllers.createReview)
 app.get("/reviews", controllers.getReviews)
 
 
 // orders
-app.put("/orders/cancel/:id", controllers.cancelOrder)
-app.put("/orders/complete/:id", controllers.completeOrder)
+app.put("/orders/cancel/:id", verifyToken, controllers.cancelOrder)
+app.put("/orders/complete/:id", verifyToken, controllers.completeOrder)
 
-app.get("/orders/:id", controllers.getOrder)
-app.delete("/orders/:id", controllers.deleteOrder)
+app.get("/orders/:id", verifyToken, controllers.getOrder)
+app.delete("/orders/:id", verifyToken, controllers.deleteOrder)
 
-app.post("/orders", controllers.createOrder)
+app.post("/orders", verifyToken, controllers.createOrder)
 
 
 // miscellaneous
-app.get("/uploadurl", controllers.getUploadURL)
+app.get("/uploadurl", verifyToken, controllers.getUploadURL)
 
 //starting server
 app.listen(PORT || 5001, () => {

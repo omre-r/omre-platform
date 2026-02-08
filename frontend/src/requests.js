@@ -14,7 +14,9 @@ function handleError(fn){
 
 // users
 async function getUserReq(id) {
-    const response = await fetch(backendURL + `/users/${id}`);
+    const response = await fetch(backendURL + `/users/${id}`, {
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
     const data = await response.json();
     if (!data.success){
         throw new Error(data.message || "req failed");
@@ -23,7 +25,9 @@ async function getUserReq(id) {
 }
 
 async function getUsersReq() {
-    const response = await fetch(backendURL + "/users");
+    const response = await fetch(backendURL + "/users", {
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
     const data = await response.json();
     if (!data.success){
         throw new Error(data.message || "req failed");
@@ -34,7 +38,7 @@ async function getUsersReq() {
 async function createUserReq({id, email, firstname, lastname, preferrednotes}){
     const response = await fetch(backendURL + `/users`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
         body: JSON.stringify({id, email, firstname, lastname, preferrednotes})
     });
     const data = await response.json();
@@ -47,6 +51,7 @@ async function createUserReq({id, email, firstname, lastname, preferrednotes}){
 async function deleteUserReq(id){
     const response = await fetch(backendURL + `/users/${id}`, {
         method: "DELETE",
+        headers: {"Authorization": `Bearer ${getToken()}`}
     });
     const data = await response.json();
     if (!data.success){
@@ -68,7 +73,7 @@ async function getProductReq(id){
 async function updateProductReq(id, updatedFields){
     const response = await fetch(backendURL + `/products/${id}`, {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
         body: JSON.stringify(updatedFields)
     });
     const data = await response.json();
@@ -81,6 +86,7 @@ async function updateProductReq(id, updatedFields){
 async function deleteProductReq(id){
     const response = await fetch(backendURL + `/products/${id}`, {
         method: "DELETE",
+        headers: {"Authorization": `Bearer ${getToken()}`}
     });
     const data = await response.json();
     if (!data.success){
@@ -101,7 +107,7 @@ async function getActiveProductsReq(){
 async function createProductReq({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden}){
     const response = await fetch(backendURL + `/products`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
         body: JSON.stringify({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden})
     });
     const data = await response.json();
@@ -144,7 +150,7 @@ async function getUserReviewsReq(customerid){
 async function updateReviewReq(id, updatedFields){
     const response = await fetch(backendURL + `/reviews/${id}`, {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
         body: JSON.stringify(updatedFields)
     });
     const data = await response.json()
@@ -158,7 +164,7 @@ async function updateReviewReq(id, updatedFields){
 async function createReviewReq({customerid, productid, message, rating, images}){
     const response = await fetch(backendURL + `/reviews`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
         body: JSON.stringify({customerid, productid, message, rating, images})
     });
     const data = await response.json();
@@ -180,6 +186,7 @@ async function getReviewsReq(){
 async function deleteReviewReq(id){
     const response = await fetch(backendURL + `/reviews/${id}`, {
         method: "DELETE",
+        headers: {"Authorization": `Bearer ${getToken()}`}
     });
     const data = await response.json();
     if (!data.success){
@@ -192,7 +199,7 @@ async function deleteReviewReq(id){
 async function cancelOrderReq(id, cancelreason) {
     const response = await fetch(backendURL + `/orders/cancel/${id}`, {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
         body: JSON.stringify({cancelreason})
     });
     const data = await response.json()
@@ -205,6 +212,7 @@ async function cancelOrderReq(id, cancelreason) {
 async function completeOrderReq(id) {
     const response = await fetch(backendURL + `/orders/complete/${id}`, {
         method: "PUT",
+        headers: {"Authorization": `Bearer ${getToken()}`}
     });
     const data = await response.json()
     if (!data.success){
@@ -214,7 +222,9 @@ async function completeOrderReq(id) {
 }
 
 async function getOrderReq(id){
-    const response = await fetch(backendURL + `/orders/${id}`);
+    const response = await fetch(backendURL + `/orders/${id}`, {
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
     const data = await response.json()
     if (!data.success){
         throw new Error(data.message || "req failed");
@@ -225,7 +235,7 @@ async function getOrderReq(id){
 async function createOrderReq({customerid, items, total}){
     const response = await fetch(backendURL + `/orders`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
         body: JSON.stringify({customerid, items, total})
     });
     const data = await response.json();
@@ -238,6 +248,7 @@ async function createOrderReq({customerid, items, total}){
 async function deleteOrderReq(id){
     const response = await fetch(backendURL + `/orders/${id}`, {
         method: "DELETE",
+        headers: {"Authorization": `Bearer ${getToken()}`}
     });
     const data = await response.json();
     if (!data.success){
@@ -287,7 +298,9 @@ async function uploadImageToS3Req(uploadUrl, file) {
 
 //returns a temporary url to upload an image
 async function getPresignedUrlReq_LOCAL(file) {
-  const response = await fetch(backendURL + `/uploadurl?filename=${file.name}&contentType=${file.contentType}&fileSize=${file.fileSize}`);
+  const response = await fetch(backendURL + `/uploadurl?filename=${file.name}&contentType=${file.contentType}&fileSize=${file.fileSize}`,{
+    headers: {"Authorization": `Bearer ${getToken()}`}
+  });
   if (!response.ok) throw new Error('Failed to get upload URL');
   return response.json();
 }
@@ -355,7 +368,12 @@ async function createProductAWSFlowReq({ name, price, description, imageFiles, m
   });
 }
 
-
+function getToken(){
+    for (let key of Object.keys(localStorage)){
+        if (key.includes("accessToken")) return localStorage.getItem(key);
+    }
+    return ""
+}
 
 
 
