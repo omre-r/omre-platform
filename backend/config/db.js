@@ -45,9 +45,9 @@ async function connectToDB(){
             database: DB_NAME,
             connectionTimeoutMillis: 2000,
             //change if doing remote
-            // ssl: {
-            //     rejectUnauthorized: false
-            // }
+            ssl: {
+                rejectUnauthorized: false
+            }
         });
         await newPool.query("SELECT NOW()");
         if (pool){
