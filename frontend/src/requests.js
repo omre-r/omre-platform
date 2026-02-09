@@ -70,7 +70,17 @@ async function getProductReq(id){
     return data.data.product;
 }
 
+// It would probably be better if the frontend ensured if images were URLs before calling update
 async function updateProductReq(id, updatedFields){
+    // if (updatedFields.hasOwn("images")){
+    //     if (!validateAllImages(updatedFields.images).valid) throw new Error("invalid images");
+    //     const uploadUrls = await Promise.all(updatedFields.images.map(f => getPresignedUrlReq_LOCAL(f)));
+    //     if (uploadUrls.some(url => url === null)) return null;
+        
+    //     const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, updatedFields.images[i])));
+    //     if (uploadResults.some(res => res === null)) return null;
+    //     updatedFields.images = uploadUrls.map(data => data.publicUrl);
+    // }
     const response = await fetch(backendURL + `/products/${id}`, {
         method: "PUT",
         headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
@@ -308,10 +318,12 @@ async function getPresignedUrlReq_LOCAL(file) {
 async function createProductFlowReq_LOCAL({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden}){
     if (!validateAllImages(images).valid) throw new Error("invalid images");
     const uploadUrls = await Promise.all(images.map(f => getPresignedUrlReq_LOCAL(f)));
+    if (uploadUrls.some(url => url === null)) return null
+    
     const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, images[i])));
-    const urls = uploadUrls.map(data => data.publicUrl)
+    if (uploadResults.some(res => res === null)) return null
 
-    return await createProductReq({type, name, variation, price, images: urls, quantity, notes, description, isfeatured, ishidden})
+    return await createProductReq({type, name, variation, price, images: uploadUrls.map(data => data.publicUrl), quantity, notes, description, isfeatured, ishidden})
 }
 
 
