@@ -54,7 +54,7 @@ export default function Home() {
 
       <View
         width="100%"
-        height="100vh"
+        minHeight="100vh"
         paddingTop="3rem"
         paddingLeft="3rem"
         paddingRight="3rem"
@@ -63,7 +63,7 @@ export default function Home() {
           backgroundImage: `url(${LuxuryBackground})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-
+          backgroundRepeat: "repeat",
         }}
       >
         <Text style={headingStyle} marginBottom="5rem">
