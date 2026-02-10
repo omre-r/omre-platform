@@ -69,7 +69,6 @@ export default function Auth() {
 
     // Show password toggle ---------------------------------------------------
     const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     // Auth Context ---------------------------------------------------
     // Syncs authorization app wide after signing in, will refresh after signing in so user can log out or acess admin page
@@ -94,7 +93,6 @@ export default function Auth() {
     // Make sure that everything is filled out for sign up form and that passwords match
     // Creates a comma separated string of the selected notes, will be sent to backend with other user information
     async function handleSignUpSubmit() {
-        setMessage("");
         setMessage("");
         if (!email || !password || !confirmPassword || !firstname || !lastname) {
             setMessage("Please fill out all required fields.");
@@ -127,6 +125,13 @@ export default function Auth() {
             setAuthUI("verify");
             setMessage("Sign up successful! Check email for verification code.");
         } catch (error) {
+            if (error.code === "UsernameExistsException") {
+                setVerifyEmail(email);
+                setAuthUI("verify");
+                await handleResendCode(email);
+                setMessage("Email already exists. Please verify your email or log in.");
+                return;
+            }
             setMessage(error.message || "Sign up failed.");
         }
     }
@@ -178,14 +183,15 @@ export default function Auth() {
                 username: email,
                 password: password, 
             });
-            // How to make conditional where if user is not verified they will have to resend verification and reconfirm
-            // What would this line of code look like? Have to do more research
-            // if (result) ... {
-            // setVerifyEmail(email);
-            // setAuthUI("verify");
-            // await handleResendCode;
-            // return;
-            // }
+            // Making sure user has verified their email and signIn result is not successful because of that, if so will switch to verify UI and resend code just in case
+            if (!result?.isSignedIn && result?.nextStep?.signInStep === "CONFIRM_SIGN_UP") {
+                setVerifyEmail(email);
+                setAuthUI("verify");
+
+                await handleResendCode(email);
+                setMessage("Please verify your email before signing in.");
+                return;
+            }
 
             await refreshAuth();
             navigate("/");
@@ -195,11 +201,13 @@ export default function Auth() {
         }
     }
 
-    // TODO: Handle Resend Code -------------------------------------------------------------
-    // Handling verification if user tries to sign in when unverified
     async function handleResendCode(email) {
         setMessage("");
         try {
+            if (!email) {
+                setMessage("Missing email to resend code.");
+                return;
+            }
             await resendSignUpCode({ 
                 username: email,  
             });
@@ -271,7 +279,7 @@ export default function Auth() {
                             Please enter verification code!
                             </Text>
                             {message && (
-                            <Text color="green">
+                            <Text>
                                 {message}
                             </Text>
                             )}
@@ -287,15 +295,26 @@ export default function Auth() {
                                 value={verificationCode}
                                 onChange={(e) => setVerificationCode(e.target.value)}
                             />
-                            <Button
-                                variation="primary"
-                                color="#2B1E1A"
-                                style={luxuryBodyStyle}
-                                marginTop="1rem"
-                                onClick={handleVerifyCode}
-                                >
-                                Verify
-                            </Button>
+                            <Flex direction="row" justifyContent="space-between" gap="1rem">
+                                <Button
+                                    variation="primary"
+                                    color="#2B1E1A"
+                                    style={luxuryBodyStyle}
+                                    marginTop="1rem"
+                                    onClick={handleVerifyCode}
+                                    >
+                                    Verify
+                                </Button>
+                                <Button
+                                    variation="primary"
+                                    color="#2B1E1A"
+                                    style={luxuryBodyStyle}
+                                    marginTop=".5rem"
+                                    onClick={() => handleResendCode(verifyEmail)}
+                                    >
+                                    Resend Code
+                                </Button>
+                            </Flex>
                         </>
                     ) 
                     : 
@@ -321,7 +340,7 @@ export default function Auth() {
                     </Text>
 
                     {message && ( 
-                    <Text color="red">
+                    <Text>
                         {message}
                     </Text>
                     )}
@@ -412,7 +431,9 @@ export default function Auth() {
                     <Flex direction="row" alignItems="center" justifyContent="space-between" marginTop="0.25rem">
                         <ToggleButton
                             isPressed={showPassword}
-                            onClick={() => setShowPassword((prev) => !prev)}
+                            onClick={() => 
+                                setShowPassword((prev) => !prev)
+                            }
                         >
                             {showPassword ? "Hide Password" : "Show Password"}
                         </ToggleButton>
