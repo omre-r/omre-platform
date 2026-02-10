@@ -7,6 +7,7 @@ import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import Mixology from "./pages/Mixology";
+import Fragrances from "./pages/Fragrances";
 
 import './App.css'
 
@@ -21,6 +22,7 @@ function App() {
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
         <Route path="/Mixology" element={<Mixology />} />
+        <Route path="/Fragrances" element={<Fragrances />} />
       </Routes>
     </Router>
     </div>
