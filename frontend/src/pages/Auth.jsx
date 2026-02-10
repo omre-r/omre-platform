@@ -502,8 +502,3 @@ export default function Auth() {
 
 // Notes on future improvements:
 // TODO: Remove scent choice part and make it part of its own page
-
-// TODO: When signing up make sure that verification is done, can sign up, leave verification page and sign in. 
-// Made HandleResendCode helper, will be send to the specific email but need to figure out how conditonal
-// will look for HandleSignIn so we can see that this person is not verified and force them to verify
-// as well maybe on verify ui make a button to resend verification code. 
