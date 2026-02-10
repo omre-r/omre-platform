@@ -37,6 +37,7 @@ reconnectInterval = setInterval(connectToDB, 2000);
 async function connectToDB(){
     if (pool) return
     try{
+        const useSSL = DB_HOST && DB_HOST !== "localhost" && DB_HOST !== "127.0.0.1";
         const newPool = new Pool({
             user: DB_USERNAME,
             password: DB_PASSWORD,
@@ -44,10 +45,7 @@ async function connectToDB(){
             port: DB_PORT,
             database: DB_NAME,
             connectionTimeoutMillis: 2000,
-            //change if doing remote
-            ssl: {
-                rejectUnauthorized: false
-            }
+            ssl: useSSL ? { rejectUnauthorized: false } : false
         });
         await newPool.query("SELECT NOW()");
         if (pool){
