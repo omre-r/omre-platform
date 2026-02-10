@@ -50,7 +50,7 @@ const defaultProductDraft = {
 };
 
 // Products Admin Panel ---------------------------------------------
-// Will give user the option to view, add, edit, and remove products from this dashboard
+// Will give user the option to add, edit, and remove products from this dashboard
 export default function ProductsPanel() {
 
     // Products states ----------------------------------------------------
@@ -63,7 +63,7 @@ export default function ProductsPanel() {
     const [message, setMessage] = useState("");
 
     // UI mode switch ---------------------------------------
-    // Will switch depending on viewing, editing, removing, or adding
+    // Will switch depending on editing, removing, or adding
     const [activeMode, setActiveMode] = useState(MODES.IDLE);
 
     // Set draft based on default draft or product editing and use that information --------------------------------
@@ -375,7 +375,7 @@ export default function ProductsPanel() {
                                 border=".5px solid #111"
                                 borderRadius="6px"
                                 onClick={() => {
-                                    // On click we activate viewing that specific product based on the id
+                                    // On click we activate editing that specific product based on the id
                                     const id = getProductId(prod);
                                     if (!id) {
                                         setMessage("Product ID missing.");
@@ -396,7 +396,7 @@ export default function ProductsPanel() {
                 </Flex>
             </Card>
         
-            {/* Right card views, edit, delete, or adds information ----------------------------------------- */}
+            {/* Right card edit, delete, or adds information ----------------------------------------- */}
             <Card
                 flex="1.0"  
                 height="100%" 
