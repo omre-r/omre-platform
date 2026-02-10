@@ -25,7 +25,6 @@ const compactStyle = {
 };
 const MODES = {
     IDLE: "idle",
-    VIEW: "view",
     ADD: "add",
     EDIT: "edit",
     REMOVE: "remove",
@@ -143,23 +142,6 @@ export default function ProductsPanel() {
         }
     }
 
-    // View product on the right card ----------------------------------------------------------
-    async function viewProduct(productId) {
-        setMessage("");
-        setLoadingProduct(true);
-        try {
-            setActiveMode(MODES.VIEW);
-            await new Promise(resolve => setTimeout(resolve, 300));
-            const product = await getProductReq(productId);
-            setSelectedProduct(product);
-        }
-        catch (error) {
-            setMessage(error.message || "Error viewing product.");
-        }
-        finally {
-            setLoadingProduct(false);
-        }
-    }
 
     // Removing a product ---------------------------------------------------------------------------------
     // get the product id of the select product and send the id to the backend deleteProductReq function
@@ -372,19 +354,6 @@ export default function ProductsPanel() {
                                 >
                                 Remove
                             </Button>
-                            {/* Button : edit mode ------------------------------- */}
-                            <Button 
-                                style={luxuryBodyStyle}
-                                disabled={!selectedProduct}
-                                onClick={() => {
-                                    if (!selectedProduct) return;
-                                    setActiveMode(MODES.EDIT);
-                                    // Create draft from backend product information
-                                    setDraft(makeDraftFromProduct(selectedProduct));
-                                }}
-                                >
-                                Edit
-                            </Button>
                         </Flex>
                     </Flex>
 
@@ -412,7 +381,10 @@ export default function ProductsPanel() {
                                         setMessage("Product ID missing.");
                                         return;
                                     }
-                                    viewProduct(id);
+                                    setMessage("");
+                                    setSelectedProduct(prod);
+                                    setDraft(makeDraftFromProduct(prod));
+                                    setActiveMode(MODES.EDIT);
                                 }}
                                 >
                                 <Text>
@@ -595,7 +567,7 @@ export default function ProductsPanel() {
                                                 // Context : If you are editing the selected product, just take the products orignal
                                                 // info and set it back as draft as if no changes were made
                                                 setDraft(makeDraftFromProduct(selectedProduct)); 
-                                                setActiveMode(MODES.VIEW);
+                                                setActiveMode(MODES.IDLE);
                                                 return;
                                             }
                                             // If adding a product and cancel just to default and return to no active mode
@@ -627,7 +599,8 @@ export default function ProductsPanel() {
                                     onClick={() => {
                                         setMessage("");
                                         if (selectedProduct) {
-                                            setActiveMode(MODES.VIEW);
+                                            setActiveMode(MODES.IDLE);
+                                            setSelectedProduct(null);
                                             return;
                                         }
                                         setActiveMode(MODES.IDLE)
@@ -656,26 +629,7 @@ export default function ProductsPanel() {
                         </Flex>
                     </>
                     )}
-                    {/* View product ------------------------------------------------- */}
-                    {activeMode === MODES.VIEW && selectedProduct &&  !loadingProduct && (
-                    <Flex direction="column" gap="0.1rem" wrap="wrap" textAlign="center">
-                        <Text style={luxuryBodyStyle}>Name: {selectedProduct.name}</Text>
-                        <Text style={luxuryBodyStyle}>Type: {selectedProduct.type}</Text>
-                        <Text style={luxuryBodyStyle}>Variation: {selectedProduct.variation}</Text>
-                        <Text style={luxuryBodyStyle}>Price: ${selectedProduct.price}</Text>
-                        <Text style={luxuryBodyStyle}>Quantity: {selectedProduct.quantity}</Text>
-                        <Text style={luxuryBodyStyle}>Featured: {selectedProduct.isfeatured ? "Yes" : "No"}</Text>
-                        <Text style={luxuryBodyStyle}>Hidden: {selectedProduct.ishidden ? "Yes" : "No"}</Text>
-                        <Text style={luxuryBodyStyle}>
-                            {/* Display the selected products Top, Heart, and Base notes in one line */}
-                            Notes: Top[{selectedProduct.notes?.top.join(", ") || "—"}] / Heart[{selectedProduct.notes?.heart.join(", ") || "—"}] / Base[{selectedProduct.notes?.base.join(", ") || "—"}]
-                        </Text>
-                        <Text 
-                            style={luxuryBodyStyle}>
-                            Images: {Array.isArray(selectedProduct.images) ? selectedProduct.images.length : 0}
-                        </Text>
-                    </Flex>
-                    )} 
+                    
                 </Flex>
             </Card>
         </Flex>

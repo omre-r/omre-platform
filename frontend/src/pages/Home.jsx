@@ -71,7 +71,7 @@ export default function Home() {
         </Text>
 
         <Flex wrap="wrap">
-          {!loadingProducts && products.filter((prod) => prod.isfeatured === true).map((prod) => (
+          {!loadingProducts && products && products.filter((prod) => prod.isfeatured === true).map((prod) => (
             <Card
               key={prod.id}
               variation="elevated"
