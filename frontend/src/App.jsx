@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
 import ForgotPassword from "./pages/ForgotPassword";
+import Fragrances from "./pages/Fragrances";
 
 import './App.css'
 
@@ -19,6 +20,7 @@ function App() {
         <Route path="/Auth" element={<Auth />} />
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/Fragrances" element={<Fragrances />} />
       </Routes>
     </Router>
     </div>

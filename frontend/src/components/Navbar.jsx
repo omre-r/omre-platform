@@ -37,11 +37,21 @@ const Navbar = () => {
 
   return (
     <header className="navbar">
-      {/* Navbar Logo ------------------------------------------------------------------------------------------ */}
-      {/* On click will take user back to home page */}
-      <Link to="/" className="logo-link">
-        <img src={logo} alt="OMRE Logo" className="logo-image" />
-      </Link>
+      <div className="nav-left">
+        {/* Navbar Logo ------------------------------------------------------------------------------------------ */}
+        {/* On click will take user back to home page */}
+        <Link to="/" className="logo-link">
+          <img src={logo} alt="OMRE Logo" className="logo-image" />
+        </Link>
+
+        <Link
+          to="/fragrances"
+          className="nav-item"
+          style={luxuryBodyStyle}
+          >
+          Fragrances
+        </Link>
+      </div>
 
       {/* Navbar Links ---------------------------------------------------------------------------------------- */}
       {/* Link to auth is shown if loadingAuth false & is not authenticated */}
@@ -70,7 +80,6 @@ const Navbar = () => {
             Sign Out
           </Link>
         )}
-        
       </nav>
     </header>
   );
