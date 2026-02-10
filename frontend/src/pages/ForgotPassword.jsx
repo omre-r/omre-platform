@@ -230,7 +230,6 @@ const ForgotPassword = () => {
                                 style={luxuryBodyStyle}
                                 label="Email"
                                 type="email"
-                                placeholder="Enter your email"
                                 required
                                 marginTop="-0rem"
                                 value={email}

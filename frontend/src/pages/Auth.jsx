@@ -346,7 +346,6 @@ export default function Auth() {
                                 style={luxuryBodyStyle}
                                 label="Enter First Name"
                                 type="text"
-                                placeholder="First Name"
                                 required
                                 marginTop="-.2rem"
                                 value={firstname}
@@ -357,7 +356,6 @@ export default function Auth() {
                                 style={luxuryBodyStyle}
                                 label="Enter Last Name"
                                 type="text"
-                                placeholder="Last Name"
                                 required
                                 marginTop="-.2rem"
                                 value={lastname}
@@ -371,7 +369,6 @@ export default function Auth() {
                         style={luxuryBodyStyle}
                         label="Email"
                         type="email"
-                        placeholder="Enter your email"
                         required
                         marginTop="-.2rem"
                         value={email}
@@ -381,7 +378,6 @@ export default function Auth() {
                     <TextField color="#2B1E1A" style={luxuryBodyStyle}
                         label="Password"
                         type="password"
-                        placeholder="Enter your password"
                         required
                         marginTop="-.2rem"
                         value={password}
@@ -395,7 +391,6 @@ export default function Auth() {
                             style={luxuryBodyStyle}
                             label="Confirm Password"
                             type="password"
-                            placeholder="Confirm your password"
                             required
                             marginTop="-.2rem"
                             value={confirmPassword}
