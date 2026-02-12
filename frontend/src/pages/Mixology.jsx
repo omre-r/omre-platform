@@ -98,14 +98,14 @@ export default function Mixology() {
             <Text
                 style={luxuryBodyStyle}
                 marginTop="-.5rem">   
-                Create your own custom fragrance blend by selecting up to three of your favorite colognes!
+                Create your own custom fragrance blend by selecting up to three of your favorite fragrances!
             </Text>
             <Flex justifyContent="center">
                 <View
                     maxWidth="600px">
                     <SelectField
                         style={luxuryBodyStyle}
-                        descriptiveText="Select your preferred cologne size."
+                        descriptiveText="Select your preferred fragrance size."
                         variation="quiet"
                         value={sizeMl}
                         onChange={(e) => setSizeMl(e.target.value)}>
@@ -116,7 +116,7 @@ export default function Mixology() {
                         style={luxuryBodyStyle}
                         variation="quiet"
                         size="small"
-                        descriptiveText="Select cologne 1"
+                        descriptiveText="Select fragrance 1"
                         value={cologne1Id}
                         onChange={(e) => setCologne1Id(e.target.value)}>
                         {products.map((product) => (
@@ -129,7 +129,7 @@ export default function Mixology() {
                         style={luxuryBodyStyle}
                         variation="quiet"
                         size="small"
-                        descriptiveText="Select cologne 2"
+                        descriptiveText="Select fragrance 2"
                         value={cologne2Id}
                         onChange={(e) => setCologne2Id(e.target.value)}>
                         {products.map((product) => (
@@ -143,7 +143,7 @@ export default function Mixology() {
                         variation="quiet"
                         size="small"
                         disabled={!thirdCologneSelectedMode}
-                        descriptiveText="Select cologne 3"
+                        descriptiveText="Select fragrance 3"
                         value={cologne3Id}
                         onChange={(e) => setCologne3Id(e.target.value)}>
                         {products.map((product) => (
@@ -168,3 +168,4 @@ export default function Mixology() {
     </>
   );
 }
+
