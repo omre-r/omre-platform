@@ -1,0 +1,10 @@
+{
+  "name": "create-product",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.515.0",
+    "pg": "^8.11.3",
+    "uuid": "^9.0.1"
+  }
+}
