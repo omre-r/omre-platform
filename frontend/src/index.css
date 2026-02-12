@@ -1,33 +1,32 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+#root {
+  max-width: none;
 }
-a:hover {
-  color: #535bf2;
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  background:
+    /* Linear gradient similar to Omre original home page colors going downward */
+    linear-gradient(
+      180deg,
+      #f3e6dc 0%,   
+      #e0bfae 22%,   
+      #b07a63 45%,   
+      #6b2e22 70%,   
+      #3b1a12 100%
+    );
+  display: block;
 }
 
 h1 {
@@ -35,34 +34,73 @@ h1 {
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+
+/* BELOW WE USE !IMPORTANT BECAUSE: It will override any preset for the amplify components
+   This lets us override the base blues for toggles that we cannot edit and it will follow theming
+   for other future pages in the future*/
+
+/* typed text */
+.amplify-input {
+  color: #2B1E1A !important;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* placeholder text for when entering name or email or password */
+.amplify-input::placeholder {
+  color: #9A8F87 !important;
+  opacity: 1;
+}
+
+.amplify-label {
+  color: #2B1E1A !important;
+}
+
+/* label styling for the font and font size */
+.amplify-field .amplify-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+
+/* input background. made it a transparent brown */
+.amplify-field-group__control {
+  background-color: #FAF7F3 !important;
+  border: 1px solid rgba(75, 15, 15, 0.25) !important;
+}
+
+/* Base toggle button edits
+  text color white, border color the same as others
+*/
+.amplify-togglebutton {
+  background-color: #FAF7F3 !important;
+  color: #2B1E1A !important;
+  border: 1px solid rgba(75, 15, 15, 0.25) !important;
+  transition: all 0.2s ease; /* smooth transition active states */
+}
+
+/* Active toggle button edits
+  darker background when active, border color the same as others, text white
+*/
+.amplify-togglebutton[aria-pressed="true"] {
+  background-color: #ded6cd !important;
+  border: 1px solid rgba(75, 15, 15, 0.25);
+}
+
+/* toggle button styling for the fonts */
+button.amplify-togglebutton {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.3px;
+}
+
+.amplify-switchfield label {
+  color: black !important;
+}
+
+.amplify-button {
+  border-radius: 6px !important;
+  border: 2px solid rgba(7, 1, 1, 0.25) !important;
+  color:"#2B1E1A" !important;
 }

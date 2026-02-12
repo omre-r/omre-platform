@@ -1,0 +1,7 @@
+{
+  "name": "stop-rds",
+  "version": "1.0.0",
+  "dependencies": {
+    "@aws-sdk/client-rds": "^3.450.0"
+  }
+}
