@@ -351,6 +351,7 @@ export default function Auth() {
                                 color="#2B1E1A"
                                 style={luxuryBodyStyle}
                                 label="Enter First Name"
+                                maxLength={20}
                                 type="text"
                                 required
                                 marginTop="-.2rem"
@@ -361,6 +362,7 @@ export default function Auth() {
                                 color="#2B1E1A"
                                 style={luxuryBodyStyle}
                                 label="Enter Last Name"
+                                maxLength={20}
                                 type="text"
                                 required
                                 marginTop="-.2rem"
@@ -375,6 +377,7 @@ export default function Auth() {
                         style={luxuryBodyStyle}
                         label="Email"
                         type="email"
+                        maxLength={50}
                         required
                         marginTop="-.2rem"
                         value={email}
@@ -384,6 +387,7 @@ export default function Auth() {
                     <TextField color="#2B1E1A" style={luxuryBodyStyle}
                         label="Password"
                         type={showPassword ? "text" : "password"}
+                        maxLength={50}
                         required
                         marginTop="-.2rem"
                         value={password}
@@ -397,6 +401,7 @@ export default function Auth() {
                             style={luxuryBodyStyle}
                             label="Confirm Password"
                             type={showPassword ? "text" : "password"}
+                            maxLength={30}
                             required
                             marginTop="-.2rem"
                             value={confirmPassword}
