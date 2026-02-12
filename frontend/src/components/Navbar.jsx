@@ -58,6 +58,12 @@ const Navbar = () => {
           style={luxuryBodyStyle}>Admin Dashboard</Link>
         )}
 
+        {!loadingAuth && isAuthenticated && (
+          <Link to="/Mixology" 
+          className="nav-item"
+          style={luxuryBodyStyle} >Mixology</Link>
+        )}
+
         {/* If loadingAuth is false (complete) and user is authenticated, will have ability to log out */}
         {!loadingAuth && isAuthenticated && (
           <Link 
