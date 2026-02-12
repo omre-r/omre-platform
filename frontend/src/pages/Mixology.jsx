@@ -44,7 +44,7 @@ export default function Mixology() {
         return product.productid || product.product_id || product.id;
     }
 
-    // Load products from bacckend ---------------------------------------
+    // Load products from backend ---------------------------------------
     async function loadProducts() {
         setMessage("");
         setLoadingProducts(true);
@@ -116,20 +116,41 @@ export default function Mixology() {
                         style={luxuryBodyStyle}
                         variation="quiet"
                         size="small"
-                        descriptiveText="Cologne 1">
+                        descriptiveText="Select cologne 1"
+                        value={cologne1Id}
+                        onChange={(e) => setCologne1Id(e.target.value)}>
+                        {products.map((product) => (
+                            <option key={getProductId(product)} value={getProductId(product)}>
+                                {product.name}
+                            </option>
+                        ))}
                     </SelectField>
                     <SelectField
                         style={luxuryBodyStyle}
                         variation="quiet"
                         size="small"
-                        descriptiveText="Cologne 2">
+                        descriptiveText="Select cologne 2"
+                        value={cologne2Id}
+                        onChange={(e) => setCologne2Id(e.target.value)}>
+                        {products.map((product) => (
+                            <option key={getProductId(product)} value={getProductId(product)}>
+                                {product.name}
+                            </option>
+                        ))}
                     </SelectField>
                     <SelectField
                         style={luxuryBodyStyle}
                         variation="quiet"
                         size="small"
                         disabled={!thirdCologneSelectedMode}
-                        descriptiveText="Cologne 3">
+                        descriptiveText="Select cologne 3"
+                        value={cologne3Id}
+                        onChange={(e) => setCologne3Id(e.target.value)}>
+                        {products.map((product) => (
+                            <option key={getProductId(product)} value={getProductId(product)}>
+                                {product.name}
+                            </option>
+                        ))}
                     </SelectField>
                     <Button
                         style={luxuryBodyStyle}
