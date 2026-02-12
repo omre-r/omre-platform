@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { View, Card, Flex, Text } from "@aws-amplify/ui-react";
+import { View, Card, Flex, Text, Button, SelectField } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getProductsReq } from "../requests.js";
+import { getProductsReq, updateProductReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 
@@ -11,21 +11,61 @@ Custom Styles ------------------------------------------------------------------
 - Custom heading and body style using downloaded font
 - Will be used through out to edit aspects of cards
 */
-const HeadingStyle = {
+const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 800,
   fontSize: "2.5rem",
   letterSpacing: "0.5px",
 };
-const BodyStyle = {
+const luxuryBodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
-  fontWeight: 400,
+  fontWeight: 500,
   fontSize: "1.3rem",   
   letterSpacing: "0.3px",
 };
 
 
 export default function Mixology() {
+    const [message, setMessage] = useState("");
+
+    // Set cologne choices --------------------------------------------------------
+    const [cologne1Id, setCologne1Id] = useState("");
+    const [cologne2Id, setCologne2Id] = useState("");
+    const [cologne3Id, setCologne3Id] = useState("");
+    const [sizeMl, setSizeMl] = useState("30");
+    const [thirdCologneSelectedMode, setThirdCologneSelectedMode] = useState(false);
+
+    // Load and set products -------------------------------------------------------
+    const [products, setProducts] = useState([]);
+    const [loadingProducts, setLoadingProducts] = useState(true);
+
+    // Get product ID from product object, accounting for different possible key names ---------------------------
+    function getProductId(product) {
+        return product.productid || product.product_id || product.id;
+    }
+
+    // Load products from bacckend ---------------------------------------
+    async function loadProducts() {
+        setMessage("");
+        setLoadingProducts(true);
+        try {
+            const prods = await getProductsReq();
+            setProducts(prods || [])
+        }
+        catch (error) {
+            setMessage(error.message || "Error loading products.");
+        }
+        finally {
+            setLoadingProducts(false);
+        }
+    }
+
+    // Load products on component mount ---------------------------------------
+    useEffect(() => {
+        loadProducts();
+    }, []);
+
+
     return (
     <>
         <Navbar />
@@ -42,12 +82,67 @@ export default function Mixology() {
                 backgroundPosition: "center",
                 backgroundRepeat: "repeat",
             }}>
+            {message && (
             <Text 
-                style={HeadingStyle} 
-                marginBottom="5rem">
+                style={luxuryBodyStyle} 
+                marginTop="0.5rem" 
+                color="black">
+                {message}
+            </Text>
+            )}
+            <Text 
+                style={luxuryHeadingStyle}
+                marginTop="-2.5rem">
                 Mixology
             </Text>
+            <Text
+                style={luxuryBodyStyle}
+                marginTop="-.5rem">   
+                Create your own custom fragrance blend by selecting up to three of your favorite colognes!
+            </Text>
+            <Flex justifyContent="center">
+                <View
+                    maxWidth="600px">
+                    <SelectField
+                        style={luxuryBodyStyle}
+                        descriptiveText="Select your preferred cologne size."
+                        variation="quiet"
+                        value={sizeMl}
+                        onChange={(e) => setSizeMl(e.target.value)}>
+                        <option value="30">30ML</option>
+                        <option value="50">50ML</option>
+                    </SelectField>
+                    <SelectField
+                        style={luxuryBodyStyle}
+                        variation="quiet"
+                        size="small"
+                        descriptiveText="Cologne 1">
+                    </SelectField>
+                    <SelectField
+                        style={luxuryBodyStyle}
+                        variation="quiet"
+                        size="small"
+                        descriptiveText="Cologne 2">
+                    </SelectField>
+                    <SelectField
+                        style={luxuryBodyStyle}
+                        variation="quiet"
+                        size="small"
+                        disabled={!thirdCologneSelectedMode}
+                        descriptiveText="Cologne 3">
+                    </SelectField>
+                    <Button
+                        style={luxuryBodyStyle}
+                        onClick={() => setThirdCologneSelectedMode(!thirdCologneSelectedMode)}>
+                        {thirdCologneSelectedMode ? "Remove 3rd Cologne" : "Add 3rd Cologne"}
 
+                    </Button>
+                    <Button
+                        style={luxuryBodyStyle}>
+                        Add to Cart
+                    </Button>
+                </View>
+            </Flex>
         </View>
     </>
   );
