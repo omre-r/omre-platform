@@ -230,6 +230,7 @@ const ForgotPassword = () => {
                                 style={luxuryBodyStyle}
                                 label="Email"
                                 type="email"
+                                maxLength={50}
                                 required
                                 marginTop="-0rem"
                                 value={email}
