@@ -14,6 +14,7 @@ import { Card, View, Flex, Heading, Text, TextField, Button, ToggleButton, Link,
 import { signUp, confirmSignUp, signIn, resendSignUpCode} from "aws-amplify/auth";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useAuth } from "../context/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 
 
 /*
@@ -57,6 +58,27 @@ export default function Auth() {
     const [firstname, setFirstName] = useState("");
     const [lastname, setLastName] = useState("");
     const [selectedNotes, setSelectedNotes] = useState([]); // MAY NOT BE SIGN UP ONLY LATER !!!
+    const [passwordRequirements, setPasswordRequirements] = useState({
+        length: false,
+        uppercase: false,
+        number: false,
+        specialChar: false,
+        });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // Real-time password requirements checker
+    const handlePasswordChange = (e) => {
+    const value = e.target.value;
+        setPassword(value);
+
+        setPasswordRequirements({
+            length: value.length >= 8,
+            uppercase: /[A-Z]/.test(value),
+            number: /[0-9]/.test(value),
+            specialChar: /[!@#$%^&*]/.test(value),
+        });
+};
 
     // Verification ----------------------------------------------
     // sets the code and email when submitting sign up
@@ -384,15 +406,40 @@ export default function Auth() {
                         onChange={(e) => setEmail(e.target.value)}
                     />
 
-                    <TextField color="#2B1E1A" style={luxuryBodyStyle}
+                    <Flex direction="row" alignItems="flex-end" gap="0.5rem" marginTop="-.2rem">
+                    <TextField
+                        color="#2B1E1A"
+                        style={luxuryBodyStyle}
                         label="Password"
                         type={showPassword ? "text" : "password"}
                         maxLength={50}
                         required
-                        marginTop="-.2rem"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={handlePasswordChange}
+                        width="100%"
                     />
+                    <span onClick={() => setShowPassword(!showPassword)} style={{ cursor: "pointer" }}>
+                        {showPassword ? <EyeOff size={25} /> : <Eye size={25} />}
+                    </span>
+                    </Flex>
+
+                    {!isLogin && (
+                    <View marginTop="0.2rem">
+                        <Text style={luxuryBodyStyle}>Password must include:</Text>
+                        <Text style={{ ...luxuryBodyStyle, color: passwordRequirements.length ? "green" : "red" }}>
+                          At least 8 characters
+                        </Text>
+                        <Text style={{ ...luxuryBodyStyle, color: passwordRequirements.uppercase ? "green" : "red" }}>
+                          At least one uppercase letter
+                        </Text>
+                        <Text style={{ ...luxuryBodyStyle, color: passwordRequirements.number ? "green" : "red" }}>
+                          At least one number
+                        </Text>
+                        <Text style={{ ...luxuryBodyStyle, color: passwordRequirements.specialChar ? "green" : "red" }}>
+                          At least one special character
+                        </Text>
+                    </View>
+                    )}
 
                     {!isLogin && (
                         <>

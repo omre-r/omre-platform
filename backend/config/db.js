@@ -72,7 +72,8 @@ async function createTables() {
             lastname VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
             role VARCHAR(10),
-            preferrednotes JSONB
+            preferrednotes JSONB,
+            last_login TIMESTAMPTZ
         )
     `);
     /* 
@@ -207,6 +208,35 @@ class Users{
         }
         return {success: true, data: {user}}
     }
+     async updateLastLogin(cognitoSub) {
+    const query = `
+      UPDATE users 
+      SET last_login = NOW() 
+      WHERE id = $1 
+      RETURNING *;
+    `;
+    try {
+      const res = await pool.query(query, [cognitoSub]);
+      if (res.rowCount === 0) {
+        return { success: false, message: "User not found", status: 404 };
+      }
+      return { success: true, data: { user: res.rows[0] } };
+    } catch (err) {
+      console.error("Failed to update last_login:", err);
+      return { success: false, message: "Failed to update last_login" };
+    }
+  }
+  async updateLastLogin(id) {
+    const query = `UPDATE users SET last_login = NOW() WHERE id = $1`;
+    try {
+        await pool.query(query, [id]);
+    } catch (err) {
+        console.error(err);
+        return { success: false, message: "Failed to update last_login", status: 400 };
+    }
+    return { success: true };
+}
+
 }
 
 /*
