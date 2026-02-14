@@ -5,6 +5,8 @@ import "@aws-amplify/ui-react/styles.css";
 import { getProductsReq, updateProductReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
+import Omre1 from "../assets/mixology/OMRE1.png";
+import Omre2 from "../assets/mixology/OMRE2.png";
 
 /*
 Custom Styles ------------------------------------------------------------------------------------------------
@@ -103,6 +105,25 @@ export default function Mixology() {
             <Flex justifyContent="center">
                 <View
                     maxWidth="600px">
+                    <View>
+                        {/* Placeholder for when we put the liquid */}
+                        {/* style={{ 
+                            inset: 0,
+                            width: "70%",
+                            height: "50%",
+                            zIndex: 1, // Index 1 to make it behind the bottle image
+                        }}  */}
+                    </View>
+                    <img
+                        src={Omre2}
+                        alt="OmreBottle"
+                        style={{
+                            inset: 0,
+                            width: "70%",
+                            height: "50%",
+                            zIndex: 2,
+                        }}
+                    />
                     <SelectField
                         style={luxuryBodyStyle}
                         descriptiveText="Select your preferred fragrance size."
