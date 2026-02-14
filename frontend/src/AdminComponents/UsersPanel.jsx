@@ -85,6 +85,7 @@ export default function UsersPanel() {
             Loading users...
         </Text>);
     }
+console.log("selectedUser object:", selectedUser);
 
     return (
         <Flex 
@@ -188,9 +189,10 @@ export default function UsersPanel() {
                             <Text>First Name: {selectedUser.first_name} </Text>
                             <Text>Last Name: {selectedUser.last_name} </Text>
                             <Text>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
-                            <Text>Admin Status: {selectedUser.is_admin ? "Yes" : "No"}</Text>
-                            <Text>Created: {selectedUser.created_at}</Text>
-                            <Text>Last Login: {selectedUser.last_login ? selectedUser.last_login : "--"}</Text>
+                            <Text>Admin Permissions: {selectedUser.is_admin ? "Yes" : "No"}</Text>
+                            <Text>Created: {new Date(selectedUser.created_at).toLocaleString()}</Text>
+                            <Text>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString(): "--"}</Text>
+
                             <Button 
                                 style={luxuryBodyStyle}
                                 onClick={() => setSelectedUser(null)}
