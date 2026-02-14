@@ -93,7 +93,7 @@ async function createTables() {
             variation VARCHAR(200),
             price DECIMAL(10, 2),
             images JSONB,
-            quantity INT,
+            stock_ml DECIMAL(10, 2),
             notes JSONB,
             description TEXT,
             isfeatured BOOLEAN,
@@ -217,10 +217,10 @@ in different situations (changePassword / updateLogin), but a product is
 likely updated in a single setting. Therefore, a single updateProduct is provided.
 */
 class Products{
-    static modifiableFields = ["type", "name", "variation", "price", "images", "quantity", "notes", "description", "ishidden", "isfeatured"];
+    static modifiableFields = ["type", "name", "variation", "price", "images", "stock_ml", "notes", "description", "ishidden", "isfeatured"];
 
     async createProduct(options){
-        const {type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden} = options;
+        const {type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden} = options;
         const id = uuidv4();
 
         // Validation
@@ -243,9 +243,9 @@ class Products{
         }  
     
         let result;
-        const query = `INSERT INTO products (id, type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;`;
+        const query = `INSERT INTO products (id, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, type, name, variation, price, JSON.stringify(images), quantity, JSON.stringify(notes), description, isfeatured, ishidden]);
+            result = await pool.query(query, [id, type, name, variation, price, JSON.stringify(images), stock_ml, JSON.stringify(notes), description, isfeatured, ishidden]);
         }catch(err){
 
             console.error(err)
