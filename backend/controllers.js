@@ -89,6 +89,25 @@ async function deleteUser(req, res) {
   return res.json(result)
 }
 
+async function updateLastLogin(req, res) {
+  const sub = req.tokenPayload?.sub;
+  const query = `UPDATE users SET last_login = NOW() WHERE id = $1`; 
+
+  if (!sub) {
+    return res.status(400).json({ success: false, message: "Missing user identifier" });
+  }
+
+  const result = await users.updateLastLogin(sub);
+
+  if (!result.success) {
+    return res.status(result.status || 500).json(result);
+  }
+
+  return res.json({ success: true, message: "Last login updated", data: result.data });
+}
+
+
+
 
 
 
@@ -365,5 +384,6 @@ module.exports = {
   getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, completeOrder, getOrder, createOrder, deleteOrder,
-  getUploadURL
+  getUploadURL,
+  updateLastLogin
 };
