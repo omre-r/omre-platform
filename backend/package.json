@@ -22,7 +22,7 @@
     "multer": "^2.0.2",
     "omre-platform": "file:..",
     "pg": "^8.17.2",
-    "uuid": "^13.0.0"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

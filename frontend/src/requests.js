@@ -114,11 +114,11 @@ async function getActiveProductsReq(){
     return data.data.products;
 }
 
-async function createProductReq({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden}){
+async function createProductReq({type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden}){
     const response = await fetch(backendURL + `/products`, {
         method: "POST",
         headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
-        body: JSON.stringify({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden})
+        body: JSON.stringify({type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden})
     });
     const data = await response.json();
     if (!data.success){
@@ -315,7 +315,7 @@ async function getPresignedUrlReq_LOCAL(file) {
   return response.json();
 }
 
-async function createProductFlowReq_LOCAL({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden}){
+async function createProductFlowReq_LOCAL({type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden}){
     if (!validateAllImages(images).valid) throw new Error("invalid images");
     const uploadUrls = await Promise.all(images.map(f => getPresignedUrlReq_LOCAL(f)));
     if (uploadUrls.some(url => url === null)) return null
@@ -323,7 +323,7 @@ async function createProductFlowReq_LOCAL({type, name, variation, price, images,
     const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, images[i])));
     if (uploadResults.some(res => res === null)) return null
 
-    return await createProductReq({type, name, variation, price, images: uploadUrls.map(data => data.publicUrl), quantity, notes, description, isfeatured, ishidden})
+    return await createProductReq({type, name, variation, price, images: uploadUrls.map(data => data.publicUrl), stock_ml, notes, description, isfeatured, ishidden})
 }
 
 

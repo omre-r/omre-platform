@@ -38,7 +38,7 @@ const defaultProductDraft = {
         name: '',
         variation: '',
         price: '',
-        quantity: '',
+        stock_ml: '',
         notes: {
             top: [],
             heart: [],
@@ -92,7 +92,7 @@ export default function ProductsPanel() {
             name: product.name ?? "",
             variation: product.variation ?? "",
             price: product.price != null ? String(product.price) : "",
-            quantity: product.quantity != null ? String(product.quantity) : "",
+            stock_ml: product.stock_ml != null ? String(product.stock_ml) : "",
             notes: {
                 top: product.notes?.top ?? [],
                 heart: product.notes?.heart ?? [],
@@ -114,9 +114,9 @@ export default function ProductsPanel() {
     }
 
     // Form helper for #'s
-    function validateNumbers(price, quantity) {
+    function validateNumbers(price, stock_ml) {
         if (!Number.isFinite(price) || price < 0) return "Price must be a valid number.";
-        if (!Number.isFinite(quantity) || quantity < 0) return "Quantity must be a valid number.";
+        if (!Number.isFinite(stock_ml) || stock_ml < 0) return "Stock must be a valid number.";
         return null;
     }
 
@@ -209,7 +209,7 @@ export default function ProductsPanel() {
                 name: draft.name.trim(),
                 variation: draft.variation.trim(),
                 price: draft.price === "" ? 0 : Number(draft.price),
-                quantity: draft.quantity === "" ? 0 : Number(draft.quantity),
+                stock_ml: draft.stock_ml === "" ? 0 : Number(draft.stock_ml),
                 // To match the backend format of the notes, we have top, heart, and base
                 // which will be respectively their own scents.
                 notes: {
@@ -222,7 +222,7 @@ export default function ProductsPanel() {
                 ishidden: !!draft.ishidden,
                 images: draft.images ?? [],
             };
-            const validNums = validateNumbers(form.price, form.quantity)
+            const validNums = validateNumbers(form.price, form.stock_ml)
             if (validNums) {
                 setMessage(validNums);
                 return;
@@ -261,7 +261,7 @@ export default function ProductsPanel() {
                 name: draft.name.trim(),
                 variation: draft.variation.trim(),
                 price: draft.price === "" ? 0 : Number(draft.price),
-                quantity: draft.quantity === "" ? 0 : Number(draft.quantity),
+                stock_ml: draft.stock_ml === "" ? 0 : Number(draft.stock_ml),
                 notes: {
                     top: draft.notes.top,
                     heart: draft.notes.heart,
@@ -270,7 +270,7 @@ export default function ProductsPanel() {
                 isfeatured: !!draft.isfeatured,
                 ishidden: !!draft.ishidden,
             };
-            const validNums = validateNumbers(form.price, form.quantity)
+            const validNums = validateNumbers(form.price, form.stock_ml)
             if (validNums) {
                 setMessage(validNums);
                 return;
@@ -388,7 +388,7 @@ export default function ProductsPanel() {
                                 }}
                                 >
                                 <Text>
-                                    {prod.name} — qty: {prod.quantity} {prod.quantity <= 5 && "(LOW!)"}
+                                    {prod.name} — {prod.stock_ml}ml {prod.stock_ml < 1000 && "(LOW!)"}
                                 </Text>
                             </Button>
                         ))}
@@ -450,10 +450,10 @@ export default function ProductsPanel() {
                             />
                             <TextField 
                                 style={compactStyle}
-                                placeholder="Quantity"
+                                placeholder="Stock (ml)"
                                 type="number"
-                                value={draft.quantity} 
-                                onChange={(e) => setDraftField("quantity", e.target.value)} 
+                                value={draft.stock_ml} 
+                                onChange={(e) => setDraftField("stock_ml", e.target.value)} 
                             />
                             {/* Entering Top, Heart, and Base notes ------------------------------------------------------------*/}
                             <TextField
@@ -629,7 +629,26 @@ export default function ProductsPanel() {
                         </Flex>
                     </>
                     )}
-                    
+                    {/* View product ------------------------------------------------- */}
+                    {activeMode === MODES.VIEW && selectedProduct &&  !loadingProduct && (
+                    <Flex direction="column" gap="0.1rem" wrap="wrap" textAlign="center">
+                        <Text style={luxuryBodyStyle}>Name: {selectedProduct.name}</Text>
+                        <Text style={luxuryBodyStyle}>Type: {selectedProduct.type}</Text>
+                        <Text style={luxuryBodyStyle}>Variation: {selectedProduct.variation}</Text>
+                        <Text style={luxuryBodyStyle}>Price: ${selectedProduct.price}</Text>
+                        <Text style={luxuryBodyStyle}>Stock: {selectedProduct.stock_ml} ml</Text>
+                        <Text style={luxuryBodyStyle}>Featured: {selectedProduct.isfeatured ? "Yes" : "No"}</Text>
+                        <Text style={luxuryBodyStyle}>Hidden: {selectedProduct.ishidden ? "Yes" : "No"}</Text>
+                        <Text style={luxuryBodyStyle}>
+                            {/* Display the selected products Top, Heart, and Base notes in one line */}
+                            Notes: Top[{selectedProduct.notes?.top.join(", ") || "—"}] / Heart[{selectedProduct.notes?.heart.join(", ") || "—"}] / Base[{selectedProduct.notes?.base.join(", ") || "—"}]
+                        </Text>
+                        <Text 
+                            style={luxuryBodyStyle}>
+                            Images: {Array.isArray(selectedProduct.images) ? selectedProduct.images.length : 0}
+                        </Text>
+                    </Flex>
+                    )} 
                 </Flex>
             </Card>
         </Flex>
