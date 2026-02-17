@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { View, Card, Flex, Text, Button, SelectField, Grid, SliderField } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, SelectField, Grid, SliderField } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { getProductsReq, updateProductReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
-import Omre1 from "../assets/mixology/OMRE1.png";
 import Omre2 from "../assets/mixology/OMRE2.png";
 
 /*
@@ -46,10 +44,76 @@ export default function Mixology() {
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
 
-    // Percentage of each cologne in the mix, default to 50/50 for two cologne mix, 33/33/33 for three cologne mix
-    const [fragrance1pct, setfragrancePct1] = useState(50);
-    const [fragrance2pct, setfragrancePct2] = useState(50);
-    const [fragrance3pct, setfragrancePct3] = useState(0);
+    // Percentage of each cologne in the mix, default to 50/50 for two cologne mix
+    const [fragrancepct1, setfragrancePct1] = useState(50);
+    const [fragrancepct2, setfragrancePct2] = useState(50);
+    const fragrancepct3 = thirdCologneSelectedMode ? Math.max(0, 100 - fragrancepct1 - fragrancepct2) : 0;
+
+    // Clamp function to ensure percentages stay within bounds and total 100% when 3rd cologne selected ----------------------
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+    // Max and min percentages for 2 fragrance and 3 fragrance modes
+    const MIN_PCT = 10;
+    const MAX_PCT = 80;
+    
+    // Changing fragrance 1 percentage ----------------------
+    const handleFragrance1PctChange = (value) => {
+        // 2 Fragrance mode --------------------------------
+        if (!thirdCologneSelectedMode) {
+            // Making sure between the set bounds and that they add to 100%
+            // Math example: 
+            // Value is 60 for fragrance 1, then fragrance 2 will be set to 40 to add to 100%
+            const p1 = clamp(value, 100 - MAX_PCT, MAX_PCT);
+            setfragrancePct1(p1);
+            setfragrancePct2(100 - p1);
+            return;
+        }
+
+        // 3 Fragrance mode -------------------------------- ------
+        // Math example:
+        // If value is 60 for fragrance 1
+        // Min of fragrance 1 will be 10 
+        // Max of fragrance 1 will be 80
+        const minP1 = Math.max(MIN_PCT, 20 - fragrancepct2);
+        const maxP1 = Math.min(MAX_PCT, 90 - fragrancepct2);
+        // Making sure between the set bounds and that fragrance 3 is at least 10% (so fragrance 1 + fragrance 2 is at most 90%)
+        const p1 = clamp(value, minP1, maxP1);
+        setfragrancePct1(p1);
+
+        // For fragrance 2,
+        // Math Example: 
+        // min of fragrance 2 will be 10 (so that fragrance 1 + fragrance 2 is at least 20%)
+        // max of fragrance 2 will be 80 (so that fragrance 1 + fragrance 2 is at most 90%)
+        const minP2 = Math.max(MIN_PCT, 20 - p1);
+        const maxP2 = Math.min(MAX_PCT, 90 - p1);
+        setfragrancePct2((prevP2) => clamp(prevP2, minP2, maxP2));
+    }
+
+    // If 3rd cologne selected, changing fragrance 2 percentage ----------------------
+    // Will be able to now slide the percentage and it will have change fragrance 3
+    const handleFragrance2PctChange = (value) => {
+        if (!thirdCologneSelectedMode) {
+            return;
+        }
+        const minP2 = Math.max(MIN_PCT, 20 - fragrancepct1);
+        const maxP2 = Math.min(MAX_PCT, 90 - fragrancepct1);
+        setfragrancePct2(clamp(value, minP2, maxP2));
+    }
+
+    // If third is toggled set initial fragrance percentages accordingly
+    const toggleThird = () => { setThirdCologneSelectedMode((prev) => {
+        const next = !prev;
+        if (next) {
+            setfragrancePct1(34);
+            setfragrancePct2(33);
+        } 
+        else {
+            setfragrancePct1(50);
+            setfragrancePct2(50);
+        }
+        return next;
+        });
+    };
 
     // Get product ID from product object, accounting for different possible key names ---------------------------
     function getProductId(product) {
@@ -176,8 +240,8 @@ export default function Mixology() {
                                 label={"Fragrance 1 Percentage"}
                                 min={0}
                                 max={100}
-                                value={fragrance1pct}
-                                onChange={setfragrancePct1}
+                                value={fragrancepct1}
+                                onChange={handleFragrance1PctChange}
                                 formatValue={(value) => `${value}%`}>
                             </SliderField>
                         </Flex>
@@ -201,8 +265,9 @@ export default function Mixology() {
                                 label={"Fragrance 2 Percentage"}
                                 min={0}
                                 max={100}
-                                value={fragrance2pct}
-                                onChange={setfragrancePct2}
+                                value={fragrancepct2}
+                                onChange={thirdCologneSelectedMode ? handleFragrance2PctChange : undefined}
+                                disabled={!thirdCologneSelectedMode}
                                 formatValue={(value) => `${value}%`}>
                             </SliderField>
                         </Flex>
@@ -230,9 +295,8 @@ export default function Mixology() {
                                 label={"Fragrance 3 Percentage"}
                                 min={0}
                                 max={100}
-                                value={fragrance3pct}
-                                onChange={setfragrancePct3}
-                                disabled={!thirdCologneSelectedMode}
+                                value={fragrancepct3}
+                                disabled={true}
                                 formatValue={(value) => `${value}%`}>
                             </SliderField>
                         </Flex>
@@ -240,8 +304,7 @@ export default function Mixology() {
                     <Flex gap="1rem" marginTop="1rem" justifyContent="center">
                         <Button
                             style={luxuryBodyStyle}
-                            // TODO: adjust percentages accordingly when 3rd cologne added/removed
-                            onClick={() => setThirdCologneSelectedMode(!thirdCologneSelectedMode)}>
+                            onClick={toggleThird}>
                             {thirdCologneSelectedMode ? "Remove 3rd Cologne" : "Add 3rd Cologne"}
 
                         </Button>
