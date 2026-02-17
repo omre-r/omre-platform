@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { View, Card, Flex, Text, Button, SelectField } from "@aws-amplify/ui-react";
+import { View, Card, Flex, Text, Button, SelectField, Grid } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { getProductsReq, updateProductReq } from "../requests.js";
 import Navbar from "../components/Navbar";
@@ -19,11 +19,17 @@ const luxuryHeadingStyle = {
   fontSize: "2.5rem",
   letterSpacing: "0.5px",
 };
-const luxuryBodyStyle = {
+const luxurySubheadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 500,
   fontSize: "1.3rem",   
   letterSpacing: "0.3px",
+};
+const luxuryBodyStyle = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 500,
+  fontSize: "1.1rem",   
+  letterSpacing: "0.2px",
 };
 
 
@@ -98,11 +104,11 @@ export default function Mixology() {
                 Mixology
             </Text>
             <Text
-                style={luxuryBodyStyle}
+                style={luxurySubheadingStyle}
                 marginTop="-.5rem">   
                 Create your own custom fragrance blend by selecting up to three of your favorite fragrances!
             </Text>
-            <Flex justifyContent="center">
+            <Flex direction="column" alignItems="center" gap="1.25rem">
                 <View
                     maxWidth="600px">
                     <View>
@@ -119,70 +125,83 @@ export default function Mixology() {
                         alt="OmreBottle"
                         style={{
                             inset: 0,
-                            width: "70%",
-                            height: "50%",
+                            width: "75%",
+                            height: "60%",
                             zIndex: 2,
                         }}
                     />
-                    <SelectField
-                        style={luxuryBodyStyle}
-                        descriptiveText="Select your preferred fragrance size."
-                        variation="quiet"
-                        value={sizeMl}
-                        onChange={(e) => setSizeMl(e.target.value)}>
-                        <option value="30">30ML</option>
-                        <option value="50">50ML</option>
-                    </SelectField>
-                    <SelectField
-                        style={luxuryBodyStyle}
-                        variation="quiet"
-                        size="small"
-                        descriptiveText="Select fragrance 1"
-                        value={cologne1Id}
-                        onChange={(e) => setCologne1Id(e.target.value)}>
-                        {products.map((product) => (
-                            <option key={getProductId(product)} value={getProductId(product)}>
-                                {product.name}
-                            </option>
-                        ))}
-                    </SelectField>
-                    <SelectField
-                        style={luxuryBodyStyle}
-                        variation="quiet"
-                        size="small"
-                        descriptiveText="Select fragrance 2"
-                        value={cologne2Id}
-                        onChange={(e) => setCologne2Id(e.target.value)}>
-                        {products.map((product) => (
-                            <option key={getProductId(product)} value={getProductId(product)}>
-                                {product.name}
-                            </option>
-                        ))}
-                    </SelectField>
-                    <SelectField
-                        style={luxuryBodyStyle}
-                        variation="quiet"
-                        size="small"
-                        disabled={!thirdCologneSelectedMode}
-                        descriptiveText="Select fragrance 3"
-                        value={cologne3Id}
-                        onChange={(e) => setCologne3Id(e.target.value)}>
-                        {products.map((product) => (
-                            <option key={getProductId(product)} value={getProductId(product)}>
-                                {product.name}
-                            </option>
-                        ))}
-                    </SelectField>
-                    <Button
-                        style={luxuryBodyStyle}
-                        onClick={() => setThirdCologneSelectedMode(!thirdCologneSelectedMode)}>
-                        {thirdCologneSelectedMode ? "Remove 3rd Cologne" : "Add 3rd Cologne"}
+                </View>
+                <View>
+                    <Grid
+                        templateColumns={{ base: "1fr", large: "160px 1fr 1fr 1fr" }}
+                        gap="1rem"
+                        width="100%"
+                        maxWidth="1100px"
+                        alignItems="start"
+                        >
+                        <SelectField
+                            style={luxuryBodyStyle}
+                            descriptiveText="Select fragrance size."
+                            variation="quiet"
+                            size="small"
+                            value={sizeMl}
+                            onChange={(e) => setSizeMl(e.target.value)}>
+                            <option value="30">30ML</option>
+                            <option value="50">50ML</option>
+                        </SelectField>
+                        <SelectField
+                            style={luxuryBodyStyle}
+                            variation="quiet"
+                            size="small"
+                            descriptiveText="Select fragrance 1"
+                            value={cologne1Id}
+                            onChange={(e) => setCologne1Id(e.target.value)}>
+                            {products.map((product) => (
+                                <option key={getProductId(product)} value={getProductId(product)}>
+                                    {product.name}
+                                </option>
+                            ))}
+                        </SelectField>
+                        <SelectField
+                            style={luxuryBodyStyle}
+                            variation="quiet"
+                            size="small"
+                            descriptiveText="Select fragrance 2"
+                            value={cologne2Id}
+                            onChange={(e) => setCologne2Id(e.target.value)}>
+                            {products.map((product) => (
+                                <option key={getProductId(product)} value={getProductId(product)}>
+                                    {product.name}
+                                </option>
+                            ))}
+                        </SelectField>
+                        <SelectField
+                            style={luxuryBodyStyle}
+                            variation="quiet"
+                            size="small"
+                            disabled={!thirdCologneSelectedMode}
+                            descriptiveText="Select fragrance 3"
+                            value={cologne3Id}
+                            onChange={(e) => setCologne3Id(e.target.value)}>
+                            {products.map((product) => (
+                                <option key={getProductId(product)} value={getProductId(product)}>
+                                    {product.name}
+                                </option>
+                            ))}
+                        </SelectField>
+                    </Grid>
+                    <Flex gap="1rem" marginTop="1rem" justifyContent="center">
+                        <Button
+                            style={luxuryBodyStyle}
+                            onClick={() => setThirdCologneSelectedMode(!thirdCologneSelectedMode)}>
+                            {thirdCologneSelectedMode ? "Remove 3rd Cologne" : "Add 3rd Cologne"}
 
-                    </Button>
-                    <Button
-                        style={luxuryBodyStyle}>
-                        Add to Cart
-                    </Button>
+                        </Button>
+                        <Button
+                            style={luxuryBodyStyle}>
+                            Add to Cart
+                        </Button>
+                    </Flex>
                 </View>
             </Flex>
         </View>
