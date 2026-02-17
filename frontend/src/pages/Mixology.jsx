@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { View, Card, Flex, Text, Button, SelectField, Grid } from "@aws-amplify/ui-react";
+import { View, Card, Flex, Text, Button, SelectField, Grid, SliderField } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { getProductsReq, updateProductReq } from "../requests.js";
 import Navbar from "../components/Navbar";
@@ -32,7 +32,6 @@ const luxuryBodyStyle = {
   letterSpacing: "0.2px",
 };
 
-
 export default function Mixology() {
     const [message, setMessage] = useState("");
 
@@ -46,6 +45,11 @@ export default function Mixology() {
     // Load and set products -------------------------------------------------------
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
+
+    // Percentage of each cologne in the mix, default to 50/50 for two cologne mix, 33/33/33 for three cologne mix
+    const [fragrance1pct, setfragrancePct1] = useState(50);
+    const [fragrance2pct, setfragrancePct2] = useState(50);
+    const [fragrance3pct, setfragrancePct3] = useState(0);
 
     // Get product ID from product object, accounting for different possible key names ---------------------------
     function getProductId(product) {
@@ -139,60 +143,104 @@ export default function Mixology() {
                         maxWidth="1100px"
                         alignItems="start"
                         >
-                        <SelectField
-                            style={luxuryBodyStyle}
-                            descriptiveText="Select fragrance size."
-                            variation="quiet"
-                            size="small"
-                            value={sizeMl}
-                            onChange={(e) => setSizeMl(e.target.value)}>
-                            <option value="30">30ML</option>
-                            <option value="50">50ML</option>
-                        </SelectField>
-                        <SelectField
-                            style={luxuryBodyStyle}
-                            variation="quiet"
-                            size="small"
-                            descriptiveText="Select fragrance 1"
-                            value={cologne1Id}
-                            onChange={(e) => setCologne1Id(e.target.value)}>
-                            {products.map((product) => (
-                                <option key={getProductId(product)} value={getProductId(product)}>
-                                    {product.name}
-                                </option>
-                            ))}
-                        </SelectField>
-                        <SelectField
-                            style={luxuryBodyStyle}
-                            variation="quiet"
-                            size="small"
-                            descriptiveText="Select fragrance 2"
-                            value={cologne2Id}
-                            onChange={(e) => setCologne2Id(e.target.value)}>
-                            {products.map((product) => (
-                                <option key={getProductId(product)} value={getProductId(product)}>
-                                    {product.name}
-                                </option>
-                            ))}
-                        </SelectField>
-                        <SelectField
-                            style={luxuryBodyStyle}
-                            variation="quiet"
-                            size="small"
-                            disabled={!thirdCologneSelectedMode}
-                            descriptiveText="Select fragrance 3"
-                            value={cologne3Id}
-                            onChange={(e) => setCologne3Id(e.target.value)}>
-                            {products.map((product) => (
-                                <option key={getProductId(product)} value={getProductId(product)}>
-                                    {product.name}
-                                </option>
-                            ))}
-                        </SelectField>
+
+                        <View>
+                            <SelectField
+                                style={luxuryBodyStyle}
+                                descriptiveText="Select fragrance size."
+                                variation="quiet"
+                                size="small"
+                                value={sizeMl}
+                                onChange={(e) => setSizeMl(e.target.value)}>
+                                <option value="30">30ML</option>
+                                <option value="50">50ML</option>
+                            </SelectField>
+                        </View>
+
+                        <Flex direction="column" gap="0.35rem">
+                            <SelectField
+                                style={luxuryBodyStyle}
+                                variation="quiet"
+                                size="small"
+                                descriptiveText="Select fragrance 1"
+                                value={cologne1Id}
+                                onChange={(e) => setCologne1Id(e.target.value)}>
+                                {products.map((product) => (
+                                    <option key={getProductId(product)} value={getProductId(product)}>
+                                        {product.name}
+                                    </option>
+                                ))}
+                            </SelectField>
+                            <SliderField 
+                                style={luxuryBodyStyle}
+                                label={"Fragrance 1 Percentage"}
+                                min={0}
+                                max={100}
+                                value={fragrance1pct}
+                                onChange={setfragrancePct1}
+                                formatValue={(value) => `${value}%`}>
+                            </SliderField>
+                        </Flex>
+
+                        <Flex direction="column" gap="0.35rem">
+                            <SelectField
+                                style={luxuryBodyStyle}
+                                variation="quiet"
+                                size="small"
+                                descriptiveText="Select fragrance 2"
+                                value={cologne2Id}
+                                onChange={(e) => setCologne2Id(e.target.value)}>
+                                {products.map((product) => (
+                                    <option key={getProductId(product)} value={getProductId(product)}>
+                                        {product.name}
+                                    </option>
+                                ))}
+                            </SelectField>
+                            <SliderField 
+                                style={luxuryBodyStyle}
+                                label={"Fragrance 2 Percentage"}
+                                min={0}
+                                max={100}
+                                value={fragrance2pct}
+                                onChange={setfragrancePct2}
+                                formatValue={(value) => `${value}%`}>
+                            </SliderField>
+                        </Flex>
+
+                        <Flex 
+                            className={!thirdCologneSelectedMode ? "mixology-disabled" : ""}
+                            direction="column" 
+                            gap="0.35rem">
+                            <SelectField
+                                style={luxuryBodyStyle}
+                                variation="quiet"
+                                size="small"
+                                disabled={!thirdCologneSelectedMode}
+                                descriptiveText="Select fragrance 3"
+                                value={cologne3Id}
+                                onChange={(e) => setCologne3Id(e.target.value)}>
+                                {products.map((product) => (
+                                    <option key={getProductId(product)} value={getProductId(product)}>
+                                        {product.name}
+                                    </option>
+                                ))}
+                            </SelectField>
+                            <SliderField 
+                                style={luxuryBodyStyle}
+                                label={"Fragrance 3 Percentage"}
+                                min={0}
+                                max={100}
+                                value={fragrance3pct}
+                                onChange={setfragrancePct3}
+                                disabled={!thirdCologneSelectedMode}
+                                formatValue={(value) => `${value}%`}>
+                            </SliderField>
+                        </Flex>
                     </Grid>
                     <Flex gap="1rem" marginTop="1rem" justifyContent="center">
                         <Button
                             style={luxuryBodyStyle}
+                            // TODO: adjust percentages accordingly when 3rd cologne added/removed
                             onClick={() => setThirdCologneSelectedMode(!thirdCologneSelectedMode)}>
                             {thirdCologneSelectedMode ? "Remove 3rd Cologne" : "Add 3rd Cologne"}
 
