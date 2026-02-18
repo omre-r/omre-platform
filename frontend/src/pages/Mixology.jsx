@@ -4,7 +4,7 @@ import "@aws-amplify/ui-react/styles.css";
 import { getProductsReq, updateProductReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
-import Omre2 from "../assets/mixology/OMRE2.png";
+import Omre2 from "../assets/Mixology/OMRE2.png";
 
 /*
 Custom Styles ------------------------------------------------------------------------------------------------
