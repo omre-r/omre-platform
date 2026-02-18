@@ -45,8 +45,8 @@ export default function Mixology() {
     const [loadingProducts, setLoadingProducts] = useState(true);
 
     // Max and min percentages for 2 fragrance and 3 fragrance modes
-    const MIN_PCT = 10;
-    const MAX_PCT = 80;
+    const MIN_PCT = 5;
+    const MAX_PCT = 95;
 
     // Percentage of each cologne in the mix, default to 50/50 for two cologne mix
     const [fragrancepct1, setfragrancePct1] = useState(50);
@@ -344,12 +344,16 @@ export default function Mixology() {
                             style={luxuryBodyStyle}
 
                             onClick={() => {toggleThird();}}>
-                            {thirdCologneSelectedMode ? "Remove 3rd Cologne" : "Add 3rd Cologne"}
+                            {thirdCologneSelectedMode ? "Remove 3rd Fragrance" : "Add 3rd Fragrance"}
 
                         </Button>
                         <Button
                             style={luxuryBodyStyle}>
                             Add to Cart
+                        </Button>
+                        <Button
+                            style={luxuryBodyStyle}>
+                            Save Fragrance
                         </Button>
                     </Flex>
                 </View>
