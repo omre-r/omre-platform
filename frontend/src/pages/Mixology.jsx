@@ -44,17 +44,17 @@ export default function Mixology() {
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
 
-    // Percentage of each cologne in the mix, default to 50/50 for two cologne mix
-    const [fragrancepct1, setfragrancePct1] = useState(50);
-    const [fragrancepct2, setfragrancePct2] = useState(50);
-    const fragrancepct3 = thirdCologneSelectedMode ? Math.max(0, 100 - fragrancepct1 - fragrancepct2) : 0;
-
-    // Clamp function to ensure percentages stay within bounds and total 100% when 3rd cologne selected ----------------------
-    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
-
     // Max and min percentages for 2 fragrance and 3 fragrance modes
     const MIN_PCT = 10;
     const MAX_PCT = 80;
+
+    // Percentage of each cologne in the mix, default to 50/50 for two cologne mix
+    const [fragrancepct1, setfragrancePct1] = useState(50);
+    const [fragrancepct2, setfragrancePct2] = useState(50);
+    const fragrancepct3 = thirdCologneSelectedMode ? Math.max(MIN_PCT, 100 - fragrancepct1 - fragrancepct2) : 0;
+
+    // Clamp function to ensure percentages stay within bounds and total 100% when 3rd cologne selected ----------------------
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
     
     // Changing fragrance 1 percentage ----------------------
     const handleFragrance1PctChange = (value) => {
@@ -108,11 +108,24 @@ export default function Mixology() {
             setfragrancePct2(33);
         } 
         else {
+            setCologne3Id("");
             setfragrancePct1(50);
             setfragrancePct2(50);
         }
         return next;
         });
+    };
+
+    // Making sure that a product that is already selected in another slot cannot be selected again to prevent duplicate selections ----------------------
+    const isAlreadyPicked = (productId, slotNumber) => {
+        // List of id's of currently selected colognes in the other slots
+        const picked = [
+            slotNumber != 1 ? cologne1Id : null,
+            slotNumber != 2 ? cologne2Id : null,
+            slotNumber != 3 ? cologne3Id : null,
+        ];
+        // Returns true or false if the product id is in the list of picked colognes for the other slots
+        return picked.includes(productId);
     };
 
     // Get product ID from product object, accounting for different possible key names ---------------------------
@@ -229,8 +242,19 @@ export default function Mixology() {
                                 descriptiveText="Select fragrance 1"
                                 value={cologne1Id}
                                 onChange={(e) => setCologne1Id(e.target.value)}>
+                                <option 
+                                    // Default non selectable placeholder
+                                    value="" 
+                                    disabled hidden>
+                                        {/* Removed text as prof doesnt want placeholders */}
+                                        {/* Select a fragrance */}
+                                </option>
                                 {products.map((product) => (
-                                    <option key={getProductId(product)} value={getProductId(product)}>
+                                    <option 
+                                        key={getProductId(product)} 
+                                        value={getProductId(product)}
+                                        // Disable option if already selected in another cologne slot to prevent duplicate selections
+                                        disabled={isAlreadyPicked(getProductId(product), 1)}>
                                         {product.name}
                                     </option>
                                 ))}
@@ -254,8 +278,15 @@ export default function Mixology() {
                                 descriptiveText="Select fragrance 2"
                                 value={cologne2Id}
                                 onChange={(e) => setCologne2Id(e.target.value)}>
+                                <option 
+                                    value="" 
+                                    disabled hidden>
+                                </option>
                                 {products.map((product) => (
-                                    <option key={getProductId(product)} value={getProductId(product)}>
+                                    <option 
+                                        key={getProductId(product)} 
+                                        value={getProductId(product)}
+                                        disabled={isAlreadyPicked(getProductId(product), 2)}>
                                         {product.name}
                                     </option>
                                 ))}
@@ -284,8 +315,15 @@ export default function Mixology() {
                                 descriptiveText="Select fragrance 3"
                                 value={cologne3Id}
                                 onChange={(e) => setCologne3Id(e.target.value)}>
+                                <option 
+                                    value="" 
+                                    disabled hidden>
+                                </option>
                                 {products.map((product) => (
-                                    <option key={getProductId(product)} value={getProductId(product)}>
+                                    <option 
+                                        key={getProductId(product)} 
+                                        value={getProductId(product)}
+                                        disabled={isAlreadyPicked(getProductId(product), 3)}>
                                         {product.name}
                                     </option>
                                 ))}
@@ -304,7 +342,8 @@ export default function Mixology() {
                     <Flex gap="1rem" marginTop="1rem" justifyContent="center">
                         <Button
                             style={luxuryBodyStyle}
-                            onClick={toggleThird}>
+
+                            onClick={() => {toggleThird();}}>
                             {thirdCologneSelectedMode ? "Remove 3rd Cologne" : "Add 3rd Cologne"}
 
                         </Button>
