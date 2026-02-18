@@ -1,9 +1,3 @@
-require("dotenv").config();
-
-console.log("DEBUG COGNITO_USER_POOL_ID =", process.env.COGNITO_USER_POOL_ID);
-
-
-
 const express = require("express");
 const cors = require("cors");
 const { CognitoJwtVerifier } = require('aws-jwt-verify');
@@ -13,14 +7,13 @@ const controllers = require("./controllers.js");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const COGNITO_POOL_ID = process.env.COGNITO_USER_POOL_ID;
-const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
+const COGNITO_POOL_ID = process.env.COGNITO_POOL_ID;
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
 const PORT = process.env.PORT;
 const USE_ACCESS_TOKENS = process.env.USE_ACCESS_TOKENS;
 
 const verifier = CognitoJwtVerifier.create({
-  userPoolId: COGNITO_USER_POOL_ID,
+  userPoolId: COGNITO_POOL_ID,
   tokenUse: 'access',
   clientId: COGNITO_CLIENT_ID
 });

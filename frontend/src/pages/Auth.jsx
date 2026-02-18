@@ -86,11 +86,9 @@ export default function Auth() {
     const [verifyEmail, setVerifyEmail] = useState("");
 
     // Feedback ---------------------------------------------------
-    // Recieving error or success messages
-    const [message, setMessage] = useState("");
-
-    // Show password toggle ---------------------------------------------------
-    const [showPassword, setShowPassword] = useState(false);
+    // Recieving the error or success messages when creating an account, verifying, or signing in. 
+    const [authError, setAuthError] = useState("");
+    const [authSuccess, setAuthSuccess] = useState("");
 
     // Auth Context ---------------------------------------------------
     // Syncs authorization app wide after signing in, will refresh after signing in so user can log out or acess admin page
@@ -115,13 +113,14 @@ export default function Auth() {
     // Make sure that everything is filled out for sign up form and that passwords match
     // Creates a comma separated string of the selected notes, will be sent to backend with other user information
     async function handleSignUpSubmit() {
-        setMessage("");
+        setAuthError("");
+        setAuthSuccess("");
         if (!email || !password || !confirmPassword || !firstname || !lastname) {
-            setMessage("Please fill out all required fields.");
+            setAuthError("Please fill out all required fields.");
             return;
         }
         if (password !== confirmPassword) {
-            setMessage("Passwords do not match.");
+            setAuthError("Passwords do not match.");
             return;
         }
         const favoriteNotesString = selectedNotes.join(", ");
@@ -145,16 +144,16 @@ export default function Auth() {
             // Set the email for verification step and switch to the verify UI so we can confirm verification code
             setVerifyEmail(email);
             setAuthUI("verify");
-            setMessage("Sign up successful! Check email for verification code.");
+            setAuthSuccess("Sign up successful! Check email for verification code.");
         } catch (error) {
             if (error.code === "UsernameExistsException") {
                 setVerifyEmail(email);
                 setAuthUI("verify");
                 await handleResendCode(email);
-                setMessage("Email already exists. Please verify your email or log in.");
+                setAuthError("Email already exists. Please verify your email or log in.");
                 return;
             }
-            setMessage(error.message || "Sign up failed.");
+            setAuthError(error.message || "Sign up failed.");
         }
     }
 
@@ -165,13 +164,14 @@ export default function Auth() {
     // Call confirmSignUp function from Amplify Auth, confirms user email with sent verification code
     // After success clear authUI and go send user to the login mode, their email will be initially set for login
     async function handleVerifyCode() {
-        setMessage("");
+        setAuthError("");
+        setAuthSuccess("");
         if (!verifyEmail) {
-            setMessage("Missing email to verify. Please sign up again.");
+            setAuthError("Missing email to verify. Please sign up again.");
             return;
         }
         if (!verificationCode) {
-            setMessage("Please enter the verification code.");
+            setAuthError("Please enter the verification code.");
             return;
         }
         try {
@@ -179,14 +179,14 @@ export default function Auth() {
                 username: verifyEmail,
                 confirmationCode: verificationCode,
             });
-            setMessage("Email verified successfully! You can now log in.");
+            setAuthSuccess("Email verified successfully! You can now log in.");
             setAuthUI("");
             setMode("login");
             setEmail(verifyEmail);
             setVerificationCode(""); 
         }
         catch (error) {
-            setMessage(error.message || "Verification failed.");
+            setAuthError(error.message || "Verification failed.");
         }
     }
 
@@ -195,9 +195,10 @@ export default function Auth() {
     // After call the amplify sign in function using their email (username) and password to sign them in
     // After success call refreshAuth function from AuthContext to show proper user authorization if admin, will navigate back to the homepage 
     async function handleSignIn() {
-        setMessage("");
+        setAuthError("");
+        setAuthSuccess("");
         if (!email || !password) {
-            setMessage("Please fill out all required fields.");
+            setAuthError("Please fill out all required fields.");
             return;
         }
         try {
@@ -219,24 +220,26 @@ export default function Auth() {
             navigate("/");
         }
         catch (error) {
-            setMessage(error.message || "Sign in failed.");
+            setAuthError(error.message || "Sign in failed.");
         }
     }
 
+    // Handling verification if user tries to sign in when unverified -----------------------------------
     async function handleResendCode(email) {
-        setMessage("");
+        setAuthError("");
+        setAuthSuccess("");
         try {
             if (!email) {
-                setMessage("Missing email to resend code.");
+                setAuthError("Missing email to resend code.");
                 return;
             }
             await resendSignUpCode({ 
                 username: email,  
             });
-            setMessage("New verification code sent. Check your email.");
+            setAuthSuccess("New verification code sent. Check your email.");
         }
         catch (error) {
-            setMessage(error.message || "Resend verification failed.");
+            setAuthError(error.message || "Resend verification failed.");
         }
 
     }
@@ -300,9 +303,15 @@ export default function Auth() {
                             >
                             Please enter verification code!
                             </Text>
-                            {message && (
-                            <Text>
-                                {message}
+                            {authError && (
+                            <Text color="red">
+                                {authError}
+                            </Text>
+                            )}
+                            {authSuccess && (
+                            <Text 
+                            color="green">
+                                {authSuccess}
                             </Text>
                             )}
 
@@ -361,9 +370,17 @@ export default function Auth() {
                         {isLogin ? "Access your curated collection." : "Join OMRÉ and define your essence."}
                     </Text>
 
-                    {message && ( 
-                    <Text>
-                        {message}
+                    {authError && ( 
+                    <Text 
+                        color="red">
+                        {authError}
+                    </Text>
+                    )}
+
+                    {authSuccess && (
+                    <Text 
+                        color="green">
+                        {authSuccess}
                     </Text>
                     )}
 
@@ -443,28 +460,34 @@ export default function Auth() {
 
                     {!isLogin && (
                         <>
-                        <TextField
-                            color="#2B1E1A"
-                            style={luxuryBodyStyle}
-                            label="Confirm Password"
-                            type={showPassword ? "text" : "password"}
-                            maxLength={30}
-                            required
-                            marginTop="-.2rem"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
-                        
-                        {/* TODO: Reimplement on another page for Retaj */}
+                    <Flex direction="row" alignItems="flex-end" gap="0.5rem" marginTop="-.2rem">
+                    <TextField
+                        color="#2B1E1A"
+                        style={luxuryBodyStyle}
+                        label="Confirm Password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm your password"
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        width="100%"
+                    />
+                    <span 
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
+                        style={{ cursor: "pointer" }}
+                    >
+                        {showConfirmPassword ? <EyeOff size={25} /> : <Eye size={25} />}
+                    </span>
+                    </Flex>
 
-                        {/*
                         <Heading level={3} 
                             color="#2B1E1A" 
                             style={luxuryBodyStyle}
                             >
                             {"Which notes are you drawn to?"}
                         </Heading>
-                         <Grid
+
+                        <Grid
                             templateColumns="repeat(2, 1fr)"
                             gap="0.5rem"
                             marginBottom="1rem"
@@ -477,19 +500,10 @@ export default function Auth() {
                             <ToggleButton isPressed={selectedNotes.includes("Jasmine")} onClick={() => toggleNote("Jasmine")}>Jasmine</ToggleButton>
                             <ToggleButton isPressed={selectedNotes.includes("Cedarwood")} onClick={() => toggleNote("Cedarwood")}>Cedarwood</ToggleButton>
                             <ToggleButton isPressed={selectedNotes.includes("Amber")} onClick={() => toggleNote("Amber")}>Amber</ToggleButton>
-                        </Grid> */}
+                        </Grid>
                         </>
                     )}
-                    <Flex direction="row" alignItems="center" justifyContent="space-between" marginTop="0.25rem">
-                        <ToggleButton
-                            isPressed={showPassword}
-                            onClick={() => 
-                                setShowPassword((prev) => !prev)
-                            }
-                        >
-                            {showPassword ? "Hide Password" : "Show Password"}
-                        </ToggleButton>
-                        </Flex>
+
                     {isLogin && (
                     <Button 
                         color="#2B1E1A" 
@@ -523,11 +537,11 @@ export default function Auth() {
                         color="#2B1E1A" 
                         style={luxuryBodyStyle}
                         isPressed={!isLogin}
-                    
-                        onClick={() => 
-                            {setMode(isLogin ? "signup" : "login")
-                            setMessage("")}
-                        }
+                        onClick={() => {
+                            setMode(isLogin ? "signup" : "login");
+                            setAuthError("");
+                            setAuthSuccess("");
+                        }}                        
                         alignSelf="center"
                         marginTop=".8rem"
                         marginBottom=".5rem"
