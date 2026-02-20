@@ -170,55 +170,67 @@ async function prepareRollback(fn){
             await client.query("COMMIT")
             return response
         }catch(err){
-            if (client) await client.query("ROLLBACK")
-            return {success: false, message: err.message, status: err.status || 400}
+            if (client) await client.query("ROLLBACK");
+            if (!(err instanceof DBError)) return {success: false, message: "Uncaught error occurred", status: 500};
+            return {success: false, message: err.message, status: err.code}
         }finally{
             await client.release()
         }
     }
 }
 
-
-
+/* 
+DBError is needed for 2 things:
+    1) include the status code too
+    2) identify if an error is one that we created or not
+*/  
+class DBError extends Error{
+    constructor(message, code=400){
+        super(message)
+        this.code = code;
+    }
+}
 
 class Users{
+    //This function will be useless for now
     //modifications made to make it match Ayman's lambda function 'omre-cognito-post-confirmation'
-    @prepareRollback
-    async createUser(options, client){
-        const {id, email, firstname, lastname, preferrednotes} = options;
+    // @prepareRollback
+    // async createUser(options, client){
+    //     const {id, email, firstname, lastname, preferrednotes} = options;
 
-        const adminEmails = [
-            '@omrefragrances.com',
-            'zchriste16@gmail.com',
-            'contact@aymannazir.com',
-            'muradsaleh2022@gmail.com'
-        ];
+    //     const adminEmails = [
+    //         '@omrefragrances.com',
+    //         'zchriste16@gmail.com',
+    //         'contact@aymannazir.com',
+    //         'muradsaleh2022@gmail.com'
+    //     ];
 
-        //IMPORTANT: roles will mainly be decided via access tokens later, so the "role" field may be removed
-        // Check if admin (later, there may be a mapping of roles rather than a simple isAdmin check)
-        const isAdmin = adminEmails.some(admin => 
-            admin.startsWith('@') ? email.endsWith(admin) : email === admin
-        );   
+    //     //IMPORTANT: roles will mainly be decided via access tokens later, so the "role" field may be removed
+    //     // Check if admin (later, there may be a mapping of roles rather than a simple isAdmin check)
+    //     const isAdmin = adminEmails.some(admin => 
+    //         admin.startsWith('@') ? email.endsWith(admin) : email === admin
+    //     );   
 
-        let result;
-        const query = `INSERT INTO users (id, email, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
-        try{
-            result = await pool.query(query, [id, email, firstname, lastname, isAdmin ? "admin" : "user", JSON.stringify(preferrednotes)]);
-        }catch(err){
-            console.error(err)
-            return {success: false, message: "Failed to create user", status: 400}
-        }
-        return {success: true, data: {user: result.rows?.[0]}}
-    }
+    //     let result;
+    //     const query = `INSERT INTO users (id, email, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
+    //     try{
+    //         result = await client.query(query, [id, email, firstname, lastname, isAdmin ? "admin" : "user", JSON.stringify(preferrednotes)]);
+    //     }catch(err){
+    //         console.error(err)
+    //         return {success: false, message: "Failed to create user", status: 400}
+    //     }
+    //     return {success: true, data: {user: result.rows?.[0]}}
+    // }
 
     @prepareRollback
     async deleteUser(id, client){
         const query = `DELETE FROM users WHERE id = $1`
         try{
-            await pool.query(query, [id]);
+            await client.query(query, [id]);
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to delete user", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to delete user");
         }
         return {success: true}
     }
@@ -230,11 +242,12 @@ class Users{
         let users;
 
         try{
-            const res = await pool.query(query);
+            const res = await client.query(query);
             users = res.rows
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to get users", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get users");
         }
         return {success: true, data: {users}}
     }
@@ -245,47 +258,32 @@ class Users{
         
         let user;
         try{
-            const res = await pool.query(query, [id]);
+            const res = await client.query(query, [id]);
             user = res.rows?.[0]
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to get user", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get user")
         }
         return {success: true, data: {user}}
     }
 
     @prepareRollback
-    async updateLastLogin(cognitoSub, client) {
-    const query = `
-      UPDATE users 
-      SET last_login = NOW() 
-      WHERE id = $1 
-      RETURNING *;
-    `;
-    try {
-      const res = await pool.query(query, [cognitoSub]);
-      if (res.rowCount === 0) {
-        return { success: false, message: "User not found", status: 404 };
-      }
-      return { success: true, data: { user: res.rows[0] } };
-    } catch (err) {
-      console.error("Failed to update last_login:", err);
-      return { success: false, message: "Failed to update last_login" };
-    }
-    }
-
-    @prepareRollback
     async updateLastLogin(id, client) {
         const query = `UPDATE users SET last_login = NOW() WHERE id = $1`;
-        try {
-            await pool.query(query, [id]);
-        } catch (err) {
-            console.error(err);
-            return { success: false, message: "Failed to update last_login", status: 400 };
-        }
-        return { success: true };
-    }
 
+        try {
+            const res = await client.query(query, [id]);
+            if (res.rowCount === 0) {
+                throw new DBError("User not found", 404);
+            }
+        } catch (err) {
+            console.error("Failed to update last_login:", err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to update last_login")
+        }
+        return {success: true}
+    }
 }
 
 /*
@@ -303,31 +301,31 @@ class Products{
 
         // Validation
         if (!name || name.trim() === '') {
-            return {success: false, status: 400, message: 'Product name is required'};
+            throw new DBError('Product name is required')
         }
         if (!price || price <= 0) {
-            return {success: false, status: 400, message: 'Valid price is required'};
+            throw new DBError('Valid price is required')
         }
         if (images.length === 0) {
-            return {success: false, status: 400, message: '1 image is required'};
+            throw new DBError('1 image is required')
         }
         if (images.length > 5) {
-            return {success: false, status: 400, message: 'Maximum of 10 images allowed'};
+            throw new DBError('Maximum of 10 images allowed')
         }
         // Ensure all URLs are from CloudFront
         const invalidUrls = images.filter(url => !url.startsWith(CLOUDFRONT_DOMAIN));
         if (invalidUrls.length > 0) {
-            return  {success: false, status: 400, message: 'All image URLs must be valid CloudFront URLs' };
+            throw new DBError('All image URLs must be valid CloudFront URLs')
         }  
     
         let result;
         const query = `INSERT INTO products (id, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, type, name, variation, price, JSON.stringify(images), stock_ml, JSON.stringify(notes), description, isfeatured, ishidden]);
+            result = await client.query(query, [id, type, name, variation, price, JSON.stringify(images), stock_ml, JSON.stringify(notes), description, isfeatured, ishidden]);
         }catch(err){
-
             console.error(err)
-            return {success: false, status: 500, message: 'Failed to create product' };
+            if (err instanceof DBError) throw err;
+            throw new DBError('Failed to create product', 500)
         }
 
         //remove tags
@@ -360,7 +358,7 @@ class Products{
     async deleteProduct(id, client){
         const query = `DELETE FROM products WHERE id = $1 RETURNING *`
         try{
-            const result = await pool.query(query, [id]);
+            const result = await client.query(query, [id]);
             const images = result?.rows?.[0]?.images;
             for (let image of images){
                 const key = image.split("/").at(-1);
@@ -370,16 +368,16 @@ class Products{
                         Key: key
                     }));
                 }catch(err){
-                    console.log("Got error saying tried to delete bucket even though its a file. Key is: ", key)
                     console.log(err)
                 }
 
             } 
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to delete product", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to delete product");
         }
-        return {success: true}
+        return {success: true};
     }
 
     @prepareRollback
@@ -388,11 +386,12 @@ class Products{
         let products;
 
         try{
-            const res = await pool.query(query);
+            const res = await client.query(query);
             products = res.rows;
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to get products", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get products")
         }
         return {success: true, data: {products}}
     }
@@ -403,11 +402,12 @@ class Products{
         let products;
 
         try{
-            const res = await pool.query(query);
+            const res = await client.query(query);
             products = res.rows;
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to get active products", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get active products")
         }
         return {success: true, data: {products}}
     }
@@ -418,11 +418,12 @@ class Products{
         let product;
 
         try{
-            const res = await pool.query(query, [id]);
+            const res = await client.query(query, [id]);
             product = res.rows[0]
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to get product", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get product")
         }
         return {success: true, data: {product}}
     }
@@ -435,12 +436,15 @@ class Products{
     async updateProduct(id, options, client) {
         const fields = Object.keys(options);
         const query = this.formatUpdateQuery(fields);
-        if (!query) return null;
+        if (!query){
+            throw new DBError("Failed to form update product query")
+        }
         try{
-            await pool.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
+            await client.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to update product", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to update product")
         }
         return {success: true}
     }
@@ -472,10 +476,11 @@ class Reviews{
         let result;
         const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
         try{
-            result = await pool.query(query, [id, customerid, productid, message, rating, JSON.stringify(images)]);
+            result = await client.query(query, [id, customerid, productid, message, rating, JSON.stringify(images)]);
         }catch(err){
             console.error(err)
-            return {success: false, message: "Failed to create review", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to create review")
         }
         return {success: true, data: {review: result.rows?.[0]}}
     }
@@ -484,10 +489,11 @@ class Reviews{
     async deleteReview(id, client){
         const query = `DELETE FROM reviews WHERE id = $1`
         try{
-            await pool.query(query, [id]);
+            await client.query(query, [id]);
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to delete review", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to delete review");
         }
         return {success: true}
     }
@@ -498,11 +504,12 @@ class Reviews{
         let reviews;
 
         try{
-            const res = await pool.query(query, [productid]);
+            const res = await client.query(query, [productid]);
             reviews = res.rows;
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to get product reviews", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get product reviews")
         }
         return {success: true, data: {reviews}}
     }
@@ -512,11 +519,12 @@ class Reviews{
         const query = `SELECT * FROM reviews WHERE customerid = $1 ORDER BY created DESC`;
         let reviews;
         try{
-            const res = await pool.query(query, [customerid]);
+            const res = await client.query(query, [customerid]);
             reviews = res.rows;
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to get user reviews", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get user reviews")
         }
         return {success: true, data: {reviews}}
     }
@@ -527,11 +535,12 @@ class Reviews{
         let reviews;
 
         try{
-            const res = await pool.query(query);
+            const res = await client.query(query);
             reviews = res.rows;
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to get reviews", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get reviews")
         }
         return {success: true, data: {reviews}}
     }
@@ -540,13 +549,16 @@ class Reviews{
     async updateReview(id, options, client){
         const fields = Object.keys(options);
         const query = this.formatUpdateQuery(fields);
-        if (!query) return null;
+        if (!query){
+            throw new DBError("Failed to form update review query")
+        }
 
         try{
-            await pool.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
+            await client.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to update review", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to update review")
         }
         return {success: true}
     }
@@ -573,7 +585,7 @@ class Orders{
         for (const item of items){
             //checks if an item contains expected fields
             if (!item.hasOwn("productType") || !item.hasOwn("productID") || !item.hasOwn("quantity")){
-                return {success: false, message: "Item does not contain required fields.", status: 400}
+                throw new DBError("Item does not contain required fields")
             }
 
         }
@@ -581,10 +593,11 @@ class Orders{
         let order;
         const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
         try{
-            order = await pool.query(query, [id, customerid, JSON.stringify(items), total]);
+            order = await client.query(query, [id, customerid, JSON.stringify(items), total]);
         }catch(err){
             console.error(err)
-            return {success: false, message: "Failed to create order", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to create order")
         }
         return {success: true, data: {order: order.rows?.[0]}}
     }
@@ -593,10 +606,11 @@ class Orders{
     async deleteOrder(id, client){
         const query = `DELETE FROM orders WHERE id = $1`
         try{
-            await pool.query(query, [id]);
+            await client.query(query, [id]);
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to delete order", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to delete order")
         }
         return {success: true}
     }
@@ -605,10 +619,11 @@ class Orders{
     async cancelOrder(id, cancelreason, client){
         const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2`;
         try{
-            await pool.query(query, [cancelreason, id]);
+            await client.query(query, [cancelreason, id]);
         }catch(err){
             console.error(err)
-            return {success: false, message: "Failed to cancel order", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to cancel order")
         }
         return {success: true}
     }
@@ -617,10 +632,11 @@ class Orders{
     async completeOrder(id, client){
         const query = `UPDATE orders SET status = 'complete' WHERE id = $1`;
         try{
-            await pool.query(query, [id]);
+            await client.query(query, [id]);
         }catch(err){
             console.error(err)
-            return {success: false, message: "Failed to complete order", status: 400}
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to complete order")
         }
         return {success: true}
     }
@@ -631,11 +647,12 @@ class Orders{
         let order;
 
         try{
-            const res = await pool.query(query, [id]);
+            const res = await client.query(query, [id]);
             order = res.rows[0]
         }catch(err){
             console.error(err);
-            return null;
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get order")
         }
         return {success: true, data: {order}}
     }
