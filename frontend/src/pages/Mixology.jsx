@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { View, Flex, Text, Button, SelectField, Grid, SliderField } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getProductsReq, updateProductReq } from "../requests.js";
+import { getProductsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import Omre2 from "../assets/Mixology/OMRE2.png";
+import BottleFill from "../components/BottleFill";
+
 
 /*
 Custom Styles ------------------------------------------------------------------------------------------------
@@ -72,20 +74,15 @@ export default function Mixology() {
         // 3 Fragrance mode -------------------------------- ------
         // Math example:
         // If value is 60 for fragrance 1
-        // Min of fragrance 1 will be 10 
-        // Max of fragrance 1 will be 80
-        const minP1 = Math.max(MIN_PCT, 20 - fragrancepct2);
-        const maxP1 = Math.min(MAX_PCT, 90 - fragrancepct2);
-        // Making sure between the set bounds and that fragrance 3 is at least 10% (so fragrance 1 + fragrance 2 is at most 90%)
+        // Min of fragrance 1 will be 5 
+        // Max of fragrance 1 will be 95
+        const minP1 = Math.max(MIN_PCT, 5 - fragrancepct2);
+        const maxP1 = Math.min(MAX_PCT, 95 - fragrancepct2);
+        // Making sure between the set bounds and that fragrance 3 is at least 5% (so fragrance 1 + fragrance 2 is at most 95%)
         const p1 = clamp(value, minP1, maxP1);
         setfragrancePct1(p1);
-
-        // For fragrance 2,
-        // Math Example: 
-        // min of fragrance 2 will be 10 (so that fragrance 1 + fragrance 2 is at least 20%)
-        // max of fragrance 2 will be 80 (so that fragrance 1 + fragrance 2 is at most 90%)
-        const minP2 = Math.max(MIN_PCT, 20 - p1);
-        const maxP2 = Math.min(MAX_PCT, 90 - p1);
+        const minP2 = Math.max(MIN_PCT, 5 - p1);
+        const maxP2 = Math.min(MAX_PCT, 95 - p1);
         setfragrancePct2((prevP2) => clamp(prevP2, minP2, maxP2));
     }
 
@@ -95,8 +92,8 @@ export default function Mixology() {
         if (!thirdCologneSelectedMode) {
             return;
         }
-        const minP2 = Math.max(MIN_PCT, 20 - fragrancepct1);
-        const maxP2 = Math.min(MAX_PCT, 90 - fragrancepct1);
+        const minP2 = Math.max(MIN_PCT, 5 - fragrancepct1);
+        const maxP2 = Math.min(MAX_PCT, 95 - fragrancepct1);
         setfragrancePct2(clamp(value, minP2, maxP2));
     }
 
@@ -149,6 +146,12 @@ export default function Mixology() {
         }
     }
 
+    // Colors for the liquid in the bottl ---------------------------------------------------
+    // Mock for now, fragrances may include color details in the backend in the future
+    const color1 = "#ff7f4d"; 
+    const color2 = "#e3615b"; 
+    const color3 = "#a12d0f"; 
+
     // Load products on component mount ---------------------------------------
     useEffect(() => {
         loadProducts();
@@ -190,25 +193,44 @@ export default function Mixology() {
                 Create your own custom fragrance blend by selecting up to three of your favorite fragrances!
             </Text>
             <Flex direction="column" alignItems="center" gap="1.25rem">
-                <View
-                    maxWidth="600px">
-                    <View>
-                        {/* Placeholder for when we put the liquid */}
-                        {/* style={{ 
-                            inset: 0,
-                            width: "70%",
-                            height: "50%",
-                            zIndex: 1, // Index 1 to make it behind the bottle image
-                        }}  */}
+                <View 
+                    style={{ 
+                        position: "relative",
+                         width: "600px", 
+                         maxWidth: "600px" 
+                    }}>
+                    <View 
+                        style={{ 
+                            position: "absolute",
+                            left: "50%",
+                            top: "55.5%",
+                            transform: "translate(-50%, -50%)",
+                            // Below will directly adjust the bottle fill size
+                            width: "194.6px",      
+                            height: "211px",     
+                            zIndex: 2, // In front of the bottle image 
+                            pointerEvents: "none",
+                        }}>
+                        <BottleFill
+                            p1={fragrancepct1}
+                            p2={fragrancepct2}
+                            p3={fragrancepct3}
+                            color1={color1}
+                            color2={color2}
+                            color3={color3}
+                            threeFragrances={thirdCologneSelectedMode}
+                        />
                     </View>
                     <img
                         src={Omre2}
                         alt="OmreBottle"
-                        style={{
-                            inset: 0,
-                            width: "75%",
-                            height: "60%",
-                            zIndex: 2,
+                        style={{ 
+                            width: "75%", 
+                            height: "auto", 
+                            zIndex: 1, 
+                            position: "relative", 
+                            display: "block", 
+                            margin: "0 auto" 
                         }}
                     />
                 </View>
