@@ -449,6 +449,60 @@ class Products{
         return {success: true}
     }
 
+    async increaseProductStock(id, quantity, client){
+        try{
+            const retrieveProductQuery = `SELECT * FROM products WHERE id = $1;`;
+            const product = (await client.query(retrieveProductQuery, [id]))?.rows?.[0];
+            if (!product){
+                return {success: false, message: "Product does not exist", status: 400}
+            }
+            const size = Number(product?.variation?.split("ml")?.[0]);
+            if (!size || isNaN(size)){
+                return {success: false, message: "Invalid size for product", status: 400}
+            }
+            
+            //only 40% of size is the stored oil. 
+            const newSize = product.stock_ml + (quantity * size*.4)
+            if (newSize < 0){
+                return {success: false, message: "Negative new size", status: 400}
+            }
+            const updateProductQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2;`;
+            await client.query(updateProductQuery, [newSize, id])
+
+        }catch(err){
+            console.error(err);
+            return {success: false, message: "Failed to increase product stock", status: 400}
+        }
+        return {success: true}
+    }
+
+    async decreaseProductStock(id, quantity, client){
+        try{
+            const retrieveProductQuery = `SELECT * FROM products WHERE id = $1;`;
+            const product = (await client.query(retrieveProductQuery, [id]))?.rows?.[0];
+            if (!product){
+                return {success: false, message: "Product does not exist", status: 400}
+            }
+            const size = Number(product?.variation?.split("ml")?.[0]);
+            if (!size || isNaN(size)){
+                return {success: false, message: "Invalid size for product", status: 400}
+            }
+            
+            //only 40% of size is the stored oil. 
+            const newSize = product.stock_ml - (quantity * size*.4)
+            if (newSize < 0){
+                return {success: false, message: "Negative new size", status: 400}
+            }
+            const updateProductQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2;`;
+            await client.query(updateProductQuery, [newSize, id])
+
+        }catch(err){
+            console.error(err);
+            return {success: false, message: "Failed to decrease product stock", status: 400}
+        }
+        return {success: true}
+    }
+
     formatUpdateQuery(fields){
         if (fields.length === 0) return null;
 
@@ -580,14 +634,25 @@ class Reviews{
 }
 
 class Orders{
-    
+
+    constructor(){
+        this.products = new Products();
+    }
+
     async createOrder(options, client){
+        const {customerid, items, total} = options;
         for (const item of items){
-            //checks if an item contains expected fields
+            //checks if an item contains the expected fields
             if (!item.hasOwn("productType") || !item.hasOwn("productID") || !item.hasOwn("quantity")){
                 throw new DBError("Item does not contain required fields")
             }
 
+            //reduce stock
+            //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
+            const result = await this.products.decreaseProductStock(item.productID, item.quantity, client);
+            if (!result.success){
+                throw new DBError("Failed to decrease product stock");
+            }
         }
 
         let order;
@@ -602,7 +667,7 @@ class Orders{
         return {success: true, data: {order: order.rows?.[0]}}
     }
 
-    
+    //Should probably only be for development
     async deleteOrder(id, client){
         const query = `DELETE FROM orders WHERE id = $1`
         try{
@@ -619,7 +684,24 @@ class Orders{
     async cancelOrder(id, cancelreason, client){
         const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2 RETURNING *;`;
         try{
-            const order = await client.query(query, [cancelreason, id]);
+            const order = (await client.query(query, [cancelreason, id]))?.rows?.[0];
+            if (!order){
+                throw new DBError("Order does not exist.");
+            }
+
+            for (const item of order.items){
+                //checks if an item contains the expected fields
+                if (!item.hasOwn("productType") || !item.hasOwn("productID") || !item.hasOwn("quantity")){
+                    throw new DBError("Item does not contain required fields")
+                }
+
+                //restore stock
+                //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
+                const result = await this.products.increaseProductStock(item.productID, item.quantity, client);
+                if (!result.success){
+                    throw new DBError("Failed to increase product stock");
+                }
+            }
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
@@ -681,18 +763,21 @@ class Orders{
 This ChatGPT provided function wraps all class methods in a function.
 This is needed because JS does not have decorators.
 */
-function wrapClassMethods(Class, wrap) {
+function wrapClassMethods(Class, wrap, exclude=[]) {
   for (const key of Object.getOwnPropertyNames(Class.prototype)) {
-    if (key === "constructor") continue
+    if (key === "constructor" || exclude.includes(key)) continue
     const fn = Class.prototype[key]
     if (typeof fn === "function") {
       Class.prototype[key] = wrap(fn)
     }
   }
 }
+
+//Will seek out a better way to do this. The exclude argument exists for any helper functions to avoid
+// starting a nested "prepareRollback".
 wrapClassMethods(Users, prepareRollback);
-wrapClassMethods(Products, prepareRollback);
-wrapClassMethods(Reviews, prepareRollback);
+wrapClassMethods(Products, prepareRollback, ["increaseProductStock", "decreaseProductStock", "formatUpdateQuery"]);
+wrapClassMethods(Reviews, prepareRollback, ["formatUpdateQuery"]);
 wrapClassMethods(Orders, prepareRollback);
 
 setTimeout(async () => {
