@@ -34,6 +34,7 @@ let reconnectInterval = null;
 connectToDB()
 reconnectInterval = setInterval(connectToDB, 2000);
 
+// Makes repeated attempts to connect to a database
 async function connectToDB(){
     if (pool) return
     try{
@@ -63,6 +64,7 @@ async function connectToDB(){
     }
 }
 
+// Creates entire schema needed for application
 async function createTables() {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS users(
@@ -156,10 +158,33 @@ async function createTables() {
     `);
 }
 
-class Users{
 
+// decorator that ensures any query completes fully, otherwise undo changes
+async function prepareRollback(fn){
+    return async (...args) => { 
+        let client;
+        try{
+            client = await pool.connect();
+            await client.query("BEGIN")
+            const response = await fn(...args, client)
+            await client.query("COMMIT")
+            return response
+        }catch(err){
+            if (client) await client.query("ROLLBACK")
+            return {success: false, message: err.message, status: err.status || 400}
+        }finally{
+            await client.release()
+        }
+    }
+}
+
+
+
+
+class Users{
     //modifications made to make it match Ayman's lambda function 'omre-cognito-post-confirmation'
-    async createUser(options){
+    @prepareRollback
+    async createUser(options, client){
         const {id, email, firstname, lastname, preferrednotes} = options;
 
         const adminEmails = [
@@ -186,7 +211,8 @@ class Users{
         return {success: true, data: {user: result.rows?.[0]}}
     }
 
-    async deleteUser(id){
+    @prepareRollback
+    async deleteUser(id, client){
         const query = `DELETE FROM users WHERE id = $1`
         try{
             await pool.query(query, [id]);
@@ -198,7 +224,8 @@ class Users{
     }
     
     //rate limiting (ex: max 200) not needed yet
-    async getUsers(){
+    @prepareRollback
+    async getUsers(client){
         const query = `SELECT * FROM users`
         let users;
 
@@ -212,7 +239,8 @@ class Users{
         return {success: true, data: {users}}
     }
 
-    async getUser(id){
+    @prepareRollback
+    async getUser(id, client){
         const query = `SELECT * FROM users WHERE id = $1`
         
         let user;
@@ -225,7 +253,9 @@ class Users{
         }
         return {success: true, data: {user}}
     }
-     async updateLastLogin(cognitoSub) {
+
+    @prepareRollback
+    async updateLastLogin(cognitoSub, client) {
     const query = `
       UPDATE users 
       SET last_login = NOW() 
@@ -242,17 +272,19 @@ class Users{
       console.error("Failed to update last_login:", err);
       return { success: false, message: "Failed to update last_login" };
     }
-  }
-  async updateLastLogin(id) {
-    const query = `UPDATE users SET last_login = NOW() WHERE id = $1`;
-    try {
-        await pool.query(query, [id]);
-    } catch (err) {
-        console.error(err);
-        return { success: false, message: "Failed to update last_login", status: 400 };
     }
-    return { success: true };
-}
+
+    @prepareRollback
+    async updateLastLogin(id, client) {
+        const query = `UPDATE users SET last_login = NOW() WHERE id = $1`;
+        try {
+            await pool.query(query, [id]);
+        } catch (err) {
+            console.error(err);
+            return { success: false, message: "Failed to update last_login", status: 400 };
+        }
+        return { success: true };
+    }
 
 }
 
@@ -264,7 +296,8 @@ likely updated in a single setting. Therefore, a single updateProduct is provide
 class Products{
     static modifiableFields = ["type", "name", "variation", "price", "images", "stock_ml", "notes", "description", "ishidden", "isfeatured"];
 
-    async createProduct(options){
+    @prepareRollback
+    async createProduct(options, client){
         const {type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden} = options;
         const id = uuidv4();
 
@@ -323,7 +356,8 @@ class Products{
         return {success: true, data: {product: result.rows?.[0]}}
     }
     
-    async deleteProduct(id){
+    @prepareRollback
+    async deleteProduct(id, client){
         const query = `DELETE FROM products WHERE id = $1 RETURNING *`
         try{
             const result = await pool.query(query, [id]);
@@ -348,7 +382,8 @@ class Products{
         return {success: true}
     }
 
-    async getProducts(){
+    @prepareRollback
+    async getProducts(client){
         const query = `SELECT * FROM products;`
         let products;
 
@@ -362,7 +397,8 @@ class Products{
         return {success: true, data: {products}}
     }
 
-    async getActiveProducts(){
+    @prepareRollback
+    async getActiveProducts(client){
         const query = `SELECT * FROM products WHERE ishidden IS FALSE;`
         let products;
 
@@ -376,7 +412,8 @@ class Products{
         return {success: true, data: {products}}
     }
 
-    async getProduct(id){
+    @prepareRollback
+    async getProduct(id, client){
         const query = `SELECT * FROM products WHERE id = $1;`;
         let product;
 
@@ -394,7 +431,8 @@ class Products{
     Expects object of fields in need of updating
     Ex) options === {type: "10ml spray", price: 35.85}
     */
-    async updateProduct(id, options) {
+    @prepareRollback
+    async updateProduct(id, options, client) {
         const fields = Object.keys(options);
         const query = this.formatUpdateQuery(fields);
         if (!query) return null;
@@ -426,7 +464,8 @@ class Products{
 class Reviews{
     static modifiableFields = ["responses"] //we may allow edits at some point, but just this for now
 
-    async createReview(options){
+    @prepareRollback
+    async createReview(options, client){
         const {customerid, productid, message, rating, images} = options;
         const id = uuidv4();
 
@@ -441,7 +480,8 @@ class Reviews{
         return {success: true, data: {review: result.rows?.[0]}}
     }
 
-    async deleteReview(id){
+    @prepareRollback
+    async deleteReview(id, client){
         const query = `DELETE FROM reviews WHERE id = $1`
         try{
             await pool.query(query, [id]);
@@ -452,8 +492,8 @@ class Reviews{
         return {success: true}
     }
 
-    
-    async getProductReviews(productid){
+    @prepareRollback
+    async getProductReviews(productid, client){
         const query = `SELECT * FROM reviews WHERE productid = $1 ORDER BY created DESC`;
         let reviews;
 
@@ -467,7 +507,8 @@ class Reviews{
         return {success: true, data: {reviews}}
     }
 
-    async getUserReviews(customerid){
+    @prepareRollback
+    async getUserReviews(customerid, client){
         const query = `SELECT * FROM reviews WHERE customerid = $1 ORDER BY created DESC`;
         let reviews;
         try{
@@ -480,7 +521,8 @@ class Reviews{
         return {success: true, data: {reviews}}
     }
 
-    async getReviews(){
+    @prepareRollback
+    async getReviews(client){
         const query = `SELECT * FROM reviews ORDER BY created DESC`;
         let reviews;
 
@@ -494,7 +536,8 @@ class Reviews{
         return {success: true, data: {reviews}}
     }
 
-    async updateReview(id, options){
+    @prepareRollback
+    async updateReview(id, options, client){
         const fields = Object.keys(options);
         const query = this.formatUpdateQuery(fields);
         if (!query) return null;
@@ -507,6 +550,7 @@ class Reviews{
         }
         return {success: true}
     }
+
     formatUpdateQuery(fields){
         if (fields.length === 0) return null;
 
@@ -524,23 +568,14 @@ class Reviews{
 }
 
 class Orders{
-            // id VARCHAR(100) PRIMARY KEY,
-            // customerid VARCHAR(100),
-            // created TIMESTAMPTZ DEFAULT NOW(),
-            // items JSONB,
-            // total DECIMAL(10, 2),
-            // status VARCHAR(100) DEFAULT 'pending',
-            // cancelreason VARCHAR(500)
-    async createOrder(options){
-        const {customerid, items, total} = options;
-        const id = uuidv4();
-
+    @prepareRollback
+    async createOrder(options, client){
         for (const item of items){
             //checks if an item contains expected fields
             if (!item.hasOwn("productType") || !item.hasOwn("productID") || !item.hasOwn("quantity")){
                 return {success: false, message: "Item does not contain required fields.", status: 400}
             }
-            
+
         }
 
         let order;
@@ -554,7 +589,8 @@ class Orders{
         return {success: true, data: {order: order.rows?.[0]}}
     }
 
-    async deleteOrder(id){
+    @prepareRollback
+    async deleteOrder(id, client){
         const query = `DELETE FROM orders WHERE id = $1`
         try{
             await pool.query(query, [id]);
@@ -565,7 +601,8 @@ class Orders{
         return {success: true}
     }
 
-    async cancelOrder(id, cancelreason){
+    @prepareRollback
+    async cancelOrder(id, cancelreason, client){
         const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2`;
         try{
             await pool.query(query, [cancelreason, id]);
@@ -575,7 +612,9 @@ class Orders{
         }
         return {success: true}
     }
-    async completeOrder(id){
+
+    @prepareRollback
+    async completeOrder(id, client){
         const query = `UPDATE orders SET status = 'complete' WHERE id = $1`;
         try{
             await pool.query(query, [id]);
@@ -586,7 +625,8 @@ class Orders{
         return {success: true}
     }
 
-    async getOrder(id){
+    @prepareRollback
+    async getOrder(id, client){
         const query = `SELECT * FROM orders WHERE id = $1`
         let order;
 
