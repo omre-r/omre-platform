@@ -121,10 +121,27 @@ async function createTables() {
     `);
 
     /*
-    Status may change, but for now it can be:
-        -ordered
-        -complete
-        -canceled
+    status can be:
+        -pending
+        -mixing
+        -ready
+        -fulfilled
+        -canceled 
+
+    items are in format: 
+    [
+        {
+            productType: "fragrance" OR "mix",
+            productID: "1ebc47bf-515c-420c-aec3-71bfa38883d1:" (points to either products table or mixes table)
+            quantity: 2
+        },
+        {
+            productType: "fragrance" OR "mix",
+            productID: "1ebc47bf-515c-420c-aec3-71bfa38883d1:" (points to either products table or mixes table)
+            quantity: 1
+        },
+        ...
+    ]
     */
     await pool.query(`
         CREATE TABLE IF NOT EXISTS orders(
@@ -133,7 +150,7 @@ async function createTables() {
             created TIMESTAMPTZ DEFAULT NOW(),
             items JSONB,
             total DECIMAL(10, 2),
-            status VARCHAR(100) DEFAULT 'ordered',
+            status VARCHAR(100) DEFAULT 'pending',
             cancelreason VARCHAR(500)
         )
     `);
@@ -507,9 +524,24 @@ class Reviews{
 }
 
 class Orders{
+            // id VARCHAR(100) PRIMARY KEY,
+            // customerid VARCHAR(100),
+            // created TIMESTAMPTZ DEFAULT NOW(),
+            // items JSONB,
+            // total DECIMAL(10, 2),
+            // status VARCHAR(100) DEFAULT 'pending',
+            // cancelreason VARCHAR(500)
     async createOrder(options){
         const {customerid, items, total} = options;
         const id = uuidv4();
+
+        for (const item of items){
+            //checks if an item contains expected fields
+            if (!item.hasOwn("productType") || !item.hasOwn("productID") || !item.hasOwn("quantity")){
+                return {success: false, message: "Item does not contain required fields.", status: 400}
+            }
+            
+        }
 
         let order;
         const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
