@@ -617,9 +617,9 @@ class Orders{
 
     
     async cancelOrder(id, cancelreason, client){
-        const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2`;
+        const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2 RETURNING *;`;
         try{
-            await client.query(query, [cancelreason, id]);
+            const order = await client.query(query, [cancelreason, id]);
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
@@ -628,15 +628,19 @@ class Orders{
         return {success: true}
     }
 
-    
-    async completeOrder(id, client){
-        const query = `UPDATE orders SET status = 'complete' WHERE id = $1`;
+    //This always promotes status, flow is ususally pending -> mixing -> ready ->  fulfilled, but may move backwards 
+    //cancels deserve their own flow.
+    async updateOrderStatus(id, status, client){
+        if (!["pending", "mixing", "ready", "fulfilled"].includes(status)){
+            throw new DBError("Unexpected status")
+        }
+        const query = `UPDATE orders SET status = ${status} WHERE id = $1`;
         try{
             await client.query(query, [id]);
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
-            throw new DBError("Failed to complete order")
+            throw new DBError("Failed to update order status")
         }
         return {success: true}
     }
@@ -653,6 +657,21 @@ class Orders{
             console.error(err);
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to get order")
+        }
+        return {success: true, data: {order}}
+    }
+
+    async getUserOrders(customerid, client){
+        const query = `SELECT * FROM orders WHERE customerid = $1`
+        let order;
+
+        try{
+            const res = await client.query(query, [customerid]);
+            order = res.rows[0]
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get customer orders")
         }
         return {success: true, data: {order}}
     }
