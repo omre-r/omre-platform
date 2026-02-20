@@ -293,7 +293,7 @@ likely updated in a single setting. Therefore, a single updateProduct is provide
 */
 class Products{
     static modifiableFields = ["type", "name", "variation", "price", "images", "stock_ml", "notes", "description", "ishidden", "isfeatured"];
-
+    static filterableFields = ["type", "name", "variation", "price", "notes", "stock_ml", "isfeatured"]
     
     async createProduct(options, client){
         const {type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden} = options;
@@ -412,6 +412,79 @@ class Products{
         return {success: true, data: {products}}
     }
 
+    async getFilteredProducts(filters, client){
+        if (Object.keys(filters).length <= 0){
+            throw new DBError("At least 1 filter required");
+        }
+
+        let query = `SELECT * FROM products WHERE ishidden IS FALSE AND `
+        let values = []
+
+        //builds a cosntraint in query for each filter
+        for (const filter of Object.keys(filters)){
+            switch (filter){
+                case "type":{
+                    query += `type = $${values.length + 1} AND `
+                    values.push(filters[filter])
+                    break
+                }
+                case "name":{
+                    query += `name ILIKE $${values.length + 1} AND `
+                    values.push(`%${filters[filter]}%`)
+                    break
+                }   
+                case "variation":{
+                    query += `variation ILIKE $${values.length + 1} AND `
+                    values.push(`${filters[filter]}%`)
+                    break
+                }
+                case "price":{
+                    const [min, max] = filters[filter]
+
+                    if (min === null && max === null){
+                        throw new DBError("price filter expects [min, max], where only 1 may be null");
+                    }
+                    if (min !== null){
+                        query += `price >= $${values.length + 1} AND `
+                        values.push(min)
+                    }
+                    if (max !== null){
+                        query += `price <= $${values.length + 1} AND `
+                        values.push(max)
+                    }
+                    break
+                }
+                case "notes":{
+                    query += `(notes -> 'top' ?| $${values.length + 1} OR notes -> 'heart' ?| $${values.length + 1} OR notes -> 'base' ?| $${values.length + 1}) AND `
+                    values.push(filters[filter])
+                    break
+                }
+                case "isfeatured":{
+                    query += `isfeatured = $${values.length + 1} AND `
+                    values.push(filters[filter])
+                    break
+                }
+                default:{
+                    throw new DBError(`${filter} is not a valid filter`);
+                }
+            }
+        }
+        //removes last 'AND '
+        query = query.slice(0,-4);
+
+        console.log(query)
+
+        let products;
+        try{
+            const res = await client.query(query, values);
+            products = res.rows;
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get filtered products")
+        }
+        return {success: true, data: {products}}
+    }
     
     async getProduct(id, client){
         const query = `SELECT * FROM products WHERE id = $1;`;
@@ -457,7 +530,7 @@ class Products{
                 return {success: false, message: "Product does not exist", status: 400}
             }
             const size = Number(product?.variation?.split("ml")?.[0]);
-            if (!size || isNaN(size)){
+            if (!size){
                 return {success: false, message: "Invalid size for product", status: 400}
             }
             
@@ -484,7 +557,7 @@ class Products{
                 return {success: false, message: "Product does not exist", status: 400}
             }
             const size = Number(product?.variation?.split("ml")?.[0]);
-            if (!size || isNaN(size)){
+            if (!size){
                 return {success: false, message: "Invalid size for product", status: 400}
             }
             
@@ -773,17 +846,12 @@ function wrapClassMethods(Class, wrap, exclude=[]) {
   }
 }
 
-//Will seek out a better way to do this. The exclude argument exists for any helper functions to avoid
+// Will seek out a better way to do this. The exclude argument exists for any helper functions to avoid
 // starting a nested "prepareRollback".
 wrapClassMethods(Users, prepareRollback);
 wrapClassMethods(Products, prepareRollback, ["increaseProductStock", "decreaseProductStock", "formatUpdateQuery"]);
 wrapClassMethods(Reviews, prepareRollback, ["formatUpdateQuery"]);
 wrapClassMethods(Orders, prepareRollback);
 
-setTimeout(async () => {
-    const x =  new Users()
-    const test = await x.getUsers()
-    console.log(test)
-},5000)
 
 module.exports = {Users, Products, Reviews, Orders}
