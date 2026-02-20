@@ -160,7 +160,7 @@ async function createTables() {
 
 
 // decorator that ensures any query completes fully, otherwise undo changes
-async function prepareRollback(fn){
+function prepareRollback(fn){
     return async (...args) => { 
         let client;
         try{
@@ -174,7 +174,7 @@ async function prepareRollback(fn){
             if (!(err instanceof DBError)) return {success: false, message: "Uncaught error occurred", status: 500};
             return {success: false, message: err.message, status: err.code}
         }finally{
-            await client.release()
+            if (client) await client.release()
         }
     }
 }
@@ -194,7 +194,7 @@ class DBError extends Error{
 class Users{
     //This function will be useless for now
     //modifications made to make it match Ayman's lambda function 'omre-cognito-post-confirmation'
-    // @prepareRollback
+    // 
     // async createUser(options, client){
     //     const {id, email, firstname, lastname, preferrednotes} = options;
 
@@ -222,7 +222,7 @@ class Users{
     //     return {success: true, data: {user: result.rows?.[0]}}
     // }
 
-    @prepareRollback
+    
     async deleteUser(id, client){
         const query = `DELETE FROM users WHERE id = $1`
         try{
@@ -236,7 +236,7 @@ class Users{
     }
     
     //rate limiting (ex: max 200) not needed yet
-    @prepareRollback
+    
     async getUsers(client){
         const query = `SELECT * FROM users`
         let users;
@@ -252,7 +252,7 @@ class Users{
         return {success: true, data: {users}}
     }
 
-    @prepareRollback
+    
     async getUser(id, client){
         const query = `SELECT * FROM users WHERE id = $1`
         
@@ -268,7 +268,7 @@ class Users{
         return {success: true, data: {user}}
     }
 
-    @prepareRollback
+    
     async updateLastLogin(id, client) {
         const query = `UPDATE users SET last_login = NOW() WHERE id = $1`;
 
@@ -294,7 +294,7 @@ likely updated in a single setting. Therefore, a single updateProduct is provide
 class Products{
     static modifiableFields = ["type", "name", "variation", "price", "images", "stock_ml", "notes", "description", "ishidden", "isfeatured"];
 
-    @prepareRollback
+    
     async createProduct(options, client){
         const {type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden} = options;
         const id = uuidv4();
@@ -354,7 +354,7 @@ class Products{
         return {success: true, data: {product: result.rows?.[0]}}
     }
     
-    @prepareRollback
+    
     async deleteProduct(id, client){
         const query = `DELETE FROM products WHERE id = $1 RETURNING *`
         try{
@@ -380,7 +380,7 @@ class Products{
         return {success: true};
     }
 
-    @prepareRollback
+    
     async getProducts(client){
         const query = `SELECT * FROM products;`
         let products;
@@ -396,7 +396,7 @@ class Products{
         return {success: true, data: {products}}
     }
 
-    @prepareRollback
+    
     async getActiveProducts(client){
         const query = `SELECT * FROM products WHERE ishidden IS FALSE;`
         let products;
@@ -412,7 +412,7 @@ class Products{
         return {success: true, data: {products}}
     }
 
-    @prepareRollback
+    
     async getProduct(id, client){
         const query = `SELECT * FROM products WHERE id = $1;`;
         let product;
@@ -432,7 +432,7 @@ class Products{
     Expects object of fields in need of updating
     Ex) options === {type: "10ml spray", price: 35.85}
     */
-    @prepareRollback
+    
     async updateProduct(id, options, client) {
         const fields = Object.keys(options);
         const query = this.formatUpdateQuery(fields);
@@ -468,7 +468,7 @@ class Products{
 class Reviews{
     static modifiableFields = ["responses"] //we may allow edits at some point, but just this for now
 
-    @prepareRollback
+    
     async createReview(options, client){
         const {customerid, productid, message, rating, images} = options;
         const id = uuidv4();
@@ -485,7 +485,7 @@ class Reviews{
         return {success: true, data: {review: result.rows?.[0]}}
     }
 
-    @prepareRollback
+    
     async deleteReview(id, client){
         const query = `DELETE FROM reviews WHERE id = $1`
         try{
@@ -498,7 +498,7 @@ class Reviews{
         return {success: true}
     }
 
-    @prepareRollback
+    
     async getProductReviews(productid, client){
         const query = `SELECT * FROM reviews WHERE productid = $1 ORDER BY created DESC`;
         let reviews;
@@ -514,7 +514,7 @@ class Reviews{
         return {success: true, data: {reviews}}
     }
 
-    @prepareRollback
+    
     async getUserReviews(customerid, client){
         const query = `SELECT * FROM reviews WHERE customerid = $1 ORDER BY created DESC`;
         let reviews;
@@ -529,7 +529,7 @@ class Reviews{
         return {success: true, data: {reviews}}
     }
 
-    @prepareRollback
+    
     async getReviews(client){
         const query = `SELECT * FROM reviews ORDER BY created DESC`;
         let reviews;
@@ -545,7 +545,7 @@ class Reviews{
         return {success: true, data: {reviews}}
     }
 
-    @prepareRollback
+    
     async updateReview(id, options, client){
         const fields = Object.keys(options);
         const query = this.formatUpdateQuery(fields);
@@ -580,7 +580,7 @@ class Reviews{
 }
 
 class Orders{
-    @prepareRollback
+    
     async createOrder(options, client){
         for (const item of items){
             //checks if an item contains expected fields
@@ -602,7 +602,7 @@ class Orders{
         return {success: true, data: {order: order.rows?.[0]}}
     }
 
-    @prepareRollback
+    
     async deleteOrder(id, client){
         const query = `DELETE FROM orders WHERE id = $1`
         try{
@@ -615,7 +615,7 @@ class Orders{
         return {success: true}
     }
 
-    @prepareRollback
+    
     async cancelOrder(id, cancelreason, client){
         const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2`;
         try{
@@ -628,7 +628,7 @@ class Orders{
         return {success: true}
     }
 
-    @prepareRollback
+    
     async completeOrder(id, client){
         const query = `UPDATE orders SET status = 'complete' WHERE id = $1`;
         try{
@@ -641,7 +641,7 @@ class Orders{
         return {success: true}
     }
 
-    @prepareRollback
+    
     async getOrder(id, client){
         const query = `SELECT * FROM orders WHERE id = $1`
         let order;
@@ -658,4 +658,28 @@ class Orders{
     }
 }
     
+/*
+This ChatGPT provided function wraps all class methods in a function.
+This is needed because JS does not have decorators.
+*/
+function wrapClassMethods(Class, wrap) {
+  for (const key of Object.getOwnPropertyNames(Class.prototype)) {
+    if (key === "constructor") continue
+    const fn = Class.prototype[key]
+    if (typeof fn === "function") {
+      Class.prototype[key] = wrap(fn)
+    }
+  }
+}
+wrapClassMethods(Users, prepareRollback);
+wrapClassMethods(Products, prepareRollback);
+wrapClassMethods(Reviews, prepareRollback);
+wrapClassMethods(Orders, prepareRollback);
+
+setTimeout(async () => {
+    const x =  new Users()
+    const test = await x.getUsers()
+    console.log(test)
+},5000)
+
 module.exports = {Users, Products, Reviews, Orders}
