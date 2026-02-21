@@ -755,11 +755,11 @@ class Orders{
 
     
     async cancelOrder(id, cancelreason, client){
-        const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2 RETURNING *;`;
+        const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2 AND status != 'canceled' RETURNING *;`;
         try{
             const order = (await client.query(query, [cancelreason, id]))?.rows?.[0];
             if (!order){
-                throw new DBError("Order does not exist.");
+                throw new DBError("Order does not exist or already canceled.");
             }
 
             for (const item of order.items){
@@ -818,17 +818,17 @@ class Orders{
 
     async getUserOrders(customerid, client){
         const query = `SELECT * FROM orders WHERE customerid = $1`
-        let order;
+        let orders;
 
         try{
             const res = await client.query(query, [customerid]);
-            order = res.rows[0]
+            orders = res.rows
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to get customer orders")
         }
-        return {success: true, data: {order}}
+        return {success: true, data: {orders}}
     }
 }
     
