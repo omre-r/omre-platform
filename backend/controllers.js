@@ -1,7 +1,7 @@
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require("uuid");
-const {Users, Products, Reviews, Orders} = require("./config/db.js")
+const { Users, Products, Reviews, Orders, Blends } = require("./config/db.js")
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -25,7 +25,7 @@ const users = new Users()
 const products = new Products()
 const reviews = new Reviews()
 const orders = new Orders()
-
+const blends = new Blends()
 
 
 // General wrapper to prevent server crashing
@@ -88,6 +88,25 @@ async function deleteUser(req, res) {
   }
   return res.json(result)
 }
+
+async function updateLastLogin(req, res) {
+  const sub = req.tokenPayload?.sub;
+  const query = `UPDATE users SET last_login = NOW() WHERE id = $1`; 
+
+  if (!sub) {
+    return res.status(400).json({ success: false, message: "Missing user identifier" });
+  }
+
+  const result = await users.updateLastLogin(sub);
+
+  if (!result.success) {
+    return res.status(result.status || 500).json(result);
+  }
+
+  return res.json({ success: true, message: "Last login updated", data: result.data });
+}
+
+
 
 
 
@@ -268,6 +287,42 @@ async function deleteOrder(req, res) {
   return res.json(result)
 }
 
+
+// blends
+
+// path: POST /blends/save
+async function saveBlend(req, res) {
+    const userid = req.tokenPayload?.sub;
+    if (!userid) return res.status(401).json({ success: false, message: "Not authenticated" });
+
+    const result = await blends.saveBlend({ userid, ...req.body });
+    if (!result.success) return res.status(result.status || 400).json(result);
+    return res.json(result);
+}
+
+// path: POST /blends/cart
+async function addBlendToCart(req, res) {
+    const userid = req.tokenPayload?.sub;
+    if (!userid) return res.status(401).json({ success: false, message: "Not authenticated" });
+
+    const result = await blends.addBlendToCart({ userid, ...req.body });
+    // stockUnavailable is a valid business response, not a server error — always 200
+    if (!result.success && !result.stockUnavailable) {
+        return res.status(result.status || 400).json(result);
+    }
+    return res.json(result);
+}
+
+// path: GET /blends
+async function getUserBlends(req, res) {
+    const userid = req.tokenPayload?.sub;
+    if (!userid) return res.status(401).json({ success: false, message: "Not authenticated" });
+
+    const result = await blends.getUserBlends(userid);
+    if (!result.success) return res.status(result.status || 400).json(result);
+    return res.json(result);
+}
+
 // miscellaneous
 
 //This is ayman's code moved from Lambda and modified for this environment
@@ -357,6 +412,9 @@ deleteOrder = handleError(deleteOrder);
 
 getUploadURL = handleError(getUploadURL);
 
+saveBlend = handleError(saveBlend);
+addBlendToCart = handleError(addBlendToCart);
+getUserBlends = handleError(getUserBlends);
 
 
 module.exports = {
@@ -365,5 +423,7 @@ module.exports = {
   getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, completeOrder, getOrder, createOrder, deleteOrder,
-  getUploadURL
+  getUploadURL,
+  updateLastLogin,
+  saveBlend, addBlendToCart, getUserBlends
 };
