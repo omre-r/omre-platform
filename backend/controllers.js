@@ -89,6 +89,7 @@ async function deleteUser(req, res) {
   return res.json(result)
 }
 
+// path: PUT /users/:id/last-login
 async function updateLastLogin(req, res) {
   const sub = req.tokenPayload?.sub;
   const query = `UPDATE users SET last_login = NOW() WHERE id = $1`; 
@@ -146,6 +147,15 @@ async function deleteProduct(req, res) {
 // path: GET /products/active
 async function getActiveProducts(req, res) {
   const result = await products.getActiveProducts();
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result)
+}
+
+// path: GET /products/filter
+async function getFilteredProducts(req, res) {
+  const result = await products.getFilteredProducts(req.body);
   if (!result.success){
     return res.status(result.status).json(result);
   }
@@ -248,10 +258,11 @@ async function cancelOrder(req, res) {
   return res.json(result);
 }
 
-//path: PUT /orders/complete/:id
-async function completeOrder(req, res) {
+// path: PUT /orders/:id
+async function updateOrderStatus(req) {
   const {id} = req.params;
-  const result = await orders.completeOrder(id);
+  const {status} = req.body;
+  const result = await orders.updateOrderStatus(id, status);
   if (!result.success){
     return res.status(result.status).json(result);
   }
@@ -262,6 +273,16 @@ async function completeOrder(req, res) {
 async function getOrder(req, res) {
   const {id} = req.params;
   const result = await orders.getOrder(id);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: GET /orders/user/:id
+async function getUserOrders(req, res) {
+  const {customerid} = req.query;
+  const result = await orders.getUserOrders(customerid);
   if (!result.success){
     return res.status(result.status).json(result);
   }
@@ -286,6 +307,8 @@ async function deleteOrder(req, res) {
   }
   return res.json(result)
 }
+
+
 
 // miscellaneous
 
@@ -360,6 +383,7 @@ deleteProduct = handleError(deleteProduct);
 getActiveProducts = handleError(getActiveProducts);
 createProduct = handleError(createProduct);
 getProducts = handleError(getProducts);
+getFilteredProducts = handleError(getFilteredProducts);
 
 getProductReviews = handleError(getProductReviews);
 getUserReviews = handleError(getUserReviews);
@@ -369,21 +393,21 @@ createReview = handleError(createReview);
 deleteReview = handleError(deleteReview);
 
 cancelOrder = handleError(cancelOrder)
-completeOrder = handleError(completeOrder);
 getOrder = handleError(getOrder);
 createOrder = handleError(createOrder);
 deleteOrder = handleError(deleteOrder);
-
+updateOrderStatus = handleError(updateOrderStatus);
+getUserOrders = handleError(getUserOrders);
 getUploadURL = handleError(getUploadURL);
 
 
 
 module.exports = {
   getServerHTML,
-  getUser, getUsers, createUser, deleteUser,
-  getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts,
+  getUser, getUsers, createUser, deleteUser, updateLastLogin,
+  getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
-  cancelOrder, completeOrder, getOrder, createOrder, deleteOrder,
+  cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders,
   getUploadURL,
-  updateLastLogin
+ 
 };

@@ -114,6 +114,16 @@ async function getActiveProductsReq(){
     return data.data.products;
 }
 
+async function getFilteredProductsReq(filters){
+    const response = await fetch(backendURL + `/products/filter?filters=${JSON.stringify(filters)}`);
+    const data = await response.json();
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.products;
+}
+
+
 async function createProductReq({type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden}){
     const response = await fetch(backendURL + `/products`, {
         method: "POST",
@@ -219,10 +229,11 @@ async function cancelOrderReq(id, cancelreason) {
     return data;
 }
 
-async function completeOrderReq(id) {
-    const response = await fetch(backendURL + `/orders/complete/${id}`, {
+async function updateOrderStatus(id, status) {
+    const response = await fetch(backendURL + `/orders/${id}`, {
         method: "PUT",
-        headers: {"Authorization": `Bearer ${getToken()}`}
+        headers: {"Authorization": `Bearer ${getToken()}`},
+        body: JSON.stringify({status})
     });
     const data = await response.json()
     if (!data.success){
@@ -241,6 +252,18 @@ async function getOrderReq(id){
     }
     return data.data.order;
 }
+
+async function getUserOrdersReq(customerid){
+    const response = await fetch(backendURL + `/orders/user/${customerid}`, {
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.orders;
+}
+
 
 async function createOrderReq({customerid, items, total}){
     const response = await fetch(backendURL + `/orders`, {
@@ -393,6 +416,7 @@ getUserReq = handleError(getUserReq);
 getUsersReq = handleError(getUsersReq);
 createUserReq = handleError(createUserReq);
 deleteUserReq = handleError(deleteUserReq);
+getUserOrdersReq = handleError(getUserOrdersReq);
 
 getProductReq = handleError(getProductReq);
 updateProductReq = handleError(updateProductReq);
@@ -400,6 +424,7 @@ deleteProductReq = handleError(deleteProductReq);
 getActiveProductsReq = handleError(getActiveProductsReq);
 createProductReq = handleError(createProductReq);
 getProductsReq = handleError(getProductsReq);
+getFilteredProductsReq = handleError(getFilteredProductsReq);
 
 getProductReviewsReq = handleError(getProductReviewsReq);
 getUserReviewsReq = handleError(getUserReviewsReq);
@@ -409,7 +434,7 @@ getReviewsReq = handleError(getReviewsReq);
 deleteReviewReq = handleError(deleteReviewReq);
 
 cancelOrderReq = handleError(cancelOrderReq);
-completeOrderReq = handleError(completeOrderReq);
+updateOrderStatus = handleError(updateOrderStatus);
 getOrderReq = handleError(getOrderReq);
 createOrderReq = handleError(createOrderReq);
 deleteOrderReq = handleError(deleteOrderReq);
@@ -424,8 +449,8 @@ createProductAWSFlowReq = handleError(createProductAWSFlowReq);
 
 export {
     getUserReq, getUsersReq, createUserReq, deleteUserReq,
-    getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
+    getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
-    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq,
+    cancelOrderReq, updateOrderStatus, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
     validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq
 }
