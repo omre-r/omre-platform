@@ -443,7 +443,7 @@ class Products{
                     const [min, max] = filters[filter]
 
                     if (min === null && max === null){
-                        throw new DBError("price filter expects [min, max], where only 1 may be null");
+                        continue
                     }
                     if (min !== null){
                         query += `price >= $${values.length + 1} AND `

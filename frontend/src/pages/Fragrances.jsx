@@ -33,38 +33,50 @@ export default function Home() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [message, setMessage] = useState("");
 
+  // these states will be for saving filter information
+  const [minimum, setMinimum] = useState("")
+  const [maximum, setMaximum] = useState("")
   const [showFilters, setShowFilters] = useState(false)
+  const [selectedSizes, setSelectedSizes] = useState([])
   const [selectedNotes, setSelectedNotes] = useState([])
-  const searchRef = useRef(null)
+  const [onlyFeatured, setOnlyFeatured] = useState(false)
+  const [includeSearch, setIncludeSearch] = useState(false)
+
+  const [priceErrorMsg, setPriceErrorMsg] = useState("")
+  const priceErrorTimer = useRef(null)
+
+  const [search, setSearch] = useState("")
+  
+  const fragranceOptions =  ["Vanilla", "Cinnamon", "Marshmallow", "Ice Cream", "Brown Sugar", "Jasmine", "Amber", "Saffron"]
+
 
 
 // make sure it loads //
   useEffect(() => {
-    async function loadProducts() {
-      try {
-        const res = await getActiveProductsReq();
-        if (!res){
-          throw Error("Error getting active products");
-        }
-        
-        //default sorts by featured
-        const featured = [];
-        const others = [];
-        for (const prod of res){
-          prod.isfeatured ? featured.push(prod) : others.push(prod);
-        }
-        setProducts([...featured, ...others]);
-      } catch (err) {
-        console.error(err);
-        setMessage("Failed to load products.");
-      } finally {
-        setLoadingProducts(false);
-      }
-    }
-
     loadProducts();
   }, []);
 
+  async function loadProducts() {
+    try {
+      const res = await getActiveProductsReq();
+      if (!res){
+        throw Error("Error getting active products");
+      }
+      
+      //default sorts by featured
+      const featured = [];
+      const others = [];
+      for (const prod of res){
+        prod.isfeatured ? featured.push(prod) : others.push(prod);
+      }
+      setProducts([...featured, ...others]);
+    } catch (err) {
+      console.error(err);
+      setMessage("Failed to load products.");
+    } finally {
+      setLoadingProducts(false);
+    }
+  }
 
   async function filterProducts(filters){
       try {
@@ -82,6 +94,40 @@ export default function Home() {
         setLoadingProducts(false);
       }
   }
+
+  function handleFilterSubmit(){
+    const filters = {}
+    if (minimum !== "" || maximum !== "") {
+      if (minimum !== "" && maximum !== "" && Number(minimum) > Number(maximum)){
+        setPriceErrorMsg("Minimum can't be greater than Maximum.")
+        clearTimeout(priceErrorTimer.current)
+        priceErrorTimer.current = setTimeout(() => {
+          setPriceErrorMsg("")
+        }, 4000)
+        return
+      }
+      if (minimum < 0){
+        setPriceErrorMsg("Negative numbers are not allowed.")
+        clearTimeout(priceErrorTimer.current)
+        priceErrorTimer.current = setTimeout(() => {
+          setPriceErrorMsg("")
+        }, 4000)
+        return
+      }
+      filters.price = [minimum || null, maximum || null]
+    }
+    if (selectedSizes.length !== 0) filters.variation = selectedSizes;
+    if (onlyFeatured) filters.isfeatured = true;
+    if (includeSearch) filters.name = search;
+    if (selectedNotes.length !== 0) filters.notes = selectedNotes;
+    if (Object.keys(filters).length === 0){
+      loadProducts()
+      return
+    }
+    filterProducts(filters)
+  }
+
+
   return (
     <>
       <Navbar />
@@ -147,7 +193,8 @@ export default function Home() {
         <View
         position={"relative"}>
           <TextField
-            ref={searchRef}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
             labelHidden
             type="text"
             placeholder="Find products..."
@@ -166,7 +213,7 @@ export default function Home() {
             right:"0",
             top: "50%",
             transform: "translateY(-50%)"}}
-            onClick={e => {filterProducts({name: searchRef.current.value})}}>
+            onClick={e => {filterProducts({name: search})}}>
             <img src={SearchIcon} alt="search" style={{width: "100%"}} />
           </section>
         </View>
@@ -192,50 +239,146 @@ export default function Home() {
           onClick={e => e.stopPropagation()}
           >
             <Flex 
-            gap={"1px"}
-            direction={"column"}>
+            direction={"column"}
+            gap={0}>
+              {priceErrorMsg && 
+              <Text
+              color={"red"}
+              lineHeight={"17px"}
+              marginBottom={"5px"}>{priceErrorMsg}</Text>}
+              {/* price container */}
               <Flex
               alignItems={"center"}>
-                <Text>Price: </Text>
-                <Input></Input>
-                <Input></Input>
+                <Text
+                marginRight={"auto"}>Price: </Text>
+                <Input 
+                min={0} 
+                max={200} 
+                type={"number"} 
+                placeholder="Minimum"
+                padding={0}
+                width={"100px"}
+                value={minimum}
+                style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
+                onChange={e => setMinimum(e.target.value)}></Input>
+                <Input
+                  min={0} 
+                  max={200} 
+                  type={"number"} 
+                  placeholder="Maximum"
+                  padding={0}
+                  width={"100px"}
+                  value={maximum}
+                  style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
+                  onChange={e => setMaximum(e.target.value)}>
+                </Input>
               </Flex>
-              <Flex
-              alignItems={"center"}>
-                <Text>Size:</Text>
-                <Button>30ml</Button>
-                <Button>50ml</Button>
-              </Flex>
-              <Flex
-              alignItems={"center"}>
-                <Text>Notes:</Text>
-                <ToggleButtonGroup
-                value={selectedNotes}
-                onChange={v => setSelectedNotes(v)}
-                isExclusive={false}>
-                  <ToggleButton value="Vanilla">Vanilla</ToggleButton>
-                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
-                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
-                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
-                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
-                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
-                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
+              <hr style={{width: "100%", marginBlock: "10px"}}/>
 
+              {/* size container */}
+              <Flex
+              alignItems={"center"}>
+                <Text
+                marginRight={"auto"}>Size:</Text>
+                <ToggleButtonGroup
+                value={selectedSizes}
+                onChange={v => setSelectedSizes(v)}
+                isExclusive={false}
+                gap={"5px"}
+                >
+                  <ToggleButton 
+                  padding={"6px"} value="30ml">30 ml</ToggleButton>
+                  <ToggleButton 
+                  padding={"6px"} value="50ml">50 ml</ToggleButton>
                 </ToggleButtonGroup>
               </Flex>
+              <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+              {/* featured container */}
               <Flex
               alignItems={"center"}>
-                <Text>Featured</Text>
-                <SwitchField></SwitchField>
+                <Text
+                marginRight={"auto"}>Only Featured:</Text>
+                <SwitchField 
+                isChecked={onlyFeatured}
+                onChange={e => setOnlyFeatured(e.target.checked)}>
+                </SwitchField>
               </Flex>
+              <hr style={{width: "100%", marginBlock: "10px"}}/>
 
+              {/* "include search" container */}
+              <Flex
+              direction={"column"}
+              gap={"3px"}
+              alignItems={"center"}>
+                <Flex
+                width={"100%"}>
+                  <Text
+                  marginRight={"auto"}>
+                    Include Search:
+                  </Text>
+                  <SwitchField 
+                  isChecked={includeSearch}
+                  onChange={e => setIncludeSearch(e.target.checked)}>
+                  </SwitchField>
+                </Flex>
+                {includeSearch && <Text style={{fontSize: ".8rem"}}>"{search}"</Text>}
+              </Flex>
+              <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+              {/* notes container */}
+              <Flex
+              direction={'column'}>
+               <Flex
+                alignItems={"center"}>
+                  <Text
+                  marginRight={"auto"}>Notes:</Text>
+                  <select 
+                  name="notes" 
+                  id="notes"
+                  style={{
+                    padding: "4px",
+                    height:"100%",
+                    justifySelf: "flex-start",
+                    fontWeight: "bold",
+                    borderRadius: "10px",
+                    textAlign: "center"}} 
+                  onChange={e => setSelectedNotes(prev => !prev.includes(e.target.value) && e.target.value ? [...prev, e.target.value] : prev)}
+                  >
+                    <option value="">Notes</option>
+                    {fragranceOptions.map(f => <option key={f} disabled={selectedNotes.includes(f)} value={f}>{f}</option>)}
+
+
+
+                  </select>
+                </Flex>  
+                <Flex 
+                wrap={"wrap"}
+                gap={0}>
+                  {selectedNotes.map(note => {
+                    return (
+                    <Button
+                    key={note}
+                    padding={"3px"}
+                    fontSize={".7rem"}
+                    onClick={e => setSelectedNotes(prev => prev.filter(n => note !== n))}
+                    >
+                      {note}
+                    </Button>)
+                  })}
+                </Flex>    
+              </Flex>
+              <hr style={{width: "100%", marginBlock: "10px"}}/>
+              <Button 
+              onClick={handleFilterSubmit}>
+                Filter
+              </Button>
             </Flex>
           </Card>
           }
         </View>
 
       </Flex>
-      {console.log(selectedNotes)}
       <View
         width="100%"
         minHeight="100vh"
