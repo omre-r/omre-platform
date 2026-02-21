@@ -77,6 +77,7 @@ app.put("/users/:id/last-login", [verifyToken], async (req, res) => {
 
 // products
 app.get("/products/active", controllers.getActiveProducts);
+app.get("/products/filter", controllers.getFilteredProducts);
 
 app.get("/products/:id", controllers.getProduct)
 app.put("/products/:id", [verifyToken, checkAdminPerm], controllers.updateProduct)
@@ -100,13 +101,13 @@ app.get("/reviews", controllers.getReviews)
 
 // orders
 app.put("/orders/cancel/:id", [verifyToken], controllers.cancelOrder)
-app.put("/orders/complete/:id", [verifyToken, checkAdminPerm], controllers.completeOrder)
+app.get("/orders/user/:customerid", [verifyToken], controllers.getUserOrders)
 
 app.get("/orders/:id", [verifyToken], controllers.getOrder)
 app.delete("/orders/:id", [verifyToken, checkAdminPerm], controllers.deleteOrder)
+app.put("/orders/:id", [verifyToken, checkAdminPerm], controllers.updateOrderStatus);
 
 app.post("/orders", [verifyToken], controllers.createOrder)
-
 
 // miscellaneous
 app.get("/uploadurl", [verifyToken], controllers.getUploadURL)
