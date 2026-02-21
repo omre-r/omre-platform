@@ -9,6 +9,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Mixology from "./pages/Mixology";
 import Fragrances from "./pages/Fragrances";
 import AboutUs from "./pages/AboutUs";
+import Cart from "./pages/Cart";
+import Contact from "./pages/Contact";
 
 import './App.css'
 
@@ -25,6 +27,8 @@ function App() {
         <Route path="/Mixology" element={<Mixology />} />
         <Route path="/Fragrances" element={<Fragrances />} />
         <Route path="/AboutUs" element={<AboutUs />} />
+        <Route path="/Cart" element={<Cart />} />
+        <Route path="/Contact" element={<Contact />} />
       </Routes>
     </Router>
     </div>
