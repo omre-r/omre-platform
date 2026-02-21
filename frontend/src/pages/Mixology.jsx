@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, Flex, Text, Button, SelectField, Grid, SliderField } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getProductsReq } from "../requests.js";
+import { getActiveProductsReq, saveBlendReq, addBlendToCartReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import Omre2 from "../assets/Mixology/OMRE2.png";
@@ -34,6 +34,7 @@ const luxuryBodyStyle = {
 
 export default function Mixology() {
     const [message, setMessage] = useState("");
+    const [blendLoading, setBlendLoading] = useState(false);  // prevents double clicks
 
     // Set cologne choices --------------------------------------------------------
     const [cologne1Id, setCologne1Id] = useState("");
@@ -135,7 +136,7 @@ export default function Mixology() {
         setMessage("");
         setLoadingProducts(true);
         try {
-            const prods = await getProductsReq();
+            const prods = await getActiveProductsReq();   // was getProductsReq — hidden products excluded
             setProducts(prods || [])
         }
         catch (error) {
@@ -143,6 +144,79 @@ export default function Mixology() {
         }
         finally {
             setLoadingProducts(false);
+        }
+    }
+
+
+    // Builds the blend payload from current state to send to backend
+    function buildBlendPayload() {
+        return {
+            frag1_productid: cologne1Id,
+            frag2_productid: cologne2Id,
+            frag3_productid: thirdCologneSelectedMode && cologne3Id ? cologne3Id : null,
+            frag1_pct: fragrancepct1,
+            frag2_pct: fragrancepct2,
+            frag3_pct: thirdCologneSelectedMode ? fragrancepct3 : null,
+            size_ml: Number(sizeMl)
+        };
+    }
+
+    // Frontend validation before hitting the backend
+    function validateBlendSelections() {
+        if (!cologne1Id || !cologne2Id) {
+            setMessage("Please select at least 2 fragrances.");
+            return false;
+        }
+        if (thirdCologneSelectedMode && !cologne3Id) {
+            setMessage("Please select a 3rd fragrance or remove it.");
+            return false;
+        }
+        return true;
+    }
+
+    async function handleSaveBlend() {
+        if (!validateBlendSelections()) return;
+        setBlendLoading(true);
+        setMessage("");
+        try {
+            const result = await saveBlendReq(buildBlendPayload());
+            if (!result || !result.success) {
+                setMessage(result?.message || "Failed to save blend.");
+                return;
+            }
+            setMessage("Blend saved successfully!");
+        } catch (err) {
+            setMessage("Failed to save blend.");
+        } finally {
+            setBlendLoading(false);
+        }
+    }
+
+    async function handleAddToCart() {
+        if (!validateBlendSelections()) return;
+        setBlendLoading(true);
+        setMessage("");
+        try {
+            const result = await addBlendToCartReq(buildBlendPayload());
+            if (!result) {
+                setMessage("Something went wrong. Please try again.");
+                return;
+            }
+            // stockUnavailable comes back as success: false but is NOT a crash
+            if (result.stockUnavailable) {
+                setMessage(result.message);
+                return;
+            }
+            if (!result.success) {
+                setMessage(result.message || "Failed to add blend to cart.");
+                return;
+            }
+            // success + cartReady
+            setMessage("Blend Ready!");
+        } catch (err) {
+            setMessage("Failed to add blend to cart.");
+        } finally {
+            setBlendLoading(false);
         }
     }
 
@@ -174,14 +248,6 @@ export default function Mixology() {
                 backgroundPosition: "center",
                 backgroundRepeat: "repeat",
             }}>
-            {message && (
-            <Text 
-                style={luxuryBodyStyle} 
-                marginTop="0.5rem" 
-                color="black">
-                {message}
-            </Text>
-            )}
             <Text 
                 style={luxuryHeadingStyle}
                 marginTop="-2.5rem">
@@ -364,20 +430,33 @@ export default function Mixology() {
                     <Flex gap="1rem" marginTop="1rem" justifyContent="center">
                         <Button
                             style={luxuryBodyStyle}
-
-                            onClick={() => {toggleThird();}}>
+                            onClick={toggleThird}>
                             {thirdCologneSelectedMode ? "Remove 3rd Fragrance" : "Add 3rd Fragrance"}
-
                         </Button>
                         <Button
-                            style={luxuryBodyStyle}>
+                            style={luxuryBodyStyle}
+                            isLoading={blendLoading}
+                            onClick={handleAddToCart}>
                             Add to Cart
                         </Button>
                         <Button
-                            style={luxuryBodyStyle}>
+                            style={luxuryBodyStyle}
+                            isLoading={blendLoading}
+                            onClick={handleSaveBlend}>
                             Save Fragrance
                         </Button>
                     </Flex>
+                    {message && (
+                        <Text
+                            style={{
+                                ...luxuryBodyStyle,
+                                color: message === "Blend Ready!" || message === "Blend saved successfully!" ? "#2d6a2d" : "#8B0000",
+                                textAlign: "center",
+                                marginTop: "0.75rem"
+                            }}>
+                            {message}
+                        </Text>
+                    )}
                 </View>
             </Flex>
         </View>

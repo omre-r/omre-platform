@@ -156,6 +156,29 @@ async function createTables() {
             cancelreason VARCHAR(500)
         )
     `);
+
+    /*
+    status can be:
+        - saved  (user clicked Save Fragrance)
+        - cart   (user clicked Add to Cart and stock was available)
+
+    frag3_productid and frag3_pct are nullable 
+    */
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS blends (
+            id              VARCHAR(100)  PRIMARY KEY,
+            userid          VARCHAR(100)  NOT NULL,
+            frag1_productid VARCHAR(100)  NOT NULL,
+            frag2_productid VARCHAR(100)  NOT NULL,
+            frag3_productid VARCHAR(100),
+            frag1_pct       SMALLINT      NOT NULL,
+            frag2_pct       SMALLINT      NOT NULL,
+            frag3_pct       SMALLINT,
+            size_ml         SMALLINT      NOT NULL,
+            status          VARCHAR(20)   NOT NULL DEFAULT 'saved',
+            created         TIMESTAMPTZ   DEFAULT NOW()
+        )
+    `);
 }
 
 
@@ -171,7 +194,6 @@ function prepareRollback(fn){
             return response
         }catch(err){
             if (client) await client.query("ROLLBACK");
-            console.log(err)
             if (!(err instanceof DBError)) return {success: false, message: "Uncaught error occurred", status: 500};
             return {success: false, message: err.message, status: err.code}
         }finally{
@@ -832,6 +854,200 @@ class Orders{
         return {success: true, data: {orders}}
     }
 }
+
+function validateBlendInput(options) {
+    const { userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml } = options;
+
+    if (!userid) throw new DBError("User not identified", 401);
+    if (!frag1_productid || !frag2_productid) throw new DBError("At least 2 fragrances are required");
+    if (frag1_productid === frag2_productid) throw new DBError("Fragrance 1 and 2 cannot be the same product");
+    if (![30, 50].includes(Number(size_ml))) throw new DBError("Bottle size must be 30 or 50 ml");
+
+    const hasThird = !!frag3_productid;
+    if (hasThird && (frag3_pct === null || frag3_pct === undefined)) throw new DBError("3rd fragrance percentage is required");
+    if (!hasThird && frag3_pct) throw new DBError("3rd fragrance product is required when a percentage is provided");
+
+    const total = Number(frag1_pct) + Number(frag2_pct) + (hasThird ? Number(frag3_pct) : 0);
+    if (total !== 100) throw new DBError(`Fragrance percentages must add up to 100%, currently: ${total}%`);
+}
+
+class Blends {
+
+    constructor() {
+        this.products = new Products();
+    }
+
+    /*
+    Shared validation used by both saveBlend and addBlendToCart.
+    Keeps both functions clean and consistent.
+    */
+    
+    /*
+    saveBlend — called when user clicks "Save Fragrance"
+    No stock check. Just saves to DB with status = 'saved'. Later the user can order them from their blends history directly
+    userid always comes from the token in the controller, never from req.body.
+    */
+    async saveBlend(options, client) {
+        validateBlendInput(options);
+
+        const {
+            userid,
+            frag1_productid,
+            frag2_productid,
+            frag3_productid = null,
+            frag1_pct,
+            frag2_pct,
+            frag3_pct = null,
+            size_ml
+        } = options;
+
+        const id = uuidv4();
+
+        const query = `
+            INSERT INTO blends (id, userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml, status)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'saved')
+            RETURNING *;
+        `;
+
+        let result;
+        try {
+            result = await client.query(query, [
+                id,
+                userid,
+                frag1_productid,
+                frag2_productid,
+                frag3_productid,
+                Number(frag1_pct),
+                Number(frag2_pct),
+                frag3_pct !== null ? Number(frag3_pct) : null,
+                Number(size_ml)
+            ]);
+        } catch (err) {
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to save blend");
+        }
+
+        return { success: true, data: { blend: result.rows?.[0] } };
+    }
+
+    /*
+    addBlendToCart — called when user clicks "Add to Cart"
+
+    Stock math:
+        total_oil_ml  = size_ml * 0.40          (40% of the bottle is pure oil)
+        oil_needed    = total_oil_ml * (pct/100) (that fragrance's share of the oil)
+        check:  product.stock_ml >= oil_needed
+
+    Example: 50ml bottle, frag1 at 60%, frag2 at 40%
+        total_oil = 20ml which is 40% of 50ml
+        frag1 needs 12ml → check stock_ml >= 12
+        frag2 needs  8ml → check stock_ml >= 8
+
+    If any fragrance is short → returns stockUnavailable (NOT saved, NOT an error)
+    If all good              → saves with status = 'cart', returns "Blend Ready!"
+    */
+    async addBlendToCart(options, client) {
+        validateBlendInput(options);
+
+        const {
+            userid,
+            frag1_productid,
+            frag2_productid,
+            frag3_productid = null,
+            frag1_pct,
+            frag2_pct,
+            frag3_pct = null,
+            size_ml
+        } = options;
+
+        const total_oil_ml = Number(size_ml) * 0.40;
+
+        // Build the list of fragrances to stock-check
+        const fragsToCheck = [
+            { productid: frag1_productid, pct: Number(frag1_pct) },
+            { productid: frag2_productid, pct: Number(frag2_pct) },
+        ];
+        if (frag3_productid && frag3_pct !== null) {
+            fragsToCheck.push({ productid: frag3_productid, pct: Number(frag3_pct) });
+        }
+
+        // Check stock for each fragrance
+        for (const frag of fragsToCheck) {
+            let product;
+            try {
+                const res = await client.query(`SELECT id, name, stock_ml FROM products WHERE id = $1;`, [frag.productid]);
+                product = res.rows?.[0];
+            } catch (err) {
+                console.error(err);
+                throw new DBError("Failed to check product stock");
+            }
+
+            if (!product) throw new DBError(`Product not found: ${frag.productid}`, 404);
+
+            const oil_needed = total_oil_ml * (frag.pct / 100);
+
+            if (Number(product.stock_ml) < oil_needed) {
+                // Stock check failed — do NOT save, return a clean response
+                return {
+                    success: false,
+                    stockUnavailable: true,
+                    message: `"${product.name}" doesn't have enough stock for this blend. Save your blend to order when restocked.`
+                };
+            }
+        }
+
+        // All stock checks passed — save with status 'cart'
+        const id = uuidv4();
+
+        const query = `
+            INSERT INTO blends (id, userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml, status)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'cart')
+            RETURNING *;
+        `;
+
+        let result;
+        try {
+            result = await client.query(query, [
+                id,
+                userid,
+                frag1_productid,
+                frag2_productid,
+                frag3_productid,
+                Number(frag1_pct),
+                Number(frag2_pct),
+                frag3_pct !== null ? Number(frag3_pct) : null,
+                Number(size_ml)
+            ]);
+        } catch (err) {
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to save blend to cart");
+        }
+
+        return {
+            success: true,
+            cartReady: true,
+            message: "Blend Ready!",
+            data: { blend: result.rows?.[0] }
+        };
+    }
+
+    // Get all blends belonging to the logged in user
+    async getUserBlends(userid, client) {
+        const query = `SELECT * FROM blends WHERE userid = $1 ORDER BY created DESC;`;
+        let blends;
+        try {
+            const res = await client.query(query, [userid]);
+            blends = res.rows;
+        } catch (err) {
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get user blends");
+        }
+        return { success: true, data: { blends } };
+    }
+}
     
 /*
 This ChatGPT provided function wraps all class methods in a function.
@@ -853,6 +1069,7 @@ wrapClassMethods(Users, prepareRollback);
 wrapClassMethods(Products, prepareRollback, ["increaseProductStock", "decreaseProductStock", "formatUpdateQuery"]);
 wrapClassMethods(Reviews, prepareRollback, ["formatUpdateQuery"]);
 wrapClassMethods(Orders, prepareRollback);
+wrapClassMethods(Blends, prepareRollback);
 
 
-module.exports = {Users, Products, Reviews, Orders}
+module.exports = { Users, Products, Reviews, Orders, Blends }

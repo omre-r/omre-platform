@@ -290,7 +290,28 @@ async function deleteOrderReq(id){
     return data;
 }
 
+// blends
+async function saveBlendReq({ frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml }) {
+    const response = await fetch(backendURL + `/blends/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
+        body: JSON.stringify({ frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml })
+    });
+    const data = await response.json();
+    if (!data.success) throw new Error(data.message || "req failed");
+    return data;
+}
 
+async function addBlendToCartReq({ frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml }) {
+    const response = await fetch(backendURL + `/blends/cart`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
+        body: JSON.stringify({ frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml })
+    });
+    const data = await response.json();
+    // stockUnavailable is NOT a throw — return it so the frontend can show the right message
+    return data;
+}
 
 
 // miscellaneous
@@ -445,6 +466,8 @@ createProductFlowReq_LOCAL = handleError(createProductFlowReq_LOCAL)
 getPresignedUrlReq = handleError(getPresignedUrlReq);
 createProductAWSReq = handleError(createProductAWSReq);
 createProductAWSFlowReq = handleError(createProductAWSFlowReq);
+saveBlendReq = handleError(saveBlendReq);
+addBlendToCartReq = handleError(addBlendToCartReq);
 
 
 export {
@@ -452,5 +475,6 @@ export {
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, updateOrderStatus, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
-    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq
+    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq,
+    saveBlendReq, addBlendToCartReq
 }
