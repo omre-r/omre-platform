@@ -171,6 +171,7 @@ function prepareRollback(fn){
             return response
         }catch(err){
             if (client) await client.query("ROLLBACK");
+            console.log(err)
             if (!(err instanceof DBError)) return {success: false, message: "Uncaught error occurred", status: 500};
             return {success: false, message: err.message, status: err.code}
         }finally{
@@ -434,8 +435,8 @@ class Products{
                     break
                 }   
                 case "variation":{
-                    query += `variation ILIKE $${values.length + 1} AND `
-                    values.push(`${filters[filter]}%`)
+                    query += `variation ILIKE ANY($${values.length + 1}) AND `
+                    values.push(filters[filter].map(v => `${v}%`))
                     break
                 }
                 case "price":{
