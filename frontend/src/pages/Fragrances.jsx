@@ -2,9 +2,9 @@
 // Imports for all data and commands
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { View, Card, Flex, Text } from "@aws-amplify/ui-react";
+import { View, Card, Flex, Text, TextField } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getProductsReq } from "../requests.js";
+import { getActiveProductsReq, getProductsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 
 import LuxuryBackground from "../assets/Luxury Background2.png";
@@ -35,8 +35,18 @@ export default function Home() {
   useEffect(() => {
     async function loadProducts() {
       try {
-        const res = await getProductsReq();
-        setProducts(res);
+        const res = await getActiveProductsReq();
+        if (!res){
+          throw Error("Error in getActiveProductsReq");
+        }
+        
+        //default sorts by featured
+        const featured = [];
+        const others = [];
+        for (const prod of res){
+          prod.isfeatured ? featured.push(prod) : others.push(prod);
+        }
+        setProducts([...featured, ...others]);
       } catch (err) {
         console.error(err);
         setMessage("Failed to load products.");
@@ -51,7 +61,68 @@ export default function Home() {
   return (
     <>
       <Navbar />
+      <Flex
+      justifyContent={"center"}
+      alignContent={"center"}
+      height={"100%"}
+      >
+        <View
+        
+        >
+          <select 
+          name="simple-filter" 
+          id="simple-filter"
+          style={{
+            height:"100%"}}
+          onChange={e => {
+            switch (e.target.value){
+              case "featured":{
+                setProducts(prev => {
+                  const featured = []
+                  const others = []
+                  for (const prod of prev){
+                    prod.isfeatured ? featured.push(prod) : others.push(prod)
+                  }
+                  return [...featured, ...others]
+                 })
+                break
+              }
+              case "pricehighlow":{
+                setProducts(prev => {
+                  const newProducts = [...prev]
+                  console.log(newProducts)
+                  newProducts.sort((a, b) => Number(b.price) - Number(a.price))
+                  return newProducts
+                })
+                break
+              }
+              case "pricelowhigh":{
+                setProducts(prev => {
+                  const newProducts = [...prev]
+                  console.log(newProducts)
+                  newProducts.sort((a, b) => Number(a.price) - Number(b.price))
+                  return newProducts
+                })
+                break
+              }
+            }
+          }}  
+          >
+            <option value="featured">Featured</option>
+            <option value="pricehighlow">Price: High to Low</option>
+            <option value="pricelowhigh">Price: Low to High</option>
+          </select>
+        </View>
 
+        <TextField
+            type="text"
+            placeholder="Find products..."
+            marginTop="-.2rem"
+            textAlign={"left"}
+            width={"100%"}
+        />
+        <button>Advanced</button>
+      </Flex>
       <View
         width="100%"
         minHeight="100vh"
