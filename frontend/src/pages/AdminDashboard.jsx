@@ -8,7 +8,7 @@ import LuxuryBackground from "../assets/Luxury Background2.png";
 
 import UsersPanel from "../AdminComponents/UsersPanel";
 import ProductsPanel from "../AdminComponents/ProductsPanel";
-//import OrdersPanel from "../AdminComponents/OrdersPanel";
+import OrdersPanel from "../AdminComponents/OrdersPanel";
 
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -121,15 +121,8 @@ export default function AdminDashboard() {
 
                             {productsMode && <ProductsPanel />}
 
-                            {/* Come back to this one later */}
-                            {ordersMode && (
-                                <Text 
-                                    color="#000000" 
-                                    style={luxuryBodyStyle}
-                                    marginTop="-1.2rem">
-                                    Orders panel
-                                </Text>
-                            )}
+                            {ordersMode && <OrdersPanel />}
+
                             </Card>
                         </Flex>
                     </Card>
