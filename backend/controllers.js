@@ -155,7 +155,11 @@ async function getActiveProducts(req, res) {
 
 // path: GET /products/filter
 async function getFilteredProducts(req, res) {
-  const result = await products.getFilteredProducts(req.body);
+  if (!req.query?.filters){
+    throw new Error("No filters query param")
+  }
+  const filters = JSON.parse(req.query.filters)
+  const result = await products.getFilteredProducts(filters);
   if (!result.success){
     return res.status(result.status).json(result);
   }

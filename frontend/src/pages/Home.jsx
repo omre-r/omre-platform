@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { View, Card, Flex, Text } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getProductsReq } from "../requests.js";
+import { getActiveProductsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 
 import LuxuryBackground from "../assets/Luxury Background2.png";
@@ -35,7 +35,7 @@ export default function Home() {
   useEffect(() => {
     async function loadProducts() {
       try {
-        const res = await getProductsReq();
+        const res = await getActiveProductsReq();
         setProducts(res);
       } catch (err) {
         console.error(err);

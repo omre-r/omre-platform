@@ -1,14 +1,15 @@
 
 // Imports for all data and commands
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { View, Card, Flex, Text, TextField, Button } from "@aws-amplify/ui-react";
+import { View, Card, Flex, Text, TextField, Button, Input, SwitchField, ToggleButtonGroup, ToggleButton } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getActiveProductsReq, getProductsReq } from "../requests.js";
+import { getActiveProductsReq, getFilteredProductsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import OptionsIcon from "../assets/options_icon.png"
+import SearchIcon from "../assets/search_icon.png"
 // fonts //
 const headingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -31,13 +32,19 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [message, setMessage] = useState("");
+
+  const [showFilters, setShowFilters] = useState(false)
+  const [selectedNotes, setSelectedNotes] = useState([])
+  const searchRef = useRef(null)
+
+
 // make sure it loads //
   useEffect(() => {
     async function loadProducts() {
       try {
         const res = await getActiveProductsReq();
         if (!res){
-          throw Error("Error in getActiveProductsReq");
+          throw Error("Error getting active products");
         }
         
         //default sorts by featured
@@ -58,6 +65,23 @@ export default function Home() {
     loadProducts();
   }, []);
 
+
+  async function filterProducts(filters){
+      try {
+        const res = await getFilteredProductsReq(filters);
+        if (!res){
+          throw Error("Error getting filtered products");
+        }
+        
+        //default sorts by featured
+        setProducts(res);
+      } catch (err) {
+        console.error(err);
+        setMessage("Failed to get filtered products.");
+      } finally {
+        setLoadingProducts(false);
+      }
+  }
   return (
     <>
       <Navbar />
@@ -120,21 +144,98 @@ export default function Home() {
             <option value="pricelowhigh">Price: Low to High</option>
           </select>
         </View>
-        <TextField
-          labelHidden
-          type="text"
-          placeholder="Find products..."
-          textAlign={"left"}
-          width={"300px"}
-          style={{borderRadius:"10px"}}
-        />
-        <Button 
-        padding={0}
+        <View
+        position={"relative"}>
+          <TextField
+            ref={searchRef}
+            labelHidden
+            type="text"
+            placeholder="Find products..."
+            textAlign={"left"}
+            width={"300px"}
+            style={{borderRadius:"10px"}}
+            onKeyDown={e => e.key === "Enter" && filterProducts({name: e.target.value})}
+          />
+          <section 
+          style={{
+            display: "flex",
+            width:"30px", 
+            paddingRight: "5px",
+            overflow:"hidden",
+            position:"absolute",
+            right:"0",
+            top: "50%",
+            transform: "translateY(-50%)"}}
+            onClick={e => {filterProducts({name: searchRef.current.value})}}>
+            <img src={SearchIcon} alt="search" style={{width: "100%"}} />
+          </section>
+        </View>
+
+        <View 
+        position={"relative"}
+        padding={"2px"}
+        backgroundColor={"white"}
+        borderRadius={"10px"}
         style={{width: "40px"}}
+        onClick={e => {e.currentTarget.blur(); setShowFilters(prev=>!prev);}}
         >
           <img src={OptionsIcon} alt="options" style={{width:"100%", display:"block"}}/>
-        </Button>
+          {showFilters && 
+          <Card
+
+          position={"absolute"}
+          top={"110%"}
+          left={"50%"}
+          transform={"translateX(-50%)"}
+          border={"1px solid"}
+          borderRadius={"10px"}
+          onClick={e => e.stopPropagation()}
+          >
+            <Flex 
+            gap={"1px"}
+            direction={"column"}>
+              <Flex
+              alignItems={"center"}>
+                <Text>Price: </Text>
+                <Input></Input>
+                <Input></Input>
+              </Flex>
+              <Flex
+              alignItems={"center"}>
+                <Text>Size:</Text>
+                <Button>30ml</Button>
+                <Button>50ml</Button>
+              </Flex>
+              <Flex
+              alignItems={"center"}>
+                <Text>Notes:</Text>
+                <ToggleButtonGroup
+                value={selectedNotes}
+                onChange={v => setSelectedNotes(v)}
+                isExclusive={false}>
+                  <ToggleButton value="Vanilla">Vanilla</ToggleButton>
+                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
+                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
+                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
+                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
+                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
+                  <ToggleButton value="Cinnammon">Cinnamon</ToggleButton>
+
+                </ToggleButtonGroup>
+              </Flex>
+              <Flex
+              alignItems={"center"}>
+                <Text>Featured</Text>
+                <SwitchField></SwitchField>
+              </Flex>
+
+            </Flex>
+          </Card>
+          }
+        </View>
+
       </Flex>
+      {console.log(selectedNotes)}
       <View
         width="100%"
         minHeight="100vh"
