@@ -59,11 +59,27 @@ const Navbar = () => {
           >
           About Us
         </Link>
+
+        <Link
+          to="/Contact"
+          className="nav-item"
+          style={luxuryBodyStyle}
+          >
+          Contact
+        </Link>
       </div>
 
       {/* Navbar Links ---------------------------------------------------------------------------------------- */}
       {/* Link to auth is shown if loadingAuth false & is not authenticated */}
       <nav className="nav-links">
+        
+        <Link
+          to="/Cart"
+          className="nav-item"
+          style={luxuryBodyStyle}
+          >
+          Cart
+        </Link>
         {!loadingAuth && !isAuthenticated && (
           <Link to="/Auth" 
           className="nav-item"
