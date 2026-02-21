@@ -2,13 +2,13 @@
 // Imports for all data and commands
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { View, Card, Flex, Text, TextField } from "@aws-amplify/ui-react";
+import { View, Card, Flex, Text, TextField, Button } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { getActiveProductsReq, getProductsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 
 import LuxuryBackground from "../assets/Luxury Background2.png";
-
+import OptionsIcon from "../assets/options_icon.png"
 // fonts //
 const headingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -61,19 +61,26 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <Flex
+      <Flex  
+      padding={"5px"}    
+      alignItems={"center"}
       justifyContent={"center"}
-      alignContent={"center"}
-      height={"100%"}
+      gap={"3px"}
       >
         <View
-        
+        height={"40px"}
+        margin={"5px"}
         >
           <select 
           name="simple-filter" 
           id="simple-filter"
           style={{
-            height:"100%"}}
+            height:"100%",
+            justifySelf: "flex-start",
+            fontWeight: "bold",
+            borderRadius: "10px",
+            textAlign: "center"
+          }}
           onChange={e => {
             switch (e.target.value){
               case "featured":{
@@ -113,15 +120,20 @@ export default function Home() {
             <option value="pricelowhigh">Price: Low to High</option>
           </select>
         </View>
-
         <TextField
-            type="text"
-            placeholder="Find products..."
-            marginTop="-.2rem"
-            textAlign={"left"}
-            width={"100%"}
+          labelHidden
+          type="text"
+          placeholder="Find products..."
+          textAlign={"left"}
+          width={"300px"}
+          style={{borderRadius:"10px"}}
         />
-        <button>Advanced</button>
+        <Button 
+        padding={0}
+        style={{width: "40px"}}
+        >
+          <img src={OptionsIcon} alt="options" style={{width:"100%", display:"block"}}/>
+        </Button>
       </Flex>
       <View
         width="100%"
