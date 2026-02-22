@@ -23,7 +23,7 @@ const bodyStyle = {
   fontWeight: 400,
   fontSize: "1.3rem",
   letterSpacing: "0.5px",
-  color: "#FFFFFF",
+  color: "#000000",
 };
 // functions //
 export default function Home() {
@@ -70,11 +70,11 @@ export default function Home() {
             Contact
         </Text>
 
-        <Text fontSize="1.5rem" fontWeight="600" marginBottom="1rem">
+        <Text style={bodyStyle} fontSize="1.5rem" fontWeight="600" marginBottom="1rem">
             Gmail: info@omrefragrances.com
         </Text>
 
-        <Text fontSize="1.5rem" fontWeight="600" marginBottom="1rem">
+        <Text style={bodyStyle} fontSize="1.5rem" fontWeight="600" marginBottom="1rem">
             Instagram: Omrefragrances
         </Text>
 

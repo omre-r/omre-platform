@@ -34,6 +34,12 @@ const luxuryBodyStyle = {
   fontSize: "1.3rem",   
   letterSpacing: "0.3px",
 };
+const luxuryCompactStyle = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 200,
+  fontSize: "1.1rem",   
+  letterSpacing: "0.15px",
+};
 
 
 export default function Auth() {
@@ -76,7 +82,8 @@ export default function Auth() {
             length: value.length >= 8,
             uppercase: /[A-Z]/.test(value),
             number: /[0-9]/.test(value),
-            specialChar: /[!@#$%^&*]/.test(value),
+            // Special character is any character that is not these characters "^"
+            specialChar: /[^A-Za-z0-9]/.test(value)
         });
 };
 
@@ -275,7 +282,7 @@ export default function Auth() {
                 margin="1rem auto" 
                 padding="2rem" 
                 marginTop={ isVerify ? "-38rem" : 
-                    isLogin ? "-20rem" : "-10rem" 
+                    isLogin ? "-23rem" : "-5rem" 
                 }
                 backgroundColor="#f6f1ecbc" 
                 border="none"
@@ -441,24 +448,6 @@ export default function Auth() {
                     </Flex>
 
                     {!isLogin && (
-                    <View marginTop="0.2rem">
-                        <Text style={luxuryBodyStyle}>Password must include:</Text>
-                        <Text style={{ ...luxuryBodyStyle, color: passwordRequirements.length ? "green" : "red" }}>
-                          At least 8 characters
-                        </Text>
-                        <Text style={{ ...luxuryBodyStyle, color: passwordRequirements.uppercase ? "green" : "red" }}>
-                          At least one uppercase letter
-                        </Text>
-                        <Text style={{ ...luxuryBodyStyle, color: passwordRequirements.number ? "green" : "red" }}>
-                          At least one number
-                        </Text>
-                        <Text style={{ ...luxuryBodyStyle, color: passwordRequirements.specialChar ? "green" : "red" }}>
-                          At least one special character
-                        </Text>
-                    </View>
-                    )}
-
-                    {!isLogin && (
                         <>
                     <Flex direction="row" alignItems="flex-end" gap="0.5rem" marginTop="-.2rem">
                     <TextField
@@ -480,6 +469,25 @@ export default function Auth() {
                     </span>
                     </Flex>
 
+                    {!isLogin && (
+                    <View marginTop="-.6rem">
+                        <Text style={luxuryBodyStyle}>Password must include:</Text>
+                        <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.length ? "green" : "red" }}>
+                          At least 8 characters
+                        </Text>
+                        <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.uppercase ? "green" : "red" }}>
+                          At least one uppercase letter
+                        </Text>
+                        <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.number ? "green" : "red" }}>
+                          At least one number
+                        </Text>
+                        <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.specialChar ? "green" : "red" }}>
+                          At least one special character
+                        </Text>
+                    </View>
+                    )}
+
+                        {/* 
                         <Heading level={3} 
                             color="#2B1E1A" 
                             style={luxuryBodyStyle}
@@ -501,6 +509,7 @@ export default function Auth() {
                             <ToggleButton isPressed={selectedNotes.includes("Cedarwood")} onClick={() => toggleNote("Cedarwood")}>Cedarwood</ToggleButton>
                             <ToggleButton isPressed={selectedNotes.includes("Amber")} onClick={() => toggleNote("Amber")}>Amber</ToggleButton>
                         </Grid>
+                        */}
                         </>
                     )}
 
