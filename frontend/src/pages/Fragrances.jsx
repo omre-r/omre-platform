@@ -27,6 +27,13 @@ const bodyStyle = {
   color: "#FFFFFF",
 };
 
+const bodyStyle2 = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 400,
+  fontSize: "1.3rem",
+  letterSpacing: "0.5px",
+  color: "#000000",
+};
 // functions //
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -145,6 +152,7 @@ export default function Home() {
           name="simple-filter" 
           id="simple-filter"
           style={{
+            ...bodyStyle2,
             height:"100%",
             justifySelf: "flex-start",
             fontWeight: "bold",
@@ -185,6 +193,7 @@ export default function Home() {
             }
           }}  
           >
+            
             <option value="featured">Featured</option>
             <option value="pricehighlow">Price: High to Low</option>
             <option value="pricelowhigh">Price: Low to High</option>
@@ -200,7 +209,7 @@ export default function Home() {
             placeholder="Find products..."
             textAlign={"left"}
             width={"300px"}
-            style={{borderRadius:"10px"}}
+            style={{borderRadius:"10px", ...bodyStyle2}}
             onKeyDown={e => e.key === "Enter" && filterProducts({name: e.target.value})}
           />
           <section 
