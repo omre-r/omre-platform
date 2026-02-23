@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Flex, Text, Button, SelectField, Grid, SliderField, Card, Divider } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, SelectField, Grid, SliderField, TableRow,  TableCell } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { getActiveProductsReq, saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
@@ -40,6 +40,12 @@ export default function Mixology() {
     const [cologne1Id, setCologne1Id] = useState("");
     const [cologne2Id, setCologne2Id] = useState("");
     const [cologne3Id, setCologne3Id] = useState("");
+
+    // Names for cologne when loading the mixology table 
+    const [cologne1Name, setCologne1Name] = useState("");
+    const [cologne2Name, setCologne2Name] = useState("");
+    const [cologne3Name, setCologne3Name] = useState("");
+
     const [sizeMl, setSizeMl] = useState("30");
     const [thirdCologneSelectedMode, setThirdCologneSelectedMode] = useState(false);
 
@@ -165,6 +171,10 @@ export default function Mixology() {
     // Builds the blend payload from current state to send to backend
     function buildBlendPayload() {
         return {
+            // TODO: Implement cologne names to use in payload and display when loading blends, currently just sending null for names and using id's to identify fragrances in backend
+            // frag1_name: cologne1Name || null,
+            // frag2_name: cologne2Name || null,
+            // frag3_name: thirdCologneSelectedMode ? (cologne3Name || null) : null,
             frag1_productid: cologne1Id,
             frag2_productid: cologne2Id,
             frag3_productid: thirdCologneSelectedMode && cologne3Id ? cologne3Id : null,
@@ -478,9 +488,27 @@ export default function Mixology() {
                     )}
                 </View>
                 {/* Place holder for loading blends */}
+
                 <View marginTop="1rem">
                     <Text>Loaded Blends Count: {loadedBlends.length}</Text>
+                    {loadedBlends.map((blend) => (
+                        <TableRow key={blend.id}>
+                            <TableCell>Name1 ({blend.frag1_pct}%)</TableCell>
+                            <TableCell>Name2 ({blend.frag2_pct}%)</TableCell>
+                            {/*TODO:  If no third make blank */}
+                            <TableCell>Name3 ({blend.frag3_pct ? `${blend.frag3_pct}%` : "Null"})</TableCell>
+                        </TableRow>
+                    ))}
+                    
+                    {/* To see json of loaded blends */}
+                    <View marginTop="1rem">
+                        <pre style={{ fontSize: "10px" }}>
+                            {JSON.stringify(loadedBlends, null, 2)}
+                        </pre>
+                    </View>
                 </View>
+
+                
             </Flex>
         </View>
     </>
