@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { View, Flex, Text, Button, SelectField, Grid, SliderField } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, SelectField, Grid, SliderField, Card, Divider } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getActiveProductsReq, saveBlendReq, addBlendToCartReq } from "../requests.js";
+import { getActiveProductsReq, saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import Omre2 from "../assets/Mixology/OMRE2.png";
@@ -46,6 +46,20 @@ export default function Mixology() {
     // Load and set products -------------------------------------------------------
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
+
+    // Loading blends -------------------------------------------------------
+    // Calling load blends on button click, getting user saved blends from backend and setting.
+    const [loadedBlends, setLoadedBlends] = useState([]);
+    async function loadBlends() {
+            setMessage("");
+            try {
+                const blends = await getUserSavedBlendsReq();
+                setLoadedBlends(blends || []);
+            }
+            catch (error) {
+                setMessage(error.message || "Error loading saved blends.");
+            }
+    }
 
     // Max and min percentages for 2 fragrance and 3 fragrance modes
     const MIN_PCT = 5;
@@ -445,6 +459,11 @@ export default function Mixology() {
                             onClick={handleSaveBlend}>
                             Save Fragrance
                         </Button>
+                        <Button 
+                            style={luxuryBodyStyle}
+                            onClick={loadBlends}>
+                            Load blends
+                        </Button>
                     </Flex>
                     {message && (
                         <Text
@@ -457,6 +476,10 @@ export default function Mixology() {
                             {message}
                         </Text>
                     )}
+                </View>
+                {/* Place holder for loading blends */}
+                <View marginTop="1rem">
+                    <Text>Loaded Blends Count: {loadedBlends.length}</Text>
                 </View>
             </Flex>
         </View>

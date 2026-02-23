@@ -313,6 +313,18 @@ async function addBlendToCartReq({ frag1_productid, frag2_productid, frag3_produ
     return data;
 }
 
+// Getting user saved blends to show in mixology page, also for users to load previous blends
+async function getUserSavedBlendsReq() {
+    const response = await fetch(backendURL + `/blends`, {
+        headers: { "Authorization": `Bearer ${getToken()}` }
+    });
+    const data = await response.json();
+    if (!data.success) {
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.blends; 
+}
+
 
 // miscellaneous
 
@@ -468,7 +480,7 @@ createProductAWSReq = handleError(createProductAWSReq);
 createProductAWSFlowReq = handleError(createProductAWSFlowReq);
 saveBlendReq = handleError(saveBlendReq);
 addBlendToCartReq = handleError(addBlendToCartReq);
-
+getUserSavedBlendsReq = handleError(getUserSavedBlendsReq);
 
 export {
     getUserReq, getUsersReq, createUserReq, deleteUserReq,
@@ -476,5 +488,5 @@ export {
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, updateOrderStatus, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
     validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq,
-    saveBlendReq, addBlendToCartReq
+    saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq
 }
