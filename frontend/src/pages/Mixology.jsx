@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Flex, Text, Button, SelectField, Grid, SliderField, TableRow,  TableCell } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, SelectField, Grid, SliderField, TableRow, TableCell, TableHead } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { getActiveProductsReq, saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
@@ -149,6 +149,17 @@ export default function Mixology() {
     // Get product ID from product object, accounting for different possible key names ---------------------------
     function getProductId(product) {
         return product.productid || product.product_id || product.id;
+    }
+
+    // Grab the product name by using the ID ------------------------------------------
+    function getProductNameById(productId) {
+        // If no product id return empty string, this will happen if a blend does not have a third fragrance
+        if (!productId) { 
+            return "";
+        }
+        // Find the product in the products list that matches the id, accounting for different possible key names for the id in the product object
+        const match = products.find((p) => String(getProductId(p)) === String(productId));
+        return match?.name || "Unknown";
     }
 
     // Load products from backend ---------------------------------------
@@ -488,27 +499,48 @@ export default function Mixology() {
                     )}
                 </View>
                 {/* Place holder for loading blends */}
-
                 <View marginTop="1rem">
                     <Text>Loaded Blends Count: {loadedBlends.length}</Text>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell as="th">Fragrance 1</TableCell>
+                            <TableCell as="th">Fragrance 2</TableCell>
+                            <TableCell as="th">Fragrance 3</TableCell>
+                            <TableCell as="th">Size</TableCell>
+                        </TableRow>
+                    </TableHead>
                     {loadedBlends.map((blend) => (
                         <TableRow key={blend.id}>
-                            <TableCell>Name1 ({blend.frag1_pct}%)</TableCell>
-                            <TableCell>Name2 ({blend.frag2_pct}%)</TableCell>
-                            {/*TODO:  If no third make blank */}
-                            <TableCell>Name3 ({blend.frag3_pct ? `${blend.frag3_pct}%` : "Null"})</TableCell>
+                            <TableCell>{getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)</TableCell>
+                            <TableCell>{getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)</TableCell>
+                            <TableCell>{getProductNameById(blend.frag3_productid)} ({blend.frag3_pct ? `${blend.frag3_pct}%` : "Null"})</TableCell>
+                            <TableCell>{blend.size_ml} ML</TableCell>
+                            <TableCell>
+                                <Button
+                                    style={luxuryBodyStyle}
+                                    // TODO: Implement load blend functionality to populate mixology form and maybe add to cart button too
+                                    onClick={() => {
+                                    }}>
+                                    Load Blend
+                                </Button>
+                                <Button
+                                    style={luxuryBodyStyle}
+                                    onClick={() => {
+                                    }}>
+                                    Add to Cart
+                                </Button>
+                            </TableCell>
                         </TableRow>
                     ))}
-                    
                     {/* To see json of loaded blends */}
+                    {/* 
                     <View marginTop="1rem">
                         <pre style={{ fontSize: "10px" }}>
                             {JSON.stringify(loadedBlends, null, 2)}
                         </pre>
                     </View>
+                    */}
                 </View>
-
-                
             </Flex>
         </View>
     </>
