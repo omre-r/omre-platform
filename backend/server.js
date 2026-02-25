@@ -114,6 +114,16 @@ app.post("/blends/save", [verifyToken], controllers.saveBlend);
 app.post("/blends/cart", [verifyToken], controllers.addBlendToCart);
 app.get("/blends",       [verifyToken], controllers.getUserBlends);
 
+// cart items
+app.delete("/cartitems/clear/:customerid", [verifyToken], controllers.clearCart)
+
+app.get("/cartitems/:customerid", [verifyToken], controllers.getCart);
+app.put("/cartitems/:customerid", [verifyToken], controllers.updateCart)
+app.delete("/cartitems/:id", [verifyToken], controllers.deleteCartItem);
+
+app.post("/cartitems", [verifyToken], controllers.createCartItem);
+
+
 
 // miscellaneous
 app.get("/uploadurl", [verifyToken], controllers.getUploadURL)

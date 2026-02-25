@@ -1,7 +1,7 @@
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require("uuid");
-const { Users, Products, Reviews, Orders, Blends } = require("./config/db.js")
+const { Users, Products, Reviews, Orders, Blends, CartItems } = require("./config/db.js")
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -26,6 +26,7 @@ const products = new Products()
 const reviews = new Reviews()
 const orders = new Orders()
 const blends = new Blends()
+const cartItems = new CartItems()
 
 
 // General wrapper to prevent server crashing
@@ -396,6 +397,57 @@ async function getUploadURL(req, res) {
   return res.json({success: true, data: {uploadUrl, publicUrl, expiresIn: PRESIGNED_URL_EXPIRATION}});
 };
 
+// cart items
+// path: POST /cartitems
+async function createCartItem(req, res) {
+  const result = await cartItems.createCartItem(req.body);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: DELETE /cartitems/:id
+async function deleteCartItem(req, res) {
+  const {id} = req.query
+  const result = await cartItems.deleteCartItem(id);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: GET /cartitems/:customerid
+async function getCart(req, res) {
+  const {customerid} = req.query;
+  const result = await cartItems.getCart(customerid);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: DELETE /cartitems/clear/:customerid
+async function clearCart(req, res) {
+  const {customerid} = req.query;
+  const result = await cartItems.clearCart(customerid);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: PUT /cartitems/:customerid
+async function updateCart(req, res) {
+  const {customerid} = req.query;
+  const {items} = req.body
+  const result = await cartItems.updateCart(customerid, items);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
 
 /* 
 Though probably not needed, we can use wrappers down the line that
@@ -442,6 +494,12 @@ saveBlend = handleError(saveBlend);
 addBlendToCart = handleError(addBlendToCart);
 getUserBlends = handleError(getUserBlends);
 
+createCartItem = handleError(createCartItem);
+deleteCartItem = handleError(deleteCartItem);
+getCart = handleError(getCart);
+clearCart = handleError(clearCart);
+updateCart = handleError(updateCart);
+
 
 module.exports = {
   getServerHTML,
@@ -449,7 +507,7 @@ module.exports = {
   getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders,
+  saveBlend, addBlendToCart, getUserBlends,
+  createCartItem, deleteCartItem, getCart, clearCart, updateCart,
   getUploadURL,
-  saveBlend, addBlendToCart, getUserBlends
- 
 };
