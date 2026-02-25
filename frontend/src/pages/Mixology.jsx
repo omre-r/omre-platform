@@ -266,7 +266,7 @@ export default function Mixology() {
 
     // Colors for the liquid in the bottl ---------------------------------------------------
     // Mock for now, fragrances may include color details in the backend in the future
-    const color1 = "#ff7f4d"; 
+    const color1 =  "#b07ac4"; 
     const color2 = "#e3615b"; 
     const color3 = "#a12d0f"; 
 
@@ -522,7 +522,7 @@ export default function Mixology() {
                         <TableRow key={blend.id}>
                             <TableCell>{getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)</TableCell>
                             <TableCell>{getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)</TableCell>
-                            <TableCell>{getProductNameById(blend.frag3_productid)} ({blend.frag3_pct ? `${blend.frag3_pct}%` : "Null"})</TableCell>
+                            <TableCell>{getProductNameById(blend.frag3_productid)} ({blend.frag3_pct ? `${blend.frag3_pct}%` : "Not Selected"})</TableCell>
                             <TableCell>{blend.size_ml} ML</TableCell>
                             <TableCell>
                                 <Button
