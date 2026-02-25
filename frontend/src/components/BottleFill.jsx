@@ -8,7 +8,7 @@ export default function BottleFill({ p1, p2, p3, color1, color2, color3, threeFr
     const stop2 = p1 + p2;
 
     // How soft the transitions are between colors, in percentage points. Higher means softer.
-    const BLEND = 8;
+    const BLEND = 20;
 
     // Helper clamp so offsets never go below 0 or above 100
     const clamp = (v) => Math.max(0, Math.min(100, v));
