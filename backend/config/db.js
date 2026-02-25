@@ -179,6 +179,18 @@ async function createTables() {
             created         TIMESTAMPTZ   DEFAULT NOW()
         )
     `);
+
+    //itemid will be an id from "products" or "blends"
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS cart_items(
+            id VARCHAR(100) PRIMARY KEY,
+            customerid VARCHAR(100),
+            itemid VARCHAR(100), 
+            quantity INT,
+            added TIMESTAMPTZ DEFAULT NOW(),
+        )
+    `);
+
 }
 
 
@@ -1048,7 +1060,33 @@ class Blends {
         return { success: true, data: { blends } };
     }
 }
+
+class CartItems{
     
+    // may simply increment quantity if item exists
+    async createCartItem(client){
+
+    }
+
+    async deleteCartItem(client){
+
+    }
+
+    async getCart(client){
+
+    }
+
+    //affects all cart items associated with a user
+    async updateCart(client){
+
+    }
+
+    async clearCart(client){
+
+    }
+
+}
+
 /*
 This ChatGPT provided function wraps all class methods in a function.
 This is needed because JS does not have decorators.
@@ -1070,6 +1108,7 @@ wrapClassMethods(Products, prepareRollback, ["increaseProductStock", "decreasePr
 wrapClassMethods(Reviews, prepareRollback, ["formatUpdateQuery"]);
 wrapClassMethods(Orders, prepareRollback);
 wrapClassMethods(Blends, prepareRollback);
+wrapClassMethods(CartItems, prepareRollback);
 
 
-module.exports = { Users, Products, Reviews, Orders, Blends }
+module.exports = { Users, Products, Reviews, Orders, Blends, CartItems }
