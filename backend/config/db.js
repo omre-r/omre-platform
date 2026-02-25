@@ -1093,7 +1093,7 @@ class CartItems{
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to create cart item")
         }
-        return {success: true, data: {review: result.rows?.[0]}}
+        return {success: true, data: {cartItem: result.rows[0]}}
     }
 
     async deleteCartItem(id, client){
@@ -1123,24 +1123,50 @@ class CartItems{
         let result;
         try{
             const getCartQuery = `SELECT * FROM cart_items WHERE customerid = $1;`;
-            result = (await client.query(getCartQuery, [customerid]))?.rows;
+            result = await client.query(getCartQuery, [customerid]);
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to get cart items")
         }
+        return {success: true, data: {cart: result.rows}}
+    }
+
+    //removes all existing cart items and add these items
+    async updateCart(customerid, items, client){
+        const result = [];
+        try{
+            const emptyCartQuery = `DELETE FROM cart_items WHERE customerid = $1;`;
+            await client.query(emptyCartQuery, [customerid]);
+
+            for (const item of items){
+                if ((!item.quantity || item.quantity <= 0) || !item.itemid){
+                    throw new DBError("Invalid cart item. A quantity and item id is required");
+                }
+                const id = uuidv4()
+                const insertQuery = `INSERT INTO cart_items (id, customerid, itemid, quantity) VALUES ($1, $2, $3, $4) RETURNING *;`
+                const insertResult = await client.query(insertQuery, [id, customerid, item.itemid, item.quantity]);
+                result.push(insertResult.rows[0]);
+            }
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to update cart");
+        }
+        return {success: true, data: {cart: result}}
+    }
+
+    async clearCart(customerid, client){
+        try{
+            const emptyCartQuery = `DELETE FROM cart_items WHERE customerid = $1;`;
+            await client.query(emptyCartQuery, [customerid]);
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to clear cart");
+        }
         return {success: true}
     }
-
-    //affects all cart items associated with a user
-    async updateCart(client){
-
-    }
-
-    async clearCart(client){
-
-    }
-
 }
 
 /*
