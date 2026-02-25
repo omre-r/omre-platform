@@ -1062,18 +1062,74 @@ class Blends {
 }
 
 class CartItems{
-    
+        // CREATE TABLE IF NOT EXISTS cart_items(
+        //     id VARCHAR(100) PRIMARY KEY,
+        //     customerid VARCHAR(100),
+        //     itemid VARCHAR(100), 
+        //     quantity INT,
+        //     added TIMESTAMPTZ DEFAULT NOW(),
+
     // may simply increment quantity if item exists
-    async createCartItem(client){
+    async createCartItem(options, client){
+        const {customerid, itemid} = options;
+        const id = uuidv4();
 
+        let result;
+        try{
+            const getCartQuery = `SELECT itemid FROM cart_items WHERE customerid = $1;`;
+            const cart = (await client.query(getCartQuery, [customerid]))?.rows;
+
+            const itemExists = cart.some(entry => entry.itemid === itemid);
+
+            if (itemExists){
+                const query = `INSERT INTO cart_items (id, customerid, itemid, quantity) VALUES ($1, $2, $3, 1) RETURNING *;`;
+                result = await client.query(query, [id, customerid, itemid]);
+            }else{
+                const query = `UPDATE cart_items SET quantity = quantity + 1 WHERE customerid = $1 AND itemid = $2 RETURNING *;`;
+                result = await client.query(query, [customerid, itemid]);
+            }
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to create cart item")
+        }
+        return {success: true, data: {review: result.rows?.[0]}}
     }
 
-    async deleteCartItem(client){
+    async deleteCartItem(id, client){
+        try{
+            const getCartItem = `SELECT quantity FROM cart_items WHERE id = $1;`;
+            const cartItem = (await client.query(getCartItem, [id]))?.rows?.[0];
+            if (!cartItem){
+                return {success: true}
+            }
 
+            if (cartItem.quantity <= 1){
+                const query = `DELETE FROM cart_items WHERE id = $1;`;
+                await client.query(query, [id]);
+            }else{
+                const query = `UPDATE cart_items SET quantity = quantity - 1 WHERE id = $1 ;`;
+                await client.query(query, [id]);
+            }
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to either delete cart item or decrement quantity")
+        }
+        return {success: true}
     }
 
-    async getCart(client){
-
+    async getCart(customerid, client){
+        let result;
+        try{
+            const getCartQuery = `SELECT * FROM cart_items WHERE customerid = $1;`;
+            result = (await client.query(getCartQuery, [customerid]))?.rows;
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get cart items")
+        }
+        return {success: true}
     }
 
     //affects all cart items associated with a user
