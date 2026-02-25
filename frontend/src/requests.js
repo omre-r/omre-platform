@@ -325,6 +325,67 @@ async function getUserSavedBlendsReq() {
     return data.data.blends; 
 }
 
+// cart items
+async function createCartItemReq({customerid, itemid, type}) {
+    const response = await fetch(backendURL + `/cartitems`, {
+        method: "POST",
+        headers: {"Authorization": `Bearer ${getToken()}`},
+        body: JSON.stringify({customerid, itemid, type})
+    });
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.cartItem;
+}
+
+async function deleteCartItemReq(id) {
+    const response = await fetch(backendURL + `/cartitems/${id}`, {
+        method: "DELETE",
+        headers: {"Authorization": `Bearer ${getToken()}`},
+    });
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
+
+async function getCartReq(customerid) {
+    const response = await fetch(backendURL + `/cartitems/${customerid}`, {
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.cart;
+}
+
+async function updateCartReq(customerid, items) {
+    const response = await fetch(backendURL + `/cartitems/${customerid}`, {
+        method: "PUT",
+        headers: {"Authorization": `Bearer ${getToken()}`},
+        body: JSON.stringify({items})
+    });
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data.data.cart; //no "item" field per object (compared to getCartReq)
+}
+
+async function clearCartReq(customerid) {
+    const response = await fetch(backendURL + `/cartitems/clear/${customerid}`, {
+        method: "DELETE",
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
+    const data = await response.json()
+    if (!data.success){
+        throw new Error(data.message || "req failed");
+    }
+    return data;
+}
 
 // miscellaneous
 
@@ -472,21 +533,30 @@ getOrderReq = handleError(getOrderReq);
 createOrderReq = handleError(createOrderReq);
 deleteOrderReq = handleError(deleteOrderReq);
 
+saveBlendReq = handleError(saveBlendReq);
+addBlendToCartReq = handleError(addBlendToCartReq);
+getUserSavedBlendsReq = handleError(getUserSavedBlendsReq);
+
+createCartItemReq = handleError(createCartItemReq);
+deleteCartItemReq = handleError(deleteCartItemReq);
+getCartReq = handleError(getCartReq);
+clearCartReq = handleError(clearCartReq);
+updateCartReq = handleError(updateCartReq);
+
+
 uploadImageToS3Req = handleError(uploadImageToS3Req);
 getPresignedUrlReq_LOCAL = handleError(getPresignedUrlReq);
 createProductFlowReq_LOCAL = handleError(createProductFlowReq_LOCAL)
 getPresignedUrlReq = handleError(getPresignedUrlReq);
 createProductAWSReq = handleError(createProductAWSReq);
 createProductAWSFlowReq = handleError(createProductAWSFlowReq);
-saveBlendReq = handleError(saveBlendReq);
-addBlendToCartReq = handleError(addBlendToCartReq);
-getUserSavedBlendsReq = handleError(getUserSavedBlendsReq);
 
 export {
     getUserReq, getUsersReq, createUserReq, deleteUserReq,
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, updateOrderStatus, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
-    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq,
-    saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq
+    saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq,
+    createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
+    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq
 }
