@@ -189,7 +189,7 @@ async function createTables() {
             itemid VARCHAR(100), 
             quantity INT,
             type VARCHAR(100),
-            added TIMESTAMPTZ DEFAULT NOW(),
+            added TIMESTAMPTZ DEFAULT NOW()
         )
     `);
 
@@ -232,32 +232,32 @@ class Users{
     //This function will be useless for now
     //modifications made to make it match Ayman's lambda function 'omre-cognito-post-confirmation'
     // 
-    // async createUser(options, client){
-    //     const {id, email, firstname, lastname, preferrednotes} = options;
+    async createUser(options, client){
+        const {id, email, firstname, lastname, preferrednotes} = options;
 
-    //     const adminEmails = [
-    //         '@omrefragrances.com',
-    //         'zchriste16@gmail.com',
-    //         'contact@aymannazir.com',
-    //         'muradsaleh2022@gmail.com'
-    //     ];
+        const adminEmails = [
+            '@omrefragrances.com',
+            'zchriste16@gmail.com',
+            'contact@aymannazir.com',
+            'muradsaleh2022@gmail.com'
+        ];
 
-    //     //IMPORTANT: roles will mainly be decided via access tokens later, so the "role" field may be removed
-    //     // Check if admin (later, there may be a mapping of roles rather than a simple isAdmin check)
-    //     const isAdmin = adminEmails.some(admin => 
-    //         admin.startsWith('@') ? email.endsWith(admin) : email === admin
-    //     );   
+        //IMPORTANT: roles will mainly be decided via access tokens later, so the "role" field may be removed
+        // Check if admin (later, there may be a mapping of roles rather than a simple isAdmin check)
+        const isAdmin = adminEmails.some(admin => 
+            admin.startsWith('@') ? email.endsWith(admin) : email === admin
+        );   
 
-    //     let result;
-    //     const query = `INSERT INTO users (id, email, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
-    //     try{
-    //         result = await client.query(query, [id, email, firstname, lastname, isAdmin ? "admin" : "user", JSON.stringify(preferrednotes)]);
-    //     }catch(err){
-    //         console.error(err)
-    //         return {success: false, message: "Failed to create user", status: 400}
-    //     }
-    //     return {success: true, data: {user: result.rows?.[0]}}
-    // }
+        let result;
+        const query = `INSERT INTO users (id, email, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
+        try{
+            result = await client.query(query, [id, email, firstname, lastname, isAdmin ? "admin" : "user", JSON.stringify(preferrednotes)]);
+        }catch(err){
+            console.error(err)
+            return {success: false, message: "Failed to create user", status: 400}
+        }
+        return {success: true, data: {user: result.rows?.[0]}}
+    }
 
     
     async deleteUser(id, client){
@@ -1083,7 +1083,7 @@ class CartItems{
 
             const itemExists = cart.some(entry => entry.itemid === itemid);
 
-            if (itemExists){
+            if (!itemExists){
                 const query = `INSERT INTO cart_items (id, customerid, itemid, quantity, type) VALUES ($1, $2, $3, 1, $4) RETURNING *;`;
                 result = await client.query(query, [id, customerid, itemid, type]);
             }else{
@@ -1137,17 +1137,17 @@ class CartItems{
         try{
             const getCartQuery = `SELECT * FROM cart_items WHERE customerid = $1;`;
             const cart = await client.query(getCartQuery, [customerid]);
-
             //get the actual products/blends
             for (const item of cart.rows){
                 try{
-                    const query = item.type === "product" ? `SELECT * FROM products WHERE id = $1"` : `SELECT * FROM blends WHERE id = $1"` 
+                    const query = item.type === "product" ? `SELECT * FROM products WHERE id = $1` : `SELECT * FROM blends WHERE id = $1` 
                     const itemRes = (await client.query(query, [item.itemid])).rows[0]
                     result.push({
                         ...item,
                         item: itemRes
                     })
                 }catch(err){
+                    console.log("prod didnt exist", item)
                     //TODO: when a product doesn't exist anymore, maybe we let client know
                     continue
                 }
