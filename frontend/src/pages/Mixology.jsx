@@ -535,6 +535,8 @@ export default function Mixology() {
                                     style={luxuryBodyStyle}
                                     onClick={() => { 
                                         handleDeleteBlend(blend.id);
+                                        // Remove deleted blend from loaded blends to update table
+                                        setLoadedBlends((prev) => prev.filter((b) => b.id !== blend.id));
                                     }}>
                                     Delete Blend
                                 </Button>
