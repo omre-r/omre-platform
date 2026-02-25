@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, Flex, Text, Button, SelectField, Grid, SliderField, TableRow, TableCell, TableHead } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getActiveProductsReq, saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq } from "../requests.js";
+import { getActiveProductsReq, saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import Omre2 from "../assets/Mixology/OMRE2.png";
@@ -178,14 +178,23 @@ export default function Mixology() {
         }
     }
 
+    async function handleDeleteBlend(blendId) {
+        setMessage("");
+        try {
+            const result = await deleteUserBlendReq(blendId);
+            if (!result || !result.success) {
+                setMessage(result?.message || "Failed to delete blend.");
+                return;
+            }
+            setMessage("Blend deleted successfully!");
+        } catch (err) {
+            setMessage("Failed to delete blend.");
+        }
+    }
 
     // Builds the blend payload from current state to send to backend
     function buildBlendPayload() {
         return {
-            // TODO: Implement cologne names to use in payload and display when loading blends, currently just sending null for names and using id's to identify fragrances in backend
-            // frag1_name: cologne1Name || null,
-            // frag2_name: cologne2Name || null,
-            // frag3_name: thirdCologneSelectedMode ? (cologne3Name || null) : null,
             frag1_productid: cologne1Id,
             frag2_productid: cologne2Id,
             frag3_productid: thirdCologneSelectedMode && cologne3Id ? cologne3Id : null,
@@ -518,16 +527,16 @@ export default function Mixology() {
                             <TableCell>
                                 <Button
                                     style={luxuryBodyStyle}
-                                    // TODO: Implement load blend functionality to populate mixology form and maybe add to cart button too
-                                    onClick={() => {
-                                    }}>
-                                    Load Blend
-                                </Button>
-                                <Button
-                                    style={luxuryBodyStyle}
                                     onClick={() => {
                                     }}>
                                     Add to Cart
+                                </Button>
+                                <Button
+                                    style={luxuryBodyStyle}
+                                    onClick={() => { 
+                                        handleDeleteBlend(blend.id);
+                                    }}>
+                                    Delete Blend
                                 </Button>
                             </TableCell>
                         </TableRow>
