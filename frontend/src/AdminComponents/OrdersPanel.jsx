@@ -20,188 +20,185 @@ const luxuryBodyStyle = {
 const API_URL = 'https://6180u0u9xf.execute-api.us-east-1.amazonaws.com/prod';
 
 
-// Users panel, a component used in admin dashboard --------------------------------------
-// Will be called by admin dashboard and shown if users button is pressed
-// Will show user email, when clicking will show deeper information on right card
-export default function UsersPanel() {
-    const [users, setUsers] = useState([]);
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [loadingUsers, setLoadingUsers] = useState(true);
-    const [loadingUser, setLoadingUser] = useState(false);
+// Orders panel, a component used in admin dashboard --------------------------------------
+export default function OrdersPanel() {
+    const [orders, setOrders] = useState([]);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [loadingOrders, setLoadingOrders] = useState(true);
+    const [loadingOrder, setLoadingOrder] = useState(false);
     const [msg, setMessage] = useState("");
 
-    // Load users ------------------------------------------------------------------
-    // Pull user information from API URL and if fails show error message
-    async function loadUsers() {
-        setMessage("");
-        setLoadingUsers(true);
-        try {
-            const response = await fetch(`${API_URL}/admin/users`);    
-            if (!response.ok) {
-                throw new Error(`Issue with load response: ${response.status}`)
-            }
-            const data = await response.json();
-            setUsers(data.users);
-        }
-        catch (error) {
-            setMessage(error.message || "Error loading users.");
-        }
-        finally {
-            setLoadingUsers(false);
-        }
-    }
+  // Load users ------------------------------------------------------------------
+  async function loadOrders() {
+      setMessage("");
+      setLoadingOrders(true);
 
-    // View user ------------------------------------------------------
-    // After user information is loaded one can click on an email and show deeper information on card to the right
-    // Will use API URL to get to user information
-    async function viewUser(userId) {
-        setMessage("");
-        setLoadingUser(true);
-        setSelectedUser(null);
-        try {
-            const response = await fetch(`${API_URL}/admin/users/${userId}`);
-            if (!response.ok) {
-                throw new Error(`Issue with load response: ${response.status}`)
-            }
-            const data = await response.json();
-            setSelectedUser(data.user);
-        }
-        catch (error) {
-            setMessage(error.message || "Error viewing user.");
-        }
-        finally {
-            setLoadingUser(false);
-        }
-    }
+      const data = await getOrdersReq();
+
+      if (!data) {
+          setMessage("Error loading orders.");
+          setOrders([]);
+      } else {
+          setOrders(data);
+      }
+
+      setLoadingOrders(false);
+  }
+
+  // View single order
+  async function viewOrder(orderId) {
+      setMessage("");
+      setLoadingOrder(true);
+      setSelectedOrder(null);
+
+      const data = await getOrderReq(orderId);
+
+      if (!data) {
+          setMessage("Error loading order.");
+      } else {
+          setSelectedOrder(data);
+      }
+
+      setLoadingOrder(false);
+  }
 
     useEffect(() => {
-        loadUsers();
+      loadOrders();
     }, []);
 
-    if (loadingUsers) {
+    if (loadingOrders) {
         return (
         <Text 
             style={luxuryBodyStyle}>
-            Loading users...
+            Loading orders...
         </Text>);
     }
-console.log("selectedUser object:", selectedUser);
+
+    // View Orders ------------------------------------------------------
+    // After user information is loaded one can click on an order and show deeper information on card to the right
 
     return (
-        <Flex 
-            direction="row" 
-            gap="1rem" 
-            height="100%">
+      <Flex direction="row" gap="1rem" height="100%">
 
-            {/* Left card holding emails ---------------------------------------------*/}
-            <Card
-                flex="1.2" 
-                height="100%" 
-                padding="1rem" 
-                backgroundColor="whitesmoke"
-                >
-                <Flex 
-                    direction="column" 
-                    height="100%">
-                    <Flex 
-                        justifyContent="space-between" 
-                        alignItems="center">   
-                        <Text 
-                            style={luxuryHeadingStyle}>
-                            Orders
-                        </Text>
-                        <Button 
-                            style={luxuryBodyStyle}
-                            onClick={loadUsers}>
-                            Refresh
-                        </Button>
-                    </Flex>
+      {/* LEFT PANEL — ORDER LIST */}
+      <Card flex="1.2" padding="1rem" backgroundColor="whitesmoke">
+        <Flex direction="column" height="100%">
 
-                    {msg && (
-                        <Text 
-                            color="Black" 
-                            style={luxuryBodyStyle} 
-                            marginTop="0.5rem">
-                            {msg}
-                        </Text>
-                    )}
+          <Flex justifyContent="space-between" alignItems="center">
+                <Text style={luxuryHeadingStyle}>
+                    Orders
+                </Text>
+                <Button style={luxuryBodyStyle} onClick={loadOrders}>
+                    Refresh
+                </Button>
+          </Flex>
 
-                    <View 
-                        overflow="auto" 
-                        height="20rem"
-                        marginTop="1rem">
-                        {users.map((currentUser) => (
-                            <Button
-                                key={currentUser.user_id}
-                                variation="link"
-                                marginBottom=".5rem"
-                                border=".5px solid #111"
-                                borderRadius="6px"
-                                onClick={() => viewUser(currentUser.user_id)}
-                                justifyContent="flex-start"
-                                width="100%"
-                                >
-                                {currentUser.email}
-                            </Button>
-                        ))}
-                    </View>
-                    </Flex>
-                </Card>
-        
-                {/* Right card holding single specific user information ----------------------------------------- */}
-                <Card
-                    flex="1.0" 
-                    height="100%" 
-                    padding="1rem" 
-                    backgroundColor="whitesmoke"
-                >
-                    <Flex>
-                        <Text 
-                            width="100%"
-                            textAlign="center"
-                            style={luxuryHeadingStyle}>
-                            Order Information
-                        </Text>              
-                    </Flex>
-                    {/* No user selected, select user ------------------------------ */}
-                    {!loadingUser && !selectedUser && (
-                        <Text 
-                            style={luxuryBodyStyle}>
-                            Please select an order
-                        </Text>
-                    )}   
-                    {/* If user selected, will display loading -------------------------- */}
-                    {loadingUser && (
-                        <Text 
-                            style={luxuryBodyStyle}>
-                            Loading user information
-                        </Text>
-                    )}   
-                    {/* Loading is false and user has been selected ----------------- */}
-                    {/* Show that users information in detail */}
-                    {/* TODO: Check back on last login with Ayman */}
-                    {!loadingUser && selectedUser && (
-                        <Flex
-                        direction="column"
-                        gap=".2rem" 
-                        >
-                            <Text>Email: {selectedUser.email}</Text>
-                            <Text>Name: {selectedUser.first_name} {selectedUser.last_name}</Text>
-                            <Text>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
-                            <Text>Admin Permissions: {selectedUser.is_admin ? "Yes" : "No"}</Text>
-                            <Text>Created: {new Date(selectedUser.created_at).toLocaleString()}</Text>
-                            <Text>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString(): "--"}</Text>
+          {msg && (<Text color="black" style={luxuryBodyStyle} marginTop="0.5rem">
+              {msg}
+              </Text>
+          )}
 
-                            <Button 
-                                style={luxuryBodyStyle}
-                                onClick={() => setSelectedUser(null)}
-                                height="auto"
-                                width="auto">
-                                Close Info
-                            </Button>
-                    </Flex>
-                )} 
-            </Card>
+          <View overflow="auto" height="20rem" marginTop="1rem">
+
+            {/* No Orders Message */}
+              {orders.length === 0 && (
+                  <Text style={luxuryBodyStyle} textAlign="center" marginTop="2rem">
+                      No orders found.
+                  </Text>
+             )}
+
+            {/* Orders List */}
+            {orders.length > 0 && orders.map((order) => (
+                <Button
+                    key={order.id}
+                    variation="link"
+                    marginBottom=".5rem"
+                    border=".5px solid #111"
+                    borderRadius="6px"
+                    onClick={() => viewOrder(order.id)}
+                    justifyContent="flex-start"
+                    width="100%"
+                  >
+                      Order #{order.id} — ${order.total}
+                </Button>
+              ))}
+
+          </View>
+
         </Flex>
-    );
+      </Card>
+
+      {/* RIGHT PANEL — ORDER DETAILS */}
+      <Card flex="1.0" padding="1rem" backgroundColor="whitesmoke">
+
+          <Text
+              width="100%"
+              textAlign="center"
+              style={luxuryHeadingStyle}
+            >
+                Order Information
+          </Text>
+
+        {!loadingOrder && !selectedOrder && (
+            <Text style={luxuryBodyStyle}>
+                Please select an order
+            </Text>
+        )}
+
+        {loadingOrder && (
+            <Text style={luxuryBodyStyle}>
+                Loading order information...
+            </Text>
+        )}
+
+        {!loadingOrder && selectedOrder && (
+            <Flex direction="column" gap=".5rem" marginTop="1rem">
+
+            <Text>
+                Order ID: {selectedOrder.id}
+            </Text>
+            <Text>
+                User ID: {selectedOrder.customer_id}
+            </Text>
+            <Text>
+                Status: {selectedOrder.status}
+            </Text>
+            <Text>
+                Total: ${selectedOrder.total}
+            </Text>
+            <Text>
+                Created: {new Date(selectedOrder.created_at).toLocaleString()}
+            </Text>
+
+            <Text marginTop="1rem" fontWeight="600">
+                Items:
+            </Text>
+
+            {selectedOrder.items && selectedOrder.items.length === 0 && (
+                <Text>
+                    No items in this order.
+                </Text>
+            )}
+
+            {selectedOrder.items?.map((item, index) => (
+                <Text key={index}>
+                  • {item.name} — {item.quantity}x — ${item.price}
+                </Text>
+            ))}
+
+            <Button
+              style={luxuryBodyStyle}
+              marginTop="1rem"
+              onClick={() => setSelectedOrder(null)}
+            >
+              Close Info
+            </Button>
+
+          </Flex>
+        )}
+
+      </Card>
+
+    </Flex>
+  );
 }
