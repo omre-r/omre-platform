@@ -229,7 +229,7 @@ async function cancelOrderReq(id, cancelreason) {
     return data;
 }
 
-async function updateOrderStatus(id, status) {
+async function updateOrderStatusReq(id, status) {
     const response = await fetch(backendURL + `/orders/${id}`, {
         method: "PUT",
         headers: {"Authorization": `Bearer ${getToken()}`},
@@ -329,7 +329,7 @@ async function getUserSavedBlendsReq() {
 async function createCartItemReq({customerid, itemid, type}) {
     const response = await fetch(backendURL + `/cartitems`, {
         method: "POST",
-        headers: {"Authorization": `Bearer ${getToken()}`},
+        headers: {"Authorization": `Bearer ${getToken()}`, "Content-Type": "application/json"},
         body: JSON.stringify({customerid, itemid, type})
     });
     const data = await response.json()
@@ -365,7 +365,7 @@ async function getCartReq(customerid) {
 async function updateCartReq(customerid, items) {
     const response = await fetch(backendURL + `/cartitems/${customerid}`, {
         method: "PUT",
-        headers: {"Authorization": `Bearer ${getToken()}`},
+        headers: {"Authorization": `Bearer ${getToken()}`, "Content-Type": "application/json"},
         body: JSON.stringify({items})
     });
     const data = await response.json()
@@ -528,7 +528,7 @@ getReviewsReq = handleError(getReviewsReq);
 deleteReviewReq = handleError(deleteReviewReq);
 
 cancelOrderReq = handleError(cancelOrderReq);
-updateOrderStatus = handleError(updateOrderStatus);
+updateOrderStatusReq = handleError(updateOrderStatusReq);
 getOrderReq = handleError(getOrderReq);
 createOrderReq = handleError(createOrderReq);
 deleteOrderReq = handleError(deleteOrderReq);
@@ -555,7 +555,7 @@ export {
     getUserReq, getUsersReq, createUserReq, deleteUserReq,
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
-    cancelOrderReq, updateOrderStatus, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
+    cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
     saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq

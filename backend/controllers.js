@@ -409,7 +409,7 @@ async function createCartItem(req, res) {
 
 // path: DELETE /cartitems/:id
 async function deleteCartItem(req, res) {
-  const {id} = req.query
+  const {id} = req.params
   const result = await cartItems.deleteCartItem(id);
   if (!result.success){
     return res.status(result.status).json(result);
@@ -419,7 +419,7 @@ async function deleteCartItem(req, res) {
 
 // path: GET /cartitems/:customerid
 async function getCart(req, res) {
-  const {customerid} = req.query;
+  const {customerid} = req.params;
   const result = await cartItems.getCart(customerid);
   if (!result.success){
     return res.status(result.status).json(result);
@@ -429,7 +429,7 @@ async function getCart(req, res) {
 
 // path: DELETE /cartitems/clear/:customerid
 async function clearCart(req, res) {
-  const {customerid} = req.query;
+  const {customerid} = req.params;
   const result = await cartItems.clearCart(customerid);
   if (!result.success){
     return res.status(result.status).json(result);
@@ -439,7 +439,7 @@ async function clearCart(req, res) {
 
 // path: PUT /cartitems/:customerid
 async function updateCart(req, res) {
-  const {customerid} = req.query;
+  const {customerid} = req.params;
   const {items} = req.body
   const result = await cartItems.updateCart(customerid, items);
   if (!result.success){

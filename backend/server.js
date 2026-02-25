@@ -10,7 +10,7 @@ dotenv.config();
 const COGNITO_POOL_ID = process.env.COGNITO_POOL_ID;
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
 const PORT = process.env.PORT;
-const USE_ACCESS_TOKENS = process.env.USE_ACCESS_TOKENS;
+const USE_ACCESS_TOKENS = process.env.USE_ACCESS_TOKENS === "true";
 
 const verifier = CognitoJwtVerifier.create({
   userPoolId: COGNITO_POOL_ID,
@@ -26,7 +26,6 @@ app.use(express.urlencoded({extended: true}));
 
 async function verifyToken(req, res, next){
   if (!USE_ACCESS_TOKENS) return next();
-
   const token = req.headers?.authorization?.split(" ")?.[1];
 
   if (!token || token.split(".").length !== 3){
@@ -45,6 +44,7 @@ async function verifyToken(req, res, next){
 
 async function checkAdminPerm(req, res, next) {
   if (!USE_ACCESS_TOKENS) return next();
+
   if (!req?.tokenPayload || !req?.tokenPayload?.["cognito:groups"]?.includes("admin")){
     return res.status(401).json({success: false, message: "You do not have permission to access this"})
   }
