@@ -349,6 +349,24 @@ async function getUserBlends(req, res) {
     return res.json(result);
 }
 
+// path: DELETE /blends/:blendid
+// Gets logged in user, pulls blend id from params, calls db function with userid and blendid 
+async function deleteUserBlend(req, res) {
+    // Get user id from token payload 
+    const userid = req.tokenPayload?.sub;
+    if (!userid) return res.status(401).json({ success: false, message: "Not authenticated" });
+
+    // Get blend id from params
+    const { blendid } = req.params;
+    if (!blendid) return res.status(400).json({ success: false, message: "Missing blend id" });
+
+    // Call db function to delete blend with userid and blendid
+    const result = await blends.deleteUserBlend(userid, blendid);
+
+    if (!result.success) return res.status(result.status || 400).json(result);
+    return res.json(result);
+}
+
 // miscellaneous
 
 //This is ayman's code moved from Lambda and modified for this environment
@@ -499,6 +517,7 @@ deleteCartItem = handleError(deleteCartItem);
 getCart = handleError(getCart);
 clearCart = handleError(clearCart);
 updateCart = handleError(updateCart);
+deleteUserBlend = handleError(deleteUserBlend);
 
 
 module.exports = {
@@ -507,7 +526,7 @@ module.exports = {
   getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders,
-  saveBlend, addBlendToCart, getUserBlends,
+  saveBlend, addBlendToCart, getUserBlends, deleteUserBlend,
   createCartItem, deleteCartItem, getCart, clearCart, updateCart,
   getUploadURL,
 };

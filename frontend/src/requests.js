@@ -325,6 +325,19 @@ async function getUserSavedBlendsReq() {
     return data.data.blends; 
 }
 
+// Deleting a user saved blend from the mixology page
+async function deleteUserBlendReq(blendid) {
+    const response = await fetch(backendURL + `/blends/${blendid}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${getToken()}` }
+    });
+    const data = await response.json();
+    if (!data.success) {
+        throw new Error(data.message || "req failed");
+    }
+    return data; 
+}
+
 // cart items
 async function createCartItemReq({customerid, itemid, type}) {
     const response = await fetch(backendURL + `/cartitems`, {
@@ -505,13 +518,14 @@ function getToken(){
 }
 
 
-
+// Users
 getUserReq = handleError(getUserReq);
 getUsersReq = handleError(getUsersReq);
 createUserReq = handleError(createUserReq);
 deleteUserReq = handleError(deleteUserReq);
 getUserOrdersReq = handleError(getUserOrdersReq);
 
+// Products
 getProductReq = handleError(getProductReq);
 updateProductReq = handleError(updateProductReq);
 deleteProductReq = handleError(deleteProductReq);
@@ -520,6 +534,7 @@ createProductReq = handleError(createProductReq);
 getProductsReq = handleError(getProductsReq);
 getFilteredProductsReq = handleError(getFilteredProductsReq);
 
+// Product Reviews
 getProductReviewsReq = handleError(getProductReviewsReq);
 getUserReviewsReq = handleError(getUserReviewsReq);
 updateReviewReq = handleError(updateReviewReq);
@@ -527,23 +542,27 @@ createReviewReq = handleError(createReviewReq);
 getReviewsReq = handleError(getReviewsReq);
 deleteReviewReq = handleError(deleteReviewReq);
 
+// Orders
 cancelOrderReq = handleError(cancelOrderReq);
 updateOrderStatusReq = handleError(updateOrderStatusReq);
 getOrderReq = handleError(getOrderReq);
 createOrderReq = handleError(createOrderReq);
 deleteOrderReq = handleError(deleteOrderReq);
 
+// Blends
 saveBlendReq = handleError(saveBlendReq);
 addBlendToCartReq = handleError(addBlendToCartReq);
 getUserSavedBlendsReq = handleError(getUserSavedBlendsReq);
+deleteUserBlendReq = handleError(deleteUserBlendReq);
 
+// Cart
 createCartItemReq = handleError(createCartItemReq);
 deleteCartItemReq = handleError(deleteCartItemReq);
 getCartReq = handleError(getCartReq);
 clearCartReq = handleError(clearCartReq);
 updateCartReq = handleError(updateCartReq);
 
-
+// Misc
 uploadImageToS3Req = handleError(uploadImageToS3Req);
 getPresignedUrlReq_LOCAL = handleError(getPresignedUrlReq);
 createProductFlowReq_LOCAL = handleError(createProductFlowReq_LOCAL)
@@ -556,7 +575,7 @@ export {
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
-    saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq,
+    saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq
 }

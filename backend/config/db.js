@@ -1061,6 +1061,28 @@ class Blends {
         }
         return { success: true, data: { blends } };
     }
+
+    // Delete user created blend by blendid.
+    async deleteUserBlend(userid, blendid, client) {
+        // Only deletes if the blend belongs to the user
+        const query = `DELETE FROM blends WHERE userid = $1 AND id = $2 RETURNING *;`;
+        let deleted;
+        try {
+            const res = await client.query(query, [userid, blendid]);
+            deleted = res.rows?.[0];
+            // If no rows were deleted, it means either the blend doesn't exist or doesn't belong to the user
+            if (!deleted) {
+                return { success: false, status: 404, message: "Blend not found" };
+            }
+        } 
+        catch (err) {
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to delete blend");
+        }
+        // Successfully deleted the blend
+        return { success: true, data: { blend: deleted } };
+    }
 }
 
 class CartItems{
