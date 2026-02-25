@@ -181,12 +181,14 @@ async function createTables() {
     `);
 
     //itemid will be an id from "products" or "blends"
+    //type will be either "product" or "blend"
     await pool.query(`
         CREATE TABLE IF NOT EXISTS cart_items(
             id VARCHAR(100) PRIMARY KEY,
             customerid VARCHAR(100),
             itemid VARCHAR(100), 
             quantity INT,
+            type VARCHAR(100),
             added TIMESTAMPTZ DEFAULT NOW(),
         )
     `);
@@ -1071,7 +1073,7 @@ class CartItems{
 
     // may simply increment quantity if item exists
     async createCartItem(options, client){
-        const {customerid, itemid} = options;
+        const {customerid, itemid, type} = options;
         const id = uuidv4();
 
         let result;
@@ -1082,8 +1084,8 @@ class CartItems{
             const itemExists = cart.some(entry => entry.itemid === itemid);
 
             if (itemExists){
-                const query = `INSERT INTO cart_items (id, customerid, itemid, quantity) VALUES ($1, $2, $3, 1) RETURNING *;`;
-                result = await client.query(query, [id, customerid, itemid]);
+                const query = `INSERT INTO cart_items (id, customerid, itemid, quantity, type) VALUES ($1, $2, $3, 1, $4) RETURNING *;`;
+                result = await client.query(query, [id, customerid, itemid, type]);
             }else{
                 const query = `UPDATE cart_items SET quantity = quantity + 1 WHERE customerid = $1 AND itemid = $2 RETURNING *;`;
                 result = await client.query(query, [customerid, itemid]);
@@ -1119,17 +1121,44 @@ class CartItems{
         return {success: true}
     }
 
+    /*
+    returns a list of objects in the form:
+    {
+        id,
+        customerid,
+        itemid,
+        quantity, 
+        added,
+        item: the actual product or blend info
+    } 
+     */
     async getCart(customerid, client){
-        let result;
+        const result = [];
         try{
             const getCartQuery = `SELECT * FROM cart_items WHERE customerid = $1;`;
-            result = await client.query(getCartQuery, [customerid]);
+            const cart = await client.query(getCartQuery, [customerid]);
+
+            //get the actual products/blends
+            for (const item of cart.rows){
+                try{
+                    const query = item.type === "product" ? `SELECT * FROM products WHERE id = $1"` : `SELECT * FROM blends WHERE id = $1"` 
+                    const itemRes = (await client.query(query, [item.itemid])).rows[0]
+                    result.push({
+                        ...item,
+                        item: itemRes
+                    })
+                }catch(err){
+                    //TODO: when a product doesn't exist anymore, maybe we let client know
+                    continue
+                }
+            }
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to get cart items")
         }
-        return {success: true, data: {cart: result.rows}}
+
+        return {success: true, data: {cart: result}}
     }
 
     //removes all existing cart items and add these items
@@ -1140,12 +1169,12 @@ class CartItems{
             await client.query(emptyCartQuery, [customerid]);
 
             for (const item of items){
-                if ((!item.quantity || item.quantity <= 0) || !item.itemid){
-                    throw new DBError("Invalid cart item. A quantity and item id is required");
+                if ((!item.quantity || item.quantity <= 0) || !item.itemid || !item.type){
+                    throw new DBError("Invalid cart item. A quantity, item id, and type is required");
                 }
                 const id = uuidv4()
-                const insertQuery = `INSERT INTO cart_items (id, customerid, itemid, quantity) VALUES ($1, $2, $3, $4) RETURNING *;`
-                const insertResult = await client.query(insertQuery, [id, customerid, item.itemid, item.quantity]);
+                const insertQuery = `INSERT INTO cart_items (id, customerid, itemid, quantity, type) VALUES ($1, $2, $3, $4, $5) RETURNING *;`
+                const insertResult = await client.query(insertQuery, [id, customerid, item.itemid, item.quantity, item.type]);
                 result.push(insertResult.rows[0]);
             }
         }catch(err){
