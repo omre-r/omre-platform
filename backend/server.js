@@ -112,7 +112,7 @@ app.post("/orders", [verifyToken], controllers.createOrder)
 // blends
 app.post("/blends/save", [verifyToken], controllers.saveBlend);
 app.post("/blends/cart", [verifyToken], controllers.addBlendToCart);
-app.get("/blends",       [verifyToken], controllers.getUserBlends);
+app.get("/blends/:userid", [verifyToken], controllers.getUserBlends);
 app.delete("/blends/:blendid", [verifyToken], controllers.deleteUserBlend);
 
 // cart items
