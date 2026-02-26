@@ -72,14 +72,24 @@ export default function Mixology() {
     // Calling load blends on button click, getting user saved blends from backend and setting.
     const [loadedBlends, setLoadedBlends] = useState([]);
     async function loadBlends() {
-            setMessage("");
-            try {
-                const blends = await getUserSavedBlendsReq();
-                setLoadedBlends(blends || []);
-            }
-            catch (error) {
-                setMessage(error.message || "Error loading saved blends.");
-            }
+        let userid;
+        for (let key of Object.keys(localStorage)){
+            if (key.includes("idToken")){
+                const idToken = localStorage.getItem(key)        
+                const base64 = idToken.split(".")[1]
+                const decoded = JSON.parse(atob(base64))
+                userid = decoded.sub
+                break
+            };
+        }
+        setMessage("");
+        try {
+            const blends = await getUserSavedBlendsReq(userid);
+            setLoadedBlends(blends || []);
+        }
+        catch (error) {
+            setMessage(error.message || "Error loading saved blends.");
+        }
     }
 
     // Max and min percentages for 2 fragrance and 3 fragrance modes
@@ -194,9 +204,19 @@ export default function Mixology() {
     }
 
     async function handleDeleteBlend(blendId) {
+        let userid;
+        for (let key of Object.keys(localStorage)){
+            if (key.includes("idToken")){
+                const idToken = localStorage.getItem(key)        
+                const base64 = idToken.split(".")[1]
+                const decoded = JSON.parse(atob(base64))
+                userid = decoded.sub
+                break
+            };
+        }
         setMessage("");
         try {
-            const result = await deleteUserBlendReq(blendId);
+            const result = await deleteUserBlendReq(userid, blendId);
             if (!result || !result.success) {
                 setMessage(result?.message || "Failed to delete blend.");
                 return;
