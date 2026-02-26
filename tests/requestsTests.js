@@ -6,6 +6,7 @@ import {
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq,
     createProductFlowReq_LOCAL,
+    saveBlendReq, deleteUserBlendReq
 } from "../frontend/src/requests.js"
  
 //Note: set USE_ACCESS_TOKENS to false before testing 
@@ -279,55 +280,166 @@ async function testReviewsFlow() {
     await deleteProductReq(product.id);
 }
 
-async function testOrdersFlow() {
-    const user =  await createUserReq({
-        email: "salehm0529@gmail.com",
-        password: "crzy8123",
+//orders are the most "connected", so this flow creates test users, products, blends, and carts as well as orders.
+async function testOrdersFlow() { 
+    //Create 2 test users
+    const user1 = {
+        id: "sdh38edg234",
+        email: "m@g.com",
         firstname: "murad",
         lastname: "saleh",
-        role: "user",
-        preferrednotes: ["ice cream", "vanilla"]
-    });
+        preferrednotes: ["Vanilla", "Cheese"]
+    }
+    const user2 = {
+        id: "sqwops0kweoak",
+        email: "ak@g.com",
+        firstname: "ahad",
+        lastname: "kidwai",
+        preferrednotes: ["Cinnamon", "Banana"]
+    }
+    const user1Info = await createUserReq(user1);
+    const user2Info = await createUserReq(user2);
+    console.log("Test user ids: ", user1Info.id, user2Info.id)
 
-    const product =  await createProductReq({
+    //Create 3 test products
+    const garbageData = new Uint8Array([1]);
+    const randomFile1 = new File([garbageData], "1.png", {type: "image/png"})
+    const randomFile2 = new File([garbageData], "2.jpeg", {type: "image/jpeg"})
+    const randomFile3 = new File([garbageData], "3.png", {type: "image/png"})
+
+    const product1 = {
         type: "mens_cologne",
-        name: "Cinnamon Cologne",
+        name: "TEST TEST PRODUCT 1",
         variation: "30ml spray",
         price: 35.34,
-        images: [new Blob([]), new Blob([]), new Blob([])],
-        quantity: 20,
+        images: [randomFile1, randomFile2, randomFile3],
+        stock_ml: 1000,
         notes: {
             top: ["Cinammon"],
             heart: ["Cherries"],
             base: []
         },
+        description: "great product",
         isfeatured: true,
         ishidden: false
-    });
-    const order = {
-        customerid: user.id,
-        items: [{productid: product.id, quantity: 3}],
-        total: 33.75
     }
-    const createdOrder = await createOrderReq(order);
-    console.log("Created order", createdOrder);
+    const product2 = {
+        type: "womens_perfume",
+        name: "TEST TEST PRODUCT 2",
+        variation: "30ml spray",
+        price: 99.99,
+        images: [randomFile1, randomFile3],
+        stock_ml: 1000,
+        notes: {
+            top: ["Vanilla", "Raspberry"],
+            heart: ["Graphe", "Blueberry"],
+            base: []
+        },
+        description: "this has a great smell",
+        isfeatured: true,
+        ishidden: false
+    }
+    const product3 = {
+        type: "unisex_fragrance",
+        name: "TEST TEST PRODUCT 3",
+        variation: "5ml mini",
+        price: 25.25,
+        images: [randomFile3],
+        stock_ml: 1000,
+        notes: {
+            top: ["Gold"],
+            heart: ["Ice cream"],
+            base: []
+        },
+        description: "buy this one too",
+        isfeatured: true,
+        ishidden: true
+    }
 
-    console.log("Get order", await getOrderReq(createdOrder.id))
+    const product1Info = await createProductFlowReq_LOCAL(product1);
+    const product2Info = await createProductFlowReq_LOCAL(product2);
+    const product3Info = await createProductFlowReq_LOCAL(product3)
+    console.log("Test Product ids: ", product1Info.id, product2Info.id, product3Info.id)
 
-    console.log("Mark order completed")
-    await completeOrderReq(createdOrder.id)
+    //Create 2 test blends
+    const blend1 = {
+        frag1_productid: product1Info.id, 
+        frag2_productid: product3Info.id, 
+        frag3_productid: null, 
+        frag1_pct: 25, 
+        frag2_pct: 75, 
+        frag3_pct: null, 
+        size_ml: 30
+    }
+    const blend2 = {
+        frag1_productid: product1Info.id, 
+        frag2_productid: product2Info.id, 
+        frag3_productid: product3Info.id, 
+        frag1_pct: 20, 
+        frag2_pct: 35, 
+        frag3_pct: 45, 
+        size_ml: 30
+    }
+    const blend1Info = await saveBlendReq(blend1);
+    const blend2Info = await saveBlendReq(blend2);
+    console.log("Test blend ids: ", blend1Info.id, blend2Info.id);
 
-    console.log("Get order", await getOrderReq(createdOrder.id))
+    //Create test carts for user 1 and user 2
+    const cartItem1 = {
+        itemid: product1Info.id,
+        type: "product"
+    }
+    const cartItem2 = {
+        itemid: product2Info.id,
+        type: "product"
+    }
+    const cartItem3 = {
+        itemid: product3Info.id,
+        type: "product"
+    }
+    const cartItem4 = {
+        itemid: blend1.id,
+        type: "blend"
+    }
+    const cartItem5 = {
+        itemid: product1Info.id,
+        type: "blend"
+    }
+    const newUser1Cart = [
+        {...cartItem1, quantity: 1},
+        {...cartItem4, quantity: 1}
+    ]
+    const newUser2Cart = [
+        {...cartItem1, quantity: 2},
+        {...cartItem2, quantity: 2},
+        {...cartItem3, quantity: 2},
+        {...cartItem4, quantity: 2},
+        {...cartItem5, quantity: 2}
+    ]
+    const updateUser1CartRes = await updateCartReq(user1Info.id, newUser1Cart);
+    const updateUser2CartRes = await updateCartReq(user2Info.id, newUser2Cart);
+    console.log("Updated carts: ", updateUser1CartRes, updateUser2CartRes);
 
-    console.log("Mark order canceled")
-    await cancelOrderReq(createdOrder.id, "I want to buy something else")
 
-    console.log("Get order", await getOrderReq(createdOrder.id))
+    // Delete everything
+    // clear carts
+    const d1 = await clearCartReq(user1Info.id)
+    const d2 = await clearCartReq(user2Info.id)
 
-    console.log("Deleted orders");
-    await deleteOrderReq(createdOrder.id);
+    //delete blends
+    const d3 = await deleteUserBlendReq(blend1Info.id);
+    const d4 = await deleteUserBlendReq(blend2Info.id);
 
-    console.log("Get order", await getOrderReq(createdOrder.id))    
+    //delete products
+    const d5 = await deleteProductReq(product1Info.id);
+    const d6 = await deleteProductReq(product2Info.id);
+    const d7 = await deleteProductReq(product3Info.id);
+
+    //delete users 
+    const d8 = await deleteUserReq(user1Info.id);
+    const d9 = await deleteUserReq(user2Info.id);
+
+    console.log("deleted: ", d1, d2, d3, d4, d5, d6, d7, d8, d9)
 }
 
 async function testCartItemsFlow() {
@@ -511,8 +623,8 @@ async function testCartItemsFlow() {
     console.log("user 2 cart: ", user2Cart);
 
     //clear everyone's cart
-    await clearCartReq(user1Info.id);
-    await clearCartReq(user2Info.id);
+    // await clearCartReq(user1Info.id);
+    // await clearCartReq(user2Info.id);
     
     console.log("Cleared everyone's cart");
     //Get user 1's cart
@@ -538,8 +650,8 @@ async function testFlows() {
     // await testUserFlow()
     // await testProductFlow()
     // await testReviewsFlow()
-    // await testOrdersFlow()
-    await testCartItemsFlow()
+    await testOrdersFlow()
+    // await testCartItemsFlow()
 }
 
 testFlows()
