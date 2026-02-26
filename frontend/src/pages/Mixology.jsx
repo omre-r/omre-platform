@@ -213,7 +213,19 @@ export default function Mixology() {
 
     // Builds the blend payload from current state to send to backend
     function buildBlendPayload() {
+        let userid;
+        for (let key of Object.keys(localStorage)){
+            if (key.includes("idToken")){
+                const idToken = localStorage.getItem(key)        
+                const base64 = idToken.split(".")[1]
+                const decoded = JSON.parse(atob(base64))
+                userid = decoded.sub
+                break
+            };
+        }
+        console.log(userid)
         return {
+            userid,
             frag1_productid: cologne1Id,
             frag2_productid: cologne2Id,
             frag3_productid: thirdCologneSelectedMode && cologne3Id ? cologne3Id : null,
@@ -243,8 +255,8 @@ export default function Mixology() {
         setMessage("");
         try {
             const result = await saveBlendReq(buildBlendPayload());
-            if (!result || !result.success) {
-                setMessage(result?.message || "Failed to save blend.");
+            if (!result) {
+                setMessage("Failed to save blend.");
                 return;
             }
             setMessage("Blend saved successfully!");
