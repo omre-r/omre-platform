@@ -561,6 +561,9 @@ class Products{
         try{
             const res = await client.query(query, [id]);
             product = res.rows[0]
+            if (!product){
+                throw new DBError("Failed to get Product")
+            }
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
@@ -806,39 +809,35 @@ class Orders{
     constructor(){
         this.products = new Products();
         this.blends = new Blends()
+        this.cartItems = new CartItems()
     }
 
     async createOrder(customerid, client){
         if (!client){
             return prepareRollback((c) => this.createOrder(customerid, c));
         }
-        const items = [];
-        let total = 0; 
+        let order;
         try{
-            //get all cart items
-            const getCartQuery = `SELECT * FROM cart_items WHERE customerid = $1;`;
-            const cart = await client.query(getCartQuery, [customerid]);
-
-            //
-
-            for (const item of cart.rows){
-
-                //checks if cart items contains the expected fields
-                if (!item.type || !item.itemid || !item.quantity){
-                    throw new DBError("Cart item does not contain required fields")
-                }
-                if (item.type !== "product" || item.type !== "blend"){
+            const cart = (await this.cartItems.getCart(customerid, client))?.data?.cart
+            if (!cart){
+                throw new DBError("Failed to get cart");
+            }
+            const items = [];
+            let total = 0; 
+            for (const {itemid, quantity, type, item} of cart){
+                if (type !== "product" && type !== "blend"){
                     throw new DBError("Unexpected item type");
                 }
-                if (item.type === "product"){
-                    const result = await this.products.decreaseProductStock(item.itemid, item.quantity, client);
+                if (type === "product"){
+                    const result = await this.products.decreaseProductStock(itemid, quantity, client);
                     total += item.price
                     //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
                     if (!result.success){
                         throw new DBError("Failed to decrease product stock");
                     }
                 }else{ 
-                    const result = await this.blends.decreaseBlendStock(item.itemid, item.quantity, client);
+                    const result = await this.blends.decreaseBlendStock(itemid, quantity, client);
+                    total += result?.data?.price
                     if (!result.success){
                         throw new DBError("Failed to decrease blend stock");
                     }
@@ -850,15 +849,14 @@ class Orders{
                 })
             }
 
-            let order;
             const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
-            order = await client.query(query, [id, customerid, JSON.stringify(items), total]);
+            order = (await client.query(query, [id, customerid, JSON.stringify(items), total])).rows[0];
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to create order")
         }
-        return {success: true, data: {order: order.rows?.[0]}}
+        return {success: true, data: {order}}
     }
 
     //Should probably only be for development
@@ -866,6 +864,7 @@ class Orders{
         if (!client){
             return prepareRollback((c) => this.deleteOrder(id, c));
         }
+        const cancelResult = await this.cancelOrder(id, "dev reasons", client);
         const query = `DELETE FROM orders WHERE id = $1`
         try{
             await client.query(query, [id]);
@@ -877,7 +876,6 @@ class Orders{
         return {success: true}
     }
 
-    
     async cancelOrder(id, cancelreason, client){
         if (!client){
             return prepareRollback((c) => this.cancelOrder(id, cancelreason, c));
@@ -1179,66 +1177,128 @@ class Blends {
         return { success: true, data: { blend: deleted } };
     }
 
-    //essentially increases stock per ingredient 
+    // increases stock per ingredient 
+    // returns price for convenience
     async increaseBlendStock(id, quantity, client){
         if (!client){
             return prepareRollback((c) => this.increaseBlendStock(id, quantity, c));
         }
+        let price = 0;
         try{
-            const retrieveProductQuery = `SELECT * FROM products WHERE id = $1;`;
-            const product = (await client.query(retrieveProductQuery, [id]))?.rows?.[0];
-            if (!product){
-                return {success: false, message: "Product does not exist", status: 400}
-            }
-            const size = Number(product?.variation?.split("ml")?.[0]);
-            if (!size){
-                return {success: false, message: "Invalid size for product", status: 400}
+            const retrieveBlendQuery = `SELECT * FROM blends WHERE id = $1;`;
+            const blend = (await client.query(retrieveBlendQuery, [id]))?.rows?.[0];
+            if (!blend){
+                return {success: false, message: "Blend does not exist", status: 400}
             }
             
-            //only 40% of size is the stored oil. 
-            const newSize = product.stock_ml + (quantity * size*.4)
-            if (newSize < 0){
-                return {success: false, message: "Negative new size", status: 400}
-            }
-            const updateProductQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2;`;
-            await client.query(updateProductQuery, [newSize, id])
+            const oil = blend.size_ml * .4;
 
+            const productIds = [blend.frag1_productid, blend.frag2_productid];
+            if (blend.frag3_productid) productIds.push(blend.frag3_productid);
+
+            const getProductsUsedQuery = `SELECT * FROM products WHERE id = ANY($1) ORDER BY array_position($1, id);`;
+            const productsUsed = (await client.query(getProductsUsedQuery, [productIds]))?.rows;
+
+            if (!productsUsed || (blend.frag3_productid && productsUsed.length !== 3) || (!blend.frag3_productid && productsUsed.length !== 2)){
+                throw new DBError("Failed to retrieve products for increasing blend");
+            }
+
+            const newProductSizes = [productsUsed[0].stock_ml + (quantity * oil * blend.frag1_pct), productsUsed[1].stock_ml + (quantity * oil * blend.frag2_pct)]
+            if (blend.frag3_productid) newProductSizes.push(productsUsed[2].stock_ml + (quantity * oil * blend.frag3_pct))
+            
+            for (const size of newProductSizes){
+                if (size < 0) throw new DBError("Not enough stock for this blend");
+            }
+            
+            const decreaseStocksArgs = [blend.frag1_productid, newProductSizes[0], blend.frag2_productid, newProductSizes[1]];
+            if (blend.frag3_productid) decreaseStocksArgs.push(blend.frag3_productid, newProductSizes[2]);
+            const decreaseStocksQuery = blend.frag3_productid ?
+            `UPDATE products p SET stock_ml = v.stock_ml_alias
+            FROM (VALUES ($1, $2), ($3, $4), ($5, $6)) AS v(id, stock_ml_alias) 
+            WHERE p.id = v.id`:
+            `UPDATE products p SET stock_ml = v.stock_ml_alias
+            FROM (VALUES ($1, $2), ($3, $4)) AS v(id, stock_ml_alias) 
+            WHERE p.id = v.id`
+            await client.query(decreaseStocksQuery, decreaseStocksArgs);
+            
+            const pricePerML1 = (Number(productsUsed[0].price) / Number(productsUsed[0].variation.split("ml")?.[0]));
+            price += pricePerML1 * (blend.stock_ml * blend.frag1_pct);
+
+            const pricePerML2 = (Number(productsUsed[1].price) / Number(productsUsed[1].variation.split("ml")?.[0]));
+            price += pricePerML2 * (blend.stock_ml * blend.frag2_pct)
+
+            if (blend.frag3_productid){
+                const pricePerML3 = (Number(productsUsed[2].price) / Number(productsUsed[2].variation.split("ml")?.[0]));
+                price += pricePerML3 * (blend.stock_ml * blend.frag3_pct)
+            }
+            price *= quantity;
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to increase product stock", status: 400}
+            return {success: false, message: "Failed to increase blend stock", status: 400}
         }
-        return {success: true}
+        return {success: true, data: {price}}
     }
 
-    //essentially decreases stock per ingredient 
+    // decreases stock per ingredient 
+    // returns price for convenience
     async decreaseBlendStock(id, quantity, client){
         if (!client){
             return prepareRollback((c) => this.decreaseBlendStock(id, quantity, c));
         }
+        let price = 0;
         try{
-            const retrieveProductQuery = `SELECT * FROM products WHERE id = $1;`;
-            const product = (await client.query(retrieveProductQuery, [id]))?.rows?.[0];
-            if (!product){
-                return {success: false, message: "Product does not exist", status: 400}
-            }
-            const size = Number(product?.variation?.split("ml")?.[0]);
-            if (!size){
-                return {success: false, message: "Invalid size for product", status: 400}
+            const retrieveBlendQuery = `SELECT * FROM blends WHERE id = $1;`;
+            const blend = (await client.query(retrieveBlendQuery, [id]))?.rows?.[0];
+            if (!blend){
+                return {success: false, message: "Blend does not exist", status: 400}
             }
             
-            //only 40% of size is the stored oil. 
-            const newSize = product.stock_ml - (quantity * size*.4)
-            if (newSize < 0){
-                return {success: false, message: "Negative new size", status: 400}
-            }
-            const updateProductQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2;`;
-            await client.query(updateProductQuery, [newSize, id])
+            const oil = blend.size_ml * .4;
 
+            const productIds = [blend.frag1_productid, blend.frag2_productid];
+            if (blend.frag3_productid) productIds.push(blend.frag3_productid);
+
+            const getProductsUsedQuery = `SELECT * FROM products WHERE id = ANY($1) ORDER BY array_position($1, id);`;
+            const productsUsed = (await client.query(getProductsUsedQuery, [productIds]))?.rows;
+
+            if (!productsUsed || (blend.frag3_productid && productsUsed.length !== 3) || (!blend.frag3_productid && productsUsed.length !== 2)){
+                throw new DBError("Failed to retrieve products for increasing blend");
+            }
+
+            const newProductSizes = [productsUsed[0].stock_ml - (quantity * oil * blend.frag1_pct), productsUsed[1].stock_ml - (quantity * oil * blend.frag2_pct)]
+            if (blend.frag3_productid) newProductSizes.push(productsUsed[2].stock_ml - (quantity * oil * blend.frag3_pct))
+            
+            for (const size of newProductSizes){
+                if (size < 0) throw new DBError("Not enough stock for this blend");
+            }
+            
+            const decreaseStocksArgs = [blend.frag1_productid, newProductSizes[0], blend.frag2_productid, newProductSizes[1]];
+            if (blend.frag3_productid) decreaseStocksArgs.push(blend.frag3_productid, newProductSizes[2]);
+            const decreaseStocksQuery = blend.frag3_productid ?
+            `UPDATE products p SET stock_ml = v.stock_ml_alias
+            FROM (VALUES ($1, $2), ($3, $4), ($5, $6)) AS v(id, stock_ml_alias) 
+            WHERE p.id = v.id`:
+            `UPDATE products p SET stock_ml = v.stock_ml_alias
+            FROM (VALUES ($1, $2), ($3, $4)) AS v(id, stock_ml_alias) 
+            WHERE p.id = v.id`
+            await client.query(decreaseStocksQuery, decreaseStocksArgs);
+
+            const pricePerML1 = (Number(productsUsed[0].price) / Number(productsUsed[0].variation.split("ml")?.[0]));
+            price += pricePerML1 * (blend.stock_ml * blend.frag1_pct);
+
+            const pricePerML2 = (Number(productsUsed[1].price) / Number(productsUsed[1].variation.split("ml")?.[0]));
+            price += pricePerML2 * (blend.stock_ml * blend.frag2_pct)
+
+            if (blend.frag3_productid){
+                const pricePerML3 = (Number(productsUsed[2].price) / Number(productsUsed[2].variation.split("ml")?.[0]));
+                price += pricePerML3 * (blend.stock_ml * blend.frag3_pct)
+            }
+            price *= quantity
         }catch(err){
             console.error(err);
-            return {success: false, message: "Failed to decrease product stock", status: 400}
+            return {success: false, message: "Failed to decrease blend stock", status: 400}
         }
-        return {success: true}
+        return {success: true, data: {price}}
     }
 
     validateBlendInput(options) {
@@ -1408,5 +1468,12 @@ class CartItems{
     }
 }
 
+const util = require('util');
+util.inspect.defaultOptions.depth = null;
+setTimeout(async () => {
+    const prods = new Blends()
+    const prod = await prods.getUserBlends("f4683458-6071-705f-924a-c936f7cef21f");
+    console.log(prod)
+},3000)
 
 module.exports = { Users, Products, Reviews, Orders, Blends, CartItems }
