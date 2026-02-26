@@ -197,22 +197,20 @@ async function createTables() {
 
 
 // decorator that ensures any query completes fully, otherwise undo changes
-function prepareRollback(fn){
-    return async (...args) => { 
-        let client;
-        try{
-            client = await pool.connect();
-            await client.query("BEGIN")
-            const response = await fn(...args, client)
-            await client.query("COMMIT")
-            return response
-        }catch(err){
-            if (client) await client.query("ROLLBACK");
-            if (!(err instanceof DBError)) return {success: false, message: "Uncaught error occurred", status: 500};
-            return {success: false, message: err.message, status: err.code}
-        }finally{
-            if (client) await client.release()
-        }
+async function prepareRollback(fn){
+    let client;
+    try{
+        client = await pool.connect();
+        await client.query("BEGIN")
+        const response = await fn(client)
+        await client.query("COMMIT")
+        return response
+    }catch(err){
+        if (client) await client.query("ROLLBACK");
+        if (!(err instanceof DBError)) return {success: false, message: "Uncaught error occurred", status: 500};
+        return {success: false, message: err.message, status: err.code}
+    }finally{
+        if (client) await client.release()
     }
 }
 
@@ -233,6 +231,9 @@ class Users{
     //modifications made to make it match Ayman's lambda function 'omre-cognito-post-confirmation'
     // 
     async createUser(options, client){
+        if (!client){
+            return prepareRollback((c) => this.createUser(options, c));
+        }
         const {id, email, firstname, lastname, preferrednotes} = options;
 
         const adminEmails = [
@@ -261,6 +262,9 @@ class Users{
 
     
     async deleteUser(id, client){
+        if (!client){
+            return prepareRollback((c) => this.deleteUser(id, c));
+        }
         const query = `DELETE FROM users WHERE id = $1`
         try{
             await client.query(query, [id]);
@@ -275,6 +279,9 @@ class Users{
     //rate limiting (ex: max 200) not needed yet
     
     async getUsers(client){
+        if (!client){
+            return prepareRollback((c) => this.getUsers(c));
+        }
         const query = `SELECT * FROM users`
         let users;
 
@@ -291,6 +298,9 @@ class Users{
 
     
     async getUser(id, client){
+        if (!client){
+            return prepareRollback((c) => this.getUser(id, c));
+        }
         const query = `SELECT * FROM users WHERE id = $1`
         
         let user;
@@ -307,6 +317,9 @@ class Users{
 
     
     async updateLastLogin(id, client) {
+        if (!client){
+            return prepareRollback((c) => this.updateLastLogin(id, c));
+        }
         const query = `UPDATE users SET last_login = NOW() WHERE id = $1`;
 
         try {
@@ -333,6 +346,9 @@ class Products{
     static filterableFields = ["type", "name", "variation", "price", "notes", "stock_ml", "isfeatured"]
     
     async createProduct(options, client){
+        if (!client){
+            return prepareRollback((c) => this.createProduct(options, c));
+        }
         const {type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden} = options;
         const id = uuidv4();
 
@@ -393,6 +409,9 @@ class Products{
     
     
     async deleteProduct(id, client){
+        if (!client){
+            return prepareRollback((c) => this.deleteProduct(id, c));
+        }
         const query = `DELETE FROM products WHERE id = $1 RETURNING *`
         try{
             const result = await client.query(query, [id]);
@@ -419,6 +438,9 @@ class Products{
 
     
     async getProducts(client){
+        if (!client){
+            return prepareRollback((c) => this.getProducts(c));
+        }
         const query = `SELECT * FROM products;`
         let products;
 
@@ -435,6 +457,9 @@ class Products{
 
     
     async getActiveProducts(client){
+        if (!client){
+            return prepareRollback((c) => this.getActiveProducts(c));
+        }
         const query = `SELECT * FROM products WHERE ishidden IS FALSE;`
         let products;
 
@@ -450,6 +475,9 @@ class Products{
     }
 
     async getFilteredProducts(filters, client){
+        if (!client){
+            return prepareRollback((c) => this.getFilteredProducts(filters, c));
+        }
         if (Object.keys(filters).length <= 0){
             throw new DBError("At least 1 filter required");
         }
@@ -509,7 +537,6 @@ class Products{
         //removes last 'AND '
         query = query.slice(0,-4);
 
-        console.log(query)
 
         let products;
         try{
@@ -524,12 +551,18 @@ class Products{
     }
     
     async getProduct(id, client){
+        if (!client){
+            return prepareRollback((c) => this.getProduct(id, c));
+        }
         const query = `SELECT * FROM products WHERE id = $1;`;
         let product;
 
         try{
             const res = await client.query(query, [id]);
             product = res.rows[0]
+            if (!product){
+                throw new DBError("Failed to get Product")
+            }
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
@@ -544,6 +577,9 @@ class Products{
     */
     
     async updateProduct(id, options, client) {
+        if (!client){
+            return prepareRollback((c) => this.updateProduct(id, options, c));
+        }
         const fields = Object.keys(options);
         const query = this.formatUpdateQuery(fields);
         if (!query){
@@ -560,6 +596,9 @@ class Products{
     }
 
     async increaseProductStock(id, quantity, client){
+        if (!client){
+            return prepareRollback((c) => this.increaseProductStock(id, quantity, c));
+        }
         try{
             const retrieveProductQuery = `SELECT * FROM products WHERE id = $1;`;
             const product = (await client.query(retrieveProductQuery, [id]))?.rows?.[0];
@@ -572,7 +611,7 @@ class Products{
             }
             
             //only 40% of size is the stored oil. 
-            const newSize = product.stock_ml + (quantity * size*.4)
+            const newSize = Number(product.stock_ml) + (quantity * size*.4)
             if (newSize < 0){
                 return {success: false, message: "Negative new size", status: 400}
             }
@@ -587,6 +626,9 @@ class Products{
     }
 
     async decreaseProductStock(id, quantity, client){
+        if (!client){
+            return prepareRollback((c) => this.decreaseProductStock(id, quantity, c));
+        }
         try{
             const retrieveProductQuery = `SELECT * FROM products WHERE id = $1;`;
             const product = (await client.query(retrieveProductQuery, [id]))?.rows?.[0];
@@ -599,7 +641,7 @@ class Products{
             }
             
             //only 40% of size is the stored oil. 
-            const newSize = product.stock_ml - (quantity * size*.4)
+            const newSize = Number(product.stock_ml) - (quantity * size*.4)
             if (newSize < 0){
                 return {success: false, message: "Negative new size", status: 400}
             }
@@ -634,6 +676,9 @@ class Reviews{
 
     
     async createReview(options, client){
+        if (!client){
+            return prepareRollback((c) => this.createReview(options, c));
+        }
         const {customerid, productid, message, rating, images} = options;
         const id = uuidv4();
 
@@ -651,6 +696,9 @@ class Reviews{
 
     
     async deleteReview(id, client){
+        if (!client){
+            return prepareRollback((c) => this.deleteReview(id, c));
+        }
         const query = `DELETE FROM reviews WHERE id = $1`
         try{
             await client.query(query, [id]);
@@ -664,6 +712,9 @@ class Reviews{
 
     
     async getProductReviews(productid, client){
+        if (!client){
+            return prepareRollback((c) => this.getProductReviews(productid, c));
+        }
         const query = `SELECT * FROM reviews WHERE productid = $1 ORDER BY created DESC`;
         let reviews;
 
@@ -680,6 +731,9 @@ class Reviews{
 
     
     async getUserReviews(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.getUserReviews(customerid, c));
+        }
         const query = `SELECT * FROM reviews WHERE customerid = $1 ORDER BY created DESC`;
         let reviews;
         try{
@@ -695,6 +749,9 @@ class Reviews{
 
     
     async getReviews(client){
+        if (!client){
+            return prepareRollback((c) => this.getReviews(c));
+        }
         const query = `SELECT * FROM reviews ORDER BY created DESC`;
         let reviews;
 
@@ -711,6 +768,9 @@ class Reviews{
 
     
     async updateReview(id, options, client){
+        if (!client){
+            return prepareRollback((c) => this.updateReview(id, options, c));
+        }
         const fields = Object.keys(options);
         const query = this.formatUpdateQuery(fields);
         if (!query){
@@ -744,43 +804,79 @@ class Reviews{
 }
 
 class Orders{
-
     constructor(){
         this.products = new Products();
+        this.blends = new Blends()
+        this.cartItems = new CartItems()
     }
 
-    async createOrder(options, client){
-        const {customerid, items, total} = options;
-        for (const item of items){
-            //checks if an item contains the expected fields
-            if (!item.hasOwn("productType") || !item.hasOwn("productID") || !item.hasOwn("quantity")){
-                throw new DBError("Item does not contain required fields")
-            }
-
-            //reduce stock
-            //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
-            const result = await this.products.decreaseProductStock(item.productID, item.quantity, client);
-            if (!result.success){
-                throw new DBError("Failed to decrease product stock");
-            }
+    async createOrder(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.createOrder(customerid, c));
         }
-
         let order;
-        const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
         try{
-            order = await client.query(query, [id, customerid, JSON.stringify(items), total]);
+            const cart = (await this.cartItems.getCart(customerid, client))?.data?.cart
+            if (!cart){
+                throw new DBError("Failed to get cart");
+            }
+            if (cart.length === 0){
+                throw new DBError("Can't create an order with empty cart");
+            }
+            const items = [];
+            let total = 0; 
+            for (const {itemid, quantity, type, item} of cart){
+                if (type !== "product" && type !== "blend"){
+                    throw new DBError("Unexpected item type");
+                }
+                if (type === "product"){
+                    //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
+                    const result = await this.products.decreaseProductStock(itemid, quantity, client);
+                    if (!result.success){
+                        throw new DBError("Failed to decrease product stock");
+                    }
+                    total += Number(item.price) * quantity
+
+                }else{ 
+                    const result = await this.blends.decreaseBlendStock(itemid, quantity, client);
+                    if (!result.success){
+                        throw new DBError("Failed to decrease blend stock");
+                    }
+                    total += result.data.price
+                }
+                items.push({itemid, quantity, type})
+            }
+
+            const id = uuidv4()
+            const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
+            order = (await client.query(query, [id, customerid, JSON.stringify(items), total])).rows[0];
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to create order")
         }
-        return {success: true, data: {order: order.rows?.[0]}}
+        return {success: true, data: {order}}
     }
 
     //Should probably only be for development
     async deleteOrder(id, client){
-        const query = `DELETE FROM orders WHERE id = $1`
+        if (!client){
+            return prepareRollback((c) => this.deleteOrder(id, c));
+        }
+
         try{
+            const order = (await this.getOrder(id, client))?.data?.order;
+            if (!order){
+                throw new DBError("Couldn't find order before deletion");
+            }
+            if (order.status !== "canceled" && order.status !== "fulfilled"){
+                const cancelOrderRes = await this.cancelOrder(id, "dev reasons", client);
+                if (!cancelOrderRes.success){
+                    throw new DBError("Failed to cancel order / restore stock before deletion")
+                }
+            }
+
+            const query = `DELETE FROM orders WHERE id = $1`
             await client.query(query, [id]);
         }catch(err){
             console.error(err);
@@ -790,26 +886,28 @@ class Orders{
         return {success: true}
     }
 
-    
     async cancelOrder(id, cancelreason, client){
-        const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2 AND status != 'canceled' RETURNING *;`;
+        if (!client){
+            return prepareRollback((c) => this.cancelOrder(id, cancelreason, c));
+        }
         try{
+            const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2 AND status != 'canceled' RETURNING *;`;
             const order = (await client.query(query, [cancelreason, id]))?.rows?.[0];
             if (!order){
                 throw new DBError("Order does not exist or already canceled.");
             }
 
-            for (const item of order.items){
-                //checks if an item contains the expected fields
-                if (!item.hasOwn("productType") || !item.hasOwn("productID") || !item.hasOwn("quantity")){
-                    throw new DBError("Item does not contain required fields")
-                }
-
-                //restore stock
-                //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
-                const result = await this.products.increaseProductStock(item.productID, item.quantity, client);
-                if (!result.success){
-                    throw new DBError("Failed to increase product stock");
+            for (const {itemid, quantity, type} of order.items){
+                if (type === "product"){
+                    const result = await this.products.increaseProductStock(itemid, quantity, client);
+                    if (!result.success){
+                        throw new DBError("Failed to increase product stock");
+                    }
+                }else{
+                    const result = await this.blends.increaseBlendStock(itemid, quantity, client);
+                    if (!result.success){
+                        throw new DBError("Failed to increase blend stock");
+                    }
                 }
             }
         }catch(err){
@@ -823,12 +921,15 @@ class Orders{
     //This always promotes status, flow is ususally pending -> mixing -> ready ->  fulfilled, but may move backwards 
     //cancels deserve their own flow.
     async updateOrderStatus(id, status, client){
+        if (!client){
+            return prepareRollback((c) => this.updateOrderStatus(id, status, c));
+        }
         if (!["pending", "mixing", "ready", "fulfilled"].includes(status)){
             throw new DBError("Unexpected status")
         }
-        const query = `UPDATE orders SET status = ${status} WHERE id = $1`;
+        const query = `UPDATE orders SET status = $1 WHERE id = $2`;
         try{
-            await client.query(query, [id]);
+            await client.query(query, [status, id]);
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
@@ -839,6 +940,9 @@ class Orders{
 
     
     async getOrder(id, client){
+        if (!client){
+            return prepareRollback((c) => this.getOrder(id, c));
+        }
         const query = `SELECT * FROM orders WHERE id = $1`
         let order;
 
@@ -854,6 +958,9 @@ class Orders{
     }
 
     async getUserOrders(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.getUserOrders(customerid, c));
+        }
         const query = `SELECT * FROM orders WHERE customerid = $1`
         let orders;
 
@@ -867,22 +974,6 @@ class Orders{
         }
         return {success: true, data: {orders}}
     }
-}
-
-function validateBlendInput(options) {
-    const { userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml } = options;
-
-    if (!userid) throw new DBError("User not identified", 401);
-    if (!frag1_productid || !frag2_productid) throw new DBError("At least 2 fragrances are required");
-    if (frag1_productid === frag2_productid) throw new DBError("Fragrance 1 and 2 cannot be the same product");
-    if (![30, 50].includes(Number(size_ml))) throw new DBError("Bottle size must be 30 or 50 ml");
-
-    const hasThird = !!frag3_productid;
-    if (hasThird && (frag3_pct === null || frag3_pct === undefined)) throw new DBError("3rd fragrance percentage is required");
-    if (!hasThird && frag3_pct) throw new DBError("3rd fragrance product is required when a percentage is provided");
-
-    const total = Number(frag1_pct) + Number(frag2_pct) + (hasThird ? Number(frag3_pct) : 0);
-    if (total !== 100) throw new DBError(`Fragrance percentages must add up to 100%, currently: ${total}%`);
 }
 
 class Blends {
@@ -902,7 +993,10 @@ class Blends {
     userid always comes from the token in the controller, never from req.body.
     */
     async saveBlend(options, client) {
-        validateBlendInput(options);
+        if (!client){
+            return prepareRollback((c) => this.saveBlend(options, c));
+        }
+        this.validateBlendInput(options);
 
         const {
             userid,
@@ -962,7 +1056,10 @@ class Blends {
     If all good              → saves with status = 'cart', returns "Blend Ready!"
     */
     async addBlendToCart(options, client) {
-        validateBlendInput(options);
+        if (!client){
+            return prepareRollback((c) => this.addBlendToCart(options, c));
+        }
+        this.validateBlendInput(options);
 
         const {
             userid,
@@ -1049,6 +1146,9 @@ class Blends {
 
     // Get all blends belonging to the logged in user
     async getUserBlends(userid, client) {
+        if (!client){
+            return prepareRollback((c) => this.getUserBlends(userid, c));
+        }
         const query = `SELECT * FROM blends WHERE userid = $1 ORDER BY created DESC;`;
         let blends;
         try {
@@ -1064,6 +1164,9 @@ class Blends {
 
     // Delete user created blend by blendid.
     async deleteUserBlend(userid, blendid, client) {
+        if (!client){
+            return prepareRollback((c) => this.deleteUserBlend(userid, blendid, c));
+        }
         // Only deletes if the blend belongs to the user
         const query = `DELETE FROM blends WHERE userid = $1 AND id = $2 RETURNING *;`;
         let deleted;
@@ -1083,6 +1186,148 @@ class Blends {
         // Successfully deleted the blend
         return { success: true, data: { blend: deleted } };
     }
+
+    // increases stock per ingredient 
+    // returns price for convenience
+    async increaseBlendStock(id, quantity, client){
+        if (!client){
+            return prepareRollback((c) => this.increaseBlendStock(id, quantity, c));
+        }
+        let price = 0;
+        try{
+            const retrieveBlendQuery = `SELECT * FROM blends WHERE id = $1;`;
+            const blend = (await client.query(retrieveBlendQuery, [id]))?.rows?.[0];
+            if (!blend){
+                return {success: false, message: "Blend does not exist", status: 400}
+            }
+            blend.frag1_pct /= 100;
+            blend.frag2_pct /= 100;
+            if (blend.frag3_productid) blend.frag3_pct /= 100;
+
+            const oil = blend.size_ml * .4;
+
+            const productIds = [blend.frag1_productid, blend.frag2_productid];
+            if (blend.frag3_productid) productIds.push(blend.frag3_productid);
+
+            const getProductsUsedQuery = `SELECT * FROM products WHERE id = ANY($1) ORDER BY array_position($1, id);`;
+            const productsUsed = (await client.query(getProductsUsedQuery, [productIds]))?.rows;
+
+            if (!productsUsed || (blend.frag3_productid && productsUsed.length !== 3) || (!blend.frag3_productid && productsUsed.length !== 2)){
+                throw new DBError("Failed to retrieve products for increasing blend");
+            }
+
+            const newProductSizes = [Number(productsUsed[0].stock_ml) + (quantity * oil * blend.frag1_pct), Number(productsUsed[1].stock_ml) + (quantity * oil * blend.frag2_pct)]
+            if (blend.frag3_productid) newProductSizes.push(Number(productsUsed[2].stock_ml) + (quantity * oil * blend.frag3_pct))
+            for (const size of newProductSizes){
+                if (size < 0) throw new DBError("Not enough stock for this blend");
+            }
+            
+            const productUpdateQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2 RETURNING *`;
+            const product1UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[0], blend.frag1_productid]))?.rows?.[0];
+            if (!product1UpdateRes) throw new DBError(`Failed to update blend product 1 with id ${blend.frag1_productid}`)
+            const product2UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[1], blend.frag2_productid]))?.rows?.[0];
+            if (!product2UpdateRes) throw new DBError(`Failed to update blend product 2 with id ${blend.frag2_productid}`)
+            if (blend.frag3_productid){
+                const product3UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[2], blend.frag3_productid]))?.rows?.[0];
+                if (!product3UpdateRes) throw new DBError(`Failed to update blend product 3 with id ${blend.frag3_productid}`)
+            }
+
+            const pricePerML1 = (Number(productsUsed[0].price) / Number(productsUsed[0].variation.split("ml")?.[0]));
+            price += pricePerML1 * (blend.size_ml * blend.frag1_pct);
+
+            const pricePerML2 = (Number(productsUsed[1].price) / Number(productsUsed[1].variation.split("ml")?.[0]));
+            price += pricePerML2 * (blend.size_ml * blend.frag2_pct)
+            
+            if (blend.frag3_productid){
+                const pricePerML3 = (Number(productsUsed[2].price) / Number(productsUsed[2].variation.split("ml")?.[0]));
+                price += pricePerML3 * (blend.size_ml * blend.frag3_pct)
+            }
+            price *= quantity
+        }catch(err){
+            console.error(err);
+            return {success: false, message: "Failed to increase blend stock", status: 400}
+        }
+        return {success: true, data: {price}}
+    }
+
+    // decreases stock per ingredient 
+    // returns price for convenience
+    async decreaseBlendStock(id, quantity, client){
+        if (!client){
+            return prepareRollback((c) => this.decreaseBlendStock(id, quantity, c));
+        }
+        let price = 0;
+        try{
+            const retrieveBlendQuery = `SELECT * FROM blends WHERE id = $1;`;
+            const blend = (await client.query(retrieveBlendQuery, [id]))?.rows?.[0];
+            if (!blend){
+                return {success: false, message: "Blend does not exist", status: 400}
+            }
+            blend.frag1_pct /= 100;
+            blend.frag2_pct /= 100;
+            if (blend.frag3_productid) blend.frag3_pct /= 100;
+
+            const oil = blend.size_ml * .4;
+
+            const productIds = [blend.frag1_productid, blend.frag2_productid];
+            if (blend.frag3_productid) productIds.push(blend.frag3_productid);
+
+            const getProductsUsedQuery = `SELECT * FROM products WHERE id = ANY($1) ORDER BY array_position($1, id);`;
+            const productsUsed = (await client.query(getProductsUsedQuery, [productIds]))?.rows;
+
+            if (!productsUsed || (blend.frag3_productid && productsUsed.length !== 3) || (!blend.frag3_productid && productsUsed.length !== 2)){
+                throw new DBError("Failed to retrieve products for decreasing blend");
+            }
+
+            const newProductSizes = [Number(productsUsed[0].stock_ml) - (quantity * oil * blend.frag1_pct), Number(productsUsed[1].stock_ml) - (quantity * oil * blend.frag2_pct)]
+            if (blend.frag3_productid) newProductSizes.push(Number(productsUsed[2].stock_ml) - (quantity * oil * blend.frag3_pct))
+            for (const size of newProductSizes){
+                if (size < 0) throw new DBError("Not enough stock for this blend");
+            }
+            
+            const productUpdateQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2 RETURNING *`;
+            const product1UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[0], blend.frag1_productid]))?.rows?.[0];
+            if (!product1UpdateRes) throw new DBError(`Failed to update blend product 1 with id ${blend.frag1_productid}`)
+            const product2UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[1], blend.frag2_productid]))?.rows?.[0];
+            if (!product2UpdateRes) throw new DBError(`Failed to update blend product 2 with id ${blend.frag2_productid}`)
+            if (blend.frag3_productid){
+                const product3UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[2], blend.frag3_productid]))?.rows?.[0];
+                if (!product3UpdateRes) throw new DBError(`Failed to update blend product 3 with id ${blend.frag3_productid}`)
+            }
+
+            const pricePerML1 = (Number(productsUsed[0].price) / Number(productsUsed[0].variation.split("ml")?.[0]));
+            price += pricePerML1 * (blend.size_ml * blend.frag1_pct);
+
+            const pricePerML2 = (Number(productsUsed[1].price) / Number(productsUsed[1].variation.split("ml")?.[0]));
+            price += pricePerML2 * (blend.size_ml * blend.frag2_pct)
+            
+            if (blend.frag3_productid){
+                const pricePerML3 = (Number(productsUsed[2].price) / Number(productsUsed[2].variation.split("ml")?.[0]));
+                price += pricePerML3 * (blend.size_ml * blend.frag3_pct)
+            }
+            price *= quantity
+        }catch(err){
+            console.error(err);
+            return {success: false, message: "Failed to decrease blend stock", status: 400}
+        }
+        return {success: true, data: {price}}
+    }
+
+    validateBlendInput(options) {
+        const { userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml } = options;
+
+        if (!userid) throw new DBError("User not identified", 401);
+        if (!frag1_productid || !frag2_productid) throw new DBError("At least 2 fragrances are required");
+        if (frag1_productid === frag2_productid) throw new DBError("Fragrance 1 and 2 cannot be the same product");
+        if (![30, 50].includes(Number(size_ml))) throw new DBError("Bottle size must be 30 or 50 ml");
+
+        const hasThird = !!frag3_productid;
+        if (hasThird && (frag3_pct === null || frag3_pct === undefined)) throw new DBError("3rd fragrance percentage is required");
+        if (!hasThird && frag3_pct) throw new DBError("3rd fragrance product is required when a percentage is provided");
+
+        const total = Number(frag1_pct) + Number(frag2_pct) + (hasThird ? Number(frag3_pct) : 0);
+        if (total !== 100) throw new DBError(`Fragrance percentages must add up to 100%, currently: ${total}%`);
+    }
 }
 
 class CartItems{
@@ -1095,6 +1340,9 @@ class CartItems{
 
     // may simply increment quantity if item exists
     async createCartItem(options, client){
+        if (!client){
+            return prepareRollback((c) => this.createCartItem(options, c));
+        }
         const {customerid, itemid, type} = options;
         const id = uuidv4();
 
@@ -1121,6 +1369,9 @@ class CartItems{
     }
 
     async deleteCartItem(id, client){
+        if (!client){
+            return prepareRollback((c) => this.deleteCartItem(id, c));
+        }
         try{
             const getCartItem = `SELECT quantity FROM cart_items WHERE id = $1;`;
             const cartItem = (await client.query(getCartItem, [id]))?.rows?.[0];
@@ -1155,6 +1406,9 @@ class CartItems{
     } 
      */
     async getCart(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.getCart(customerid, c));
+        }
         const result = [];
         try{
             const getCartQuery = `SELECT * FROM cart_items WHERE customerid = $1;`;
@@ -1169,7 +1423,6 @@ class CartItems{
                         item: itemRes
                     })
                 }catch(err){
-                    console.log("prod didnt exist", item)
                     //TODO: when a product doesn't exist anymore, maybe we let client know
                     continue
                 }
@@ -1185,6 +1438,9 @@ class CartItems{
 
     //removes all existing cart items and add these items
     async updateCart(customerid, items, client){
+        if (!client){
+            return prepareRollback((c) => this.updateCart(customerid, items, c));
+        }
         const result = [];
         try{
             const emptyCartQuery = `DELETE FROM cart_items WHERE customerid = $1;`;
@@ -1208,6 +1464,9 @@ class CartItems{
     }
 
     async clearCart(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.clearCart(customerid, c));
+        }
         try{
             const emptyCartQuery = `DELETE FROM cart_items WHERE customerid = $1;`;
             await client.query(emptyCartQuery, [customerid]);
@@ -1219,29 +1478,5 @@ class CartItems{
         return {success: true}
     }
 }
-
-/*
-This ChatGPT provided function wraps all class methods in a function.
-This is needed because JS does not have decorators.
-*/
-function wrapClassMethods(Class, wrap, exclude=[]) {
-  for (const key of Object.getOwnPropertyNames(Class.prototype)) {
-    if (key === "constructor" || exclude.includes(key)) continue
-    const fn = Class.prototype[key]
-    if (typeof fn === "function") {
-      Class.prototype[key] = wrap(fn)
-    }
-  }
-}
-
-// Will seek out a better way to do this. The exclude argument exists for any helper functions to avoid
-// starting a nested "prepareRollback".
-wrapClassMethods(Users, prepareRollback);
-wrapClassMethods(Products, prepareRollback, ["increaseProductStock", "decreaseProductStock", "formatUpdateQuery"]);
-wrapClassMethods(Reviews, prepareRollback, ["formatUpdateQuery"]);
-wrapClassMethods(Orders, prepareRollback);
-wrapClassMethods(Blends, prepareRollback);
-wrapClassMethods(CartItems, prepareRollback);
-
 
 module.exports = { Users, Products, Reviews, Orders, Blends, CartItems }

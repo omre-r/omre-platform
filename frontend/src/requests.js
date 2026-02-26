@@ -123,7 +123,6 @@ async function getFilteredProductsReq(filters){
     return data.data.products;
 }
 
-
 async function createProductReq({type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden}){
     const response = await fetch(backendURL + `/products`, {
         method: "POST",
@@ -232,7 +231,7 @@ async function cancelOrderReq(id, cancelreason) {
 async function updateOrderStatusReq(id, status) {
     const response = await fetch(backendURL + `/orders/${id}`, {
         method: "PUT",
-        headers: {"Authorization": `Bearer ${getToken()}`},
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
         body: JSON.stringify({status})
     });
     const data = await response.json()
@@ -265,11 +264,11 @@ async function getUserOrdersReq(customerid){
 }
 
 
-async function createOrderReq({customerid, items, total}){
+async function createOrderReq({customerid}){
     const response = await fetch(backendURL + `/orders`, {
         method: "POST",
         headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
-        body: JSON.stringify({customerid, items, total})
+        body: JSON.stringify({customerid})
     });
     const data = await response.json();
     if (!data.success){
@@ -291,22 +290,22 @@ async function deleteOrderReq(id){
 }
 
 // blends
-async function saveBlendReq({ frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml }) {
+async function saveBlendReq({ userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml }) {
     const response = await fetch(backendURL + `/blends/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
-        body: JSON.stringify({ frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml })
+        body: JSON.stringify({ userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml })
     });
     const data = await response.json();
     if (!data.success) throw new Error(data.message || "req failed");
-    return data;
+    return data.data.blend;
 }
 
-async function addBlendToCartReq({ frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml }) {
+async function addBlendToCartReq({ userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml }) {
     const response = await fetch(backendURL + `/blends/cart`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
-        body: JSON.stringify({ frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml })
+        body: JSON.stringify({ userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml })
     });
     const data = await response.json();
     // stockUnavailable is NOT a throw — return it so the frontend can show the right message
@@ -314,9 +313,9 @@ async function addBlendToCartReq({ frag1_productid, frag2_productid, frag3_produ
 }
 
 // Getting user saved blends to show in mixology page, also for users to load previous blends
-async function getUserSavedBlendsReq() {
-    const response = await fetch(backendURL + `/blends`, {
-        headers: { "Authorization": `Bearer ${getToken()}` }
+async function getUserSavedBlendsReq(userid) {
+    const response = await fetch(backendURL + `/blends/${userid}`, {
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
     });
     const data = await response.json();
     if (!data.success) {
@@ -326,10 +325,11 @@ async function getUserSavedBlendsReq() {
 }
 
 // Deleting a user saved blend from the mixology page
-async function deleteUserBlendReq(blendid) {
+async function deleteUserBlendReq(userid, blendid) {
     const response = await fetch(backendURL + `/blends/${blendid}`, {
         method: "DELETE",
-        headers: { "Authorization": `Bearer ${getToken()}` }
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
+        body: JSON.stringify({userid})
     });
     const data = await response.json();
     if (!data.success) {

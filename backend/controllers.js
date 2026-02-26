@@ -10,6 +10,7 @@ const BUCKET_NAME = process.env.BUCKET_NAME;
 const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN;
 const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
 const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
+const USE_ACCESS_TOKENS = process.env.USE_ACCESS_TOKENS === "true";
 
 // working with images 
 const s3Client = new S3Client({ 
@@ -264,7 +265,7 @@ async function cancelOrder(req, res) {
 }
 
 // path: PUT /orders/:id
-async function updateOrderStatus(req) {
+async function updateOrderStatus(req, res) {
   const {id} = req.params;
   const {status} = req.body;
   const result = await orders.updateOrderStatus(id, status);
@@ -284,9 +285,9 @@ async function getOrder(req, res) {
   return res.json(result);
 }
 
-// path: GET /orders/user/:id
+// path: GET /orders/user/:customerid
 async function getUserOrders(req, res) {
-  const {customerid} = req.query;
+  const {customerid} = req.params;
   const result = await orders.getUserOrders(customerid);
   if (!result.success){
     return res.status(result.status).json(result);
@@ -296,7 +297,8 @@ async function getUserOrders(req, res) {
 
 // path: POST /orders
 async function createOrder(req, res) {
-  const result = await orders.createOrder(req.body);
+  const {customerid} = req.body
+  const result = await orders.createOrder(customerid);
   if (!result.success){
     return res.status(result.status).json(result);
   }
@@ -318,32 +320,41 @@ async function deleteOrder(req, res) {
 
 // path: POST /blends/save
 async function saveBlend(req, res) {
-    const userid = req.tokenPayload?.sub;
-    if (!userid) return res.status(401).json({ success: false, message: "Not authenticated" });
-
-    const result = await blends.saveBlend({ userid, ...req.body });
+    if (USE_ACCESS_TOKENS){
+      const {userid} = req.body
+      if (userid !== req.tokenPayload.sub){
+        return res.status(401).json({ success: false, message: "Not authenticated" })
+      }
+    }
+    const result = await blends.saveBlend(req.body);
     if (!result.success) return res.status(result.status || 400).json(result);
     return res.json(result);
 }
 
 // path: POST /blends/cart
 async function addBlendToCart(req, res) {
-    const userid = req.tokenPayload?.sub;
-    if (!userid) return res.status(401).json({ success: false, message: "Not authenticated" });
-
+    if (USE_ACCESS_TOKENS){
+      const {userid} = req.body
+      if (userid !== req.tokenPayload.sub){
+        return res.status(401).json({ success: false, message: "Not authenticated" })
+      }
+    }
     const result = await blends.addBlendToCart({ userid, ...req.body });
     // stockUnavailable is a valid business response, not a server error — always 200
     if (!result.success && !result.stockUnavailable) {
         return res.status(result.status || 400).json(result);
-    }
+    } 
     return res.json(result);
 }
 
 // path: GET /blends
 async function getUserBlends(req, res) {
-    const userid = req.tokenPayload?.sub;
-    if (!userid) return res.status(401).json({ success: false, message: "Not authenticated" });
-
+    const {userid} = req.params
+    if (USE_ACCESS_TOKENS){
+      if (userid !== req.tokenPayload.sub){
+        return res.status(401).json({ success: false, message: "Not authenticated" })
+      }
+    }
     const result = await blends.getUserBlends(userid);
     if (!result.success) return res.status(result.status || 400).json(result);
     return res.json(result);
@@ -352,15 +363,16 @@ async function getUserBlends(req, res) {
 // path: DELETE /blends/:blendid
 // Gets logged in user, pulls blend id from params, calls db function with userid and blendid 
 async function deleteUserBlend(req, res) {
-    // Get user id from token payload 
-    const userid = req.tokenPayload?.sub;
-    if (!userid) return res.status(401).json({ success: false, message: "Not authenticated" });
+    const {userid} = req.body;
+    if (USE_ACCESS_TOKENS){
+      if (userid !== req.tokenPayload.sub){
+        return res.status(401).json({ success: false, message: "Not authenticated" })
+      }
+    }
 
-    // Get blend id from params
-    const { blendid } = req.params;
+    const {blendid} = req.params;
     if (!blendid) return res.status(400).json({ success: false, message: "Missing blend id" });
 
-    // Call db function to delete blend with userid and blendid
     const result = await blends.deleteUserBlend(userid, blendid);
 
     if (!result.success) return res.status(result.status || 400).json(result);
