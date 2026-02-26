@@ -537,7 +537,6 @@ class Products{
         //removes last 'AND '
         query = query.slice(0,-4);
 
-        console.log(query)
 
         let products;
         try{
@@ -612,7 +611,7 @@ class Products{
             }
             
             //only 40% of size is the stored oil. 
-            const newSize = product.stock_ml + (quantity * size*.4)
+            const newSize = Number(product.stock_ml) + (quantity * size*.4)
             if (newSize < 0){
                 return {success: false, message: "Negative new size", status: 400}
             }
@@ -642,7 +641,7 @@ class Products{
             }
             
             //only 40% of size is the stored oil. 
-            const newSize = product.stock_ml - (quantity * size*.4)
+            const newSize = Number(product.stock_ml) - (quantity * size*.4)
             if (newSize < 0){
                 return {success: false, message: "Negative new size", status: 400}
             }
@@ -821,6 +820,9 @@ class Orders{
             if (!cart){
                 throw new DBError("Failed to get cart");
             }
+            if (cart.length === 0){
+                throw new DBError("Can't create an order with empty cart");
+            }
             const items = [];
             let total = 0; 
             for (const {itemid, quantity, type, item} of cart){
@@ -828,26 +830,24 @@ class Orders{
                     throw new DBError("Unexpected item type");
                 }
                 if (type === "product"){
-                    const result = await this.products.decreaseProductStock(itemid, quantity, client);
-                    total += item.price
                     //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
+                    const result = await this.products.decreaseProductStock(itemid, quantity, client);
                     if (!result.success){
                         throw new DBError("Failed to decrease product stock");
                     }
+                    total += Number(item.price) * quantity
+
                 }else{ 
                     const result = await this.blends.decreaseBlendStock(itemid, quantity, client);
-                    total += result?.data?.price
                     if (!result.success){
                         throw new DBError("Failed to decrease blend stock");
                     }
+                    total += result.data.price
                 }
-                items.push({
-                    itemid: item.itemid,
-                    quantity: item.quantity,
-                    type: item.type,
-                })
+                items.push({itemid, quantity, type})
             }
 
+            const id = uuidv4()
             const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
             order = (await client.query(query, [id, customerid, JSON.stringify(items), total])).rows[0];
         }catch(err){
@@ -863,9 +863,20 @@ class Orders{
         if (!client){
             return prepareRollback((c) => this.deleteOrder(id, c));
         }
-        const cancelResult = await this.cancelOrder(id, "dev reasons", client);
-        const query = `DELETE FROM orders WHERE id = $1`
+
         try{
+            const order = (await this.getOrder(id, client))?.data?.order;
+            if (!order){
+                throw new DBError("Couldn't find order before deletion");
+            }
+            if (order.status !== "canceled" && order.status !== "fulfilled"){
+                const cancelOrderRes = await this.cancelOrder(id, "dev reasons", client);
+                if (!cancelOrderRes.success){
+                    throw new DBError("Failed to cancel order / restore stock before deletion")
+                }
+            }
+
+            const query = `DELETE FROM orders WHERE id = $1`
             await client.query(query, [id]);
         }catch(err){
             console.error(err);
@@ -916,9 +927,9 @@ class Orders{
         if (!["pending", "mixing", "ready", "fulfilled"].includes(status)){
             throw new DBError("Unexpected status")
         }
-        const query = `UPDATE orders SET status = ${status} WHERE id = $1`;
+        const query = `UPDATE orders SET status = $1 WHERE id = $2`;
         try{
-            await client.query(query, [id]);
+            await client.query(query, [status, id]);
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
@@ -1189,7 +1200,10 @@ class Blends {
             if (!blend){
                 return {success: false, message: "Blend does not exist", status: 400}
             }
-            
+            blend.frag1_pct /= 100;
+            blend.frag2_pct /= 100;
+            if (blend.frag3_productid) blend.frag3_pct /= 100;
+
             const oil = blend.size_ml * .4;
 
             const productIds = [blend.frag1_productid, blend.frag2_productid];
@@ -1202,35 +1216,33 @@ class Blends {
                 throw new DBError("Failed to retrieve products for increasing blend");
             }
 
-            const newProductSizes = [productsUsed[0].stock_ml + (quantity * oil * blend.frag1_pct), productsUsed[1].stock_ml + (quantity * oil * blend.frag2_pct)]
-            if (blend.frag3_productid) newProductSizes.push(productsUsed[2].stock_ml + (quantity * oil * blend.frag3_pct))
-            
+            const newProductSizes = [Number(productsUsed[0].stock_ml) + (quantity * oil * blend.frag1_pct), Number(productsUsed[1].stock_ml) + (quantity * oil * blend.frag2_pct)]
+            if (blend.frag3_productid) newProductSizes.push(Number(productsUsed[2].stock_ml) + (quantity * oil * blend.frag3_pct))
             for (const size of newProductSizes){
                 if (size < 0) throw new DBError("Not enough stock for this blend");
             }
             
-            const decreaseStocksArgs = [blend.frag1_productid, newProductSizes[0], blend.frag2_productid, newProductSizes[1]];
-            if (blend.frag3_productid) decreaseStocksArgs.push(blend.frag3_productid, newProductSizes[2]);
-            const decreaseStocksQuery = blend.frag3_productid ?
-            `UPDATE products p SET stock_ml = v.stock_ml_alias
-            FROM (VALUES ($1, $2), ($3, $4), ($5, $6)) AS v(id, stock_ml_alias) 
-            WHERE p.id = v.id`:
-            `UPDATE products p SET stock_ml = v.stock_ml_alias
-            FROM (VALUES ($1, $2), ($3, $4)) AS v(id, stock_ml_alias) 
-            WHERE p.id = v.id`
-            await client.query(decreaseStocksQuery, decreaseStocksArgs);
-            
+            const productUpdateQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2 RETURNING *`;
+            const product1UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[0], blend.frag1_productid]))?.rows?.[0];
+            if (!product1UpdateRes) throw new DBError(`Failed to update blend product 1 with id ${blend.frag1_productid}`)
+            const product2UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[1], blend.frag2_productid]))?.rows?.[0];
+            if (!product2UpdateRes) throw new DBError(`Failed to update blend product 2 with id ${blend.frag2_productid}`)
+            if (blend.frag3_productid){
+                const product3UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[2], blend.frag3_productid]))?.rows?.[0];
+                if (!product3UpdateRes) throw new DBError(`Failed to update blend product 3 with id ${blend.frag3_productid}`)
+            }
+
             const pricePerML1 = (Number(productsUsed[0].price) / Number(productsUsed[0].variation.split("ml")?.[0]));
-            price += pricePerML1 * (blend.stock_ml * blend.frag1_pct);
+            price += pricePerML1 * (blend.size_ml * blend.frag1_pct);
 
             const pricePerML2 = (Number(productsUsed[1].price) / Number(productsUsed[1].variation.split("ml")?.[0]));
-            price += pricePerML2 * (blend.stock_ml * blend.frag2_pct)
-
+            price += pricePerML2 * (blend.size_ml * blend.frag2_pct)
+            
             if (blend.frag3_productid){
                 const pricePerML3 = (Number(productsUsed[2].price) / Number(productsUsed[2].variation.split("ml")?.[0]));
-                price += pricePerML3 * (blend.stock_ml * blend.frag3_pct)
+                price += pricePerML3 * (blend.size_ml * blend.frag3_pct)
             }
-            price *= quantity;
+            price *= quantity
         }catch(err){
             console.error(err);
             return {success: false, message: "Failed to increase blend stock", status: 400}
@@ -1251,7 +1263,10 @@ class Blends {
             if (!blend){
                 return {success: false, message: "Blend does not exist", status: 400}
             }
-            
+            blend.frag1_pct /= 100;
+            blend.frag2_pct /= 100;
+            if (blend.frag3_productid) blend.frag3_pct /= 100;
+
             const oil = blend.size_ml * .4;
 
             const productIds = [blend.frag1_productid, blend.frag2_productid];
@@ -1261,36 +1276,34 @@ class Blends {
             const productsUsed = (await client.query(getProductsUsedQuery, [productIds]))?.rows;
 
             if (!productsUsed || (blend.frag3_productid && productsUsed.length !== 3) || (!blend.frag3_productid && productsUsed.length !== 2)){
-                throw new DBError("Failed to retrieve products for increasing blend");
+                throw new DBError("Failed to retrieve products for decreasing blend");
             }
 
-            const newProductSizes = [productsUsed[0].stock_ml - (quantity * oil * blend.frag1_pct), productsUsed[1].stock_ml - (quantity * oil * blend.frag2_pct)]
-            if (blend.frag3_productid) newProductSizes.push(productsUsed[2].stock_ml - (quantity * oil * blend.frag3_pct))
-            
+            const newProductSizes = [Number(productsUsed[0].stock_ml) - (quantity * oil * blend.frag1_pct), Number(productsUsed[1].stock_ml) - (quantity * oil * blend.frag2_pct)]
+            if (blend.frag3_productid) newProductSizes.push(Number(productsUsed[2].stock_ml) - (quantity * oil * blend.frag3_pct))
             for (const size of newProductSizes){
                 if (size < 0) throw new DBError("Not enough stock for this blend");
             }
             
-            const decreaseStocksArgs = [blend.frag1_productid, newProductSizes[0], blend.frag2_productid, newProductSizes[1]];
-            if (blend.frag3_productid) decreaseStocksArgs.push(blend.frag3_productid, newProductSizes[2]);
-            const decreaseStocksQuery = blend.frag3_productid ?
-            `UPDATE products p SET stock_ml = v.stock_ml_alias
-            FROM (VALUES ($1, $2), ($3, $4), ($5, $6)) AS v(id, stock_ml_alias) 
-            WHERE p.id = v.id`:
-            `UPDATE products p SET stock_ml = v.stock_ml_alias
-            FROM (VALUES ($1, $2), ($3, $4)) AS v(id, stock_ml_alias) 
-            WHERE p.id = v.id`
-            await client.query(decreaseStocksQuery, decreaseStocksArgs);
+            const productUpdateQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2 RETURNING *`;
+            const product1UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[0], blend.frag1_productid]))?.rows?.[0];
+            if (!product1UpdateRes) throw new DBError(`Failed to update blend product 1 with id ${blend.frag1_productid}`)
+            const product2UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[1], blend.frag2_productid]))?.rows?.[0];
+            if (!product2UpdateRes) throw new DBError(`Failed to update blend product 2 with id ${blend.frag2_productid}`)
+            if (blend.frag3_productid){
+                const product3UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[2], blend.frag3_productid]))?.rows?.[0];
+                if (!product3UpdateRes) throw new DBError(`Failed to update blend product 3 with id ${blend.frag3_productid}`)
+            }
 
             const pricePerML1 = (Number(productsUsed[0].price) / Number(productsUsed[0].variation.split("ml")?.[0]));
-            price += pricePerML1 * (blend.stock_ml * blend.frag1_pct);
+            price += pricePerML1 * (blend.size_ml * blend.frag1_pct);
 
             const pricePerML2 = (Number(productsUsed[1].price) / Number(productsUsed[1].variation.split("ml")?.[0]));
-            price += pricePerML2 * (blend.stock_ml * blend.frag2_pct)
-
+            price += pricePerML2 * (blend.size_ml * blend.frag2_pct)
+            
             if (blend.frag3_productid){
                 const pricePerML3 = (Number(productsUsed[2].price) / Number(productsUsed[2].variation.split("ml")?.[0]));
-                price += pricePerML3 * (blend.stock_ml * blend.frag3_pct)
+                price += pricePerML3 * (blend.size_ml * blend.frag3_pct)
             }
             price *= quantity
         }catch(err){
@@ -1410,7 +1423,6 @@ class CartItems{
                         item: itemRes
                     })
                 }catch(err){
-                    console.log("prod didnt exist", item)
                     //TODO: when a product doesn't exist anymore, maybe we let client know
                     continue
                 }
