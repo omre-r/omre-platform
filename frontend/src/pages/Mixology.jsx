@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Flex, Text, Button, SelectField, Grid, SliderField, TableRow, TableCell, TableHead } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, SelectField, Grid, SliderField, Table, TableRow, TableCell, TableHead, TableBody } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { getActiveProductsReq, saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq } from "../requests.js";
 import Navbar from "../components/Navbar";
@@ -21,8 +21,8 @@ const luxuryHeadingStyle = {
 };
 const luxurySubheadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
-  fontWeight: 500,
-  fontSize: "1.3rem",   
+  fontWeight: 600,
+  fontSize: "1.6rem",   
   letterSpacing: "0.3px",
 };
 const luxuryBodyStyle = {
@@ -31,6 +31,20 @@ const luxuryBodyStyle = {
   fontSize: "1.1rem",   
   letterSpacing: "0.2px",
 };
+
+const tableHeaderStyle = {
+    ...luxuryBodyStyle,
+    fontSize: "1.45rem",  
+    fontWeight: 550,
+    letterSpacing: "0.3px",
+}
+
+const tableBodyStyle = {
+    ...luxuryBodyStyle,
+    fontSize: "1.2rem",  
+    fontWeight: 400,
+    letterSpacing: "0.2px",
+}
 
 export default function Mixology() {
     const [message, setMessage] = useState("");
@@ -52,6 +66,7 @@ export default function Mixology() {
     // Load and set products -------------------------------------------------------
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
+    const [loadTable, setLoadTable] = useState(false);
 
     // Loading blends -------------------------------------------------------
     // Calling load blends on button click, getting user saved blends from backend and setting.
@@ -186,6 +201,10 @@ export default function Mixology() {
                 setMessage(result?.message || "Failed to delete blend.");
                 return;
             }
+            // Remove deleted blend from loaded blends to update table
+            // This is done here after a successful delete request to the backend to ensure the frontend state matches the backend data
+            setLoadedBlends((prev) => prev.filter((b) => b.id !== blendId));
+
             setMessage("Blend deleted successfully!");
         } catch (err) {
             setMessage("Failed to delete blend.");
@@ -489,9 +508,13 @@ export default function Mixology() {
                             onClick={handleSaveBlend}>
                             Save Fragrance
                         </Button>
+                        
                         <Button 
                             style={luxuryBodyStyle}
-                            onClick={loadBlends}>
+                            onClick={() => {
+                                loadBlends();
+                                setLoadTable(true);
+                            }}>
                             Load blends
                         </Button>
                     </Flex>
@@ -507,51 +530,66 @@ export default function Mixology() {
                         </Text>
                     )}
                 </View>
-                {/* Place holder for loading blends */}
-                <View marginTop="1rem">
-                    <Text>Loaded Blends Count: {loadedBlends.length}</Text>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell as="th">Fragrance 1</TableCell>
-                            <TableCell as="th">Fragrance 2</TableCell>
-                            <TableCell as="th">Fragrance 3</TableCell>
-                            <TableCell as="th">Size</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    {loadedBlends.map((blend) => (
-                        <TableRow key={blend.id}>
-                            <TableCell>{getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)</TableCell>
-                            <TableCell>{getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)</TableCell>
-                            <TableCell>{getProductNameById(blend.frag3_productid)} ({blend.frag3_pct ? `${blend.frag3_pct}%` : "Not Selected"})</TableCell>
-                            <TableCell>{blend.size_ml} ML</TableCell>
-                            <TableCell>
-                                <Button
-                                    style={luxuryBodyStyle}
-                                    onClick={() => {
-                                    }}>
-                                    Add to Cart
-                                </Button>
-                                <Button
-                                    style={luxuryBodyStyle}
-                                    onClick={() => { 
-                                        handleDeleteBlend(blend.id);
-                                        // Remove deleted blend from loaded blends to update table
-                                        setLoadedBlends((prev) => prev.filter((b) => b.id !== blend.id));
-                                    }}>
-                                    Delete Blend
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                    {/* To see json of loaded blends */}
-                    {/* 
-                    <View marginTop="1rem">
-                        <pre style={{ fontSize: "10px" }}>
-                            {JSON.stringify(loadedBlends, null, 2)}
-                        </pre>
+
+                {loadTable && (
+                    <View marginTop="1rem"  >
+                        {/* This is used to verify that a user has created a specific amount of blends */}
+                        {/* <Text>Loaded Blends Count: {loadedBlends.length}</Text> */}
+
+                        <Text 
+                            style={luxurySubheadingStyle}>
+                            Your Saved Blends
+                        </Text>
+                        {/* If no blends are currently saved to users profile */}
+                        {loadedBlends.length === 0 ? (
+                            <Text style={luxuryBodyStyle}>
+                                No saved blends yet. Create one above and press “Save Fragrance”.
+                            </Text>
+                        ) : ( 
+                            <View
+                                style={{
+                                    backgroundColor: "#300a0a2e",
+                                    borderRadius: "14px",
+                                }}
+                            >
+                            <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell as="th" style={tableHeaderStyle}>Fragrance 1</TableCell>
+                                    <TableCell as="th" style={tableHeaderStyle}>Fragrance 2</TableCell>
+                                    <TableCell as="th" style={tableHeaderStyle}>Fragrance 3</TableCell>
+                                    <TableCell as="th" style={tableHeaderStyle}>Size</TableCell>
+                                    <TableCell as="th" style={tableHeaderStyle}>Actions</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            {loadedBlends.map((blend) => (
+                                <TableRow key={blend.id}>
+                                    <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)</TableCell>
+                                    <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)</TableCell>
+                                    <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag3_productid)} ({blend.frag3_pct ? `${blend.frag3_pct}%` : "Not Selected"})</TableCell>
+                                    <TableCell style={tableBodyStyle}>{blend.size_ml} ML</TableCell>
+                                    <TableCell>
+                                        <Button
+                                            style={luxuryBodyStyle}
+                                            onClick={() => {
+                                            }}>
+                                            Add to Cart
+                                        </Button>
+                                        <Button
+                                            style={luxuryBodyStyle}
+                                            onClick={() => { 
+                                                handleDeleteBlend(blend.id);
+                                            }}>
+                                            Delete Blend
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            </Table>
+                        </View>
+                        )}
                     </View>
-                    */}
-                </View>
+                )}
             </Flex>
         </View>
     </>
