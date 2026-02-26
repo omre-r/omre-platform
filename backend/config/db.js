@@ -805,7 +805,6 @@ class Reviews{
 }
 
 class Orders{
-
     constructor(){
         this.products = new Products();
         this.blends = new Blends()
@@ -880,24 +879,24 @@ class Orders{
         if (!client){
             return prepareRollback((c) => this.cancelOrder(id, cancelreason, c));
         }
-        const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2 AND status != 'canceled' RETURNING *;`;
         try{
+            const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2 AND status != 'canceled' RETURNING *;`;
             const order = (await client.query(query, [cancelreason, id]))?.rows?.[0];
             if (!order){
                 throw new DBError("Order does not exist or already canceled.");
             }
 
-            for (const item of order.items){
-                //checks if an item contains the expected fields
-                if (!item.hasOwn("productType") || !item.hasOwn("productID") || !item.hasOwn("quantity")){
-                    throw new DBError("Item does not contain required fields")
-                }
-
-                //restore stock
-                //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
-                const result = await this.products.increaseProductStock(item.productID, item.quantity, client);
-                if (!result.success){
-                    throw new DBError("Failed to increase product stock");
+            for (const {itemid, quantity, type} of order.items){
+                if (type === "product"){
+                    const result = await this.products.increaseProductStock(itemid, quantity, client);
+                    if (!result.success){
+                        throw new DBError("Failed to increase product stock");
+                    }
+                }else{
+                    const result = await this.blends.increaseBlendStock(itemid, quantity, client);
+                    if (!result.success){
+                        throw new DBError("Failed to increase blend stock");
+                    }
                 }
             }
         }catch(err){
@@ -1467,13 +1466,5 @@ class CartItems{
         return {success: true}
     }
 }
-
-const util = require('util');
-util.inspect.defaultOptions.depth = null;
-setTimeout(async () => {
-    const prods = new Blends()
-    const prod = await prods.getUserBlends("f4683458-6071-705f-924a-c936f7cef21f");
-    console.log(prod)
-},3000)
 
 module.exports = { Users, Products, Reviews, Orders, Blends, CartItems }
