@@ -265,7 +265,7 @@ async function cancelOrder(req, res) {
 }
 
 // path: PUT /orders/:id
-async function updateOrderStatus(req) {
+async function updateOrderStatus(req, res) {
   const {id} = req.params;
   const {status} = req.body;
   const result = await orders.updateOrderStatus(id, status);
@@ -285,9 +285,9 @@ async function getOrder(req, res) {
   return res.json(result);
 }
 
-// path: GET /orders/user/:id
+// path: GET /orders/user/:customerid
 async function getUserOrders(req, res) {
-  const {customerid} = req.query;
+  const {customerid} = req.params;
   const result = await orders.getUserOrders(customerid);
   if (!result.success){
     return res.status(result.status).json(result);
@@ -297,7 +297,8 @@ async function getUserOrders(req, res) {
 
 // path: POST /orders
 async function createOrder(req, res) {
-  const result = await orders.createOrder(req.body);
+  const {customerid} = req.body
+  const result = await orders.createOrder(customerid);
   if (!result.success){
     return res.status(result.status).json(result);
   }

@@ -123,7 +123,6 @@ async function getFilteredProductsReq(filters){
     return data.data.products;
 }
 
-
 async function createProductReq({type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden}){
     const response = await fetch(backendURL + `/products`, {
         method: "POST",
@@ -232,7 +231,7 @@ async function cancelOrderReq(id, cancelreason) {
 async function updateOrderStatusReq(id, status) {
     const response = await fetch(backendURL + `/orders/${id}`, {
         method: "PUT",
-        headers: {"Authorization": `Bearer ${getToken()}`},
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
         body: JSON.stringify({status})
     });
     const data = await response.json()
@@ -265,11 +264,11 @@ async function getUserOrdersReq(customerid){
 }
 
 
-async function createOrderReq({customerid, items, total}){
+async function createOrderReq({customerid}){
     const response = await fetch(backendURL + `/orders`, {
         method: "POST",
         headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
-        body: JSON.stringify({customerid, items, total})
+        body: JSON.stringify({customerid})
     });
     const data = await response.json();
     if (!data.success){

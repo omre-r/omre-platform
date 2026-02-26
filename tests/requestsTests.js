@@ -2,7 +2,7 @@ import {
     getUserReq, getUsersReq, createUserReq, deleteUserReq,
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
-    cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq,
+    cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq,
     createProductFlowReq_LOCAL,
@@ -327,7 +327,7 @@ async function testOrdersFlow() {
         type: "womens_perfume",
         name: "TEST TEST PRODUCT 2",
         variation: "30ml spray",
-        price: 99.99,
+        price: 27.99,
         images: [randomFile1, randomFile3],
         stock_ml: 1000,
         notes: {
@@ -363,6 +363,7 @@ async function testOrdersFlow() {
 
     //Create 2 test blends
     const blend1 = {
+        userid: user1Info.id,
         frag1_productid: product1Info.id, 
         frag2_productid: product3Info.id, 
         frag3_productid: null, 
@@ -372,6 +373,7 @@ async function testOrdersFlow() {
         size_ml: 30
     }
     const blend2 = {
+        userid: user2Info.id,
         frag1_productid: product1Info.id, 
         frag2_productid: product2Info.id, 
         frag3_productid: product3Info.id, 
@@ -398,11 +400,11 @@ async function testOrdersFlow() {
         type: "product"
     }
     const cartItem4 = {
-        itemid: blend1.id,
+        itemid: blend1Info.id,
         type: "blend"
     }
     const cartItem5 = {
-        itemid: product1Info.id,
+        itemid: blend2Info.id,
         type: "blend"
     }
     const newUser1Cart = [
@@ -413,33 +415,113 @@ async function testOrdersFlow() {
         {...cartItem1, quantity: 2},
         {...cartItem2, quantity: 2},
         {...cartItem3, quantity: 2},
-        {...cartItem4, quantity: 2},
         {...cartItem5, quantity: 2}
     ]
-    const updateUser1CartRes = await updateCartReq(user1Info.id, newUser1Cart);
-    const updateUser2CartRes = await updateCartReq(user2Info.id, newUser2Cart);
-    console.log("Updated carts: ", updateUser1CartRes, updateUser2CartRes);
+    await updateCartReq(user1Info.id, newUser1Cart);
+    await updateCartReq(user2Info.id, newUser2Cart);
+    let user1Cart = await getCartReq(user1Info.id);
+    let user2Cart = await getCartReq(user2Info.id);
+    console.log("Updated carts: ", user1Cart, user2Cart);
+
+    console.log(" ")
+
+    //Check items BEFORE creating an order
+    console.log(`Current stocks of products in order 1 are:`)
+    for (const item of user1Cart){
+        if (item.type !== "product") continue
+        console.log(`id ${item.itemid}: ${item.item.stock_ml}` );
+    }
+    console.log(`Current stocks of products in order 2 are:`)
+    for (const item of user2Cart){
+        if (item.type !== "product") continue
+        console.log(`id ${item.itemid}: ${item.item.stock_ml}` );
+    }
+    console.log(" ")
+
+    //Create 2 orders
+    const user1OrderInfo = await createOrderReq({customerid: user1Info.id})
+    const user2OrderInfo = await createOrderReq({customerid: user2Info.id})
+    console.log("Orders:", user1OrderInfo, user2OrderInfo)
+
+    console.log(" ")
+    user1Cart = await getCartReq(user1Info.id);
+    user2Cart = await getCartReq(user2Info.id);    
+    console.log("Current carts: ", user1Cart, user2Cart);
+
+    //Check items AFTER creating an order
+    console.log(`Current stocks of products in order 1 are:`)
+    for (const item of user1Cart){
+        if (item.type !== "product") continue
+        console.log(`id ${item.itemid}: ${item.item.stock_ml}` );
+    }
+    console.log(`Current stocks of products in order 2 are:`)
+    for (const item of user2Cart){
+        if (item.type !== "product") continue
+        console.log(`id ${item.itemid}: ${item.item.stock_ml}` );
+    }
+
+    //update order status with invalid status, this should fail
+    await updateOrderStatusReq(user1OrderInfo.id, "mixeing")
+    console.log("Updated order 1 with an invalid status")
+    //Update order status with valid status
+    await updateOrderStatusReq(user1OrderInfo.id, "mixing")
+    console.log("Updated order 1 with a valid status")
+
+    console.log("Order 1 ", await getOrderReq(user1OrderInfo.id))
+
+
+    const cancelOrder1Res = await cancelOrderReq(user1OrderInfo.id, "dev reasons");
+    const cancelOrder2Res = await cancelOrderReq(user2OrderInfo.id, "dev reasons");
+    console.log("Canceled orders", cancelOrder1Res, cancelOrder2Res)
+    console.log("Orders  ", await getOrderReq(user1OrderInfo.id), await getOrderReq(user2OrderInfo.id))
+
+
+    //Check stocks after canceling
+    user1Cart = await getCartReq(user1Info.id);
+    user2Cart = await getCartReq(user2Info.id);    
+    console.log(`Current stocks of products in order 1 are:`)
+    for (const item of user1Cart){
+        if (item.type !== "product") continue
+        console.log(`id ${item.itemid}: ${item.item.stock_ml}` );
+    }
+    console.log(`Current stocks of products in order 2 are:`)
+    for (const item of user2Cart){
+        if (item.type !== "product") continue
+        console.log(`id ${item.itemid}: ${item.item.stock_ml}` );
+    }
+
+    console.log(" ")
+
+    //test get user orders
+    const user1Orders = await getUserOrdersReq(user1Info.id)
+    const user2Orders = await getUserOrdersReq(user2Info.id)
+    console.log("User 1 orders", user1Orders);
+    console.log("User 2 orders", user2Orders);
 
 
     // Delete everything
+    //delete orders
+    const d1 = await deleteOrderReq(user1OrderInfo.id);
+    const d2 = await deleteOrderReq(user2OrderInfo.id);
+
     // clear carts
-    const d1 = await clearCartReq(user1Info.id)
-    const d2 = await clearCartReq(user2Info.id)
+    const d3 = await clearCartReq(user1Info.id)
+    const d4 = await clearCartReq(user2Info.id)
 
     //delete blends
-    const d3 = await deleteUserBlendReq(blend1Info.id);
-    const d4 = await deleteUserBlendReq(blend2Info.id);
+    const d5 = await deleteUserBlendReq(user1Info.id, blend1Info.id);
+    const d6 = await deleteUserBlendReq(user2Info.id, blend2Info.id);
 
     //delete products
-    const d5 = await deleteProductReq(product1Info.id);
-    const d6 = await deleteProductReq(product2Info.id);
-    const d7 = await deleteProductReq(product3Info.id);
+    const d7 = await deleteProductReq(product1Info.id);
+    const d8 = await deleteProductReq(product2Info.id);
+    const d9 = await deleteProductReq(product3Info.id);
 
     //delete users 
-    const d8 = await deleteUserReq(user1Info.id);
-    const d9 = await deleteUserReq(user2Info.id);
+    const d10 = await deleteUserReq(user1Info.id);
+    const d11 = await deleteUserReq(user2Info.id);
 
-    console.log("deleted: ", d1, d2, d3, d4, d5, d6, d7, d8, d9)
+    console.log("deleted: ", d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11)
 }
 
 async function testCartItemsFlow() {
@@ -488,7 +570,7 @@ async function testCartItemsFlow() {
         type: "womens_perfume",
         name: "TEST TEST PRODUCT 2",
         variation: "30ml spray",
-        price: 99.99,
+        price: 27.99,
         images: [randomFile1, randomFile3],
         stock_ml: 50,
         notes: {
