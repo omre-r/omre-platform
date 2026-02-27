@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Flex, Text, Button, SelectField, Grid, SliderField, Table, TableRow, TableCell, TableHead, TableBody } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, SelectField, Grid, SliderField, Table, TableRow, TableCell, TableHead } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { getActiveProductsReq, saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq } from "../requests.js";
 import Navbar from "../components/Navbar";
@@ -62,19 +62,18 @@ export default function Mixology() {
     const [cologne1Id, setCologne1Id] = useState("");
     const [cologne2Id, setCologne2Id] = useState("");
     const [cologne3Id, setCologne3Id] = useState("");
-
-    // Names for cologne when loading the mixology table 
-    const [cologne1Name, setCologne1Name] = useState("");
-    const [cologne2Name, setCologne2Name] = useState("");
-    const [cologne3Name, setCologne3Name] = useState("");
-
     const [sizeMl, setSizeMl] = useState("30");
+
+    // Third Cologne Selected Mode -------------------------------------------------------
     const [thirdCologneSelectedMode, setThirdCologneSelectedMode] = useState(false);
 
     // Load and set products -------------------------------------------------------
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [loadTable, setLoadTable] = useState(false);
+
+    // Show instructions when i is clicked -------------------------------------------
+    const [showInstructions, setShowInstructions] = useState(false);
 
     // Loading blends -------------------------------------------------------
     // Calling load blends on button click, getting user saved blends from backend and setting.
@@ -356,11 +355,39 @@ export default function Mixology() {
                 marginTop="-2.5rem">
                 Mixology
             </Text>
-            <Text
-                style={luxurySubheadingStyle}
-                marginTop="-.5rem">   
-                Create your own custom fragrance blend by selecting up to three of your favorite fragrances!
-            </Text>
+            <Flex 
+                direction="row"
+                alignItems="center"
+                justifyContent="Center">
+                    <Text
+                        style={luxurySubheadingStyle}
+                        marginTop="-.5rem">   
+                        Create your own custom fragrance blend by selecting up to three of your favorite fragrances!
+                    </Text>
+                    <Text
+                        style={{ 
+                            fontSize: "1.6rem",
+                            marginLeft: "-.75rem",
+                            color: showInstructions ? "darkgray" : "black"
+                        }}
+                        variation="link"
+                        onClick={() => setShowInstructions((prev) => !prev)}
+                    >
+                    🛈
+                    </Text>
+                </Flex>
+                {showInstructions && (
+                    <Text
+                        style={{...luxurySubheadingStyle, fontSize: "1.35rem"}}>
+                        Instructions<br/>
+                        1. Select desired fragrance size. <br/>
+                        2. Select desired fragrances from drop down fields. <br/>
+                        3. If wanted, can select "Add 3rd Fragrance" button to add a 3rd fragrance to the mix. <br/>
+                        4. Can use sliders to change percentages of fragrances within mix. <br/>
+                        5. When satisfied user can add blend to their cart or save blend to their profile. <br/>
+                        6. User can press "Load Blends" button to show a table below of all previously made blends. <br/>
+                    </Text>
+                )}
             <Flex direction="column" alignItems="center" gap="1.25rem">
                 <View 
                     style={{ 
