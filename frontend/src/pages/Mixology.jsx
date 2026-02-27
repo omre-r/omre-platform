@@ -32,18 +32,26 @@ const luxuryBodyStyle = {
   letterSpacing: "0.2px",
 };
 
+// Styles to change font and outline of table headers and body ------------------------------
 const tableHeaderStyle = {
     ...luxuryBodyStyle,
     fontSize: "1.45rem",  
     fontWeight: 550,
     letterSpacing: "0.3px",
+    backgroundColor: "transparent",
+    border: "none",
+    boxShadow: "none",
+    outline: "none",
 }
-
 const tableBodyStyle = {
     ...luxuryBodyStyle,
     fontSize: "1.2rem",  
     fontWeight: 400,
     letterSpacing: "0.2px",
+    backgroundColor: "transparent",
+    border: "none",
+    boxShadow: "none",
+    outline: "none",
 }
 
 export default function Mixology() {
@@ -542,12 +550,15 @@ export default function Mixology() {
                         </Button>
                         
                         <Button 
+                            // Can load and hide blends depending on click -----------------------
                             style={luxuryBodyStyle}
-                            onClick={() => {
-                                loadBlends();
-                                setLoadTable(true);
+                            onClick={async () => {
+                                if (!loadTable) {
+                                    await loadBlends();
+                                }
+                                setLoadTable((prev) => !prev);
                             }}>
-                            Load blends
+                            {loadTable ? "Hide blends" : "Load blends"}
                         </Button>
                     </Flex>
                     {message && (
@@ -580,27 +591,34 @@ export default function Mixology() {
                         ) : ( 
                             <View
                                 style={{
-                                    backgroundColor: "#300a0a2e",
+                                    backgroundColor: "#300a0a38",
                                     borderRadius: "14px",
                                 }}
                             >
-                            <Table>
+                            <Table
+                                style={{             
+                                }}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell as="th" style={tableHeaderStyle}>Fragrance 1</TableCell>
-                                    <TableCell as="th" style={tableHeaderStyle}>Fragrance 2</TableCell>
-                                    <TableCell as="th" style={tableHeaderStyle}>Fragrance 3</TableCell>
-                                    <TableCell as="th" style={tableHeaderStyle}>Size</TableCell>
-                                    <TableCell as="th" style={tableHeaderStyle}>Actions</TableCell>
+                                    <TableCell style={tableHeaderStyle}>Fragrance 1</TableCell>
+                                    <TableCell style={tableHeaderStyle}>Fragrance 2</TableCell>
+                                    <TableCell style={tableHeaderStyle}>Fragrance 3</TableCell>
+                                    <TableCell style={tableHeaderStyle}>Size</TableCell>
+                                    <TableCell style={tableHeaderStyle}>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             {loadedBlends.map((blend) => (
-                                <TableRow key={blend.id}>
+                                <TableRow 
+                                    key={blend.id}
+                                    style={{
+                                    borderTop: "1px solid rgba(0,0,0,0.15)"
+                                }}>
                                     <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)</TableCell>
                                     <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)</TableCell>
-                                    <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag3_productid)} ({blend.frag3_pct ? `${blend.frag3_pct}%` : "Not Selected"})</TableCell>
-                                    <TableCell style={tableBodyStyle}>{blend.size_ml} ML</TableCell>
-                                    <TableCell>
+                                    <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag3_productid)} ({blend.frag3_pct ? `${blend.frag3_pct}%` : "~"})</TableCell>
+                                    <TableCell style={{...tableBodyStyle, whiteSpace: "nowrap" }}>{blend.size_ml} ML</TableCell>
+                                    <TableCell style={tableBodyStyle}>
+                                        <Flex direction="row" gap="0.2rem">
                                         <Button
                                             style={luxuryBodyStyle}
                                             onClick={() => {
@@ -614,6 +632,7 @@ export default function Mixology() {
                                             }}>
                                             Delete Blend
                                         </Button>
+                                        </Flex>
                                     </TableCell>
                                 </TableRow>
                             ))}
