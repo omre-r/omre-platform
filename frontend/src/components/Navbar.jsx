@@ -13,6 +13,7 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/Logo.png";
 import "../styles/Navbar.css";
 import { useAuth } from "../context/AuthContext";
+import cartIcon from "../assets/cartIcon.png";
 
 const luxuryBodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -72,14 +73,6 @@ const Navbar = () => {
       {/* Navbar Links ---------------------------------------------------------------------------------------- */}
       {/* Link to auth is shown if loadingAuth false & is not authenticated */}
       <nav className="nav-links">
-        
-        <Link
-          to="/Cart"
-          className="nav-item"
-          style={luxuryBodyStyle}
-          >
-          Cart
-        </Link>
         {!loadingAuth && !isAuthenticated && (
           <Link to="/Auth" 
           className="nav-item"
@@ -110,6 +103,11 @@ const Navbar = () => {
             Sign Out
           </Link>
         )}
+        {!loadingAuth && isAuthenticated && (
+          <Link to="/Cart" className="nav-item">
+            <img src={cartIcon} alt="Cart" className="cart-icon" />
+          </Link>
+      )}
       </nav>
     </header>
   );
