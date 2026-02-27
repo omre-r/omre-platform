@@ -333,8 +333,8 @@ async function saveBlend(req, res) {
 
 // path: POST /blends/cart
 async function addBlendToCart(req, res) {
+    const {userid} = req.body
     if (USE_ACCESS_TOKENS){
-      const {userid} = req.body
       if (userid !== req.tokenPayload.sub){
         return res.status(401).json({ success: false, message: "Not authenticated" })
       }
