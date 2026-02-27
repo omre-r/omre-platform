@@ -8,7 +8,8 @@ import {
   getCartReq, 
   deleteCartItemReq, 
   createOrderReq,
-  clearCartReq 
+  clearCartReq,
+  getActiveProductsReq,
 } from "../requests.js";
 
 // fonts //
@@ -40,7 +41,32 @@ const bodyStyleBlack = {
 export default function Cart({ customerid }) {
   const [cart, setCart] = useState([]);
   const [loadingCart, setLoadingCart] = useState(true);
+  const [cartLoaded, setCartLoaded] = useState(false);
   const [message, setMessage] = useState("");
+
+
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  
+  useEffect(() => {
+    if (!cartLoaded) return;
+    async function loadProducts() {
+      try {
+        const res = await getActiveProductsReq();
+        setProducts(res);
+      } 
+      catch (err) {
+        console.error(err);
+        setMessage("Failed to load products.");
+      } 
+      finally {
+        // .5 seconds to load the cart this can be changed but its so the page doesnt flash so much
+        setTimeout(() => setLoadingProducts(false), 500);
+      }
+    }
+    loadProducts();
+  }, [cartLoaded]); 
 
   useEffect(() => {
     async function loadCart() {
@@ -92,6 +118,7 @@ setLoadingCart(false);
         setMessage("Failed to load cart.");
       } finally {
         setLoadingCart(false);
+        setCartLoaded(true);
       }
     }
 
@@ -134,7 +161,7 @@ setLoadingCart(false);
           backgroundRepeat: "repeat",
         }}
       >
-        <Text style={headingStyle} marginBottom="2rem">
+        <Text style={headingStyle} marginTop="-2.5rem">
           Your Cart
         </Text>
 
@@ -175,11 +202,10 @@ setLoadingCart(false);
                   marginBottom="1.5rem"
                   backgroundColor="rgba(0,0,0,0.6)"
                   borderRadius="20px"
-                  padding="1.5rem"
+                  padding="1rem"
                 >
-                  <Flex justifyContent="space-between" alignItems="center">
-                    <Flex alignItems="center" gap="1.5rem">
-
+                <Flex justifyContent="space-between" alignItems="center">
+                  <Flex alignItems="center" gap="1.5rem">
                       {cartItem.item?.images?.[0] && (
                         <img
                           src={cartItem.item.images[0]}
@@ -277,8 +303,57 @@ setLoadingCart(false);
                 </View>
               </View>
             </Flex>
-)}
-
+      )}
+      {loadingProducts && (
+        <Text style={bodyStyleBlack}>Loading recommendations...</Text>
+      )}
+      {!loadingProducts &&  (
+      <View>
+        <Text style={headingStyle} marginBottom=".5rem">
+          You May Also Like
+        </Text>
+          <Flex 
+            wrap="wrap"
+            justifyContent="center">
+            {/* TODO: swap is featured to recommendations array */}
+              {products.filter((prod) => prod.isfeatured === true).map((prod) => (
+                <Card
+                  key={prod.id}
+                  variation="elevated"
+                  width="12rem"
+                  margin="1rem"
+                  padding="1.25rem"
+                  backgroundColor="rgba(0, 0, 0, 0.75)"
+                  border="1px solid rgba(151, 33, 0, 0.72)"
+                  borderRadius="8px"
+                >
+                  <Link to={`/fragrances/${prod.id}`}>
+                    <img
+                        src={prod.images?.[0]}
+                        alt={prod.name}
+                        style={{
+                            width: "100%",
+                            objectFit: "cover",
+                            borderRadius: "10px",
+                            display: "block",
+                            alignContent: "center",
+                        }}
+                    />
+                    <Text style={{...bodyStyle, fontSize: ".95rem"}} textAlign="center">
+                      {prod.name}
+                    </Text>
+                    <Text
+                      style={{ ...bodyStyle, fontSize: ".95rem", fontWeight: 600 }}
+                      textAlign="center"
+                    >
+                      ${prod.price}
+                    </Text>
+                  </Link>
+                </Card>
+              ))}
+          </Flex>
+      </View>
+      )}
       </View>
     </>
   );

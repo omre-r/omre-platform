@@ -377,16 +377,22 @@ export default function Mixology() {
                     </Text>
                 </Flex>
                 {showInstructions && (
-                    <Text
-                        style={{...luxurySubheadingStyle, fontSize: "1.35rem"}}>
-                        Instructions<br/>
-                        1. Select desired fragrance size. <br/>
-                        2. Select desired fragrances from drop down fields. <br/>
-                        3. If wanted, can select "Add 3rd Fragrance" button to add a 3rd fragrance to the mix. <br/>
-                        4. Can use sliders to change percentages of fragrances within mix. <br/>
-                        5. When satisfied user can add blend to their cart or save blend to their profile. <br/>
-                        6. User can press "Load Blends" button to show a table below of all previously made blends. <br/>
-                    </Text>
+                    <View>
+                        <Text
+                            style={{...luxurySubheadingStyle, fontSize: "1.35rem", textDecoration: "underline"}}>
+                            Instructions<br/> 
+                        </Text>
+                        
+                        <Text
+                            style={{...luxurySubheadingStyle, fontSize: "1.25rem", textAlign: "left", marginLeft: "25rem"}}>
+                            1. Select desired fragrance size. <br/>
+                            2. Select desired fragrances from drop down fields. <br/>
+                            3. If wanted, can select "Add 3rd Fragrance" button to add a 3rd fragrance to the mix. <br/>
+                            4. Can use sliders to change percentages of fragrances within mix. <br/>
+                            5. When satisfied user can add blend to their cart or save blend to their profile. <br/>
+                            6. User can press "Load Blends" button to show a table below of all previously made blends. <br/>
+                        </Text>
+                    </View>
                 )}
             <Flex direction="column" alignItems="center" gap="1.25rem">
                 <View 
