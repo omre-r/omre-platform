@@ -59,7 +59,17 @@ export default function Mixology() {
     async function loadBlends() {
             setMessage("");
             try {
-                const blends = await getUserSavedBlendsReq();
+                let userid;
+                for (let key of Object.keys(localStorage)){
+                    if (key.includes("idToken")){
+                        const idToken = localStorage.getItem(key)        
+                        const base64 = idToken.split(".")[1]
+                        const decoded = JSON.parse(atob(base64))
+                        userid = decoded.sub
+                        break
+                    };
+                }
+                const blends = await getUserSavedBlendsReq(userid);
                 setLoadedBlends(blends || []);
             }
             catch (error) {
@@ -181,7 +191,17 @@ export default function Mixology() {
     async function handleDeleteBlend(blendId) {
         setMessage("");
         try {
-            const result = await deleteUserBlendReq(blendId);
+            let userid;
+            for (let key of Object.keys(localStorage)){
+                if (key.includes("idToken")){
+                    const idToken = localStorage.getItem(key)        
+                    const base64 = idToken.split(".")[1]
+                    const decoded = JSON.parse(atob(base64))
+                    userid = decoded.sub
+                    break
+                };
+            }
+            const result = await deleteUserBlendReq(userid);
             if (!result || !result.success) {
                 setMessage(result?.message || "Failed to delete blend.");
                 return;
@@ -204,7 +224,6 @@ export default function Mixology() {
                 break
             };
         }
-        console.log(userid)
         return {
             userid,
             frag1_productid: cologne1Id,
