@@ -1,13 +1,16 @@
-
-// Imports for all data and commands
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { View, Card, Flex, Text } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getProductsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
-
 import LuxuryBackground from "../assets/Luxury Background2.png";
+import { 
+  getCartReq, 
+  deleteCartItemReq, 
+  createOrderReq,
+  clearCartReq,
+  getActiveProductsReq,
+} from "../requests.js";
 
 // fonts //
 const headingStyle = {
@@ -25,27 +28,120 @@ const bodyStyle = {
   letterSpacing: "0.5px",
   color: "#FFFFFF",
 };
+
+const bodyStyleBlack = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 400,
+  fontSize: "1.3rem",
+  letterSpacing: "0.5px",
+  color: "#000000",
+};
+
 // functions //
-export default function Home() {
+export default function Cart({ customerid }) {
+  const [cart, setCart] = useState([]);
+  const [loadingCart, setLoadingCart] = useState(true);
+  const [cartLoaded, setCartLoaded] = useState(false);
+  const [message, setMessage] = useState("");
+
+
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const [message, setMessage] = useState("");
-// make sure it loads //
+
+  
   useEffect(() => {
+    if (!cartLoaded) return;
     async function loadProducts() {
       try {
-        const res = await getProductsReq();
+        const res = await getActiveProductsReq();
         setProducts(res);
-      } catch (err) {
+      } 
+      catch (err) {
         console.error(err);
         setMessage("Failed to load products.");
+      } 
+      finally {
+        // .5 seconds to load the cart this can be changed but its so the page doesnt flash so much
+        setTimeout(() => setLoadingProducts(false), 500);
+      }
+    }
+    loadProducts();
+  }, [cartLoaded]); 
+
+  useEffect(() => {
+    async function loadCart() {
+      try {
+        const res = await getCartReq(customerid);
+        setCart(res || []);
+        setCart([
+  {
+    id: 1,
+    quantity: 1,
+    item: {
+      id: 101,
+      name: "Midnight Oud",
+      price: 145,
+      images: [
+        "https://images.unsplash.com/photo-1615634260167-c8cdede054de"
+      ]
+    }
+  },
+  {
+    id: 2,
+    quantity: 2,
+    item: {
+      id: 102,
+      name: "Velvet Amber",
+      price: 120,
+      images: [
+        "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539"
+      ]
+    }
+  },
+  {
+    id: 3,
+    quantity: 1,
+    item: {
+      id: 103,
+      name: "Noir Santal",
+      price: 165,
+      images: [
+        "https://images.unsplash.com/photo-1585386959984-a4155224a1ad"
+      ]
+    }
+  }
+]);
+
+setLoadingCart(false);
+      } catch (err) {
+        console.error(err);
+        setMessage("Failed to load cart.");
       } finally {
-        setLoadingProducts(false);
+        setLoadingCart(false);
+        setCartLoaded(true);
       }
     }
 
-    loadProducts();
-  }, []);
+    loadCart();
+  }, [customerid]);
+
+  async function removeItem(id) {
+    await deleteCartItemReq(id);
+    const updated = await getCartReq(customerid);
+    setCart(updated || []);
+  }
+
+  async function checkout() {
+    await createOrderReq({ customerid });
+    await clearCartReq(customerid);
+    setCart([]);
+    alert("Order placed successfully.");
+  }
+
+  const total = cart.reduce(
+    (sum, item) => sum + (item.item?.price || 0) * item.quantity,
+    0
+  );
 
   return (
     <>
@@ -65,24 +161,199 @@ export default function Home() {
           backgroundRepeat: "repeat",
         }}
       >
-         <Text style={headingStyle} marginBottom="2rem">
-             Your cart is currently empty
-         </Text>
-         
-        <Flex justifyContent="center">
-          <Link to="/fragrances">
-            <View
-              padding="0.75rem 1.75rem"
-              border="1px solid rgba(255,255,255,0.5)"
-              borderRadius="25px"
-              backgroundColor="rgba(0,0,0,0.5)"
-            >
-              <Text style={bodyStyle}>Shop All</Text>
+        <Text style={headingStyle} marginTop="-2.5rem">
+          Your Cart
+        </Text>
+
+        {loadingCart && (
+          <Text style={bodyStyleBlack}>Loading cart...</Text>
+        )}
+
+        {!loadingCart && cart.length === 0 && (
+          <>
+            <Text style={bodyStyleBlack} marginBottom="2rem">
+              Your cart is currently empty
+            </Text>
+
+            <Flex justifyContent="center">
+              <Link to="/fragrances">
+                <View
+                  padding="0.75rem 1.75rem"
+                  border="1px solid rgba(255,255,255,0.5)"
+                  borderRadius="25px"
+                  backgroundColor="rgba(0,0,0,0.5)"
+                  style={{ cursor: "pointer" }}
+                >
+                  <Text style={bodyStyle}>Shop All</Text>
+                </View>
+              </Link>
+            </Flex>
+          </>
+        )}
+
+        {!loadingCart && cart.length > 0 && (
+          <Flex alignItems="flex-start" gap="3rem">
+
+            {/* Left side products window */}
+            <View width="67%">
+              {cart.map((cartItem) => (
+                <Card
+                  key={cartItem.id}
+                  marginBottom="1.5rem"
+                  backgroundColor="rgba(0,0,0,0.6)"
+                  borderRadius="20px"
+                  padding="1rem"
+                >
+                <Flex justifyContent="space-between" alignItems="center">
+                  <Flex alignItems="center" gap="1.5rem">
+                      {cartItem.item?.images?.[0] && (
+                        <img
+                          src={cartItem.item.images[0]}
+                          alt={cartItem.item.name}
+                          style={{
+                            width: "120px",
+                            height: "120px",
+                            objectFit: "cover",
+                            borderRadius: "10px",
+                          }}
+                        />
+                      )}
+
+                      <View>
+                        <Text style={bodyStyle}>
+                          {cartItem.item?.name}
+                        </Text>
+
+                        <Text style={bodyStyle}>
+                          Quantity: {cartItem.quantity}
+                        </Text>
+
+                        <Text style={bodyStyle}>
+                          ${cartItem.item?.price}
+                        </Text>
+                      </View>
+                    </Flex>
+
+                    <View
+                      as="button"
+                      onClick={() => removeItem(cartItem.id)}
+                      padding="0.75rem 1.75rem"
+                      border="1px solid rgba(255,255,255,0.5)"
+                      borderRadius="25px"
+                      backgroundColor="rgba(0,0,0,0.5)"
+                      style={{ cursor: "pointer" }}
+                    >
+                      <Text style={bodyStyle}>Remove</Text>
+                    </View>
+                  </Flex>
+                </Card>
+              ))}
             </View>
-          </Link>
-        </Flex>
 
+                {/* Right side order summary */}
+              <View width="33%" paddingTop="1rem">
 
+                <Text style={headingStyle} marginBottom="2rem">
+                  Order Summary
+                </Text>
+
+                {/* item breakdown */}
+                {cart.map((cartItem) => (
+                  <Flex
+                    key={cartItem.id}
+                    justifyContent="space-between"
+                    marginBottom="1rem"
+                  >
+                    <Text style={bodyStyleBlack}>
+                      {cartItem.item?.name} × {cartItem.quantity}
+                    </Text>
+
+                    <Text style={bodyStyleBlack}>
+                      ${(cartItem.item?.price * cartItem.quantity).toFixed(2)}
+                    </Text>
+                  </Flex>
+                ))}
+
+                <View
+                  height="1px"
+                  backgroundColor="rgba(0,0,0,0.2)"
+                  marginTop="1.5rem"
+                  marginBottom="1.5rem"
+                />
+
+                <Flex justifyContent="space-between" marginBottom="2rem">
+                  <Text style={headingStyle}>Total</Text>
+                  <Text style={headingStyle}>
+                    ${total.toFixed(2)}
+                  </Text>
+                </Flex>
+
+                <View
+                  as="button"
+                  onClick={checkout}
+                  padding="0.75rem 1.75rem"
+                  border="1px solid rgba(255,255,255,0.5)"
+                  borderRadius="25px"
+                  backgroundColor="rgba(0,0,0,0.5)"
+                  style={{ cursor: "pointer" }}
+                >
+                  <Text style={bodyStyle}>
+                      Checkout
+                    </Text>
+                </View>
+              </View>
+            </Flex>
+      )}
+      {loadingProducts && (
+        <Text style={bodyStyleBlack}>Loading recommendations...</Text>
+      )}
+      {!loadingProducts &&  (
+      <View>
+        <Text style={headingStyle} marginBottom=".5rem">
+          You May Also Like
+        </Text>
+          <Flex 
+            wrap="wrap"
+            justifyContent="center">
+            {/* TODO: swap is featured to recommendations array */}
+              {products.filter((prod) => prod.isfeatured === true).map((prod) => (
+                <Card
+                  key={prod.id}
+                  variation="elevated"
+                  width="12rem"
+                  margin="1rem"
+                  padding="1.25rem"
+                  backgroundColor="rgba(0, 0, 0, 0.75)"
+                  border="1px solid rgba(151, 33, 0, 0.72)"
+                  borderRadius="8px"
+                >
+                  <Link to={`/fragrances/${prod.id}`}>
+                    <img
+                        src={prod.images?.[0]}
+                        alt={prod.name}
+                        style={{
+                            width: "100%",
+                            objectFit: "cover",
+                            borderRadius: "10px",
+                            display: "block",
+                            alignContent: "center",
+                        }}
+                    />
+                    <Text style={{...bodyStyle, fontSize: ".95rem"}} textAlign="center">
+                      {prod.name}
+                    </Text>
+                    <Text
+                      style={{ ...bodyStyle, fontSize: ".95rem", fontWeight: 600 }}
+                      textAlign="center"
+                    >
+                      ${prod.price}
+                    </Text>
+                  </Link>
+                </Card>
+              ))}
+          </Flex>
+      </View>
+      )}
       </View>
     </>
   );
