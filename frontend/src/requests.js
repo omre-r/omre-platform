@@ -72,15 +72,6 @@ async function getProductReq(id){
 
 // It would probably be better if the frontend ensured if images were URLs before calling update
 async function updateProductReq(id, updatedFields){
-    // if (updatedFields.hasOwn("images")){
-    //     if (!validateAllImages(updatedFields.images).valid) throw new Error("invalid images");
-    //     const uploadUrls = await Promise.all(updatedFields.images.map(f => getPresignedUrlReq_LOCAL(f)));
-    //     if (uploadUrls.some(url => url === null)) return null;
-        
-    //     const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, updatedFields.images[i])));
-    //     if (uploadResults.some(res => res === null)) return null;
-    //     updatedFields.images = uploadUrls.map(data => data.publicUrl);
-    // }
     const response = await fetch(backendURL + `/products/${id}`, {
         method: "PUT",
         headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
@@ -445,6 +436,14 @@ async function getPresignedUrlReq_LOCAL(file) {
   return response.json();
 }
 
+async function uploadAndGetURlsReq(imageFiles) {
+    if (!validateAllImages(imageFiles).valid) throw new Error("invalid images");
+    const uploadUrls = await Promise.all(imageFiles.map(f => getPresignedUrlReq_LOCAL(f)));
+    const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, imageFiles[i])));
+    if (uploadResults.some(res => res === null)) return null
+    return uploadUrls.map(data => data.publicUrl)
+}
+
 async function createProductFlowReq_LOCAL({type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden}){
     if (!validateAllImages(images).valid) throw new Error("invalid images");
     const uploadUrls = await Promise.all(images.map(f => getPresignedUrlReq_LOCAL(f)));
@@ -563,6 +562,7 @@ clearCartReq = handleError(clearCartReq);
 updateCartReq = handleError(updateCartReq);
 
 // Misc
+uploadAndGetURlsReq = handleError(uploadAndGetURlsReq)
 uploadImageToS3Req = handleError(uploadImageToS3Req);
 getPresignedUrlReq_LOCAL = handleError(getPresignedUrlReq);
 createProductFlowReq_LOCAL = handleError(createProductFlowReq_LOCAL)
@@ -577,5 +577,5 @@ export {
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
     saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
-    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq
+    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq, uploadAndGetURlsReq
 }

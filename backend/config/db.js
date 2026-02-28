@@ -581,12 +581,39 @@ class Products{
             return prepareRollback((c) => this.updateProduct(id, options, c));
         }
         const fields = Object.keys(options);
-        const query = this.formatUpdateQuery(fields);
-        if (!query){
-            throw new DBError("Failed to form update product query")
-        }
+
         try{
-            await client.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
+            const query = this.formatUpdateQuery(fields);
+            if (!query){
+                throw new DBError("Failed to form update product query");
+            }
+
+            let oldImages;
+            if (options.images){
+                oldImages = (await client.query("SELECT images FROM products WHERE id = $1", [id]))?.rows?.[0]?.images
+                if (!oldImages){
+                    throw new DBError("Failed to get old images, or product doesn't exist");
+                }
+            }
+            const updateResult = await client.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id]);
+            if (!updateResult?.rows?.[0]){
+                throw new DBError("Failed to update product");
+            }
+            if (options.images){
+                for (let image of oldImages){
+                    if (options.images.includes(image)) continue;
+
+                    const key = image.split("/").at(-1);
+                    try{
+                        await s3Client.send(new DeleteObjectCommand({
+                            Bucket: BUCKET_NAME,
+                            Key: key
+                        }));
+                    }catch(err){
+                        console.log(err)
+                    }
+                } 
+            }
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
@@ -666,7 +693,7 @@ class Products{
             formattedQuery += `${fields[i]} = $${i + 1}`
             if (i !== fields.length - 1) formattedQuery += ', ';
         }
-        formattedQuery += ` WHERE id = $${i + 1};`
+        formattedQuery += ` WHERE id = $${i + 1} RETURNING *;`
         return formattedQuery
     }
 }
