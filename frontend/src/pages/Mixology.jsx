@@ -91,8 +91,11 @@ export default function Mixology() {
         }
         setMessage("");
         try {
-            const blends = await getUserSavedBlendsReq(userid);
-            setLoadedBlends(blends || []);
+            const data = await getUserSavedBlendsReq(userid);
+            if (!data.success){
+                throw new Error(data.message);
+            }
+            setLoadedBlends(data.data.blends);
         }
         catch (error) {
             setMessage(error.message || "Error loading saved blends.");
@@ -199,8 +202,11 @@ export default function Mixology() {
         setMessage("");
         setLoadingProducts(true);
         try {
-            const prods = await getActiveProductsReq();   // was getProductsReq — hidden products excluded
-            setProducts(prods || [])
+            const data = await getActiveProductsReq();  
+            if (!data.success){
+                throw new Error(data.message)
+            }
+            setProducts(data.data.products)
         }
         catch (error) {
             setMessage(error.message || "Error loading products.");
@@ -223,9 +229,9 @@ export default function Mixology() {
         }
         setMessage("");
         try {
-            const result = await deleteUserBlendReq(userid, blendId);
-            if (!result || !result.success) {
-                setMessage(result?.message || "Failed to delete blend.");
+            const data = await deleteUserBlendReq(userid, blendId);
+            if (!data.success) {
+                setMessage(data.message || "Failed to delete blend.");
                 return;
             }
             // Remove deleted blend from loaded blends to update table
@@ -280,9 +286,9 @@ export default function Mixology() {
         setBlendLoading(true);
         setMessage("");
         try {
-            const result = await saveBlendReq(buildBlendPayload());
-            if (!result) {
-                setMessage("Failed to save blend.");
+            const data = await saveBlendReq(buildBlendPayload());
+            if (!data.success) {
+                setMessage(data.message || "Failed to save blend.");
                 return;
             }
             setMessage("Blend saved successfully!");
@@ -298,17 +304,17 @@ export default function Mixology() {
         setBlendLoading(true);
         setMessage("");
         try {
-            const result = await addBlendToCartReq(buildBlendPayload());
-            if (!result) {
-                setMessage("Something went wrong. Please try again.");
+            const data = await addBlendToCartReq(buildBlendPayload());
+            if (!data.success) {
+                setMessage(data.message || "Something went wrong. Please try again.");
                 return;
             }
             // stockUnavailable comes back as success: false but is NOT a crash
-            if (result.stockUnavailable) {
+            if (data.stockUnavailable) {
                 setMessage(result.message);
                 return;
             }
-            if (!result.success) {
+            if (!data.success) {
                 setMessage(result.message || "Failed to add blend to cart.");
                 return;
             }

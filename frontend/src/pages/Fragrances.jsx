@@ -65,15 +65,15 @@ export default function Home() {
 
   async function loadProducts() {
     try {
-      const res = await getActiveProductsReq();
-      if (!res){
-        throw Error("Error getting active products");
+      const data = await getActiveProductsReq();
+      if (!data.success){
+        throw Error(data.message || "Error getting active products");
       }
       
-      //default sorts by featured
+      //By default, sorts by featured
       const featured = [];
       const others = [];
-      for (const prod of res){
+      for (const prod of data.data.products){
         prod.isfeatured ? featured.push(prod) : others.push(prod);
       }
       setProducts([...featured, ...others]);
@@ -87,13 +87,12 @@ export default function Home() {
 
   async function filterProducts(filters){
       try {
-        const res = await getFilteredProductsReq(filters);
-        if (!res){
-          throw Error("Error getting filtered products");
+        const data = await getFilteredProductsReq(filters);
+        if (!data.success){
+          throw Error(data.message || "Error getting filtered products");
         }
         
-        //default sorts by featured
-        setProducts(res);
+        setProducts(data.data.products);
       } catch (err) {
         console.error(err);
         setMessage("Failed to get filtered products.");

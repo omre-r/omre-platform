@@ -43,20 +43,22 @@ async function testUserFlow(){
     }
 
     //get all users
-    console.log("Getting all users: ", await getUsersReq())
+    let allUsers = (await getUsersReq()).data.users
+    console.log("Getting all users: ", allUsers)
 
     //create 4 users
-    const createdUser1 =  await createUserReq(user1);
-    const createdUser2 =  await createUserReq(user2);
-    const createdUser3 =  await createUserReq(user3);
-    const createdUser4 =  await createUserReq(user4);
+    const createdUser1 =  (await createUserReq(user1)).data.user;
+    const createdUser2 =  (await createUserReq(user2)).data.user;
+    const createdUser3 =  (await createUserReq(user3)).data.user;
+    const createdUser4 =  (await createUserReq(user4)).data.user;
     console.log("Created users", createdUser1, createdUser2, createdUser3, createdUser4)
 
     //get all users
-    console.log("Getting all users: ", await getUsersReq())
+    allUsers = (await getUsersReq()).data.users
+    console.log("Getting all users: ", allUsers)
 
     //get a single user
-    console.log("Getting user 2", await getUserReq(createdUser2.id))
+    console.log("Getting user 2", (await getUserReq(createdUser2.id)).data.user)
 
     //delete users 
     await deleteUserReq(createdUser1.id);
@@ -66,7 +68,8 @@ async function testUserFlow(){
     console.log("Deleting users");
 
     //get all users
-    console.log("Getting all users: ", await getUsersReq())
+    allUsers = (await getUsersReq()).data.users
+    console.log("Getting all users: ", allUsers)
 }
 
 async function testProductFlow(){   
@@ -151,22 +154,21 @@ async function testProductFlow(){
         ishidden: true
     }
     // checks
-    console.log("Get all products: ", await getProductsReq());
-    console.log("Get active products: ", await getActiveProductsReq());
+    console.log("Get all products: ", (await getProductsReq()).data.products);
+    console.log("Get active products: ", (await getActiveProductsReq()).data.products);
 
 
     //create 4 products
-    const createdProduct1 =  await createProductReq(product1);
-    const createdProduct2 =  await createProductReq(product2);
-    const createdProduct3 =  await createProductReq(product3);
+    const createdProduct1 =  (await createProductReq(product1)).data.product;
+    const createdProduct2 =  (await createProductReq(product2)).data.product;
+    const createdProduct3 =  (await createProductReq(product3)).data.product;
     console.log("Created products", createdProduct1, createdProduct2, createdProduct3)
 
     //checks
-    console.log("Get all products: ", await getProductsReq());
-    console.log("Get active products: ", await getActiveProductsReq());
-
+    console.log("Get all products: ", (await getProductsReq()).data.products);
+    console.log("Get active products: ", (await getActiveProductsReq()).data.products);
     // get a single product
-    console.log("Get product 2", await getProductReq(createdProduct2.id))
+    console.log("Get product 2", (await getProductReq(createdProduct2.id)).data.product)
 
     const updatedFields1 = {variation: "95ML supersize", price: 1000, ishidden: true}
     const updatedFields2 = {type: "mens_cologne", name: "smth else"}
@@ -177,8 +179,8 @@ async function testProductFlow(){
     await updateProductReq(createdProduct3.id, updatedFields3);
 
     //checks
-    console.log("Get all products: ", await getProductsReq());
-    console.log("Get active products: ", await getActiveProductsReq());
+    console.log("Get all products: ", (await getProductsReq()).data.products);
+    console.log("Get active products: ", (await getActiveProductsReq()).data.products);
 
     //delete products
     console.log("Deleting products");
@@ -187,21 +189,21 @@ async function testProductFlow(){
     await deleteProductReq(createdProduct3.id);
 
     //checks
-    console.log("Get all products: ", await getProductsReq());
-    console.log("Get active products: ", await getActiveProductsReq());
+    console.log("Get all products: ", (await getProductsReq()).data.products);
+    console.log("Get active products: ", (await getActiveProductsReq()).data.products);
 }
 
 async function testReviewsFlow() {
-    const user =  await createUserReq({
+    const user =  (await createUserReq({
         email: "salehm0529@gmail.com",
         password: "crzy8123",
         firstname: "murad",
         lastname: "saleh",
         role: "user",
         preferrednotes: ["ice cream", "vanilla"]
-    });
+    })).data.user;
 
-    const product =  await createProductReq({
+    const product =  (await createProductReq({
         type: "mens_cologne",
         name: "Cinnamon Cologne",
         variation: "30ml spray",
@@ -215,7 +217,7 @@ async function testReviewsFlow() {
         },
         isfeatured: true,
         ishidden: false
-    });
+    })).data.product;
 
     const review1 = {
         customerid: user.id,
@@ -232,47 +234,47 @@ async function testReviewsFlow() {
         images: [new Blob([])]
     }
 
-    console.log("Get Product reviews: ", await getProductReviewsReq(product.id));
-    console.log("Get User reviews: ", await getUserReviewsReq(user.id));
-    console.log("Get reviews: ", await getReviewsReq());
+    console.log("Get Product reviews: ", (await getProductReviewsReq(product.id))).data.reviews;
+    console.log("Get User reviews: ", (await getUserReviewsReq(user.id))).data.reviews;
+    console.log("Get reviews: ", (await getReviewsReq())).data.reviews;
 
-    const createdReview1 = await createReviewReq(review1)
-    const createdReview2 = await createReviewReq(review2)
+    const createdReview1 = (await createReviewReq(review1)).data.review
+    const createdReview2 = (await createReviewReq(review2)).data.review
     console.log("Created reviews: ", createdReview1, createdReview2)
 
-    console.log("Get Product reviews: ", await getProductReviewsReq(product.id));
-    console.log("Get User reviews: ", await getUserReviewsReq(user.id));
-    console.log("Get reviews: ", await getReviewsReq());
+    console.log("Get Product reviews: ", (await getProductReviewsReq(product.id))).data.reviews;
+    console.log("Get User reviews: ", (await getUserReviewsReq(user.id))).data.reviews;
+    console.log("Get reviews: ", (await getReviewsReq())).data.reviews;
 
 
     console.log("Adding admin responses: ")
     let newResponses1 = [{isadmin: true, message: "Thank you! We strive for quality."}];
-    let newResponses2 = [{isadmin: true, message: "I see, we apologize for the misunderstaning."}];
+    let newResponses2 = [{isadmin: true, message: "I see, we apologize for the misunderstanding."}];
 
     await updateReviewReq(createdReview1.id, {responses: newResponses1});
     await updateReviewReq(createdReview2.id, {responses: newResponses2});
 
-    console.log("Get Product reviews: ", await getProductReviewsReq(product.id));
-    console.log("Get User reviews: ", await getUserReviewsReq(user.id));
-    console.log("Get reviews: ", await getReviewsReq());
+    console.log("Get Product reviews: ", (await getProductReviewsReq(product.id))).data.reviews;
+    console.log("Get User reviews: ", (await getUserReviewsReq(user.id))).data.reviews;
+    console.log("Get reviews: ", (await getReviewsReq())).data.reviews;
 
     console.log("Adding review 2 rebuttal: ")
     newResponses2 = [...newResponses2, {isadmin: false, message: "May I have a refund?"}];
 
     await updateReviewReq(createdReview2.id, {responses: newResponses2});
     
-    console.log("Get Product reviews: ", await getProductReviewsReq(product.id));
-    console.log("Get User reviews: ", await getUserReviewsReq(user.id));
-    console.log("Get reviews: ", await getReviewsReq());
+    console.log("Get Product reviews: ", (await getProductReviewsReq(product.id))).data.reviews;
+    console.log("Get User reviews: ", (await getUserReviewsReq(user.id))).data.reviews;
+    console.log("Get reviews: ", (await getReviewsReq())).data.reviews;
 
 
     console.log("Deleting reviews")
     await deleteReviewReq(createdReview1.id);
     await deleteReviewReq(createdReview2.id);
 
-    console.log("Get Product reviews: ", await getProductReviewsReq(product.id));
-    console.log("Get User reviews: ", await getUserReviewsReq(user.id));
-    console.log("Get reviews: ", await getReviewsReq());
+    console.log("Get Product reviews: ", (await getProductReviewsReq(product.id))).data.reviews;
+    console.log("Get User reviews: ", (await getUserReviewsReq(user.id))).data.reviews;
+    console.log("Get reviews: ", (await getReviewsReq())).data.reviews;
 
 
 
@@ -297,8 +299,10 @@ async function testOrdersFlow() {
         lastname: "kidwai",
         preferrednotes: ["Cinnamon", "Banana"]
     }
-    const user1Info = await createUserReq(user1);
-    const user2Info = await createUserReq(user2);
+
+    const user1Info = (await createUserReq(user1)).data.user;
+    const user2Info = (await createUserReq(user2)).data.user;
+
     console.log("Test user ids: ", user1Info.id, user2Info.id)
 
     //Create 3 test products
@@ -356,9 +360,9 @@ async function testOrdersFlow() {
         ishidden: true
     }
 
-    const product1Info = await createProductFlowReq_LOCAL(product1);
-    const product2Info = await createProductFlowReq_LOCAL(product2);
-    const product3Info = await createProductFlowReq_LOCAL(product3)
+    const product1Info = (await createProductFlowReq_LOCAL(product1)).data.product;
+    const product2Info = (await createProductFlowReq_LOCAL(product2)).data.product;
+    const product3Info = (await createProductFlowReq_LOCAL(product3)).data.product;
     console.log("Test Product ids: ", product1Info.id, product2Info.id, product3Info.id)
 
     //Create 2 test blends
@@ -382,8 +386,8 @@ async function testOrdersFlow() {
         frag3_pct: 45, 
         size_ml: 30
     }
-    const blend1Info = await saveBlendReq(blend1);
-    const blend2Info = await saveBlendReq(blend2);
+    const blend1Info = (await saveBlendReq(blend1)).data.blend;
+    const blend2Info = (await saveBlendReq(blend2)).data.blend;
     console.log("Test blend ids: ", blend1Info.id, blend2Info.id);
 
     //Create test carts for user 1 and user 2
@@ -419,8 +423,8 @@ async function testOrdersFlow() {
     ]
     await updateCartReq(user1Info.id, newUser1Cart);
     await updateCartReq(user2Info.id, newUser2Cart);
-    let user1Cart = await getCartReq(user1Info.id);
-    let user2Cart = await getCartReq(user2Info.id);
+    let user1Cart = (await getCartReq(user1Info.id)).data.cart;
+    let user2Cart = (await getCartReq(user2Info.id)).data.cart;
     console.log("Updated carts: ", user1Cart, user2Cart);
 
     console.log(" ")
@@ -439,13 +443,13 @@ async function testOrdersFlow() {
     console.log(" ")
 
     //Create 2 orders
-    const user1OrderInfo = await createOrderReq({customerid: user1Info.id})
-    const user2OrderInfo = await createOrderReq({customerid: user2Info.id})
+    const user1OrderInfo = (await createOrderReq({customerid: user1Info.id})).data.order
+    const user2OrderInfo = (await createOrderReq({customerid: user2Info.id})).data.order
     console.log("Orders:", user1OrderInfo, user2OrderInfo)
 
     console.log(" ")
-    user1Cart = await getCartReq(user1Info.id);
-    user2Cart = await getCartReq(user2Info.id);    
+    user1Cart = (await getCartReq(user1Info.id)).data.cart;
+    user2Cart = (await getCartReq(user2Info.id)).data.cart;    
     console.log("Current carts: ", user1Cart, user2Cart);
 
     //Check items AFTER creating an order
@@ -467,18 +471,18 @@ async function testOrdersFlow() {
     await updateOrderStatusReq(user1OrderInfo.id, "mixing")
     console.log("Updated order 1 with a valid status")
 
-    console.log("Order 1 ", await getOrderReq(user1OrderInfo.id))
+    console.log("Order 1 ", (await getOrderReq(user1OrderInfo.id)).data.order)
 
 
     const cancelOrder1Res = await cancelOrderReq(user1OrderInfo.id, "dev reasons");
     const cancelOrder2Res = await cancelOrderReq(user2OrderInfo.id, "dev reasons");
     console.log("Canceled orders", cancelOrder1Res, cancelOrder2Res)
-    console.log("Orders  ", await getOrderReq(user1OrderInfo.id), await getOrderReq(user2OrderInfo.id))
+    console.log("Orders  ", (await getOrderReq(user1OrderInfo.id)).data.order, (await getOrderReq(user2OrderInfo.id)).data.order)
 
 
     //Check stocks after canceling
-    user1Cart = await getCartReq(user1Info.id);
-    user2Cart = await getCartReq(user2Info.id);    
+    user1Cart = (await getCartReq(user1Info.id)).data.cart;
+    user2Cart = (await getCartReq(user2Info.id)).data.cart;    
     console.log(`Current stocks of products in order 1 are:`)
     for (const item of user1Cart){
         if (item.type !== "product") continue
@@ -493,8 +497,8 @@ async function testOrdersFlow() {
     console.log(" ")
 
     //test get user orders
-    const user1Orders = await getUserOrdersReq(user1Info.id)
-    const user2Orders = await getUserOrdersReq(user2Info.id)
+    const user1Orders = (await getUserOrdersReq(user1Info.id)).data.orders
+    const user2Orders = (await getUserOrdersReq(user2Info.id)).data.orders
     console.log("User 1 orders", user1Orders);
     console.log("User 2 orders", user2Orders);
 
@@ -540,8 +544,8 @@ async function testCartItemsFlow() {
         lastname: "kidwai",
         preferrednotes: ["Cinnamon", "Banana"]
     }
-    const user1Info = await createUserReq(user1);
-    const user2Info = await createUserReq(user2);
+    const user1Info = (await createUserReq(user1)).data.user;
+    const user2Info = (await createUserReq(user2)).data.user;
     console.log("Test user ids: ", user1Info.id, user2Info.id)
 
     //Create 3 test products
@@ -599,19 +603,19 @@ async function testCartItemsFlow() {
         ishidden: true
     }
 
-    const product1Info = await createProductFlowReq_LOCAL(product1);
-    const product2Info = await createProductFlowReq_LOCAL(product2);
-    const product3Info = await createProductFlowReq_LOCAL(product3)
+    const product1Info = (await createProductFlowReq_LOCAL(product1)).data.product;
+    const product2Info = (await createProductFlowReq_LOCAL(product2)).data.product;
+    const product3Info = (await createProductFlowReq_LOCAL(product3)).data.product;
     console.log("Test Product ids: ", product1Info.id, product2Info.id, product3Info.id)
 
     let user1Cart;
     let user2Cart;
     //Get user 1's cart
-    user1Cart = await getCartReq(user1Info.id)
+    user1Cart = (await getCartReq(user1Info.id)).data.cart;
     console.log("user 1 cart: ", user1Cart);
 
     //Get user 2's cart
-    user2Cart = await getCartReq(user2Info.id)
+    user2Cart = (await getCartReq(user2Info.id)).data.cart;
     console.log("user 2 cart: ", user2Cart);
 
 
@@ -631,17 +635,17 @@ async function testCartItemsFlow() {
         itemid: product3Info.id,
         type: "product"
     }
-    const cartItem1Info = await createCartItemReq(cartItem1);
-    const cartItem2Info = await createCartItemReq(cartItem2);
-    const cartItem3Info = await createCartItemReq(cartItem3);
+    const cartItem1Info = (await createCartItemReq(cartItem1)).data.cartItem;
+    const cartItem2Info = (await createCartItemReq(cartItem2)).data.cartItem;
+    const cartItem3Info = (await createCartItemReq(cartItem3)).data.cartItem;
     console.log("Created cart items: ", cartItem1Info, cartItem2Info, cartItem3Info);
 
     //Get user 1's cart
-    user1Cart = await getCartReq(user1Info.id)
+    user1Cart = (await getCartReq(user1Info.id)).data.cart;
     console.log("user 1 cart: ", user1Cart);
 
     //Get user 2's cart
-    user2Cart = await getCartReq(user2Info.id)
+    user2Cart = (await getCartReq(user2Info.id)).data.cart;
     console.log("user 2 cart: ", user2Cart);
 
     //add 2 product 2s to user 1's cart and delete 1 product 3 from user 2's cart
@@ -655,19 +659,19 @@ async function testCartItemsFlow() {
         itemid: product2Info.id,
         type: "product"
     }
-    const cartItem4Info = await createCartItemReq(cartItem4);
-    const cartItem5Info = await createCartItemReq(cartItem5);
+    const cartItem4Info = (await createCartItemReq(cartItem4)).data.cartItem;
+    const cartItem5Info = (await createCartItemReq(cartItem5)).data.cartItem;
     console.log("Created cart items: ", cartItem4Info, cartItem5Info);
 
     const deleteCartItem3Res = await deleteCartItemReq(cartItem3Info.id)
     console.log("Deleted cart item: ", deleteCartItem3Res);
 
     //Get user 1's cart
-    user1Cart = await getCartReq(user1Info.id)
+    user1Cart = (await getCartReq(user1Info.id)).data.cart;
     console.log("user 1 cart: ", user1Cart);
 
     //Get user 2's cart
-    user2Cart = await getCartReq(user2Info.id)
+    user2Cart = (await getCartReq(user2Info.id)).data.cart;
     console.log("user 2 cart: ", user2Cart);
 
 
@@ -677,11 +681,11 @@ async function testCartItemsFlow() {
     console.log("Cleared everyone's cart");
 
     //Get user 1's cart
-    user1Cart = await getCartReq(user1Info.id)
+    user1Cart = (await getCartReq(user1Info.id)).data.cart;
     console.log("user 1 cart: ", user1Cart);
 
     //Get user 2's cart
-    user2Cart = await getCartReq(user2Info.id)
+    user2Cart = (await getCartReq(user2Info.id)).data.cart;
     console.log("user 2 cart: ", user2Cart);
 
     //restore states before clearing
@@ -692,16 +696,16 @@ async function testCartItemsFlow() {
     const newUser2Cart = [
         {...cartItem2, quantity: 1}
     ]
-    const updateUser1CartRes = await updateCartReq(user1Info.id, newUser1Cart);
-    const updateUser2CartRes = await updateCartReq(user2Info.id, newUser2Cart);
+    const updateUser1CartRes = (await updateCartReq(user1Info.id, newUser1Cart)).data.cart;
+    const updateUser2CartRes = (await updateCartReq(user2Info.id, newUser2Cart)).data.cart;
     console.log("Updated carts: ", updateUser1CartRes, updateUser2CartRes);
 
     //Get user 1's cart
-    user1Cart = await getCartReq(user1Info.id)
+    user1Cart = (await getCartReq(user1Info.id)).data.cart;
     console.log("user 1 cart: ", user1Cart);
 
     //Get user 2's cart
-    user2Cart = await getCartReq(user2Info.id)
+    user2Cart = (await getCartReq(user2Info.id)).data.cart;
     console.log("user 2 cart: ", user2Cart);
 
     //clear everyone's cart
@@ -710,11 +714,11 @@ async function testCartItemsFlow() {
     
     console.log("Cleared everyone's cart");
     //Get user 1's cart
-    user1Cart = await getCartReq(user1Info.id)
+    user1Cart = (await getCartReq(user1Info.id)).data.cart;
     console.log("user 1 cart: ", user1Cart);
 
     //Get user 2's cart
-    user2Cart = await getCartReq(user2Info.id)
+    user2Cart = (await getCartReq(user2Info.id)).data.cart;
     console.log("user 2 cart: ", user2Cart);
 
     //delete users 
@@ -732,7 +736,7 @@ async function testFlows() {
     // await testUserFlow()
     // await testProductFlow()
     // await testReviewsFlow()
-    await testOrdersFlow()
+    // await testOrdersFlow()
     // await testCartItemsFlow()
 }
 

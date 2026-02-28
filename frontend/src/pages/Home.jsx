@@ -35,8 +35,11 @@ export default function Home() {
   useEffect(() => {
     async function loadProducts() {
       try {
-        const res = await getActiveProductsReq();
-        setProducts(res);
+        const data = await getActiveProductsReq();
+        if (!data.success){
+          throw new Error(data.message)
+        }
+        setProducts(data.data.products);
       } catch (err) {
         console.error(err);
         setMessage("Failed to load products.");
