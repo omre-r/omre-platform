@@ -254,8 +254,11 @@ export default function ProductsPanel() {
         setMessage("");
         setLoadingProducts(true);
         try {
-            const prods = await getProductsReq();
-            setProducts(prods || [])
+            const data = await getProductsReq();
+            if (!data.success){
+                throw new Error(data.message)
+            }
+            setProducts(data.data.products)
         }
         catch (error) {
             setMessage(error.message || "Error loading products.");
@@ -280,7 +283,10 @@ export default function ProductsPanel() {
                 return;
             }
 
-            await deleteProductReq(id);
+            const data = await deleteProductReq(id);
+            if (!data.success){
+                throw new Error(data.message);
+            }
             setMessage("Deleted product: " + selectedProduct.name);
             resetToIdle();
             await loadProducts();
@@ -307,7 +313,10 @@ export default function ProductsPanel() {
             // Check if product is hidden, will hide or unhide depending on which
             const hiddenStatus = !selectedProduct.ishidden;
 
-            await updateProductReq(id, { ishidden: hiddenStatus });
+            const data = await updateProductReq(id, { ishidden: hiddenStatus });
+            if (!data.success){
+                throw new Error(data.message);
+            }
             setMessage(`${hiddenStatus ? "Hidden" : "Unhidden"}: ${selectedProduct.name}`);
             await loadProducts();
             resetToIdle();
@@ -354,8 +363,11 @@ export default function ProductsPanel() {
                 setMessage(validNums);
                 return;
             }
-            const newProduct = await createProductReq(form);
-            console.log("createProductReq returned:", newProduct);
+            const data = await createProductReq(form);
+            if (!data.success){
+                throw new Error(data.message);
+            }
+            const newProduct = data.data.product;
             setMessage(`Created: ${newProduct.name}`);
             resetToIdle();
             await loadProducts();
@@ -407,7 +419,10 @@ export default function ProductsPanel() {
             if (draft.images.length > 0) {
                 form.images = draft.images;
             }
-            await updateProductReq(id, form);
+            const data = await updateProductReq(id, form);
+            if (!data.success){
+                throw new Error(data.message);
+            }
             setMessage(`Updated: ${form.name}`);
             await loadProducts();
             resetToIdle();
@@ -752,6 +767,7 @@ export default function ProductsPanel() {
                                             width={"100%"}
                                             height={"200px"}
                                             wrap={"nowrap"}
+                                            
                                             gap={"12px"}
                                             alignItems={"center"}
                                             backgroundColor={"rgb(253, 248, 245)"}
@@ -762,6 +778,7 @@ export default function ProductsPanel() {
                                                     <View 
                                                     key={url}
                                                     width={"200px"}
+                                                    shrink={0}
                                                     border={"solid gray"}
                                                     borderWidth={"5px"}
                                                     borderRadius={"10px"}

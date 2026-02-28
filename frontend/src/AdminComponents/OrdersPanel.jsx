@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, Flex, Text, Button, View } from "@aws-amplify/ui-react";
-
+import { getUserOrdersReq } from "../requests";
 
 // Custom Styling for fonts and amplify ui --------------------------------------
 const luxuryHeadingStyle = {
@@ -33,7 +33,7 @@ export default function OrdersPanel() {
       setMessage("");
       setLoadingOrders(true);
 
-      const data = await getOrdersReq();
+      const data = (await getUserOrdersReq())?.data?.orders;
 
       if (!data) {
           setMessage("Error loading orders.");
@@ -51,7 +51,7 @@ export default function OrdersPanel() {
       setLoadingOrder(true);
       setSelectedOrder(null);
 
-      const data = await getOrderReq(orderId);
+      const data = (await getOrderReq(orderId))?.data?.order;
 
       if (!data) {
           setMessage("Error loading order.");

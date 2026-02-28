@@ -53,8 +53,11 @@ export default function Cart({ customerid }) {
     if (!cartLoaded) return;
     async function loadProducts() {
       try {
-        const res = await getActiveProductsReq();
-        setProducts(res);
+        const data = await getActiveProductsReq();
+        if (!data.success){
+          throw new Error(data.message);
+        }
+        setProducts(data.data.products);
       } 
       catch (err) {
         console.error(err);
@@ -71,46 +74,49 @@ export default function Cart({ customerid }) {
   useEffect(() => {
     async function loadCart() {
       try {
-        const res = await getCartReq(customerid);
-        setCart(res || []);
+        const data = await getCartReq(customerid);
+        if (!data.success){
+          throw new Error(data.message);
+        }
+        setCart(data.data.cart);
         setCart([
-  {
-    id: 1,
-    quantity: 1,
-    item: {
-      id: 101,
-      name: "Midnight Oud",
-      price: 145,
-      images: [
-        "https://images.unsplash.com/photo-1615634260167-c8cdede054de"
-      ]
-    }
-  },
-  {
-    id: 2,
-    quantity: 2,
-    item: {
-      id: 102,
-      name: "Velvet Amber",
-      price: 120,
-      images: [
-        "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539"
-      ]
-    }
-  },
-  {
-    id: 3,
-    quantity: 1,
-    item: {
-      id: 103,
-      name: "Noir Santal",
-      price: 165,
-      images: [
-        "https://images.unsplash.com/photo-1585386959984-a4155224a1ad"
-      ]
-    }
-  }
-]);
+          {
+            id: 1,
+            quantity: 1,
+            item: {
+              id: 101,
+              name: "Midnight Oud",
+              price: 145,
+              images: [
+                "https://images.unsplash.com/photo-1615634260167-c8cdede054de"
+              ]
+            }
+          },
+          {
+            id: 2,
+            quantity: 2,
+            item: {
+              id: 102,
+              name: "Velvet Amber",
+              price: 120,
+              images: [
+                "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539"
+              ]
+            }
+          },
+          {
+            id: 3,
+            quantity: 1,
+            item: {
+              id: 103,
+              name: "Noir Santal",
+              price: 165,
+              images: [
+                "https://images.unsplash.com/photo-1585386959984-a4155224a1ad"
+              ]
+            }
+          }
+        ]);
 
 setLoadingCart(false);
       } catch (err) {
@@ -126,16 +132,39 @@ setLoadingCart(false);
   }, [customerid]);
 
   async function removeItem(id) {
-    await deleteCartItemReq(id);
-    const updated = await getCartReq(customerid);
-    setCart(updated || []);
+    try{
+      const deleteData = await deleteCartItemReq(id);
+      if (!deleteData.success){
+        throw new Error(deleteData.message);
+      }
+
+      const cartData = await getCartReq(customerid);
+      if (!cartData.success){
+        throw new Error(cartData.message);
+      }
+      setCart(cartData.data.cart);
+    }catch(err){
+      console.error(err);
+      setCart([])
+    }
   }
 
   async function checkout() {
-    await createOrderReq({ customerid });
-    await clearCartReq(customerid);
-    setCart([]);
-    alert("Order placed successfully.");
+    try{
+      const createData = await createOrderReq({ customerid });
+      if (!createData.success){
+        throw new Error(createData.message);
+      }
+
+      const clearData = await clearCartReq(customerid);
+      if (!clearData.success){
+        throw new Error(clearData.message);
+      }
+      setCart([])
+      alert("Order placed successfully.");
+    }catch(err){
+      console.error(err);
+    }
   }
 
   const total = cart.reduce(
