@@ -85,6 +85,7 @@ export default function UsersPanel() {
             Loading users...
         </Text>);
     }
+console.log("selectedUser object:", selectedUser);
 
     return (
         <Flex 
@@ -185,12 +186,12 @@ export default function UsersPanel() {
                         gap=".2rem" 
                         >
                             <Text>Email: {selectedUser.email}</Text>
-                            <Text>First Name: {selectedUser.first_name} </Text>
-                            <Text>Last Name: {selectedUser.last_name} </Text>
+                            <Text>Name: {selectedUser.first_name} {selectedUser.last_name}</Text>
                             <Text>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
-                            <Text>Admin Status: {selectedUser.is_admin ? "Yes" : "No"}</Text>
-                            <Text>Created: {selectedUser.created_at}</Text>
-                            <Text>Last Login: {selectedUser.last_login ? selectedUser.last_login : "--"}</Text>
+                            <Text>Admin Permissions: {selectedUser.is_admin ? "Yes" : "No"}</Text>
+                            <Text>Created: {new Date(selectedUser.created_at).toLocaleString()}</Text>
+                            <Text>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString(): "--"}</Text>
+
                             <Button 
                                 style={luxuryBodyStyle}
                                 onClick={() => setSelectedUser(null)}
@@ -206,8 +207,6 @@ export default function UsersPanel() {
 }
 
 // To do list
-// TODO: Make the styling of the cards and information better eventually for the panels
 // TODO: if no users make a condition, IE users = 0 
 // TODO: Talk to Ayman about last login
-// TODO: Edit created_at date to look cleaner
 // TODO: Check that user information isnt missing like response.ok check with the data

@@ -41,41 +41,47 @@ export function AuthProvider({ children }) {
     // Will set current user and make sure to setAuthentification, if invalid will throw and set info false or null
     // Temporary debug checks to see in console if tokens are there
     async function refreshAuth() {
+    try {
+        const currentUser = await getCurrentUser(); 
+        setUser(currentUser);
+        setIsAuthenticated(true);
+
+        // Fetch session and update last_login
         try {
-            const currentUser = await getCurrentUser(); 
-            setUser(currentUser);
-            setIsAuthenticated(true);
-            // TEMP DEBUG CHECK CONSOLE LOG
-            //console.log("CURRENT USER:", currentUser);
+            const session = await fetchAuthSession();
+            const token = session.tokens.accessToken?.jwtToken;
 
-            // Check to see if admin or within specific group ------------------------------------
-            try {
-                
-                const session = await fetchAuthSession();
-                // TEMP DEBUG CHECK CONSOLE LOG
-                //console.log("AUTH SESSION:", session);
-                //console.log("ID TOKEN PAYLOAD:", session?.tokens?.idToken?.payload);
-                //console.log("ACCESS TOKEN PAYLOAD:", session?.tokens?.accessToken?.payload);
-
-                const groups = session?.tokens?.idToken?.payload?.["cognito:groups"] || [];
-                setIsAdmin(Array.isArray(groups) && groups.includes("admin"));
-            } 
-            // If fails, user is not an admin
-            catch {
-                setIsAdmin(false);
-                }
-        } 
-        // Not logged in? Null user, not authenticated, not an admin -------------------------------------------
-        catch {
-            setUser(null);
-            setIsAuthenticated(false);
-            setIsAdmin(false);
-        } 
-        // Authorization has been complete, setting to false ----------------------------------------------
-        finally {
-            setLoadingAuth(false);
+            if (token) {
+                await fetch(`/users/${currentUser.attributes.sub}/last-login`, {
+                    method: "PUT",
+                    headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                    },
+                });
+            }
+        } catch (err) {
+            console.error("Failed to update last_login:", err);
         }
+
+        // Check if admin
+        try {
+            const session = await fetchAuthSession();
+            const groups = session?.tokens?.accessToken?.payload?.["cognito:groups"] || [];
+            setIsAdmin(Array.isArray(groups) && groups.includes("admin"));
+        } catch {
+            setIsAdmin(false);
+        }
+
+    } catch {
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsAdmin(false);
+    } finally {
+        setLoadingAuth(false);
     }
+}
+
 
     // Logout function -----------------------------------------
     // If signed out sets user to null and any further authentification to false

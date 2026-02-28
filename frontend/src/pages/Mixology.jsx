@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { View, Flex, Text, Button, SelectField, Grid, SliderField } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, SelectField, Grid, SliderField, Table, TableRow, TableCell, TableHead } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getActiveProductsReq, saveBlendReq, addBlendToCartReq } from "../requests.js";
+import { getActiveProductsReq, saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import Omre2 from "../assets/Mixology/OMRE2.png";
@@ -21,8 +21,8 @@ const luxuryHeadingStyle = {
 };
 const luxurySubheadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
-  fontWeight: 500,
-  fontSize: "1.3rem",   
+  fontWeight: 600,
+  fontSize: "1.6rem",   
   letterSpacing: "0.3px",
 };
 const luxuryBodyStyle = {
@@ -31,6 +31,28 @@ const luxuryBodyStyle = {
   fontSize: "1.1rem",   
   letterSpacing: "0.2px",
 };
+
+// Styles to change font and outline of table headers and body ------------------------------
+const tableHeaderStyle = {
+    ...luxuryBodyStyle,
+    fontSize: "1.45rem",  
+    fontWeight: 550,
+    letterSpacing: "0.3px",
+    backgroundColor: "transparent",
+    border: "none",
+    boxShadow: "none",
+    outline: "none",
+}
+const tableBodyStyle = {
+    ...luxuryBodyStyle,
+    fontSize: "1.2rem",  
+    fontWeight: 400,
+    letterSpacing: "0.2px",
+    backgroundColor: "transparent",
+    border: "none",
+    boxShadow: "none",
+    outline: "none",
+}
 
 export default function Mixology() {
     const [message, setMessage] = useState("");
@@ -41,11 +63,44 @@ export default function Mixology() {
     const [cologne2Id, setCologne2Id] = useState("");
     const [cologne3Id, setCologne3Id] = useState("");
     const [sizeMl, setSizeMl] = useState("30");
+
+    // Third Cologne Selected Mode -------------------------------------------------------
     const [thirdCologneSelectedMode, setThirdCologneSelectedMode] = useState(false);
 
     // Load and set products -------------------------------------------------------
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
+    const [loadTable, setLoadTable] = useState(false);
+
+    // Show instructions when i is clicked -------------------------------------------
+    const [showInstructions, setShowInstructions] = useState(false);
+
+    // Loading blends -------------------------------------------------------
+    // Calling load blends on button click, getting user saved blends from backend and setting.
+    const [loadedBlends, setLoadedBlends] = useState([]);
+    async function loadBlends() {
+        let userid;
+        for (let key of Object.keys(localStorage)){
+            if (key.includes("idToken")){
+                const idToken = localStorage.getItem(key)        
+                const base64 = idToken.split(".")[1]
+                const decoded = JSON.parse(atob(base64))
+                userid = decoded.sub
+                break
+            };
+        }
+        setMessage("");
+        try {
+            const data = await getUserSavedBlendsReq(userid);
+            if (!data.success){
+                throw new Error(data.message);
+            }
+            setLoadedBlends(data.data.blends);
+        }
+        catch (error) {
+            setMessage(error.message || "Error loading saved blends.");
+        }
+    }
 
     // Max and min percentages for 2 fragrance and 3 fragrance modes
     const MIN_PCT = 5;
@@ -131,13 +186,27 @@ export default function Mixology() {
         return product.productid || product.product_id || product.id;
     }
 
+    // Grab the product name by using the ID ------------------------------------------
+    function getProductNameById(productId) {
+        // If no product id return empty string, this will happen if a blend does not have a third fragrance
+        if (!productId) { 
+            return "";
+        }
+        // Find the product in the products list that matches the id, accounting for different possible key names for the id in the product object
+        const match = products.find((p) => String(getProductId(p)) === String(productId));
+        return match?.name || "Unknown";
+    }
+
     // Load products from backend ---------------------------------------
     async function loadProducts() {
         setMessage("");
         setLoadingProducts(true);
         try {
-            const prods = await getActiveProductsReq();   // was getProductsReq — hidden products excluded
-            setProducts(prods || [])
+            const data = await getActiveProductsReq();  
+            if (!data.success){
+                throw new Error(data.message)
+            }
+            setProducts(data.data.products)
         }
         catch (error) {
             setMessage(error.message || "Error loading products.");
@@ -147,10 +216,48 @@ export default function Mixology() {
         }
     }
 
+    async function handleDeleteBlend(blendId) {
+        let userid;
+        for (let key of Object.keys(localStorage)){
+            if (key.includes("idToken")){
+                const idToken = localStorage.getItem(key)        
+                const base64 = idToken.split(".")[1]
+                const decoded = JSON.parse(atob(base64))
+                userid = decoded.sub
+                break
+            };
+        }
+        setMessage("");
+        try {
+            const data = await deleteUserBlendReq(userid, blendId);
+            if (!data.success) {
+                setMessage(data.message || "Failed to delete blend.");
+                return;
+            }
+            // Remove deleted blend from loaded blends to update table
+            // This is done here after a successful delete request to the backend to ensure the frontend state matches the backend data
+            setLoadedBlends((prev) => prev.filter((b) => b.id !== blendId));
+
+            setMessage("Blend deleted successfully!");
+        } catch (err) {
+            setMessage("Failed to delete blend.");
+        }
+    }
 
     // Builds the blend payload from current state to send to backend
     function buildBlendPayload() {
+        let userid;
+        for (let key of Object.keys(localStorage)){
+            if (key.includes("idToken")){
+                const idToken = localStorage.getItem(key)        
+                const base64 = idToken.split(".")[1]
+                const decoded = JSON.parse(atob(base64))
+                userid = decoded.sub
+                break
+            };
+        }
         return {
+            userid,
             frag1_productid: cologne1Id,
             frag2_productid: cologne2Id,
             frag3_productid: thirdCologneSelectedMode && cologne3Id ? cologne3Id : null,
@@ -179,9 +286,9 @@ export default function Mixology() {
         setBlendLoading(true);
         setMessage("");
         try {
-            const result = await saveBlendReq(buildBlendPayload());
-            if (!result || !result.success) {
-                setMessage(result?.message || "Failed to save blend.");
+            const data = await saveBlendReq(buildBlendPayload());
+            if (!data.success) {
+                setMessage(data.message || "Failed to save blend.");
                 return;
             }
             setMessage("Blend saved successfully!");
@@ -197,17 +304,17 @@ export default function Mixology() {
         setBlendLoading(true);
         setMessage("");
         try {
-            const result = await addBlendToCartReq(buildBlendPayload());
-            if (!result) {
-                setMessage("Something went wrong. Please try again.");
+            const data = await addBlendToCartReq(buildBlendPayload());
+            if (!data.success) {
+                setMessage(data.message || "Something went wrong. Please try again.");
                 return;
             }
             // stockUnavailable comes back as success: false but is NOT a crash
-            if (result.stockUnavailable) {
+            if (data.stockUnavailable) {
                 setMessage(result.message);
                 return;
             }
-            if (!result.success) {
+            if (!data.success) {
                 setMessage(result.message || "Failed to add blend to cart.");
                 return;
             }
@@ -222,7 +329,7 @@ export default function Mixology() {
 
     // Colors for the liquid in the bottl ---------------------------------------------------
     // Mock for now, fragrances may include color details in the backend in the future
-    const color1 = "#ff7f4d"; 
+    const color1 =  "#b07ac4"; 
     const color2 = "#e3615b"; 
     const color3 = "#a12d0f"; 
 
@@ -253,11 +360,45 @@ export default function Mixology() {
                 marginTop="-2.5rem">
                 Mixology
             </Text>
-            <Text
-                style={luxurySubheadingStyle}
-                marginTop="-.5rem">   
-                Create your own custom fragrance blend by selecting up to three of your favorite fragrances!
-            </Text>
+            <Flex 
+                direction="row"
+                alignItems="center"
+                justifyContent="Center">
+                    <Text
+                        style={luxurySubheadingStyle}
+                        marginTop="-.5rem">   
+                        Create your own custom fragrance blend by selecting up to three of your favorite fragrances!
+                    </Text>
+                    <Text
+                        style={{ 
+                            fontSize: "1.6rem",
+                            marginLeft: "-.75rem",
+                            color: showInstructions ? "darkgray" : "black"
+                        }}
+                        variation="link"
+                        onClick={() => setShowInstructions((prev) => !prev)}
+                    >
+                    🛈
+                    </Text>
+                </Flex>
+                {showInstructions && (
+                    <View>
+                        <Text
+                            style={{...luxurySubheadingStyle, fontSize: "1.35rem", textDecoration: "underline"}}>
+                            Instructions<br/> 
+                        </Text>
+                        
+                        <Text
+                            style={{...luxurySubheadingStyle, fontSize: "1.25rem", textAlign: "left", marginLeft: "25rem"}}>
+                            1. Select desired fragrance size. <br/>
+                            2. Select desired fragrances from drop down fields. <br/>
+                            3. If wanted, can select "Add 3rd Fragrance" button to add a 3rd fragrance to the mix. <br/>
+                            4. Can use sliders to change percentages of fragrances within mix. <br/>
+                            5. When satisfied user can add blend to their cart or save blend to their profile. <br/>
+                            6. User can press "Load Blends" button to show a table below of all previously made blends. <br/>
+                        </Text>
+                    </View>
+                )}
             <Flex direction="column" alignItems="center" gap="1.25rem">
                 <View 
                     style={{ 
@@ -445,6 +586,18 @@ export default function Mixology() {
                             onClick={handleSaveBlend}>
                             Save Fragrance
                         </Button>
+                        
+                        <Button 
+                            // Can load and hide blends depending on click -----------------------
+                            style={luxuryBodyStyle}
+                            onClick={async () => {
+                                if (!loadTable) {
+                                    await loadBlends();
+                                }
+                                setLoadTable((prev) => !prev);
+                            }}>
+                            {loadTable ? "Hide blends" : "Load blends"}
+                        </Button>
                     </Flex>
                     {message && (
                         <Text
@@ -458,6 +611,74 @@ export default function Mixology() {
                         </Text>
                     )}
                 </View>
+
+                {loadTable && (
+                    <View marginTop="1rem"  >
+                        {/* This is used to verify that a user has created a specific amount of blends */}
+                        {/* <Text>Loaded Blends Count: {loadedBlends.length}</Text> */}
+
+                        <Text 
+                            style={luxurySubheadingStyle}>
+                            Your Saved Blends
+                        </Text>
+                        {/* If no blends are currently saved to users profile */}
+                        {loadedBlends.length === 0 ? (
+                            <Text style={luxuryBodyStyle}>
+                                No saved blends yet. Create one above and press “Save Fragrance”.
+                            </Text>
+                        ) : ( 
+                            <View
+                                style={{
+                                    backgroundColor: "#300a0a38",
+                                    borderRadius: "14px",
+                                }}
+                            >
+                            <Table
+                                style={{             
+                                }}>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell style={tableHeaderStyle}>Fragrance 1</TableCell>
+                                    <TableCell style={tableHeaderStyle}>Fragrance 2</TableCell>
+                                    <TableCell style={tableHeaderStyle}>Fragrance 3</TableCell>
+                                    <TableCell style={tableHeaderStyle}>Size</TableCell>
+                                    <TableCell style={tableHeaderStyle}>Actions</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            {loadedBlends.map((blend) => (
+                                <TableRow 
+                                    key={blend.id}
+                                    style={{
+                                    borderTop: "1px solid rgba(0,0,0,0.15)"
+                                }}>
+                                    <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)</TableCell>
+                                    <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)</TableCell>
+                                    <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag3_productid)} ({blend.frag3_pct ? `${blend.frag3_pct}%` : "~"})</TableCell>
+                                    <TableCell style={{...tableBodyStyle, whiteSpace: "nowrap" }}>{blend.size_ml} ML</TableCell>
+                                    <TableCell style={tableBodyStyle}>
+                                        <Flex direction="row" gap="0.2rem">
+                                        <Button
+                                            style={luxuryBodyStyle}
+                                            onClick={() => {
+                                            }}>
+                                            Add to Cart
+                                        </Button>
+                                        <Button
+                                            style={luxuryBodyStyle}
+                                            onClick={() => { 
+                                                handleDeleteBlend(blend.id);
+                                            }}>
+                                            Delete Blend
+                                        </Button>
+                                        </Flex>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            </Table>
+                        </View>
+                        )}
+                    </View>
+                )}
             </Flex>
         </View>
     </>

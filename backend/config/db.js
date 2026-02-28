@@ -1557,8 +1557,9 @@ class Recommendations {
 
             // RANK 1: Favourite notes from signup — 8pts flat per note
             try {
-                const userRes = await client.query(`SELECT preferrednotes FROM users WHERE id = $1;`, [userid]);
-                const favNotes = flattenNotes(userRes.rows?.[0]?.preferrednotes);
+                const userRes = await client.query(`SELECT favorite_notes FROM users WHERE cognito_sub = $1;`, [userid]);
+                const favNotesRaw = userRes.rows?.[0]?.favorite_notes || "";
+                const favNotes = favNotesRaw.split(",").map(n => n.trim()).filter(Boolean);
                 for (const note of favNotes) addScore(note, 8);
             } catch {}
 

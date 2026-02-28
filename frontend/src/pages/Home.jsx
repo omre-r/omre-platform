@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { View, Card, Flex, Text } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getProductsReq } from "../requests.js";
+import { getActiveProductsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 
 import LuxuryBackground from "../assets/Luxury Background2.png";
@@ -35,8 +35,11 @@ export default function Home() {
   useEffect(() => {
     async function loadProducts() {
       try {
-        const res = await getProductsReq();
-        setProducts(res);
+        const data = await getActiveProductsReq();
+        if (!data.success){
+          throw new Error(data.message)
+        }
+        setProducts(data.data.products);
       } catch (err) {
         console.error(err);
         setMessage("Failed to load products.");
@@ -71,7 +74,7 @@ export default function Home() {
         </Text>
 
         <Flex wrap="wrap">
-          {!loadingProducts && products.filter((prod) => prod.isfeatured === true).map((prod) => (
+          {!loadingProducts && products && products.filter((prod) => prod.isfeatured === true).map((prod) => (
             <Card
               key={prod.id}
               variation="elevated"
@@ -102,7 +105,7 @@ export default function Home() {
                   style={{ ...bodyStyle, fontWeight: 600 }}
                   textAlign="center"
                 >
-                  {prod.price}
+                  ${prod.price}
                 </Text>
               </Link>
             </Card>
