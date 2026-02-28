@@ -179,26 +179,38 @@ async function createTables() {
             created         TIMESTAMPTZ   DEFAULT NOW()
         )
     `);
+
+    //itemid will be an id from "products" or "blends"
+    //type will be either "product" or "blend"
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS cart_items(
+            id VARCHAR(100) PRIMARY KEY,
+            customerid VARCHAR(100),
+            itemid VARCHAR(100), 
+            quantity INT,
+            type VARCHAR(100),
+            added TIMESTAMPTZ DEFAULT NOW()
+        )
+    `);
+
 }
 
 
 // decorator that ensures any query completes fully, otherwise undo changes
-function prepareRollback(fn){
-    return async (...args) => { 
-        let client;
-        try{
-            client = await pool.connect();
-            await client.query("BEGIN")
-            const response = await fn(...args, client)
-            await client.query("COMMIT")
-            return response
-        }catch(err){
-            if (client) await client.query("ROLLBACK");
-            if (!(err instanceof DBError)) return {success: false, message: "Uncaught error occurred", status: 500};
-            return {success: false, message: err.message, status: err.code}
-        }finally{
-            if (client) await client.release()
-        }
+async function prepareRollback(fn){
+    let client;
+    try{
+        client = await pool.connect();
+        await client.query("BEGIN")
+        const response = await fn(client)
+        await client.query("COMMIT")
+        return response
+    }catch(err){
+        if (client) await client.query("ROLLBACK");
+        if (!(err instanceof DBError)) return {success: false, message: "Uncaught error occurred", status: 500};
+        return {success: false, message: err.message, status: err.code}
+    }finally{
+        if (client) await client.release()
     }
 }
 
@@ -218,35 +230,41 @@ class Users{
     //This function will be useless for now
     //modifications made to make it match Ayman's lambda function 'omre-cognito-post-confirmation'
     // 
-    // async createUser(options, client){
-    //     const {id, email, firstname, lastname, preferrednotes} = options;
+    async createUser(options, client){
+        if (!client){
+            return prepareRollback((c) => this.createUser(options, c));
+        }
+        const {id, email, firstname, lastname, preferrednotes} = options;
 
-    //     const adminEmails = [
-    //         '@omrefragrances.com',
-    //         'zchriste16@gmail.com',
-    //         'contact@aymannazir.com',
-    //         'muradsaleh2022@gmail.com'
-    //     ];
+        const adminEmails = [
+            '@omrefragrances.com',
+            'zchriste16@gmail.com',
+            'contact@aymannazir.com',
+            'muradsaleh2022@gmail.com'
+        ];
 
-    //     //IMPORTANT: roles will mainly be decided via access tokens later, so the "role" field may be removed
-    //     // Check if admin (later, there may be a mapping of roles rather than a simple isAdmin check)
-    //     const isAdmin = adminEmails.some(admin => 
-    //         admin.startsWith('@') ? email.endsWith(admin) : email === admin
-    //     );   
+        //IMPORTANT: roles will mainly be decided via access tokens later, so the "role" field may be removed
+        // Check if admin (later, there may be a mapping of roles rather than a simple isAdmin check)
+        const isAdmin = adminEmails.some(admin => 
+            admin.startsWith('@') ? email.endsWith(admin) : email === admin
+        );   
 
-    //     let result;
-    //     const query = `INSERT INTO users (id, email, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
-    //     try{
-    //         result = await client.query(query, [id, email, firstname, lastname, isAdmin ? "admin" : "user", JSON.stringify(preferrednotes)]);
-    //     }catch(err){
-    //         console.error(err)
-    //         return {success: false, message: "Failed to create user", status: 400}
-    //     }
-    //     return {success: true, data: {user: result.rows?.[0]}}
-    // }
+        let result;
+        const query = `INSERT INTO users (id, email, firstname, lastname, role, preferrednotes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
+        try{
+            result = await client.query(query, [id, email, firstname, lastname, isAdmin ? "admin" : "user", JSON.stringify(preferrednotes)]);
+        }catch(err){
+            console.error(err)
+            return {success: false, message: "Failed to create user", status: 400}
+        }
+        return {success: true, data: {user: result.rows?.[0]}}
+    }
 
     
     async deleteUser(id, client){
+        if (!client){
+            return prepareRollback((c) => this.deleteUser(id, c));
+        }
         const query = `DELETE FROM users WHERE id = $1`
         try{
             await client.query(query, [id]);
@@ -261,6 +279,9 @@ class Users{
     //rate limiting (ex: max 200) not needed yet
     
     async getUsers(client){
+        if (!client){
+            return prepareRollback((c) => this.getUsers(c));
+        }
         const query = `SELECT * FROM users`
         let users;
 
@@ -277,6 +298,9 @@ class Users{
 
     
     async getUser(id, client){
+        if (!client){
+            return prepareRollback((c) => this.getUser(id, c));
+        }
         const query = `SELECT * FROM users WHERE id = $1`
         
         let user;
@@ -293,6 +317,9 @@ class Users{
 
     
     async updateLastLogin(id, client) {
+        if (!client){
+            return prepareRollback((c) => this.updateLastLogin(id, c));
+        }
         const query = `UPDATE users SET last_login = NOW() WHERE id = $1`;
 
         try {
@@ -316,9 +343,12 @@ likely updated in a single setting. Therefore, a single updateProduct is provide
 */
 class Products{
     static modifiableFields = ["type", "name", "variation", "price", "images", "stock_ml", "notes", "description", "ishidden", "isfeatured"];
-
+    static filterableFields = ["type", "name", "variation", "price", "notes", "stock_ml", "isfeatured"]
     
     async createProduct(options, client){
+        if (!client){
+            return prepareRollback((c) => this.createProduct(options, c));
+        }
         const {type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden} = options;
         const id = uuidv4();
 
@@ -379,6 +409,9 @@ class Products{
     
     
     async deleteProduct(id, client){
+        if (!client){
+            return prepareRollback((c) => this.deleteProduct(id, c));
+        }
         const query = `DELETE FROM products WHERE id = $1 RETURNING *`
         try{
             const result = await client.query(query, [id]);
@@ -405,6 +438,9 @@ class Products{
 
     
     async getProducts(client){
+        if (!client){
+            return prepareRollback((c) => this.getProducts(c));
+        }
         const query = `SELECT * FROM products;`
         let products;
 
@@ -421,6 +457,9 @@ class Products{
 
     
     async getActiveProducts(client){
+        if (!client){
+            return prepareRollback((c) => this.getActiveProducts(c));
+        }
         const query = `SELECT * FROM products WHERE ishidden IS FALSE;`
         let products;
 
@@ -435,14 +474,95 @@ class Products{
         return {success: true, data: {products}}
     }
 
+    async getFilteredProducts(filters, client){
+        if (!client){
+            return prepareRollback((c) => this.getFilteredProducts(filters, c));
+        }
+        if (Object.keys(filters).length <= 0){
+            throw new DBError("At least 1 filter required");
+        }
+
+        let query = `SELECT * FROM products WHERE ishidden IS FALSE AND `
+        let values = []
+
+        //builds a cosntraint in query for each filter
+        for (const filter of Object.keys(filters)){
+            switch (filter){
+                case "type":{
+                    query += `type = $${values.length + 1} AND `
+                    values.push(filters[filter])
+                    break
+                }
+                case "name":{
+                    query += `name ILIKE $${values.length + 1} AND `
+                    values.push(`%${filters[filter]}%`)
+                    break
+                }   
+                case "variation":{
+                    query += `variation ILIKE ANY($${values.length + 1}) AND `
+                    values.push(filters[filter].map(v => `${v}%`))
+                    break
+                }
+                case "price":{
+                    const [min, max] = filters[filter]
+
+                    if (min === null && max === null){
+                        continue
+                    }
+                    if (min !== null){
+                        query += `price >= $${values.length + 1} AND `
+                        values.push(min)
+                    }
+                    if (max !== null){
+                        query += `price <= $${values.length + 1} AND `
+                        values.push(max)
+                    }
+                    break
+                }
+                case "notes":{
+                    query += `(notes -> 'top' ?| $${values.length + 1} OR notes -> 'heart' ?| $${values.length + 1} OR notes -> 'base' ?| $${values.length + 1}) AND `
+                    values.push(filters[filter])
+                    break
+                }
+                case "isfeatured":{
+                    query += `isfeatured = $${values.length + 1} AND `
+                    values.push(filters[filter])
+                    break
+                }
+                default:{
+                    throw new DBError(`${filter} is not a valid filter`);
+                }
+            }
+        }
+        //removes last 'AND '
+        query = query.slice(0,-4);
+
+
+        let products;
+        try{
+            const res = await client.query(query, values);
+            products = res.rows;
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get filtered products")
+        }
+        return {success: true, data: {products}}
+    }
     
     async getProduct(id, client){
+        if (!client){
+            return prepareRollback((c) => this.getProduct(id, c));
+        }
         const query = `SELECT * FROM products WHERE id = $1;`;
         let product;
 
         try{
             const res = await client.query(query, [id]);
             product = res.rows[0]
+            if (!product){
+                throw new DBError("Failed to get Product")
+            }
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
@@ -457,13 +577,43 @@ class Products{
     */
     
     async updateProduct(id, options, client) {
-        const fields = Object.keys(options);
-        const query = this.formatUpdateQuery(fields);
-        if (!query){
-            throw new DBError("Failed to form update product query")
+        if (!client){
+            return prepareRollback((c) => this.updateProduct(id, options, c));
         }
+        const fields = Object.keys(options);
+
         try{
-            await client.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
+            const query = this.formatUpdateQuery(fields);
+            if (!query){
+                throw new DBError("Failed to form update product query");
+            }
+
+            let oldImages;
+            if (options.images){
+                oldImages = (await client.query("SELECT images FROM products WHERE id = $1", [id]))?.rows?.[0]?.images
+                if (!oldImages){
+                    throw new DBError("Failed to get old images, or product doesn't exist");
+                }
+            }
+            const updateResult = await client.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id]);
+            if (!updateResult?.rows?.[0]){
+                throw new DBError("Failed to update product");
+            }
+            if (options.images){
+                for (let image of oldImages){
+                    if (options.images.includes(image)) continue;
+
+                    const key = image.split("/").at(-1);
+                    try{
+                        await s3Client.send(new DeleteObjectCommand({
+                            Bucket: BUCKET_NAME,
+                            Key: key
+                        }));
+                    }catch(err){
+                        console.log(err)
+                    }
+                } 
+            }
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
@@ -473,6 +623,9 @@ class Products{
     }
 
     async increaseProductStock(id, quantity, client){
+        if (!client){
+            return prepareRollback((c) => this.increaseProductStock(id, quantity, c));
+        }
         try{
             const retrieveProductQuery = `SELECT * FROM products WHERE id = $1;`;
             const product = (await client.query(retrieveProductQuery, [id]))?.rows?.[0];
@@ -480,12 +633,12 @@ class Products{
                 return {success: false, message: "Product does not exist", status: 400}
             }
             const size = Number(product?.variation?.split("ml")?.[0]);
-            if (!size || isNaN(size)){
+            if (!size){
                 return {success: false, message: "Invalid size for product", status: 400}
             }
             
             //only 40% of size is the stored oil. 
-            const newSize = product.stock_ml + (quantity * size*.4)
+            const newSize = Number(product.stock_ml) + (quantity * size*.4)
             if (newSize < 0){
                 return {success: false, message: "Negative new size", status: 400}
             }
@@ -500,6 +653,9 @@ class Products{
     }
 
     async decreaseProductStock(id, quantity, client){
+        if (!client){
+            return prepareRollback((c) => this.decreaseProductStock(id, quantity, c));
+        }
         try{
             const retrieveProductQuery = `SELECT * FROM products WHERE id = $1;`;
             const product = (await client.query(retrieveProductQuery, [id]))?.rows?.[0];
@@ -507,12 +663,12 @@ class Products{
                 return {success: false, message: "Product does not exist", status: 400}
             }
             const size = Number(product?.variation?.split("ml")?.[0]);
-            if (!size || isNaN(size)){
+            if (!size){
                 return {success: false, message: "Invalid size for product", status: 400}
             }
             
             //only 40% of size is the stored oil. 
-            const newSize = product.stock_ml - (quantity * size*.4)
+            const newSize = Number(product.stock_ml) - (quantity * size*.4)
             if (newSize < 0){
                 return {success: false, message: "Negative new size", status: 400}
             }
@@ -537,7 +693,7 @@ class Products{
             formattedQuery += `${fields[i]} = $${i + 1}`
             if (i !== fields.length - 1) formattedQuery += ', ';
         }
-        formattedQuery += ` WHERE id = $${i + 1};`
+        formattedQuery += ` WHERE id = $${i + 1} RETURNING *;`
         return formattedQuery
     }
 }
@@ -547,6 +703,9 @@ class Reviews{
 
     
     async createReview(options, client){
+        if (!client){
+            return prepareRollback((c) => this.createReview(options, c));
+        }
         const {customerid, productid, message, rating, images} = options;
         const id = uuidv4();
 
@@ -564,6 +723,9 @@ class Reviews{
 
     
     async deleteReview(id, client){
+        if (!client){
+            return prepareRollback((c) => this.deleteReview(id, c));
+        }
         const query = `DELETE FROM reviews WHERE id = $1`
         try{
             await client.query(query, [id]);
@@ -577,6 +739,9 @@ class Reviews{
 
     
     async getProductReviews(productid, client){
+        if (!client){
+            return prepareRollback((c) => this.getProductReviews(productid, c));
+        }
         const query = `SELECT * FROM reviews WHERE productid = $1 ORDER BY created DESC`;
         let reviews;
 
@@ -593,6 +758,9 @@ class Reviews{
 
     
     async getUserReviews(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.getUserReviews(customerid, c));
+        }
         const query = `SELECT * FROM reviews WHERE customerid = $1 ORDER BY created DESC`;
         let reviews;
         try{
@@ -608,6 +776,9 @@ class Reviews{
 
     
     async getReviews(client){
+        if (!client){
+            return prepareRollback((c) => this.getReviews(c));
+        }
         const query = `SELECT * FROM reviews ORDER BY created DESC`;
         let reviews;
 
@@ -624,6 +795,9 @@ class Reviews{
 
     
     async updateReview(id, options, client){
+        if (!client){
+            return prepareRollback((c) => this.updateReview(id, options, c));
+        }
         const fields = Object.keys(options);
         const query = this.formatUpdateQuery(fields);
         if (!query){
@@ -657,43 +831,79 @@ class Reviews{
 }
 
 class Orders{
-
     constructor(){
         this.products = new Products();
+        this.blends = new Blends()
+        this.cartItems = new CartItems()
     }
 
-    async createOrder(options, client){
-        const {customerid, items, total} = options;
-        for (const item of items){
-            //checks if an item contains the expected fields
-            if (!item.hasOwn("productType") || !item.hasOwn("productID") || !item.hasOwn("quantity")){
-                throw new DBError("Item does not contain required fields")
-            }
-
-            //reduce stock
-            //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
-            const result = await this.products.decreaseProductStock(item.productID, item.quantity, client);
-            if (!result.success){
-                throw new DBError("Failed to decrease product stock");
-            }
+    async createOrder(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.createOrder(customerid, c));
         }
-
         let order;
-        const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
         try{
-            order = await client.query(query, [id, customerid, JSON.stringify(items), total]);
+            const cart = (await this.cartItems.getCart(customerid, client))?.data?.cart
+            if (!cart){
+                throw new DBError("Failed to get cart");
+            }
+            if (cart.length === 0){
+                throw new DBError("Can't create an order with empty cart");
+            }
+            const items = [];
+            let total = 0; 
+            for (const {itemid, quantity, type, item} of cart){
+                if (type !== "product" && type !== "blend"){
+                    throw new DBError("Unexpected item type");
+                }
+                if (type === "product"){
+                    //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
+                    const result = await this.products.decreaseProductStock(itemid, quantity, client);
+                    if (!result.success){
+                        throw new DBError("Failed to decrease product stock");
+                    }
+                    total += Number(item.price) * quantity
+
+                }else{ 
+                    const result = await this.blends.decreaseBlendStock(itemid, quantity, client);
+                    if (!result.success){
+                        throw new DBError("Failed to decrease blend stock");
+                    }
+                    total += result.data.price
+                }
+                items.push({itemid, quantity, type})
+            }
+
+            const id = uuidv4()
+            const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
+            order = (await client.query(query, [id, customerid, JSON.stringify(items), total])).rows[0];
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to create order")
         }
-        return {success: true, data: {order: order.rows?.[0]}}
+        return {success: true, data: {order}}
     }
 
     //Should probably only be for development
     async deleteOrder(id, client){
-        const query = `DELETE FROM orders WHERE id = $1`
+        if (!client){
+            return prepareRollback((c) => this.deleteOrder(id, c));
+        }
+
         try{
+            const order = (await this.getOrder(id, client))?.data?.order;
+            if (!order){
+                throw new DBError("Couldn't find order before deletion");
+            }
+            if (order.status !== "canceled" && order.status !== "fulfilled"){
+                const cancelOrderRes = await this.cancelOrder(id, "dev reasons", client);
+                if (!cancelOrderRes.success){
+                    throw new DBError("Failed to cancel order / restore stock before deletion")
+                }
+            }
+
+            const query = `DELETE FROM orders WHERE id = $1`
             await client.query(query, [id]);
         }catch(err){
             console.error(err);
@@ -703,26 +913,28 @@ class Orders{
         return {success: true}
     }
 
-    
     async cancelOrder(id, cancelreason, client){
-        const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2 RETURNING *;`;
+        if (!client){
+            return prepareRollback((c) => this.cancelOrder(id, cancelreason, c));
+        }
         try{
+            const query = `UPDATE orders SET status = 'canceled', cancelreason = $1 WHERE id = $2 AND status != 'canceled' RETURNING *;`;
             const order = (await client.query(query, [cancelreason, id]))?.rows?.[0];
             if (!order){
-                throw new DBError("Order does not exist.");
+                throw new DBError("Order does not exist or already canceled.");
             }
 
-            for (const item of order.items){
-                //checks if an item contains the expected fields
-                if (!item.hasOwn("productType") || !item.hasOwn("productID") || !item.hasOwn("quantity")){
-                    throw new DBError("Item does not contain required fields")
-                }
-
-                //restore stock
-                //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
-                const result = await this.products.increaseProductStock(item.productID, item.quantity, client);
-                if (!result.success){
-                    throw new DBError("Failed to increase product stock");
+            for (const {itemid, quantity, type} of order.items){
+                if (type === "product"){
+                    const result = await this.products.increaseProductStock(itemid, quantity, client);
+                    if (!result.success){
+                        throw new DBError("Failed to increase product stock");
+                    }
+                }else{
+                    const result = await this.blends.increaseBlendStock(itemid, quantity, client);
+                    if (!result.success){
+                        throw new DBError("Failed to increase blend stock");
+                    }
                 }
             }
         }catch(err){
@@ -736,12 +948,15 @@ class Orders{
     //This always promotes status, flow is ususally pending -> mixing -> ready ->  fulfilled, but may move backwards 
     //cancels deserve their own flow.
     async updateOrderStatus(id, status, client){
+        if (!client){
+            return prepareRollback((c) => this.updateOrderStatus(id, status, c));
+        }
         if (!["pending", "mixing", "ready", "fulfilled"].includes(status)){
             throw new DBError("Unexpected status")
         }
-        const query = `UPDATE orders SET status = ${status} WHERE id = $1`;
+        const query = `UPDATE orders SET status = $1 WHERE id = $2`;
         try{
-            await client.query(query, [id]);
+            await client.query(query, [status, id]);
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
@@ -752,6 +967,9 @@ class Orders{
 
     
     async getOrder(id, client){
+        if (!client){
+            return prepareRollback((c) => this.getOrder(id, c));
+        }
         const query = `SELECT * FROM orders WHERE id = $1`
         let order;
 
@@ -767,35 +985,22 @@ class Orders{
     }
 
     async getUserOrders(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.getUserOrders(customerid, c));
+        }
         const query = `SELECT * FROM orders WHERE customerid = $1`
-        let order;
+        let orders;
 
         try{
             const res = await client.query(query, [customerid]);
-            order = res.rows[0]
+            orders = res.rows
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to get customer orders")
         }
-        return {success: true, data: {order}}
+        return {success: true, data: {orders}}
     }
-}
-
-function validateBlendInput(options) {
-    const { userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml } = options;
-
-    if (!userid) throw new DBError("User not identified", 401);
-    if (!frag1_productid || !frag2_productid) throw new DBError("At least 2 fragrances are required");
-    if (frag1_productid === frag2_productid) throw new DBError("Fragrance 1 and 2 cannot be the same product");
-    if (![30, 50].includes(Number(size_ml))) throw new DBError("Bottle size must be 30 or 50 ml");
-
-    const hasThird = !!frag3_productid;
-    if (hasThird && (frag3_pct === null || frag3_pct === undefined)) throw new DBError("3rd fragrance percentage is required");
-    if (!hasThird && frag3_pct) throw new DBError("3rd fragrance product is required when a percentage is provided");
-
-    const total = Number(frag1_pct) + Number(frag2_pct) + (hasThird ? Number(frag3_pct) : 0);
-    if (total !== 100) throw new DBError(`Fragrance percentages must add up to 100%, currently: ${total}%`);
 }
 
 class Blends {
@@ -815,7 +1020,10 @@ class Blends {
     userid always comes from the token in the controller, never from req.body.
     */
     async saveBlend(options, client) {
-        validateBlendInput(options);
+        if (!client){
+            return prepareRollback((c) => this.saveBlend(options, c));
+        }
+        this.validateBlendInput(options);
 
         const {
             userid,
@@ -875,7 +1083,10 @@ class Blends {
     If all good              → saves with status = 'cart', returns "Blend Ready!"
     */
     async addBlendToCart(options, client) {
-        validateBlendInput(options);
+        if (!client){
+            return prepareRollback((c) => this.addBlendToCart(options, c));
+        }
+        this.validateBlendInput(options);
 
         const {
             userid,
@@ -962,6 +1173,9 @@ class Blends {
 
     // Get all blends belonging to the logged in user
     async getUserBlends(userid, client) {
+        if (!client){
+            return prepareRollback((c) => this.getUserBlends(userid, c));
+        }
         const query = `SELECT * FROM blends WHERE userid = $1 ORDER BY created DESC;`;
         let blends;
         try {
@@ -974,35 +1188,450 @@ class Blends {
         }
         return { success: true, data: { blends } };
     }
-}
-    
-/*
-This ChatGPT provided function wraps all class methods in a function.
-This is needed because JS does not have decorators.
-*/
-function wrapClassMethods(Class, wrap, exclude=[]) {
-  for (const key of Object.getOwnPropertyNames(Class.prototype)) {
-    if (key === "constructor" || exclude.includes(key)) continue
-    const fn = Class.prototype[key]
-    if (typeof fn === "function") {
-      Class.prototype[key] = wrap(fn)
+
+    // Delete user created blend by blendid.
+    async deleteUserBlend(userid, blendid, client) {
+        if (!client){
+            return prepareRollback((c) => this.deleteUserBlend(userid, blendid, c));
+        }
+        // Only deletes if the blend belongs to the user
+        const query = `DELETE FROM blends WHERE userid = $1 AND id = $2 RETURNING *;`;
+        let deleted;
+        try {
+            const res = await client.query(query, [userid, blendid]);
+            deleted = res.rows?.[0];
+            // If no rows were deleted, it means either the blend doesn't exist or doesn't belong to the user
+            if (!deleted) {
+                return { success: false, status: 404, message: "Blend not found" };
+            }
+        } 
+        catch (err) {
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to delete blend");
+        }
+        // Successfully deleted the blend
+        return { success: true, data: { blend: deleted } };
     }
-  }
+
+    // increases stock per ingredient 
+    // returns price for convenience
+    async increaseBlendStock(id, quantity, client){
+        if (!client){
+            return prepareRollback((c) => this.increaseBlendStock(id, quantity, c));
+        }
+        let price = 0;
+        try{
+            const retrieveBlendQuery = `SELECT * FROM blends WHERE id = $1;`;
+            const blend = (await client.query(retrieveBlendQuery, [id]))?.rows?.[0];
+            if (!blend){
+                return {success: false, message: "Blend does not exist", status: 400}
+            }
+            blend.frag1_pct /= 100;
+            blend.frag2_pct /= 100;
+            if (blend.frag3_productid) blend.frag3_pct /= 100;
+
+            const oil = blend.size_ml * .4;
+
+            const productIds = [blend.frag1_productid, blend.frag2_productid];
+            if (blend.frag3_productid) productIds.push(blend.frag3_productid);
+
+            const getProductsUsedQuery = `SELECT * FROM products WHERE id = ANY($1) ORDER BY array_position($1, id);`;
+            const productsUsed = (await client.query(getProductsUsedQuery, [productIds]))?.rows;
+
+            if (!productsUsed || (blend.frag3_productid && productsUsed.length !== 3) || (!blend.frag3_productid && productsUsed.length !== 2)){
+                throw new DBError("Failed to retrieve products for increasing blend");
+            }
+
+            const newProductSizes = [Number(productsUsed[0].stock_ml) + (quantity * oil * blend.frag1_pct), Number(productsUsed[1].stock_ml) + (quantity * oil * blend.frag2_pct)]
+            if (blend.frag3_productid) newProductSizes.push(Number(productsUsed[2].stock_ml) + (quantity * oil * blend.frag3_pct))
+            for (const size of newProductSizes){
+                if (size < 0) throw new DBError("Not enough stock for this blend");
+            }
+            
+            const productUpdateQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2 RETURNING *`;
+            const product1UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[0], blend.frag1_productid]))?.rows?.[0];
+            if (!product1UpdateRes) throw new DBError(`Failed to update blend product 1 with id ${blend.frag1_productid}`)
+            const product2UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[1], blend.frag2_productid]))?.rows?.[0];
+            if (!product2UpdateRes) throw new DBError(`Failed to update blend product 2 with id ${blend.frag2_productid}`)
+            if (blend.frag3_productid){
+                const product3UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[2], blend.frag3_productid]))?.rows?.[0];
+                if (!product3UpdateRes) throw new DBError(`Failed to update blend product 3 with id ${blend.frag3_productid}`)
+            }
+
+            const pricePerML1 = (Number(productsUsed[0].price) / Number(productsUsed[0].variation.split("ml")?.[0]));
+            price += pricePerML1 * (blend.size_ml * blend.frag1_pct);
+
+            const pricePerML2 = (Number(productsUsed[1].price) / Number(productsUsed[1].variation.split("ml")?.[0]));
+            price += pricePerML2 * (blend.size_ml * blend.frag2_pct)
+            
+            if (blend.frag3_productid){
+                const pricePerML3 = (Number(productsUsed[2].price) / Number(productsUsed[2].variation.split("ml")?.[0]));
+                price += pricePerML3 * (blend.size_ml * blend.frag3_pct)
+            }
+            price *= quantity
+        }catch(err){
+            console.error(err);
+            return {success: false, message: "Failed to increase blend stock", status: 400}
+        }
+        return {success: true, data: {price}}
+    }
+
+    // decreases stock per ingredient 
+    // returns price for convenience
+    async decreaseBlendStock(id, quantity, client){
+        if (!client){
+            return prepareRollback((c) => this.decreaseBlendStock(id, quantity, c));
+        }
+        let price = 0;
+        try{
+            const retrieveBlendQuery = `SELECT * FROM blends WHERE id = $1;`;
+            const blend = (await client.query(retrieveBlendQuery, [id]))?.rows?.[0];
+            if (!blend){
+                return {success: false, message: "Blend does not exist", status: 400}
+            }
+            blend.frag1_pct /= 100;
+            blend.frag2_pct /= 100;
+            if (blend.frag3_productid) blend.frag3_pct /= 100;
+
+            const oil = blend.size_ml * .4;
+
+            const productIds = [blend.frag1_productid, blend.frag2_productid];
+            if (blend.frag3_productid) productIds.push(blend.frag3_productid);
+
+            const getProductsUsedQuery = `SELECT * FROM products WHERE id = ANY($1) ORDER BY array_position($1, id);`;
+            const productsUsed = (await client.query(getProductsUsedQuery, [productIds]))?.rows;
+
+            if (!productsUsed || (blend.frag3_productid && productsUsed.length !== 3) || (!blend.frag3_productid && productsUsed.length !== 2)){
+                throw new DBError("Failed to retrieve products for decreasing blend");
+            }
+
+            const newProductSizes = [Number(productsUsed[0].stock_ml) - (quantity * oil * blend.frag1_pct), Number(productsUsed[1].stock_ml) - (quantity * oil * blend.frag2_pct)]
+            if (blend.frag3_productid) newProductSizes.push(Number(productsUsed[2].stock_ml) - (quantity * oil * blend.frag3_pct))
+            for (const size of newProductSizes){
+                if (size < 0) throw new DBError("Not enough stock for this blend");
+            }
+            
+            const productUpdateQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2 RETURNING *`;
+            const product1UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[0], blend.frag1_productid]))?.rows?.[0];
+            if (!product1UpdateRes) throw new DBError(`Failed to update blend product 1 with id ${blend.frag1_productid}`)
+            const product2UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[1], blend.frag2_productid]))?.rows?.[0];
+            if (!product2UpdateRes) throw new DBError(`Failed to update blend product 2 with id ${blend.frag2_productid}`)
+            if (blend.frag3_productid){
+                const product3UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[2], blend.frag3_productid]))?.rows?.[0];
+                if (!product3UpdateRes) throw new DBError(`Failed to update blend product 3 with id ${blend.frag3_productid}`)
+            }
+
+            const pricePerML1 = (Number(productsUsed[0].price) / Number(productsUsed[0].variation.split("ml")?.[0]));
+            price += pricePerML1 * (blend.size_ml * blend.frag1_pct);
+
+            const pricePerML2 = (Number(productsUsed[1].price) / Number(productsUsed[1].variation.split("ml")?.[0]));
+            price += pricePerML2 * (blend.size_ml * blend.frag2_pct)
+            
+            if (blend.frag3_productid){
+                const pricePerML3 = (Number(productsUsed[2].price) / Number(productsUsed[2].variation.split("ml")?.[0]));
+                price += pricePerML3 * (blend.size_ml * blend.frag3_pct)
+            }
+            price *= quantity
+        }catch(err){
+            console.error(err);
+            return {success: false, message: "Failed to decrease blend stock", status: 400}
+        }
+        return {success: true, data: {price}}
+    }
+
+    validateBlendInput(options) {
+        const { userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml } = options;
+
+        if (!userid) throw new DBError("User not identified", 401);
+        if (!frag1_productid || !frag2_productid) throw new DBError("At least 2 fragrances are required");
+        if (frag1_productid === frag2_productid) throw new DBError("Fragrance 1 and 2 cannot be the same product");
+        if (![30, 50].includes(Number(size_ml))) throw new DBError("Bottle size must be 30 or 50 ml");
+
+        const hasThird = !!frag3_productid;
+        if (hasThird && (frag3_pct === null || frag3_pct === undefined)) throw new DBError("3rd fragrance percentage is required");
+        if (!hasThird && frag3_pct) throw new DBError("3rd fragrance product is required when a percentage is provided");
+
+        const total = Number(frag1_pct) + Number(frag2_pct) + (hasThird ? Number(frag3_pct) : 0);
+        if (total !== 100) throw new DBError(`Fragrance percentages must add up to 100%, currently: ${total}%`);
+    }
 }
 
-//Will seek out a better way to do this. The exclude argument exists for any helper functions to avoid
-// starting a nested "prepareRollback".
-wrapClassMethods(Users, prepareRollback);
-wrapClassMethods(Products, prepareRollback, ["increaseProductStock", "decreaseProductStock", "formatUpdateQuery"]);
-wrapClassMethods(Reviews, prepareRollback, ["formatUpdateQuery"]);
-wrapClassMethods(Orders, prepareRollback);
-wrapClassMethods(Blends, prepareRollback);
+class CartItems{
+        // CREATE TABLE IF NOT EXISTS cart_items(
+        //     id VARCHAR(100) PRIMARY KEY,
+        //     customerid VARCHAR(100),
+        //     itemid VARCHAR(100), 
+        //     quantity INT,
+        //     added TIMESTAMPTZ DEFAULT NOW(),
 
+    // may simply increment quantity if item exists
+    async createCartItem(options, client){
+        if (!client){
+            return prepareRollback((c) => this.createCartItem(options, c));
+        }
+        const {customerid, itemid, type} = options;
+        const id = uuidv4();
 
-setTimeout(async () => {
-    const x = new Users()
-    const test = await x.getUsers()
-    console.log(test)
-}, 5000)
+        let result;
+        try{
+            const getCartQuery = `SELECT itemid FROM cart_items WHERE customerid = $1;`;
+            const cart = (await client.query(getCartQuery, [customerid]))?.rows;
 
-module.exports = { Users, Products, Reviews, Orders, Blends }
+            const itemExists = cart.some(entry => entry.itemid === itemid);
+
+            if (!itemExists){
+                const query = `INSERT INTO cart_items (id, customerid, itemid, quantity, type) VALUES ($1, $2, $3, 1, $4) RETURNING *;`;
+                result = await client.query(query, [id, customerid, itemid, type]);
+            }else{
+                const query = `UPDATE cart_items SET quantity = quantity + 1 WHERE customerid = $1 AND itemid = $2 RETURNING *;`;
+                result = await client.query(query, [customerid, itemid]);
+            }
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to create cart item")
+        }
+        return {success: true, data: {cartItem: result.rows[0]}}
+    }
+
+    async deleteCartItem(id, client){
+        if (!client){
+            return prepareRollback((c) => this.deleteCartItem(id, c));
+        }
+        try{
+            const getCartItem = `SELECT quantity FROM cart_items WHERE id = $1;`;
+            const cartItem = (await client.query(getCartItem, [id]))?.rows?.[0];
+            if (!cartItem){
+                return {success: true}
+            }
+
+            if (cartItem.quantity <= 1){
+                const query = `DELETE FROM cart_items WHERE id = $1;`;
+                await client.query(query, [id]);
+            }else{
+                const query = `UPDATE cart_items SET quantity = quantity - 1 WHERE id = $1 ;`;
+                await client.query(query, [id]);
+            }
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to either delete cart item or decrement quantity")
+        }
+        return {success: true}
+    }
+
+    /*
+    returns a list of objects in the form:
+    {
+        id,
+        customerid,
+        itemid,
+        quantity, 
+        added,
+        item: the actual product or blend info
+    } 
+     */
+    async getCart(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.getCart(customerid, c));
+        }
+        const result = [];
+        try{
+            const getCartQuery = `SELECT * FROM cart_items WHERE customerid = $1;`;
+            const cart = await client.query(getCartQuery, [customerid]);
+            //get the actual products/blends
+            for (const item of cart.rows){
+                try{
+                    const query = item.type === "product" ? `SELECT * FROM products WHERE id = $1` : `SELECT * FROM blends WHERE id = $1` 
+                    const itemRes = (await client.query(query, [item.itemid])).rows[0]
+                    result.push({
+                        ...item,
+                        item: itemRes
+                    })
+                }catch(err){
+                    //TODO: when a product doesn't exist anymore, maybe we let client know
+                    continue
+                }
+            }
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get cart items")
+        }
+
+        return {success: true, data: {cart: result}}
+    }
+
+    //removes all existing cart items and add these items
+    async updateCart(customerid, items, client){
+        if (!client){
+            return prepareRollback((c) => this.updateCart(customerid, items, c));
+        }
+        const result = [];
+        try{
+            const emptyCartQuery = `DELETE FROM cart_items WHERE customerid = $1;`;
+            await client.query(emptyCartQuery, [customerid]);
+
+            for (const item of items){
+                if ((!item.quantity || item.quantity <= 0) || !item.itemid || !item.type){
+                    throw new DBError("Invalid cart item. A quantity, item id, and type is required");
+                }
+                const id = uuidv4()
+                const insertQuery = `INSERT INTO cart_items (id, customerid, itemid, quantity, type) VALUES ($1, $2, $3, $4, $5) RETURNING *;`
+                const insertResult = await client.query(insertQuery, [id, customerid, item.itemid, item.quantity, item.type]);
+                result.push(insertResult.rows[0]);
+            }
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to update cart");
+        }
+        return {success: true, data: {cart: result}}
+    }
+
+    async clearCart(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.clearCart(customerid, c));
+        }
+        try{
+            const emptyCartQuery = `DELETE FROM cart_items WHERE customerid = $1;`;
+            await client.query(emptyCartQuery, [customerid]);
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to clear cart");
+        }
+        return {success: true}
+    }
+}
+
+class Recommendations {
+
+    async getRecommendations(userid, client) {
+        if (!client) {
+            return prepareRollback((c) => this.getRecommendations(userid, c));
+        }
+
+        try {
+            const noteScores = {};
+            const seenProductIds = new Set();
+
+            const addScore = (note, points) => {
+                if (!note || typeof note !== "string") return;
+                const key = note.toLowerCase().trim();
+                noteScores[key] = (noteScores[key] || 0) + points;
+            };
+
+            const flattenNotes = (notes) => {
+                if (!notes || typeof notes !== "object") return [];
+                return [
+                    ...(Array.isArray(notes.top)   ? notes.top   : []),
+                    ...(Array.isArray(notes.heart)  ? notes.heart : []),
+                    ...(Array.isArray(notes.base)   ? notes.base  : []),
+                ];
+            };
+
+            const getProductNotes = async (productid) => {
+                if (!productid) return [];
+                try {
+                    const res = await client.query(`SELECT notes FROM products WHERE id = $1;`, [productid]);
+                    return flattenNotes(res.rows?.[0]?.notes);
+                } catch { return []; }
+            };
+
+            const scoreBlend = async (blend, basePoints) => {
+                const frags = [
+                    { productid: blend.frag1_productid, pct: Number(blend.frag1_pct) },
+                    { productid: blend.frag2_productid, pct: Number(blend.frag2_pct) },
+                ];
+                if (blend.frag3_productid) {
+                    frags.push({ productid: blend.frag3_productid, pct: Number(blend.frag3_pct) });
+                }
+                for (const frag of frags) {
+                    const notes = await getProductNotes(frag.productid);
+                    const weightedPoints = basePoints * (frag.pct / 100);
+                    for (const note of notes) addScore(note, weightedPoints);
+                }
+            };
+
+            // RANK 1: Favourite notes from signup — 8pts flat per note
+            try {
+                const userRes = await client.query(`SELECT preferrednotes FROM users WHERE id = $1;`, [userid]);
+                const favNotes = flattenNotes(userRes.rows?.[0]?.preferrednotes);
+                for (const note of favNotes) addScore(note, 8);
+            } catch {}
+
+            // RANK 2: Ordered fragrances and blends — 6pts
+            try {
+                const ordersRes = await client.query(
+                    `SELECT items FROM orders WHERE customerid = $1 AND status != 'canceled';`,
+                    [userid]
+                );
+                for (const order of ordersRes.rows) {
+                    const items = Array.isArray(order.items) ? order.items : [];
+                    for (const item of items) {
+                        if (item.productType === "fragrance" && item.productID) {
+                            seenProductIds.add(item.productID);
+                            const notes = await getProductNotes(item.productID);
+                            for (const note of notes) addScore(note, 6);
+                        } else if (item.productType === "mix" && item.productID) {
+                            const blendRes = await client.query(`SELECT * FROM blends WHERE id = $1;`, [item.productID]);
+                            const blend = blendRes.rows?.[0];
+                            if (blend) await scoreBlend(blend, 6);
+                        }
+                    }
+                }
+            } catch {}
+
+            // RANK 3: Cart items — 4pts
+            try {
+                const cartRes = await client.query(`SELECT * FROM cart_items WHERE customerid = $1;`, [userid]);
+                for (const cartItem of cartRes.rows) {
+                    if (cartItem.type === "product" && cartItem.itemid) {
+                        seenProductIds.add(cartItem.itemid);
+                        const notes = await getProductNotes(cartItem.itemid);
+                        for (const note of notes) addScore(note, 4);
+                    } else if (cartItem.type === "blend" && cartItem.itemid) {
+                        const blendRes = await client.query(`SELECT * FROM blends WHERE id = $1;`, [cartItem.itemid]);
+                        const blend = blendRes.rows?.[0];
+                        if (blend) await scoreBlend(blend, 4);
+                    }
+                }
+            } catch {}
+
+            // RANK 4: Saved blends — 2pts, always percentage weighted
+            try {
+                const savedRes = await client.query(
+                    `SELECT * FROM blends WHERE userid = $1 AND status = 'saved';`,
+                    [userid]
+                );
+                for (const blend of savedRes.rows) await scoreBlend(blend, 2);
+            } catch {}
+
+            // Fetch all unseen active products and score them
+            const candidatesRes = await client.query(`SELECT * FROM products WHERE ishidden = false;`);
+            const candidates = candidatesRes.rows.filter(p => !seenProductIds.has(p.id));
+
+            const scored = candidates.map(product => {
+                const productNotes = flattenNotes(product.notes);
+                let score = 0;
+                for (const note of productNotes) {
+                    score += noteScores[note.toLowerCase().trim()] || 0;
+                }
+                score += Math.random() * 0.5; // tiny bias nudge so equal scores shuffle
+                return { ...product, score };
+            });
+
+            scored.sort((a, b) => b.score - a.score);
+            return { success: true, data: { recommendations: scored.slice(0, 4) } };
+
+        } catch (err) {
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get recommendations", 500);
+        }
+    }
+}
+
+module.exports = { Users, Products, Reviews, Orders, Blends, CartItems, Recommendations }
