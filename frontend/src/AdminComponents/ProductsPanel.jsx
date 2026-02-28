@@ -156,14 +156,23 @@ export default function ProductsPanel() {
     async function handleImageDrag(event, i) {
         event.preventDefault()
         const elem = event.currentTarget;
+        const scrollContainer = elem.parentElement;
 
         const initialElemRect = elem.getBoundingClientRect();
         initialElemRect.index = i;
         
         const initialX = event.clientX;
+        const initialScrollLeft = scrollContainer.scrollLeft;
+        const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth
         let newPosition = i;
+        let scrollLeftInterval;
+        let scrollRightInterval;
+
+        let lastClientX = event.clientX;
         const startDrag = (e) => {
-            const shift =  e.clientX - initialX;
+            lastClientX = e.clientX;
+
+            const shift =  (e.clientX - initialX) + (scrollContainer.scrollLeft - initialScrollLeft);
             elem.style.transform = `translate(${shift}px,0)`;
 
             //get sorted list of rects of image containers in increasing order
@@ -180,17 +189,52 @@ export default function ProductsPanel() {
             //checks who is closest to the mouse
             let closest = [99999999, i];
             for (const rect of allImageRects){
-                const distance = Math.abs(rect.right - e.clientX)
+                const distance = Math.abs((rect.left + (rect.right - rect.left) / 2) - e.clientX)
                 if (distance < closest[0]){
                     closest = [distance, rect.index]
                 }
             }
             newPosition = closest[1];
+
+            //move scroll container if near left/right end
+            /*main reason for complexity is that when mouse stops moving,
+             so does dragged image and scrolling */
+            const scrollRect = scrollContainer.getBoundingClientRect()
+            if (e.clientX < (scrollRect.left + 150)){
+                clearInterval(scrollRightInterval);
+                scrollRightInterval = null;
+
+                scrollLeftInterval = scrollLeftInterval 
+                ? scrollLeftInterval
+                : setInterval(() => {
+                    scrollContainer.scrollLeft -= 4;
+                    const shift =  (lastClientX - initialX) + (scrollContainer.scrollLeft - initialScrollLeft);
+                    elem.style.transform = `translate(${shift}px,0)`;
+                }, 16);
+            }else if (e.clientX > (scrollRect.right - 150)){
+                clearInterval(scrollLeftInterval);
+                scrollLeftInterval = null;
+
+                scrollRightInterval = scrollRightInterval 
+                ? scrollRightInterval
+                : setInterval(() => {
+                    if (scrollContainer.scrollLeft > maxScroll) return;
+                    scrollContainer.scrollLeft += 4;
+                    const shift =  (lastClientX - initialX) + (scrollContainer.scrollLeft - initialScrollLeft);
+                    elem.style.transform = `translate(${shift}px,0)`;
+                }, 16);
+            }else{
+                clearInterval(scrollLeftInterval)
+                clearInterval(scrollRightInterval)
+                scrollLeftInterval = null;
+                scrollRightInterval = null;
+            }
         }
         const endDrag = (e) => {
             elem.style.zIndex = "auto";
             elem.style.transform = ``;
-            
+            clearInterval(scrollLeftInterval)
+            clearInterval(scrollRightInterval)
             if (newPosition !== i){
                 const newImages = [...draft.images];
                 const temp1 = newImages[newPosition];
@@ -767,7 +811,6 @@ export default function ProductsPanel() {
                                             width={"100%"}
                                             height={"200px"}
                                             wrap={"nowrap"}
-                                            
                                             gap={"12px"}
                                             alignItems={"center"}
                                             backgroundColor={"rgb(253, 248, 245)"}
@@ -814,6 +857,12 @@ export default function ProductsPanel() {
                                                         fontSize={"1.3em"}
                                                         onClick={e => {
                                                             if (draft.images.length <= 1) return
+                                                            setDraft(prev => {
+                                                                return {
+                                                                    ...prev,
+                                                                    images: prev.images.filter(u => u !== url)
+                                                                }
+                                                            })
                                                         }}
                                                         >
                                                             <strong>X</strong>
@@ -914,6 +963,7 @@ export default function ProductsPanel() {
                                                     <View 
                                                     key={f.url}
                                                     width={"200px"}
+                                                    shrink={0}
                                                     border={"solid gray"}
                                                     borderWidth={"5px"}
                                                     borderRadius={"10px"}
