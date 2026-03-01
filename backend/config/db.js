@@ -1515,6 +1515,11 @@ class Recommendations {
 
         try {
             const noteScores = {};
+
+            // seenProductIds is rebuilt fresh every call — never stored permanently.
+            // If a user removes a product from cart or deletes a blend, 
+            // that product becomes recommendable again on the next call.
+
             const seenProductIds = new Set();
 
             const addScore = (note, points) => {
@@ -1540,6 +1545,13 @@ class Recommendations {
                 } catch { return []; }
             };
 
+            // Marks all component fragrances of a blend as seen
+            const markBlendSeen = (blend) => {
+                if (blend.frag1_productid) seenProductIds.add(blend.frag1_productid);
+                if (blend.frag2_productid) seenProductIds.add(blend.frag2_productid);
+                if (blend.frag3_productid) seenProductIds.add(blend.frag3_productid);
+            };
+
             const scoreBlend = async (blend, basePoints) => {
                 const frags = [
                     { productid: blend.frag1_productid, pct: Number(blend.frag1_pct) },
@@ -1556,6 +1568,7 @@ class Recommendations {
             };
 
             // RANK 1: Favourite notes from signup — 8pts flat per note
+            
             try {
                 const userRes = await client.query(`SELECT favorite_notes FROM users WHERE cognito_sub = $1;`, [userid]);
                 const favNotesRaw = userRes.rows?.[0]?.favorite_notes || "";
@@ -1564,6 +1577,7 @@ class Recommendations {
             } catch {}
 
             // RANK 2: Ordered fragrances and blends — 6pts
+           
             try {
                 const ordersRes = await client.query(
                     `SELECT items FROM orders WHERE customerid = $1 AND status != 'canceled';`,
@@ -1572,20 +1586,24 @@ class Recommendations {
                 for (const order of ordersRes.rows) {
                     const items = Array.isArray(order.items) ? order.items : [];
                     for (const item of items) {
-                        if (item.productType === "fragrance" && item.productID) {
-                            seenProductIds.add(item.productID);
-                            const notes = await getProductNotes(item.productID);
+                        if (item.type === "product" && item.itemid) {
+                            seenProductIds.add(item.itemid);
+                            const notes = await getProductNotes(item.itemid);
                             for (const note of notes) addScore(note, 6);
-                        } else if (item.productType === "mix" && item.productID) {
-                            const blendRes = await client.query(`SELECT * FROM blends WHERE id = $1;`, [item.productID]);
+                        } else if (item.type === "blend" && item.itemid) {
+                            const blendRes = await client.query(`SELECT * FROM blends WHERE id = $1;`, [item.itemid]);
                             const blend = blendRes.rows?.[0];
-                            if (blend) await scoreBlend(blend, 6);
+                            if (blend) {
+                                await scoreBlend(blend, 6);
+                                markBlendSeen(blend);
+                            }
                         }
                     }
                 }
             } catch {}
 
             // RANK 3: Cart items — 4pts
+           
             try {
                 const cartRes = await client.query(`SELECT * FROM cart_items WHERE customerid = $1;`, [userid]);
                 for (const cartItem of cartRes.rows) {
@@ -1596,21 +1614,28 @@ class Recommendations {
                     } else if (cartItem.type === "blend" && cartItem.itemid) {
                         const blendRes = await client.query(`SELECT * FROM blends WHERE id = $1;`, [cartItem.itemid]);
                         const blend = blendRes.rows?.[0];
-                        if (blend) await scoreBlend(blend, 4);
+                        if (blend) {
+                            await scoreBlend(blend, 4);
+                            markBlendSeen(blend);
+                        }
                     }
                 }
             } catch {}
 
-            // RANK 4: Saved blends — 2pts, always percentage weighted
+            // RANK 4: Saved blends — 2pts, percentage weighted
+    
             try {
                 const savedRes = await client.query(
-                    `SELECT * FROM blends WHERE userid = $1 AND status = 'saved';`,
+                    `SELECT * FROM blends WHERE userid = $1;`,
                     [userid]
                 );
-                for (const blend of savedRes.rows) await scoreBlend(blend, 2);
+                for (const blend of savedRes.rows) {
+                    await scoreBlend(blend, 2);
+                    markBlendSeen(blend);
+                }
             } catch {}
 
-            // Fetch all unseen active products and score them
+            // Fetch all active products, exclude ones user already interacted with, score by note match
             const candidatesRes = await client.query(`SELECT * FROM products WHERE ishidden = false;`);
             const candidates = candidatesRes.rows.filter(p => !seenProductIds.has(p.id));
 
@@ -1620,7 +1645,7 @@ class Recommendations {
                 for (const note of productNotes) {
                     score += noteScores[note.toLowerCase().trim()] || 0;
                 }
-                score += Math.random() * 0.5; // tiny bias nudge so equal scores shuffle
+                score += Math.random() * 0.5; // tiny nudge so equal scores shuffle
                 return { ...product, score };
             });
 
@@ -1634,5 +1659,4 @@ class Recommendations {
         }
     }
 }
-
 module.exports = { Users, Products, Reviews, Orders, Blends, CartItems, Recommendations }
