@@ -1,7 +1,7 @@
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require("uuid");
-const { Users, Products, Reviews, Orders, Blends, CartItems } = require("./config/db.js")
+const { Users, Products, Reviews, Orders, Blends, CartItems, Recommendations } = require("./config/db.js")
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -28,7 +28,7 @@ const reviews = new Reviews()
 const orders = new Orders()
 const blends = new Blends()
 const cartItems = new CartItems()
-
+const recommendations = new Recommendations()
 
 // General wrapper to prevent server crashing
 function handleError(fn){
@@ -478,6 +478,18 @@ async function updateCart(req, res) {
   return res.json(result);
 }
 
+// path: GET /recommendations
+async function getRecommendations(req, res) {
+    const userid = req.tokenPayload?.sub;
+    if (!userid) {
+        return res.status(401).json({ success: false, message: "Missing user identifier" });
+    }
+    const result = await recommendations.getRecommendations(userid);
+    if (!result.success) {
+        return res.status(result.status || 500).json(result);
+    }
+    return res.json(result);
+}
 
 /* 
 Though probably not needed, we can use wrappers down the line that
@@ -490,6 +502,9 @@ function handleOtherService(fn){
   }
 }
 */
+
+
+
 getServerHTML = handleError(getServerHTML);
 
 getUser = handleError(getUser);
@@ -523,6 +538,8 @@ getUploadURL = handleError(getUploadURL);
 saveBlend = handleError(saveBlend);
 addBlendToCart = handleError(addBlendToCart);
 getUserBlends = handleError(getUserBlends);
+getRecommendations = handleError(getRecommendations);    //get recommendation
+
 
 createCartItem = handleError(createCartItem);
 deleteCartItem = handleError(deleteCartItem);
@@ -541,4 +558,5 @@ module.exports = {
   saveBlend, addBlendToCart, getUserBlends, deleteUserBlend,
   createCartItem, deleteCartItem, getCart, clearCart, updateCart,
   getUploadURL,
+  getRecommendations,
 };

@@ -9,7 +9,7 @@ import {
   deleteCartItemReq, 
   createOrderReq,
   clearCartReq,
-  getActiveProductsReq,
+  getRecommendationsReq,
 } from "../requests.js";
 
 // fonts //
@@ -45,31 +45,24 @@ export default function Cart({ customerid }) {
   const [message, setMessage] = useState("");
 
 
-  const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(true);
 
   
   useEffect(() => {
     if (!cartLoaded) return;
-    async function loadProducts() {
-      try {
-        const data = await getActiveProductsReq();
-        if (!data.success){
-          throw new Error(data.message);
+    async function loadRecommendations() {
+        try {
+            const data = await getRecommendationsReq();
+            setRecommendations(data?.data?.recommendations || []);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setTimeout(() => setLoadingRecommendations(false), 500);
         }
-        setProducts(data.data.products);
-      } 
-      catch (err) {
-        console.error(err);
-        setMessage("Failed to load products.");
-      } 
-      finally {
-        // .5 seconds to load the cart this can be changed but its so the page doesnt flash so much
-        setTimeout(() => setLoadingProducts(false), 500);
-      }
     }
-    loadProducts();
-  }, [cartLoaded]); 
+    loadRecommendations();
+}, [cartLoaded]);
 
   useEffect(() => {
     async function loadCart() {
@@ -333,10 +326,10 @@ setLoadingCart(false);
               </View>
             </Flex>
       )}
-      {loadingProducts && (
+      {loadingRecommendations && (
         <Text style={bodyStyleBlack}>Loading recommendations...</Text>
       )}
-      {!loadingProducts &&  (
+      {!loadingRecommendations && (
       <View>
         <Text style={headingStyle} marginBottom=".5rem">
           You May Also Like
@@ -345,7 +338,7 @@ setLoadingCart(false);
             wrap="wrap"
             justifyContent="center">
             {/* TODO: swap is featured to recommendations array */}
-              {products.filter((prod) => prod.isfeatured === true).map((prod) => (
+              {recommendations.map((prod) => (
                 <Card
                   key={prod.id}
                   variation="elevated"

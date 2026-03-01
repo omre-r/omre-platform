@@ -128,6 +128,7 @@ app.post("/cartitems", [verifyToken], controllers.createCartItem);
 
 // miscellaneous
 app.get("/uploadurl", [verifyToken], controllers.getUploadURL)
+app.get("/recommendations", [verifyToken], controllers.getRecommendations)
 
 //starting server
 app.listen(PORT || 5001, () => {

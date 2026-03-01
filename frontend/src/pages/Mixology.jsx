@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, Flex, Text, Button, SelectField, Grid, SliderField, Table, TableRow, TableCell, TableHead } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getActiveProductsReq, saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq } from "../requests.js";
+import { getActiveProductsReq, saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq, createCartItemReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import Omre2 from "../assets/Mixology/OMRE2.png";
@@ -300,32 +300,51 @@ export default function Mixology() {
     }
 
     async function handleAddToCart() {
-        if (!validateBlendSelections()) return;
-        setBlendLoading(true);
-        setMessage("");
-        try {
-            const data = await addBlendToCartReq(buildBlendPayload());
-            if (!data.success) {
-                setMessage(data.message || "Something went wrong. Please try again.");
-                return;
-            }
-            // stockUnavailable comes back as success: false but is NOT a crash
-            if (data.stockUnavailable) {
-                setMessage(result.message);
-                return;
-            }
-            if (!data.success) {
-                setMessage(result.message || "Failed to add blend to cart.");
-                return;
-            }
-            // success + cartReady
-            setMessage("Blend Ready!");
-        } catch (err) {
-            setMessage("Failed to add blend to cart.");
-        } finally {
-            setBlendLoading(false);
+    if (!validateBlendSelections()) return;
+    setBlendLoading(true);
+    setMessage("");
+    try {
+        const blendPayload = buildBlendPayload();
+        const res = await addBlendToCartReq(blendPayload);
+
+        // stockUnavailable comes back as success: false but is NOT a crash
+        if (res.stockUnavailable) {
+            setMessage(res.message || "Not enough stock for this blend.");
+            return;
         }
+        if (!res.success) {
+            setMessage(res.message || "Failed to add blend to cart.");
+            return;
+        }
+
+        // success + cartReady
+        // Create cart items row pointing to the blend
+        // Taking the responses data and grabbing the blend by id
+        const blendId = res.data.blend.id;
+        if (!blendId) {
+            setMessage("Failed getting blendId");
+            return;
+        }
+
+        // Write information to cart_item table
+        const cartRes = await createCartItemReq({
+            customerid: blendPayload.userid,
+            itemid: blendId,
+            type: "blend",
+        });
+
+        if (!cartRes.success) {
+            setMessage(cartRes.message || "Issue adding blend to cart.");
+            return;
+        }
+
+        setMessage("Blend added to cart!");
+    } catch (err) {
+        setMessage("Failed to add blend to cart.");
+    } finally {
+        setBlendLoading(false);
     }
+}
 
     // Colors for the liquid in the bottl ---------------------------------------------------
     // Mock for now, fragrances may include color details in the backend in the future

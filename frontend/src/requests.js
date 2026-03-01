@@ -397,6 +397,18 @@ async function clearCartReq(customerid) {
     return data;
 }
 
+
+async function getRecommendationsReq() {
+    const response = await fetch(backendURL + `/recommendations`, {
+        headers: { "Authorization": `Bearer ${getToken()}` }
+    });
+    const data = await response.json();
+    if (!data.success) {
+        console.error(data.message || "req failed");
+    }
+    return data;
+}
+
 // miscellaneous
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];    //We are allowing upto 4 images types
@@ -567,6 +579,10 @@ getCartReq = handleError(getCartReq);
 clearCartReq = handleError(clearCartReq);
 updateCartReq = handleError(updateCartReq);
 
+// Recommendations
+getRecommendationsReq = handleError(getRecommendationsReq);
+
+
 // Misc
 uploadAndGetURlsReq = handleError(uploadAndGetURlsReq)
 uploadImageToS3Req = handleError(uploadImageToS3Req);
@@ -583,5 +599,6 @@ export {
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
     saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
+    getRecommendationsReq,
     validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq, uploadAndGetURlsReq
 }
