@@ -1,14 +1,15 @@
 import { Card, Flex, View, Text, Button } from "@aws-amplify/ui-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getProductReq } from "../requests";
+import { getProductReq, getRelatedProductsReq } from "../requests";
 
 import Navbar from "../components/Navbar";
 
 export default function Product(){
     const params = useParams()
 
-    const [product, setProduct] = useState(null)
+    const [products, setProducts] = useState([])
+    const [selectedProduct, setSelectedProduct] = useState(null)
     const [loadingProduct, setLoadingProduct] = useState(true);
     const [displayedImage, setDisplayedImage] = useState(0)
 
@@ -18,13 +19,15 @@ export default function Product(){
     },[])
     async function loadProduct() {
         setLoadingProduct(true);
-        const data = await getProductReq(params.productID);
+        const data = await getRelatedProductsReq(params.parentid);
         setLoadingProduct(false)
         if (!data.success){
             setErrorMessage(data.message);
             return;
         }
-        setProduct(data.data.product);
+        const products = data.data.products;
+        setProducts(products)
+        setSelectedProduct(products[0]);
     }
     if (loadingProduct){
         return (
@@ -75,11 +78,11 @@ export default function Product(){
                 borderRadius={"30px"}
                 overflow={"hidden"}
                 >
-                    <img src={product.images[displayedImage]} alt="cover" 
+                    <img src={selectedProduct.images[displayedImage]} alt="cover" 
                     style={{width:"100%", height: "100%", objectFit: "contain",display: "block"}}/>
                 </View>
                 <Flex>
-                    {product.images.map((url, i) => {
+                    {selectedProduct.images.map((url, i) => {
                         return (
                             <View
                             width={"50px"}
@@ -116,18 +119,38 @@ export default function Product(){
                     borderRadius: "10px 10px"
                 }}
                 >
-                    {product.name}
+                    {selectedProduct.name}
                 </h1>
 
                 <Text
                 width={"100%"}
                 textAlign={"left"}
                 >
-                    Price: ${product.price}
+                    Price: ${selectedProduct.price}
                 </Text>
+
                 <View
                 width={"100%"}
                 >
+                    <h2
+                    style={{
+                        fontSize: "1.2rem",
+                    }}
+                    >
+                        Sizes
+                    </h2>
+                    <Text
+                    textAlign={"left"}
+                    >
+                        {products.map(p => {
+                            return (
+                                <Button key={p.id} onClick={() => setSelectedProduct(p)}>
+                                    {p.variation}
+                                </Button>
+                            )
+                        })}
+                    </Text>
+
                     <h2
                     style={{
                         fontSize: "1.2rem",
@@ -138,7 +161,7 @@ export default function Product(){
                     <Text
                     textAlign={"left"}
                     >
-                        {product.description}
+                        {selectedProduct.description}
                     </Text>
                 <View
                 width={"100%"}
@@ -156,7 +179,7 @@ export default function Product(){
                         <h3>Top</h3>
                         <Flex
                         wrap={"wrap"}>
-                            {product.notes.top.map(note => {
+                            {selectedProduct.notes.top.map(note => {
                                 return (
                                     <Text
                                     padding={"5px"}
@@ -170,7 +193,7 @@ export default function Product(){
                         <h3>Heart</h3>
                         <Flex
                         wrap={"wrap"}>
-                            {product.notes.heart.map(note => {
+                            {selectedProduct.notes.heart.map(note => {
                                 return (
                                     <Text
                                     padding={"5px"}
@@ -180,7 +203,7 @@ export default function Product(){
                                     </Text>
                                 )
                             })}
-                            {product.notes.heart.length === 0 &&
+                            {selectedProduct.notes.heart.length === 0 &&
                             <Text
                             paddingLeft={"20px"}
 
@@ -191,7 +214,7 @@ export default function Product(){
                         <h3>Base</h3>
                         <Flex
                         wrap={"wrap"}>
-                            {product.notes.base.map(note => {
+                            {selectedProduct.notes.base.map(note => {
                                 return (
                                     <Text
                                     padding={"5px"}
@@ -201,7 +224,7 @@ export default function Product(){
                                     </Text>
                                 )
                             })}
-                            {product.notes.base.length === 0 &&
+                            {selectedProduct.notes.base.length === 0 &&
                             <Text
                             paddingLeft={"20px"}
                             >
