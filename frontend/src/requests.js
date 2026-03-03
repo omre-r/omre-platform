@@ -71,6 +71,16 @@ async function getProductReq(id){
     return data;
 }
 
+async function getRelatedProductsReq(parentid){
+    const response = await fetch(backendURL + `/products/related/${parentid}`);
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+
 // It would probably be better if the frontend ensured if images were URLs before calling update
 async function updateProductReq(id, updatedFields){
     const response = await fetch(backendURL + `/products/${id}`, {
@@ -543,6 +553,7 @@ deleteUserReq = handleError(deleteUserReq);
 
 // Products
 getProductReq = handleError(getProductReq);
+getRelatedProductsReq = handleError(getRelatedProductsReq);
 updateProductReq = handleError(updateProductReq);
 deleteProductReq = handleError(deleteProductReq);
 getActiveProductsReq = handleError(getActiveProductsReq);
@@ -594,7 +605,7 @@ createProductAWSFlowReq = handleError(createProductAWSFlowReq);
 
 export {
     getUserReq, getUsersReq, createUserReq, deleteUserReq,
-    getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
+    getProductReq, getRelatedProductsReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
     saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq,

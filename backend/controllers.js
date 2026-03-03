@@ -126,6 +126,16 @@ async function getProduct(req, res) {
   return res.json(result)
 }
 
+// path: GET /products/related/:parentid
+async function getRelatedProducts(req, res) {
+  const {parentid} = req.params;
+  const result = await products.getRelatedProducts(parentid);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result)
+}
+
 // path: PUT /products/:id
 async function updateProduct(req, res) {
   const {id} = req.params;
@@ -513,6 +523,7 @@ createUser = handleError(createUser);
 deleteUser = handleError(deleteUser);
 
 getProduct = handleError(getProduct);
+getRelatedProducts = handleError(getRelatedProducts);
 updateProduct = handleError(updateProduct);
 deleteProduct = handleError(deleteProduct);
 getActiveProducts = handleError(getActiveProducts);
@@ -552,7 +563,7 @@ deleteUserBlend = handleError(deleteUserBlend);
 module.exports = {
   getServerHTML,
   getUser, getUsers, createUser, deleteUser, updateLastLogin,
-  getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts,
+  getProduct, getRelatedProducts, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders,
   saveBlend, addBlendToCart, getUserBlends, deleteUserBlend,
