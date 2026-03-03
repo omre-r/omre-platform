@@ -89,6 +89,7 @@ async function createTables() {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS products(
             id VARCHAR(100) PRIMARY KEY,
+            parentid VARCHAR(100),
             type VARCHAR(100),
             name VARCHAR(1000),
             variation VARCHAR(200),
@@ -349,7 +350,7 @@ class Products{
         if (!client){
             return prepareRollback((c) => this.createProduct(options, c));
         }
-        const {type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden} = options;
+        const {parentid, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden} = options;
         const id = uuidv4();
 
         // Validation
@@ -372,9 +373,9 @@ class Products{
         }  
     
         let result;
-        const query = `INSERT INTO products (id, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;`;
+        const query = `INSERT INTO products (id, parentid, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *;`;
         try{
-            result = await client.query(query, [id, type, name, variation, price, JSON.stringify(images), stock_ml, JSON.stringify(notes), description, isfeatured, ishidden]);
+            result = await client.query(query, [id, parentid ? parentid : uuidv4(), type, name, variation, price, JSON.stringify(images), stock_ml, JSON.stringify(notes), description, isfeatured, ishidden]);
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
