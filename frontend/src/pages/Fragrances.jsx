@@ -437,7 +437,7 @@ export default function Home() {
                   style={{ ...bodyStyle, fontWeight: 600 }}
                   textAlign="center"
                 >
-                  {prod.price}
+                  ${prod.price}
                 </Text>
               </Link>
             </Card>

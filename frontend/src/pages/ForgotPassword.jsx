@@ -9,6 +9,7 @@ import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { Card, View, Flex, Link, Text, TextField, Button, Heading } from "@aws-amplify/ui-react";
 import {resetPassword, confirmResetPassword} from "aws-amplify/auth";
+import { Eye, EyeOff } from "lucide-react";
 
 /*
 Custom Styles ------------------------------------------------------------------------------------------------
@@ -27,6 +28,13 @@ const luxuryBodyStyle = {
   fontSize: "1.3rem",   
   letterSpacing: "0.3px",
 };
+const luxuryCompactStyle = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 200,
+  fontSize: "1.1rem",   
+  letterSpacing: "0.15px",
+};
+
 
 // Forgot Password -----------------------------------------------------------------------------------------
 // If user has forgot password will go throough the process of sending a reset code to their email and then 
@@ -41,9 +49,33 @@ const ForgotPassword = () => {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
+    const [passwordRequirements, setPasswordRequirements] = useState({
+        length: false,
+        uppercase: false,
+        number: false,
+        specialChar: false,
+        });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     // Feedback Messages ------------------------------------------------------------------------
     const [authError, setAuthError] = useState("");
     const [authSuccess, setAuthSuccess] = useState("");
+
+
+    // Real-time password requirements checker -----------------------------------------
+    const handlePasswordChange = (e) => {
+    const value = e.target.value;
+        setNewPassword(value);
+
+        setPasswordRequirements({
+            length: value.length >= 8,
+            uppercase: /[A-Z]/.test(value),
+            number: /[0-9]/.test(value),
+            // Special character is any character that is not these characters "^"
+            specialChar: /[^A-Za-z0-9]/.test(value)
+        });
+    };
 
     // Function to send reset code -------------------------------------------------------
     // user enters email (username), if no error will send and change ui to verification mode
@@ -116,7 +148,7 @@ const ForgotPassword = () => {
                         width="30rem"
                         margin="1rem auto"
                         padding="2rem"
-                        marginTop= { isVerify ? "-25rem" : "-30rem" }
+                        marginTop= { isVerify ? "-15rem" : "-30rem" }
                         backgroundColor="#f6f1ecbc"
                         border="none"
                         box-shadow="0 14px 36px rgba(75, 15, 15, 0.15)"
@@ -153,34 +185,56 @@ const ForgotPassword = () => {
                                 style={luxuryBodyStyle}
                                 label="Verification Code"
                                 type="text"
-                                placeholder="Enter verification code"
                                 required
                                 marginTop="-.2rem"
                                 value={verificationCode}
                                 onChange={(e) => setVerificationCode(e.target.value)}
                             />
-                            <TextField
-                                color="#2B1E1A"
-                                style={luxuryBodyStyle}
-                                label="Enter new password"
-                                type="password"
-                                placeholder="Enter new password"
-                                required
-                                marginTop="-.2rem"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                            />
-                            <TextField
-                                color="#2B1E1A"
-                                style={luxuryBodyStyle}
-                                label="Confirm new password"
-                                type="password"
-                                placeholder="Confirm new password"
-                                required
-                                marginTop="-.2rem"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                            />
+                            <Flex direction="row" alignItems="flex-end" gap="0.5rem" marginTop="-.2rem">
+                                <TextField
+                                    color="#2B1E1A"
+                                    style={luxuryBodyStyle}
+                                    label="Enter new password"
+                                    type={showPassword ? "text" : "password"}
+                                    required
+                                    marginTop="-.2rem"
+                                    value={newPassword}
+                                    onChange={handlePasswordChange}
+                                />
+                                <span onClick={() => setShowPassword(!showPassword)} style={{ cursor: "pointer" }}>
+                                    {showPassword ? <EyeOff size={25} /> : <Eye size={25} />}
+                                </span>
+                            </Flex>
+                            <Flex direction="row" alignItems="flex-end" gap="0.5rem" marginTop="-.2rem">
+                                <TextField
+                                    color="#2B1E1A"
+                                    style={luxuryBodyStyle}
+                                    label="Confirm new password"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    required
+                                    marginTop="-.2rem"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                />
+                                <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ cursor: "pointer" }}>
+                                    {showConfirmPassword ? <EyeOff size={25} /> : <Eye size={25} />}
+                                </span>
+                            </Flex>
+                                <View marginTop="-.6rem">
+                                    <Text style={luxuryBodyStyle}>Password must include:</Text>
+                                    <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.length ? "green" : "red" }}>
+                                        At least 8 characters
+                                    </Text>
+                                    <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.uppercase ? "green" : "red" }}>
+                                        At least one uppercase letter
+                                    </Text>
+                                    <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.number ? "green" : "red" }}>
+                                        At least one number
+                                    </Text>
+                                    <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.specialChar ? "green" : "red" }}>
+                                        At least one special character
+                                    </Text>
+                                </View>
                             <Button
                                 variation="primary"
                                 marginTop="1rem"

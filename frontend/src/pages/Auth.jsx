@@ -85,7 +85,7 @@ export default function Auth() {
             // Special character is any character that is not these characters "^"
             specialChar: /[^A-Za-z0-9]/.test(value)
         });
-};
+    };
 
     // Verification ----------------------------------------------
     // sets the code and email when submitting sign up
@@ -327,7 +327,6 @@ export default function Auth() {
                                 style={luxuryBodyStyle}
                                 label="Verification Code"
                                 type="text"
-                                placeholder="Enter verification code"
                                 required
                                 marginTop="-.2rem"
                                 value={verificationCode}
@@ -455,7 +454,6 @@ export default function Auth() {
                         style={luxuryBodyStyle}
                         label="Confirm Password"
                         type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm your password"
                         required
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
