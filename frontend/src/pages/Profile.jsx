@@ -1,7 +1,8 @@
 import Navbar from "../components/Navbar";
-import { View, Card, Flex, Text, Grid, Heading, ToggleButton } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, Heading, ToggleButton } from "@aws-amplify/ui-react";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useEffect, useState } from "react";
+import {getUserSavedBlendsReq, getActiveProductsReq } from "../requests.js";
 
 // Fonts ----------------------------------------------
 const luxuryHeadingStyle = {
@@ -23,11 +24,94 @@ const luxuryBodyStyle = {
     letterSpacing: "0.2px",
 };
 
+// Styles to change font and outline of table headers and body ------------------------------
+const tableHeaderStyle = {
+    ...luxuryBodyStyle,
+    fontSize: "1.45rem",  
+    fontWeight: 550,
+    letterSpacing: "0.3px",
+    backgroundColor: "transparent",
+    border: "none",
+    boxShadow: "none",
+    outline: "none",
+}
+const tableBodyStyle = {
+    ...luxuryBodyStyle,
+    fontSize: "1.2rem",  
+    fontWeight: 400,
+    letterSpacing: "0.2px",
+    backgroundColor: "transparent",
+    border: "none",
+    boxShadow: "none",
+    outline: "none",
+}
+
 export default function Profile() {
     const [message, setMessage] = useState("");
     const [firstName, setfirstName] = useState("");
     const [activeTab, setActiveTab] = useState("overview");    
     const [selectedNotes, setSelectedNotes] = useState([]); 
+    const [loadedBlends, setLoadedBlends] = useState([]);
+    const [products, setProducts] = useState([]);
+
+    // Load products from backend ---------------------------------------
+    async function loadProducts() {
+        setMessage("");
+        setLoadingProducts(true);
+        try {
+            const data = await getActiveProductsReq();  
+            if (!data.success){
+                throw new Error(data.message)
+            }
+            setProducts(data.data.products)
+        }
+        catch (error) {
+            setMessage(error.message || "Error loading products.");
+        }
+        finally {
+            setLoadingProducts(false);
+        }
+    }
+
+    async function loadBlends() {
+        let userid;
+        for (let key of Object.keys(localStorage)){
+            if (key.includes("idToken")){
+                const idToken = localStorage.getItem(key)        
+                const base64 = idToken.split(".")[1]
+                const decoded = JSON.parse(atob(base64))
+                userid = decoded.sub
+                break
+            };
+        }
+        setMessage("");
+        try {
+            const data = await getUserSavedBlendsReq(userid);
+            if (!data.success){
+                throw new Error(data.message);
+            }
+            setLoadedBlends(data.data.blends);
+        }
+        catch (error) {
+            setMessage(error.message || "Error loading saved blends.");
+        }
+    }
+
+    // Get product ID from product object, accounting for different possible key names ---------------------------
+    function getProductId(product) {
+        return product.productid || product.product_id || product.id;
+    }
+
+    // Grab the product name by using the ID ------------------------------------------
+    function getProductNameById(productId) {
+        // If no product id return empty string, this will happen if a blend does not have a third fragrance
+        if (!productId) { 
+            return "";
+        }
+        // Find the product in the products list that matches the id, accounting for different possible key names for the id in the product object
+        const match = products.find((p) => String(getProductId(p)) === String(productId));
+        return match?.name || "Unknown";
+    }
 
     // Toggle Note -----------------------------------------------------------
     // Once note is toggled you take that note and add/remove it from selectedNotes array
@@ -41,6 +125,17 @@ export default function Profile() {
         });
     };
 
+    // If activeTab mixes will load blends --------------------------------------
+    useEffect(() => {
+        if (activeTab === "mixes") {
+            loadBlends();
+        }
+    }, [activeTab]);
+
+    // Load products on component mount ---------------------------------------
+    useEffect(() => {
+        loadProducts();
+    }, []);
 
     return (
         <>
@@ -114,10 +209,69 @@ export default function Profile() {
                         </Text>
                     )}
 
+                    
                     {activeTab === "mixes" && (
-                        <Text style={luxuryBodyStyle}>
-                            Saved mixes
-                        </Text>
+                        <View marginTop="1rem"  >
+                            <Text 
+                                style={luxurySubheadingStyle}>
+                                Your Saved Blends
+                            </Text>
+                            {/* If no blends are currently saved to users profile */}
+                            {loadedBlends.length === 0 ? (
+                                <Text style={luxuryBodyStyle}>
+                                    No saved blends yet. Create one above and press “Save Fragrance”.
+                                </Text>
+                            ) : ( 
+                                <View
+                                    style={{
+                                        backgroundColor: "#300a0a38",
+                                        borderRadius: "14px",
+                                    }}
+                                >
+                                <Table
+                                    style={{             
+                                    }}>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell style={tableHeaderStyle}>Fragrance 1</TableCell>
+                                        <TableCell style={tableHeaderStyle}>Fragrance 2</TableCell>
+                                        <TableCell style={tableHeaderStyle}>Fragrance 3</TableCell>
+                                        <TableCell style={tableHeaderStyle}>Size</TableCell>
+                                        <TableCell style={tableHeaderStyle}>Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                {loadedBlends.map((blend) => (
+                                    <TableRow 
+                                        key={blend.id}
+                                        style={{
+                                        borderTop: "1px solid rgba(0,0,0,0.15)"
+                                    }}>
+                                        <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)</TableCell>
+                                        <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)</TableCell>
+                                        <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag3_productid)} ({blend.frag3_pct ? `${blend.frag3_pct}%` : "~"})</TableCell>
+                                        <TableCell style={{...tableBodyStyle, whiteSpace: "nowrap" }}>{blend.size_ml} ML</TableCell>
+                                        <TableCell style={tableBodyStyle}>
+                                            <Flex direction="row" gap="0.2rem">
+                                            <Button
+                                                style={luxuryBodyStyle}
+                                                onClick={() => handleAddSavedBlendToCart(blend)}>
+                                                Add to Cart
+                                            </Button>
+                                            <Button
+                                                style={luxuryBodyStyle}
+                                                onClick={() => { 
+                                                    handleDeleteBlend(blend.id);
+                                                }}>
+                                                Delete Blend
+                                            </Button>
+                                            </Flex>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                                </Table>
+                            </View>
+                            )}
+                        </View>
                     )}
 
                     {activeTab === "preferences" && (
