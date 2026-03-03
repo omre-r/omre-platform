@@ -63,7 +63,6 @@ export default function Auth() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [firstname, setFirstName] = useState("");
     const [lastname, setLastName] = useState("");
-    const [selectedNotes, setSelectedNotes] = useState([]); // MAY NOT BE SIGN UP ONLY LATER !!!
     const [passwordRequirements, setPasswordRequirements] = useState({
         length: false,
         uppercase: false,
@@ -101,20 +100,6 @@ export default function Auth() {
     // Syncs authorization app wide after signing in, will refresh after signing in so user can log out or acess admin page
     const { refreshAuth } = useAuth();
 
-
-    // Toggle Note -----------------------------------------------------------
-    // Once note is toggled you take that note and add/remove it from selectedNotes array
-    // Can toggle multiple notes
-    // Toggles a note in selectedNotes
-
-    const toggleNote = (note) => {
-        setSelectedNotes((prev) => {
-            if (prev.includes(note)) 
-                return prev.filter((n) => n !== note);
-            return [...prev, note];
-        });
-    };
-
     // Handle Sign Up ---------------------------------------------------------------
     // Initially clear previous messages if testing before
     // Make sure that everything is filled out for sign up form and that passwords match
@@ -130,12 +115,10 @@ export default function Auth() {
             setAuthError("Passwords do not match.");
             return;
         }
-        const favoriteNotesString = selectedNotes.join(", ");
         try {
             // Calling sign up function from Amplify Auth
             // {isSignUpComplete, userId, nextStep } these are returned from the signUp function
             // Email is treated as the username
-            // UserAttributes are very simple, custom attribute is the custom favorite notes string
             const {isSignUpComplete, userId, nextStep } = await signUp({
                 username: email,
                 password: password,
@@ -144,7 +127,6 @@ export default function Auth() {
                         email,
                         given_name: firstname,
                         family_name: lastname,
-                        "custom:favorite_notes": favoriteNotesString || "",
                     }
                 }
             });
@@ -486,30 +468,6 @@ export default function Auth() {
                         </Text>
                     </View>
                     )}
-
-                        {/* 
-                        <Heading level={3} 
-                            color="#2B1E1A" 
-                            style={luxuryBodyStyle}
-                            >
-                            {"Which notes are you drawn to?"}
-                        </Heading>
-
-                        <Grid
-                            templateColumns="repeat(2, 1fr)"
-                            gap="0.5rem"
-                            marginBottom="1rem"
-                        >
-                            <ToggleButton isPressed={selectedNotes.includes("Vanilla")} onClick={() => toggleNote("Vanilla")}>Vanilla</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Rose")} onClick={() => toggleNote("Rose")}>Rose</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Oud")} onClick={() => toggleNote("Oud")}>Oud</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Bergamot")} onClick={() => toggleNote("Bergamot")}>Bergamot</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Sandalwood")} onClick={() => toggleNote("Sandalwood")}>Sandalwood</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Jasmine")} onClick={() => toggleNote("Jasmine")}>Jasmine</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Cedarwood")} onClick={() => toggleNote("Cedarwood")}>Cedarwood</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Amber")} onClick={() => toggleNote("Amber")}>Amber</ToggleButton>
-                        </Grid>
-                        */}
                         </>
                     )}
 

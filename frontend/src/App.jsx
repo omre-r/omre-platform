@@ -12,6 +12,7 @@ import AboutUs from "./pages/AboutUs";
 import Cart from "./pages/Cart";
 import Contact from "./pages/Contact";
 import Product from "./pages/Product";
+import Profile from "./pages/Profile";
 
 import './App.css'
 
@@ -30,7 +31,7 @@ function App() {
         <Route path="/AboutUs" element={<AboutUs />} />
         <Route path="/Cart" element={<Cart />} />
         <Route path="/Contact" element={<Contact />} />
-
+        <Route path="/Profile" element={<Profile />} />
         <Route path="/Fragrances/:productID" element={<Product/>}/>
         
       </Routes>
