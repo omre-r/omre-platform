@@ -268,6 +268,30 @@ export default function Mixology() {
         };
     }
 
+    // Build payload from a previously saved blend ----------------------------------
+    function buildBlendPayloadFromSavedBlend(blend) {
+        let userid;
+        for (let key of Object.keys(localStorage)){
+            if (key.includes("idToken")){
+                const idToken = localStorage.getItem(key)        
+                const base64 = idToken.split(".")[1]
+                const decoded = JSON.parse(atob(base64))
+                userid = decoded.sub
+                break
+            };
+        }
+        return {
+            userid,
+            frag1_productid: blend.frag1_productid,
+            frag2_productid: blend.frag2_productid,
+            frag3_productid: blend.frag3_productid || null,
+            frag1_pct: blend.frag1_pct,
+            frag2_pct: blend.frag2_pct,
+            frag3_pct: blend.frag3_pct || null,
+            size_ml: Number(blend.size_ml),
+        };
+    }
+
     // Frontend validation before hitting the backend
     function validateBlendSelections() {
         if (!cologne1Id || !cologne2Id) {
@@ -342,6 +366,56 @@ export default function Mixology() {
     } catch (err) {
         setMessage("Failed to add blend to cart.");
     } finally {
+        setBlendLoading(false);
+    }
+}
+
+// Taking a saved blend and adding it to the cart ---------------------------------------
+// Making sure that we create the payload, check userid, product stock,
+async function handleAddSavedBlendToCart(savedBlend) {
+    setBlendLoading(true);
+    setMessage("");
+    try {
+        const blendPayload = buildBlendPayloadFromSavedBlend(savedBlend);
+        if (!blendPayload.userid) {
+            setMessage("User not found. Please log in again.");
+            return;
+        }
+
+        const res = await addBlendToCartReq(blendPayload);
+        if (res.stockUnavailable) {
+            setMessage(res.message || "Not enough stock for this blend.");
+            return;
+        }
+        if (!res.success) {
+            setMessage(res.message || "Failed to add blend to cart.");
+            return;
+        }
+
+        const blendId = res.data.blend.id;
+        if (!blendId) {
+            setMessage("Failed getting blendId");
+            return;
+        }
+
+        const cartRes = await createCartItemReq({
+            customerid: blendPayload.userid,
+            itemid: blendId,
+            type: "blend",
+        });
+
+        if (!cartRes.success) {
+            setMessage(cartRes.message || "Issue adding blend to cart.");
+            return;
+        }
+
+        setMessage("Blend added to cart!");
+    } 
+    catch (err) {
+        console.error(err);
+        setMessage("Failed to add blend to cart.");
+        } 
+    finally {
         setBlendLoading(false);
     }
 }
@@ -678,8 +752,7 @@ export default function Mixology() {
                                         <Flex direction="row" gap="0.2rem">
                                         <Button
                                             style={luxuryBodyStyle}
-                                            onClick={() => {
-                                            }}>
+                                            onClick={() => handleAddSavedBlendToCart(blend)}>
                                             Add to Cart
                                         </Button>
                                         <Button
