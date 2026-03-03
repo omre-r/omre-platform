@@ -572,6 +572,24 @@ class Products{
         return {success: true, data: {product}}
     }
 
+    async getRelatedProducts(parentid, client){
+        if (!client){
+            return prepareRollback((c) => this.getRelatedProducts(parentid, c));
+        }
+        const query = `SELECT * FROM products WHERE parentid = $1;`;
+        let products;
+
+        try{
+            const res = await client.query(query, [parentid]);
+            products = res.rows;
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get related products")
+        }
+        return {success: true, data: {products}}
+    }
+
     /*
     Expects object of fields in need of updating
     Ex) options === {type: "10ml spray", price: 35.85}
@@ -858,7 +876,7 @@ class Orders{
                     throw new DBError("Unexpected item type");
                 }
                 if (type === "product"){
-                    //this flow can definitely be optimized to do all products in 1 or 2 queries, but I do not know how at this moment.
+                    //this flow can probably be optimized to do all products in 1 or 2 queries, but this is simplest
                     const result = await this.products.decreaseProductStock(itemid, quantity, client);
                     if (!result.success){
                         throw new DBError("Failed to decrease product stock");

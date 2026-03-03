@@ -76,6 +76,8 @@ app.put("/users/:id/last-login", [verifyToken], async (req, res) => {
 
 
 // products
+app.get("/products/related/:parentid", controllers.getRelatedProducts);
+
 app.get("/products/active", controllers.getActiveProducts);
 app.get("/products/filter", controllers.getFilteredProducts);
 
