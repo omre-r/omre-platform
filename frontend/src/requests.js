@@ -634,7 +634,7 @@ export {
     getProductReq, getRelatedProductsReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
-    saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq,
+    saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq, getBlendByIdReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     getRecommendationsReq,
     validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, 

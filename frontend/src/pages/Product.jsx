@@ -42,6 +42,15 @@ export default function Product(){
         loadProduct()
         loadRecommendations()
     },[])
+    useEffect(() => {
+        if (!selectedProduct) return;
+        const id = setInterval(() => {
+            setDisplayedImage(prev => (prev + 1) % selectedProduct.images.length)
+        }, 10000)
+        return () => {
+            clearInterval(id);
+        }
+    }, [selectedProduct])
 
     function displayTemporaryError(message){
         setErrorMessage(message);
@@ -149,6 +158,7 @@ export default function Product(){
                             borderRadius={"10px"}
                             overflow={"hidden"}
                             opacity={displayedImage === i ? ".5": 1}
+                            onClick={() => setDisplayedImage(i)}
                             >
                                 <img src={url} alt={"miniimage"} 
                                 style={{width:"100%", height: "100%", objectFit: "contain",display: "block"}}/>
