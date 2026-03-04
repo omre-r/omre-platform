@@ -45,7 +45,7 @@ export default function Product(){
     useEffect(() => {
         loadProduct()
         loadRecommendations()
-    },[])
+    },[params])
     useEffect(() => {
         if (!selectedProduct) return;
         const id = setInterval(() => {
