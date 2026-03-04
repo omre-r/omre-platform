@@ -890,7 +890,7 @@ class Orders{
                     }
                     total += result.data.price
                 }
-                items.push({itemid, quantity, type})
+                items.push({itemid, quantity, type, item})
             }
 
             const id = uuidv4()
