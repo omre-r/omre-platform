@@ -7,6 +7,8 @@ import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken
 
 import Navbar from "../components/Navbar";
 
+import LuxuryBackground from "../assets/Luxury Background2.png";
+
 
 const bodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -38,6 +40,8 @@ export default function Product(){
 
     const [isAuthenticated, setIsAuthenticated] = useState(() => !!getIDToken());
 
+    const [addToCartText, setAddToCartText] = useState("Add To Cart");
+
     useEffect(() => {
         loadProduct()
         loadRecommendations()
@@ -64,6 +68,9 @@ export default function Product(){
             displayTemporaryError("Please create an account first");
             return;
         }
+
+        setAddToCartText("Adding...");
+
         const data = await createCartItemReq({
             customerid: getIDToken()?.sub,
             itemid: selectedProduct.id,
@@ -73,6 +80,10 @@ export default function Product(){
             displayTemporaryError(data.message);
             return;
         }
+        setAddToCartText("Added to cart!");
+        setTimeout(() => {
+            setAddToCartText("Add To Cart");
+        }, 2500);
     }
 
     async function loadProduct() {
@@ -114,6 +125,22 @@ export default function Product(){
 
     }
     return (
+        <>
+        <Navbar/>
+        <View
+                width="100%"
+                minHeight="100vh"
+                paddingTop="3rem"
+                paddingLeft="3rem"
+                paddingRight="3rem"
+                paddingBottom="3rem"
+                style={{
+                  backgroundImage: `url(${LuxuryBackground})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  backgroundRepeat: "repeat",
+                }}
+              >
     <Card
     display={"flex"}
     direction={"column"}    
@@ -125,10 +152,8 @@ export default function Product(){
         overflowX:"auto",
     }}
     >
-        <Navbar/>
         <Flex
         padding={"10px"}
-        minHeight={"80vh"}
         maxWidth={"1000px"}
         // border={"solid black"}
         borderWidth={"1px"}
@@ -179,12 +204,14 @@ export default function Product(){
             shrink={0}     
             alignItems={"center"}        
             backgroundColor={"rgba(87, 86, 86, 0.22)"}   
-            padding={"30px"}
+            padding={"18px"}
+            gap={"0.35rem"}
             borderRadius={"20px"}
             >
                 <h1
                 style={{
-                    fontSize: "1.5rem",
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: "1.8rem",
                     backgroundColor: "rgb(255, 255, 255)",
                     margin: 0,
                     padding: "10px",
@@ -200,6 +227,8 @@ export default function Product(){
                 >
                      <h2
                      style={{
+                        fontFamily: "'Cormorant Garamond', serif",
+                        fontSize: "1.8rem",
                         margin: 0,
                         backgroundColor: "rgba(255,255,255,.6)",
                         borderRadius: "8px",
@@ -215,25 +244,38 @@ export default function Product(){
 
                     <h2
                     style={{
-                        fontSize: "1.2rem",
+                        fontFamily: "'Cormorant Garamond', serif",
+                        fontSize: "1.5rem",
                         fontStyle: "italic",
                         marginBottom: 0
                     }}
                     >
                         Sizes
                     </h2>
-                    <Text
-                    textAlign={"left"}
+                    <Text 
+                        textAlign={"left"} 
+                        display="flex" 
+                        style={{ 
+                            gap: "10px", 
+                            flexWrap: "wrap" 
+                        }}
                     >
                         {products.map(p => {
+                            const isSelected = selectedProduct.id === p.id;
+
                             return (
                                 <button 
                                 key={p.id} 
                                 onClick={() => setSelectedProduct(p)}
                                 style={{
-                                    padding: "8px",
+                                    fontFamily: "'Cormorant Garamond', serif",
+                                    padding: "8px 12px",
                                     borderRadius: "8px",
-                                    backgroundColor: "rgba(255, 255, 255, 0.6)"
+                                    backgroundColor: "rgba(255, 255, 255, 0.6)",
+                                    fontSize: "1.35rem",
+                                    ...(isSelected && {
+                                        border: "4px solid rgba(0,0,0,0.65)",
+                                    }),
                                 }}
                                 >
                                     {p.variation}
@@ -246,7 +288,9 @@ export default function Product(){
                     <h2
                     style={{
                         fontSize: "1.2rem",
-                        fontStyle: "italic"
+                        fontStyle: "italic",
+                        fontFamily: "'Cormorant Garamond', serif",
+                        fontSize: "1.5rem",
                     }}
                     >
                         Description
@@ -255,7 +299,11 @@ export default function Product(){
                     textAlign={"left"}
                     backgroundColor="rgba(255,255,255,.6)"
                     borderRadius ="8px"
-                    padding={"10px"}
+                    padding={"8px"}
+                    style={{
+                        fontFamily: "'Cormorant Garamond', serif",
+                        fontSize: "1.35rem"
+                    }}
                     >
                         {selectedProduct.description}
                     </Text>
@@ -267,7 +315,9 @@ export default function Product(){
                     <h2
                     style={{
                         fontSize: "1.2rem",
-                        fontStyle: "italic"
+                        fontStyle: "italic",
+                        fontFamily: "'Cormorant Garamond', serif",
+                        fontSize: "1.5rem",
                     }}
                     >
                         Notes
@@ -276,13 +326,18 @@ export default function Product(){
                     textAlign={"left"}
                     backgroundColor="rgba(255,255,255,.3)"
                     borderRadius ="8px"
-                    padding={"10px"}
+                    padding={"6px"}
                     >
                         <h3
-                        style={{
-                            fontStyle: "italic"
-                        }}
-                        >Top</h3>
+                            style={{
+                                margin: "4px 0",
+                                fontStyle: "italic",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.35rem",
+                                lineHeight: "1.05",
+                            }}
+                        >
+                        Top</h3>
                         <Flex
 
                         wrap={"wrap"}>
@@ -290,7 +345,8 @@ export default function Product(){
                                 if (!note) return null 
                                 return (
                                     <Text
-                                    padding={"5px"}
+                                    fontFamily={"'Cormorant Garamond', serif"}
+                                    padding={"3px 8px"}
                                     borderRadius={"5px 10px"}
                                     backgroundColor={"rgba(54, 54, 54, 1)"}
                                     fontStyle={"italic"}
@@ -302,16 +358,22 @@ export default function Product(){
                             })}
                         </Flex>
                         <h3
-                        style={{
-                            fontStyle: "italic"
-                        }}
-                        >Heart</h3>
+                            style={{
+                                margin: "4px 0",
+                                fontStyle: "italic",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.35rem",
+                                lineHeight: "1.05",
+                            }}
+                        >
+                        Heart</h3>
                         <Flex
                         wrap={"wrap"}>
                             {selectedProduct.notes.heart.map(note => {
                                 return (
                                     <Text
-                                    padding={"5px"}
+                                    fontFamily={"'Cormorant Garamond', serif"}
+                                    padding={"3px 8px"}
                                     borderRadius={"5px 10px"}
                                     backgroundColor={"rgba(54, 54, 54, 1)"}
                                     fontStyle={"italic"}
@@ -330,16 +392,22 @@ export default function Product(){
                             </Text>}
                         </Flex>
                         <h3
-                        style={{
-                            fontStyle: "italic"
-                        }}
-                        >Base</h3>
+                            style={{
+                                margin: "4px 0",
+                                fontStyle: "italic",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.35rem",
+                                lineHeight: "1.05",
+                            }}
+                        >
+                        Base</h3>
                         <Flex
                         wrap={"wrap"}>
                             {selectedProduct.notes.base.map(note => {
                                 return (
                                     <Text
-                                    padding={"5px"}
+                                    fontFamily={"'Cormorant Garamond', serif"}
+                                    padding={"3px 8px"}
                                     borderRadius={"5px 10px"}
                                     backgroundColor={"rgba(54, 54, 54, 1)"}
                                     fontStyle={"italic"}
@@ -371,15 +439,33 @@ export default function Product(){
                     <button
                     style={{
                         width: "75%",
-                        padding: "8px",
-                        borderRadius: "10px",
-                        backgroundColor: 'rgb(255, 253, 145)',
-                        fontSize: "1.2rem",
-                        fontWeight: "bold"
+                        padding: "12px",
+                        borderRadius: "14px",
+                        backgroundColor: "rgba(43, 30, 26, 0.95)", 
+                        color: "white",
+                        fontFamily: "'Cormorant Garamond', serif",
+                        fontSize: "1.35rem",
+                        fontWeight: 700,
+                        letterSpacing: "0.5px",
+                        border: "1px solid rgba(0,0,0,0.4)",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease-in-out",
+                    }}
+                    // Implementation where if mouse touches button will raise and change color -------------
+                    // AFter leaving button will go back to normal
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "rgba(107, 46, 34, 0.95)";
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = "0 8px 18px rgba(0,0,0,0.25)";
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "rgba(43, 30, 26, 0.95)";
+                        e.currentTarget.style.transform = "translateY(0px)";
+                        e.currentTarget.style.boxShadow = "none";
                     }}
                     onClick={handleAddToCart}
                     >
-                        Add To Cart
+                        {addToCartText}
                     </button>   
                     {errorMessage && 
                     <Text style={{color:"red", fontSize: "1.2rem"}}>{errorMessage}</Text>}
@@ -443,5 +529,7 @@ export default function Product(){
             null
       )}
     </Card>
+    </View>
+    </>
     )
 }
