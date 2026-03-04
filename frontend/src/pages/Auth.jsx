@@ -396,6 +396,7 @@ export default function Auth() {
                                 color="#2B1E1A"
                                 style={luxuryBodyStyle}
                                 label="Enter First Name"
+                                placeholder="e.g., John"
                                 maxLength={20}
                                 type="text"
                                 required
@@ -407,6 +408,7 @@ export default function Auth() {
                                 color="#2B1E1A"
                                 style={luxuryBodyStyle}
                                 label="Enter Last Name"
+                                placeholder="e.g., Smith"
                                 maxLength={20}
                                 type="text"
                                 required
@@ -422,6 +424,7 @@ export default function Auth() {
                         style={luxuryBodyStyle}
                         label="Email"
                         type="email"
+                        placeholder="e.g., john.smith@email.com"
                         maxLength={50}
                         required
                         marginTop="-.2rem"
@@ -430,20 +433,37 @@ export default function Auth() {
                     />
 
                     <Flex direction="row" alignItems="flex-end" gap="0.5rem" marginTop="-.2rem">
-                    <TextField
-                        color="#2B1E1A"
-                        style={luxuryBodyStyle}
-                        label="Password"
-                        type={showPassword ? "text" : "password"}
-                        maxLength={50}
-                        required
-                        value={password}
-                        onChange={handlePasswordChange}
-                        width="100%"
-                    />
-                    <span onClick={() => setShowPassword(!showPassword)} style={{ cursor: "pointer" }}>
-                        {showPassword ? <EyeOff size={25} /> : <Eye size={25} />}
-                    </span>
+                        <TextField
+                            color="#2B1E1A"
+                            style={luxuryBodyStyle}
+                            label="Password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="************"
+                            maxLength={50}
+                            required
+                            value={password}
+                            onChange={handlePasswordChange}
+                            width="100%"
+                            innerEndComponent={
+                                <View
+                                    as="button"
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{
+                                    all: "unset",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    paddingRight: "0.5rem",
+                                    height: "100%",
+                                    pointerEvents: "auto",
+                                    }}
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </View>
+                            }
+                        />
                     </Flex>
 
                     {!isLogin && (
@@ -455,16 +475,30 @@ export default function Auth() {
                         label="Confirm Password"
                         type={showConfirmPassword ? "text" : "password"}
                         required
+                        placeholder="************"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         width="100%"
-                    />
-                    <span 
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
-                        style={{ cursor: "pointer" }}
-                    >
-                        {showConfirmPassword ? <EyeOff size={25} /> : <Eye size={25} />}
-                    </span>
+                        innerEndComponent={
+                                <View
+                                    as="button"
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    style={{
+                                    all: "unset",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    paddingRight: "0.5rem",
+                                    height: "100%",
+                                    pointerEvents: "auto",
+                                    }}
+                                >
+                                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </View>
+                            }
+                        />
                     </Flex>
 
                     {!isLogin && (
