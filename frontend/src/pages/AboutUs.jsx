@@ -78,7 +78,7 @@ export default function Home() {
         </Text>
 
         <Text style={bodyStyle}  marginBottom=".5rem">
-            Derived from the Arabic word ʿomr—meaning life—OMRY translates to my life.
+            Derived from the Arabic word ʿomr—meaning life—OMRÉ translates to my life.
         </Text>
 
         <Text style={bodyStyle} marginBottom=".5rem">
@@ -123,7 +123,7 @@ export default function Home() {
         </Text>
 
         <Text style={bodyStyle} marginBottom=".5rem">
-            That's how OMRY began.
+            That's how OMRÉ began.
         </Text>
 
         <Text style={bodyStyle} marginBottom=".5rem">
@@ -135,7 +135,7 @@ export default function Home() {
         </Text>
 
         <Text style={bodyStyle}  fontWeight="600" marginBottom=".5rem">
-            OMRY means my life.
+            OMRÉ means my life.
         </Text>
 
         <Text style={bodyStyle}  marginBottom=".5rem">
@@ -155,12 +155,12 @@ export default function Home() {
         </Text>
 
         <Text style={bodyStyle}  fontWeight="600" marginBottom=".5rem">
-            The House of OMRY
+            The House of OMRÉ
         </Text>
 
         {/* CLOSING */}
         <Text style={bodyStyle} fontSize="1.5rem" fontWeight="600" textAlign="center">
-            “You don't just wear OMRY— you live in it.”
+            “You don't just wear OMRÉ— you live in it.”
         </Text>
       </View>
     </>
