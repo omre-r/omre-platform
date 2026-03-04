@@ -345,6 +345,18 @@ async function deleteUserBlendReq(userid, blendid) {
     return data; 
 }
 
+// get blend by ID
+async function getBlendByIdReq(id) {
+    const response = await fetch(backendURL + `/blends/item/${id}`, {
+        headers: { "Authorization": `Bearer ${getToken()}` }
+    });
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
 // cart items
 async function createCartItemReq({customerid, itemid, type}) {
     const response = await fetch(backendURL + `/cartitems`, {
@@ -583,6 +595,8 @@ addBlendToCartReq = handleError(addBlendToCartReq);
 getUserSavedBlendsReq = handleError(getUserSavedBlendsReq);
 deleteUserBlendReq = handleError(deleteUserBlendReq);
 
+getBlendByIdReq = handleError(getBlendByIdReq);
+
 // Cart
 createCartItemReq = handleError(createCartItemReq);
 deleteCartItemReq = handleError(deleteCartItemReq);
@@ -611,5 +625,5 @@ export {
     saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     getRecommendationsReq,
-    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq, uploadAndGetURlsReq
+    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq, uploadAndGetURlsReq, getBlendByIdReq
 }

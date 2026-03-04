@@ -1085,6 +1085,27 @@ class Blends {
         return { success: true, data: { blend: result.rows?.[0] } };
     }
 
+
+    // In your Blends class
+async getBlendById(blendid, client) {
+    if (!client) {
+        return prepareRollback((c) => this.getBlendById(blendid, c));
+    }
+
+    const query = `SELECT * FROM blends WHERE id = $1;`;
+    try {
+        const res = await client.query(query, [blendid]);
+        const blend = res.rows?.[0];
+        if (!blend) {
+            return { success: false, message: "Blend not found", status: 404 };
+        }
+        return { success: true, data: { blend } };
+    } catch (err) {
+        console.error(err);
+        return { success: false, message: "Failed to retrieve blend", status: 500 };
+    }
+}
+
     /*
     addBlendToCart — called when user clicks "Add to Cart"
 

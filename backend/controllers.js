@@ -370,6 +370,28 @@ async function getUserBlends(req, res) {
     return res.json(result);
 }
 
+
+
+
+// path: GET /blends/item/:id
+async function getBlendById(req, res) {
+    const { id } = req.params; // blend id
+
+    // Call the DB method
+    const result = await blends.getBlendById(id);
+
+    if (!result.success) {
+        return res.status(result.status || 404).json(result);
+    }
+
+    return res.json(result);
+}
+
+
+
+
+
+
 // path: DELETE /blends/:blendid
 // Gets logged in user, pulls blend id from params, calls db function with userid and blendid 
 async function deleteUserBlend(req, res) {
@@ -566,7 +588,7 @@ module.exports = {
   getProduct, getRelatedProducts, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders,
-  saveBlend, addBlendToCart, getUserBlends, deleteUserBlend,
+  saveBlend, addBlendToCart, getUserBlends, deleteUserBlend, getBlendById,
   createCartItem, deleteCartItem, getCart, clearCart, updateCart,
   getUploadURL,
   getRecommendations,
