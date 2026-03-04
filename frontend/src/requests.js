@@ -420,8 +420,8 @@ async function clearCartReq(customerid) {
 }
 
 
-async function getRecommendationsReq() {
-    const response = await fetch(backendURL + `/recommendations`, {
+async function getRecommendationsReq(userid) {
+    const response = await fetch(backendURL + `/recommendations/${userid}`, {
         headers: { "Authorization": `Bearer ${getToken()}` }
     });
     const data = await response.json();

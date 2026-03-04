@@ -88,13 +88,13 @@ export default function Product(){
         setSelectedProduct(products[0]);
     }
     async function loadRecommendations() {
-        if (!getIDToken()){
+        const idToken = getIDToken();
+        if (!idToken || !idToken?.sub){
             setLoadingRecommendations(false);
             return;
         }
         setLoadingRecommendations(true);
-        const data = await getRecommendationsReq();
-        console.log(data)
+        const data = await getRecommendationsReq(idToken.sub);
         setLoadingRecommendations(false);
         setRecommendations(data?.data?.recommendations || []);
     }

@@ -371,8 +371,6 @@ async function getUserBlends(req, res) {
 }
 
 
-
-
 // path: GET /blends/item/:id
 async function getBlendById(req, res) {
     const { id } = req.params; // blend id
@@ -386,11 +384,6 @@ async function getBlendById(req, res) {
 
     return res.json(result);
 }
-
-
-
-
-
 
 // path: DELETE /blends/:blendid
 // Gets logged in user, pulls blend id from params, calls db function with userid and blendid 
@@ -510,9 +503,14 @@ async function updateCart(req, res) {
   return res.json(result);
 }
 
-// path: GET /recommendations
+// path: GET /recommendations/:userid
 async function getRecommendations(req, res) {
-    const userid = req.tokenPayload?.sub;
+    const {userid} = req.params;
+    if (USE_ACCESS_TOKENS){
+      if (userid !== req.tokenPayload.sub){
+        return res.status(401).json({ success: false, message: "Not authenticated" })
+      }
+    }
     if (!userid) {
         return res.status(401).json({ success: false, message: "Missing user identifier" });
     }
@@ -571,8 +569,7 @@ getUploadURL = handleError(getUploadURL);
 saveBlend = handleError(saveBlend);
 addBlendToCart = handleError(addBlendToCart);
 getUserBlends = handleError(getUserBlends);
-getRecommendations = handleError(getRecommendations);    //get recommendation
-
+getRecommendations = handleError(getRecommendations); 
 
 createCartItem = handleError(createCartItem);
 deleteCartItem = handleError(deleteCartItem);
