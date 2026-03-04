@@ -195,6 +195,7 @@ const ForgotPassword = () => {
                                     color="#2B1E1A"
                                     style={luxuryBodyStyle}
                                     label="Enter new password"
+                                    maxLength={50}
                                     type={showPassword ? "text" : "password"}
                                     required
                                     marginTop="-.2rem"
@@ -211,6 +212,7 @@ const ForgotPassword = () => {
                                     style={luxuryBodyStyle}
                                     label="Confirm new password"
                                     type={showConfirmPassword ? "text" : "password"}
+                                    maxLength={50}
                                     required
                                     marginTop="-.2rem"
                                     value={confirmPassword}

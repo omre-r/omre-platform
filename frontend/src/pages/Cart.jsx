@@ -12,7 +12,10 @@ import {
   clearCartReq,
   getProductReq,
   getBlendByIdReq,
-  updateCartReq
+  updateCartReq,
+  createCartItemReq,
+  getRecommendationsReq,
+  getIDToken,
 } from "../requests.js";
 
 // custom styles
@@ -52,6 +55,8 @@ export default function Cart() {
   const [cart, setCart] = useState([]);
   const [loadingCart, setLoadingCart] = useState(true);
   const [message, setMessage] = useState("");
+  const [loadingRecommendations, setLoadingRecommendations] = useState(true); 
+  const [recommendations, setRecommendations] = useState([]);
 
   async function getCustomerId() {
     try {
@@ -128,6 +133,23 @@ async function loadCart() {
 
   useEffect(() => {
     loadCart();
+  }, []);
+
+
+async function loadRecommendations() {
+        const idToken = getIDToken();
+        if (!idToken || !idToken?.sub){
+            setLoadingRecommendations(false);
+            return;
+        }
+        setLoadingRecommendations(true);
+        const data = await getRecommendationsReq(idToken.sub);
+        setLoadingRecommendations(false);
+        setRecommendations(data?.data?.recommendations || []);
+    }
+
+  useEffect(() => {
+    loadRecommendations();
   }, []);
 
   async function removeItem(id) {
@@ -212,10 +234,14 @@ async function loadCart() {
       <View
         width="100%"
         minHeight="100vh"
-        padding="3rem"
+        paddingTop="3rem"
+        paddingLeft="3rem"
+        paddingRight="3rem"
+        paddingBottom="3rem"
         style={{
           backgroundImage: `url(${LuxuryBackground})`,
           backgroundSize: "cover",
+          backgroundPosition: "center",
           backgroundRepeat: "repeat",
         }}
       >
@@ -335,7 +361,6 @@ async function loadCart() {
 
           </Flex>
         )}
-
         {message && (
           <Text
             style={{
@@ -346,7 +371,52 @@ async function loadCart() {
             {message}
           </Text>
         )}
+        <View>
+            <Text style={luxuryHeadingStyle} marginBottom=".5rem">
+            You May Also Like
+            </Text>
+            <Flex 
+                wrap="wrap"
+                justifyContent="center">
+                {recommendations.map((prod) => (
+                    <Card
+                    key={prod.id}
+                    variation="elevated"
+                    width="12rem"
+                    margin="1rem"
+                    padding="1.25rem"
+                    backgroundColor="rgba(0, 0, 0, 0.75)"
+                    border="1px solid rgba(151, 33, 0, 0.72)"
+                    borderRadius="8px"
+                    >
+                    <Link to={`/fragrances/${prod.parentid}`}>
+                        <img
+                            src={prod.images?.[0]}
+                            alt={prod.name}
+                            style={{
+                                width: "100%",
+                                objectFit: "cover",
+                                borderRadius: "10px",
+                                display: "block",
+                                alignContent: "center",
+                            }}
+                        />
+                        <Text style={{...luxuryBodyStyle, fontSize: ".95rem"}} textAlign="center">
+                        {prod.name}
+                        </Text>
+                        <Text
+                        style={{ ...luxuryBodyStyle, fontSize: ".95rem", fontWeight: 600 }}
+                        textAlign="center"
+                        >
+                        ${prod.price}
+                        </Text>
+                    </Link>
+                    </Card>
+                ))}
+            </Flex>
+        </View>
       </View>
+        
     </>
   );
 }
