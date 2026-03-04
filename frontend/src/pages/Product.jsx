@@ -186,7 +186,6 @@ export default function Product(){
                 style={{
                     fontSize: "1.5rem",
                     backgroundColor: "rgb(255, 255, 255)",
-                    borderRadius: "",
                     margin: 0,
                     padding: "10px",
                     borderRadius: "10px 10px"

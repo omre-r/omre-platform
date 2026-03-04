@@ -26,6 +26,7 @@ const compactStyle = {
 const MODES = {
     IDLE: "idle",
     ADD: "add",
+    APPEND: "append",
     EDIT: "edit",
     REMOVE: "remove",
 };
@@ -152,6 +153,7 @@ export default function ProductsPanel() {
         })
         setFiles([])
     }
+
     //Used when rearranging images
     async function handleImageDrag(event, i) {
         event.preventDefault()
@@ -283,6 +285,20 @@ export default function ProductsPanel() {
         setActiveMode(MODES.ADD);
     }
 
+    //Prefills fields. For when we want a new product based off another and of a different variation
+    function resetToAppend(prod){
+        for (const file of files){
+            URL.revokeObjectURL(file.url)
+        }
+        setFiles([])
+        setDraft({
+            ...makeDraftFromProduct(prod),
+            variation: "",
+            images: []
+        });
+        setActiveMode(MODES.APPEND);
+    }
+
     function resetToEdit(prod){
         for (const file of files){
             URL.revokeObjectURL(file.url)
@@ -291,6 +307,14 @@ export default function ProductsPanel() {
         setSelectedProduct(prod);
         setDraft(makeDraftFromProduct(prod));
         setActiveMode(MODES.EDIT);
+    }
+
+    function groupRelevantElements(productList){
+        const parents = {};
+        for (const p of productList){
+            parents?.[p.parentid] ? parents[p.parentid].push(p) : parents[p.parentid] = [p];
+        }
+        return Object.values(parents);
     }
     
     // Left card  loading---------------------------------------------------------------
@@ -302,7 +326,7 @@ export default function ProductsPanel() {
             if (!data.success){
                 throw new Error(data.message)
             }
-            setProducts(data.data.products)
+            setProducts(groupRelevantElements(data.data.products));
         }
         catch (error) {
             setMessage(error.message || "Error loading products.");
@@ -385,6 +409,7 @@ export default function ProductsPanel() {
             }
             // Pull info from draft 
             const form = {
+                parentid: activeMode === MODES.APPEND ? selectedProduct.parentid : null,
                 type: draft.type.trim(),
                 name: draft.name.trim(),
                 variation: draft.variation.trim(),
@@ -406,6 +431,10 @@ export default function ProductsPanel() {
             if (validNums) {
                 setMessage(validNums);
                 return;
+            }
+            if (!form.variation){
+                setMessage("Please select a variation");
+                return
             }
             const data = await createProductReq(form);
             if (!data.success){
@@ -546,32 +575,81 @@ export default function ProductsPanel() {
                     )}
                     <View overflow="auto" height="20rem" marginTop="1rem"> 
                         {/* Below creating a list of all the products ---------------------------- */}
-                        {products.map((prod) => (
-                            <Button
-                                key={getProductId(prod)}
-                                style={luxuryBodyStyle}
-                                variation="link"
-                                justifyContent="flex-start"
-                                width="100%"
-                                marginBottom=".5rem"
-                                border=".5px solid #111"
-                                borderRadius="6px"
-                                onClick={() => {
-                                    // On click we activate editing that specific product based on the id
-                                    const id = getProductId(prod);
-                                    if (!id) {
-                                        setMessage("Product ID missing.");
-                                        return;
-                                    }
-                                    setMessage("");
-                                    resetToEdit(prod)
-                                }}
-                                >
-                                <Text>
-                                    {prod.name} — {prod.stock_ml}ml {prod.stock_ml < 1000 && "(LOW!)"}
-                                </Text>
-                            </Button>
-                        ))}
+                        {products.map((prodList) => {
+                            return (
+                            <Flex
+                            direction={"column"}
+                            gap={0}
+                            >
+                                {
+                                    selectedProduct?.parentid === prodList[0].parentid 
+                                    ? 
+                                    <Button
+                                        key={prodList[0].parentid}
+                                        style={luxuryBodyStyle}
+                                        variation="link"
+                                        justifyContent="flex-start"
+                                        width="100%"
+                                        border=".5px solid #111"
+                                        borderRadius="6px"
+                                        >
+                                        <Text>
+                                            {selectedProduct.name} — {selectedProduct.stock_ml}ml {selectedProduct.stock_ml < 1000 && "(LOW!)"}
+                                        </Text>
+                                    </Button>
+                                    :
+                                    <Button
+                                        key={prodList[0].parentid}
+                                        style={luxuryBodyStyle}
+                                        variation="link"
+                                        justifyContent="flex-start"
+                                        width="100%"
+                                        border=".5px solid #111"
+                                        borderRadius="6px"
+                                        onClick={() => {
+                                            const id = getProductId(prodList[0]);
+                                            if (!id) {
+                                                setMessage("Product ID missing.");
+                                                return;
+                                            }
+                                            setMessage("");
+                                            resetToEdit(prodList[0]);
+                                        }}
+                                        >
+                                        <Text>
+                                            {prodList[0].name} — {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"}
+                                        </Text>
+                                    </Button>
+                                }
+                                {selectedProduct?.parentid === prodList[0].parentid &&
+                                    <Flex 
+                                    wrap={"wrap"}
+                                    gap={"5px"}
+                                    justifyContent={"center"}
+                                    marginBlock={"10px"}>
+                                        {prodList.map(prod => (
+                                            <Button
+                                            style={selectedProduct.id === prod.id ? {opacity: ".7", boxShadow: "0 0 5px inset"} : {}}
+                                            padding={"5px 10px"}
+                                            onClick={() => {
+                                                resetToEdit(prod)
+                                            }}>
+                                                {prod.variation}
+                                            </Button>
+                                        ))}
+                                            <Button
+                                            padding={"5px 10px"}
+                                            style={activeMode === MODES.APPEND ? {opacity: ".7", boxShadow: "0 0 5px inset"} : {}}
+                                            onClick={() => {
+                                                resetToAppend(selectedProduct);
+                                            }}>
+                                                +
+                                            </Button>
+                                    </Flex>
+                                }
+
+                            </Flex>
+                        )})}
                     </View>
                 </Flex>
             </Card>
@@ -597,7 +675,7 @@ export default function ProductsPanel() {
 
                     {/* Add mode: Will pull up a blank draft to be filled out with information of a product they want to add */}
                     {/* Edit mode: Will take existing product and show its information in the draft instead of being blank */}
-                    {(activeMode === MODES.ADD || activeMode === MODES.EDIT) && (
+                    {(activeMode === MODES.ADD || activeMode === MODES.EDIT || activeMode === MODES.APPEND) && (
                         <Grid 
                             templateColumns="12rem 10rem"
                             gap="0.3rem" 
@@ -1037,7 +1115,8 @@ export default function ProductsPanel() {
                                                 setMessage("Please fill out type and name information.");
                                                 return;
                                             }
-                                            if (activeMode === MODES.ADD) addProduct();
+                                            // in case of append, it will include the parentid of the selected product
+                                            if (activeMode === MODES.ADD || activeMode === MODES.APPEND) addProduct();
                                             else updateProduct();
                                             
                                         }}
