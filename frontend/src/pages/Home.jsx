@@ -86,7 +86,7 @@ export default function Home() {
               border="1px solid rgba(151, 33, 0, 0.72)"
               borderRadius="8px"
             >
-              <Link to={`/fragrances/${prod.id}`}>
+              <Link to={`/fragrances/${prod.parentid}`}>
                 <img
                     src={prod.images?.[0]}
                     alt={prod.name}

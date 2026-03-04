@@ -556,6 +556,18 @@ function getToken(){
     return ""
 }
 
+//gets DECODED id token
+function getIDToken(){
+    for (let key of Object.keys(localStorage)){
+        if (key.includes("idToken")) {
+            const idToken = localStorage.getItem(key)
+            const base64 = idToken.split(".")[1]
+            const decoded = JSON.parse(atob(base64))
+            return decoded
+        }
+    }
+    return ""
+}
 
 // Users
 getUserReq = handleError(getUserReq);
@@ -625,5 +637,6 @@ export {
     saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     getRecommendationsReq,
-    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq, uploadAndGetURlsReq, getBlendByIdReq
+    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, 
+    createProductAWSReq, createProductAWSFlowReq, uploadAndGetURlsReq, getIDToken
 }
