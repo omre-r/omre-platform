@@ -110,6 +110,7 @@ app.delete("/orders/:id", [verifyToken, checkAdminPerm], controllers.deleteOrder
 app.put("/orders/:id", [verifyToken, checkAdminPerm], controllers.updateOrderStatus);
 
 app.post("/orders", [verifyToken], controllers.createOrder)
+app.get("/orders", [verifyToken], controllers.getOrders);
 
 // blends
 app.post("/blends/save", [verifyToken], controllers.saveBlend);

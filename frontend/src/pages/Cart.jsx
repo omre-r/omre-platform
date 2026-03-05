@@ -84,43 +84,48 @@ async function loadCart() {
         setCart([]);
       return;
     }
-    const fullCart = await Promise.all(
-      cartRows.map(async (row) => {
-        let item;
-      if (row.type === "blend") {
-        const blendRes = await getBlendByIdReq(row.itemid);
-        const blend = blendRes?.data?.data?.blend || blendRes?.data?.blend;
-          if (!blend) return { ...row, item: null };
-            let price = 0;
-          if (blend.size_ml === 30) price = 50;
-          if (blend.size_ml === 50) price = 75;
-            const frag1Res = await getProductReq(blend.frag1_productid);
-            const frag2Res = await getProductReq(blend.frag2_productid);
-            const frag1 = frag1Res?.data?.data?.product || frag1Res?.data?.product;
-            const frag2 = frag2Res?.data?.data?.product || frag2Res?.data?.product;
-            let frag3 = null;
-          if (blend.frag3_productid) {
-          const frag3Res = await getProductReq(blend.frag3_productid);
-            frag3 = frag3Res?.data?.data?.product || frag3Res?.data?.product;
-          }
-          const imageArray = frag1?.images || [];
-          const name = `${frag1?.name || "Unknown"} ${blend.frag1_pct}% / 
-          ${frag2?.name || "Unknown"} ${blend.frag2_pct}%${
-          frag3 ? ` / ${frag3.name} ${blend.frag3_pct}%` : ""
-          } Blend`.replace(/\s+/g, " ").trim();
-          item = {
-            name,
-            price,
-            images: imageArray,
-          };
-} else {
-          const productRes = await getProductReq(row.itemid);
-          item = productRes?.data?.data?.product || productRes?.data?.product;
-        }
+const fullCart = await Promise.all(
+  cartRows.map(async (row) => {
+    let item;
+    if (row.type === "blend") {
+      const blendRes = await getBlendByIdReq(row.itemid);
+      const blend = blendRes?.data?.data?.blend || blendRes?.data?.blend;
+      if (!blend) return { ...row, item: null };
 
-        return { ...row, item };
-      })
-    );
+      let price = 0;
+      if (blend.size_ml === 30) price = 50;
+      if (blend.size_ml === 50) price = 75;
+
+      const frag1Res = await getProductReq(blend.frag1_productid);
+      const frag2Res = await getProductReq(blend.frag2_productid);
+      const frag1 = frag1Res?.data?.data?.product || frag1Res?.data?.product;
+      const frag2 = frag2Res?.data?.data?.product || frag2Res?.data?.product;
+      let frag3 = null;
+      if (blend.frag3_productid) {
+        const frag3Res = await getProductReq(blend.frag3_productid);
+        frag3 = frag3Res?.data?.data?.product || frag3Res?.data?.product;
+      }
+
+      const imageArray = frag1?.images || [];
+      const name = `${frag1?.name || "Unknown"} ${blend.frag1_pct}% / 
+                    ${frag2?.name || "Unknown"} ${blend.frag2_pct}%${
+                      frag3 ? ` / ${frag3.name} ${blend.frag3_pct}%` : ""
+                    } Blend`.replace(/\s+/g, " ").trim();
+
+      item = {
+        name,
+        price,
+        images: imageArray,
+        size_ml: blend.size_ml,
+      };
+    } else {
+      const productRes = await getProductReq(row.itemid);
+      item = productRes?.data?.data?.product || productRes?.data?.product;
+    }
+
+    return { ...row, item };
+  })
+);
 
     setCart(fullCart);
   } catch (err) {
@@ -207,20 +212,30 @@ async function loadRecommendations() {
   );
 }
 
-  async function checkout() {
-    const customerid = await getCustomerId();
-    if (!customerid) return;
+async function checkout() {
+  const customerid = await getCustomerId();
+  if (!customerid) return;
 
-    try {
-      await createOrderReq({ customerid });
-      await clearCartReq(customerid);
-      setCart([]);
-      setMessage("Order placed successfully!");
-    } catch (err) {
-      console.error(err);
-      setMessage("Checkout failed.");
-    }
+  if (cart.length === 0) {
+    setMessage("Your cart is empty.");
+    return;
   }
+
+  try {
+    const response = await createOrderReq({ customerid });
+    if (!response?.success) {
+      setMessage("Checkout failed.");
+      return;
+    }
+    await clearCartReq(customerid);
+
+    setCart([]);
+    setMessage("Order placed successfully!");
+  } catch (err) {
+    console.error(err);
+    setMessage("Checkout failed.");
+  }
+}
 
   const total = cart.reduce(
     (sum, item) => sum + ((item.item?.price || 0) * item.quantity),
@@ -291,17 +306,22 @@ async function loadRecommendations() {
                         />
                       )}
 
-                      <View textAlign={"left"}>
+                    <View textAlign={"left"}>
                         <Text style={luxuryBodyStyle}>
-                          {cartItem.item?.name}
-                        </Text>
-                        <Text style={luxuryBodyStyle}>
-                          Quantity: {cartItem.quantity}
-                        </Text>
-                        <Text style={luxuryBodyStyle}>
-                          ${cartItem.item?.price}
-                        </Text>
-                      </View>
+                        {cartItem.item?.name}{" "}
+                        {cartItem.item?.variation 
+                          ? `(${cartItem.item.variation})` 
+                          : cartItem.item?.size_ml 
+                          ? `(${cartItem.item.size_ml}ml)` 
+                          : ""}
+                      </Text>
+                      <Text style={luxuryBodyStyle}>
+                        Quantity: {cartItem.quantity}
+                      </Text>
+                      <Text style={luxuryBodyStyle}>
+                     ${cartItem.item?.price}
+                     </Text>
+                    </View>
                     </Flex>
 
                     <Flex gap="1rem">
@@ -309,7 +329,7 @@ async function loadRecommendations() {
                         style={buttonViewStyle}
                         onClick={() => decreaseQuantity(cartItem.id)}
                       >
-                        <Text style={luxuryBodyStyle}>−</Text>
+                        <Text style={luxuryBodyStyle}>-</Text>
                       </View>
 
                       <View
@@ -337,7 +357,12 @@ async function loadRecommendations() {
                   marginBottom="1rem"
                 >
                   <Text style={luxuryBodyStyleBlack}>
-                    {cartItem.item?.name} × {cartItem.quantity}
+                    {cartItem.item?.name}{" "}
+                    {cartItem.item?.variation 
+                      ? `(${cartItem.item.variation})` 
+                      : cartItem.item?.size_ml 
+                      ? `(${cartItem.item.size_ml}ml)` 
+                      : ""} × {cartItem.quantity}
                   </Text>
                   <Text style={luxuryBodyStyleBlack}>
                     ${((cartItem.item?.price || 0) * cartItem.quantity).toFixed(2)}

@@ -675,27 +675,40 @@ class Products{
         if (!client){
             return prepareRollback((c) => this.decreaseProductStock(id, quantity, c));
         }
+
         try{
             const retrieveProductQuery = `SELECT * FROM products WHERE id = $1;`;
             const product = (await client.query(retrieveProductQuery, [id]))?.rows?.[0];
-            if (!product){
+
+           if (!product){
                 return {success: false, message: "Product does not exist", status: 400}
             }
-            const size = Number(product?.variation?.split("ml")?.[0]);
+
+            const size = Number(product?.variation?.toLowerCase().replace("ml", ""));
             if (!size){
                 return {success: false, message: "Invalid size for product", status: 400}
             }
-            
-            //only 40% of size is the stored oil. 
-            const newSize = Number(product.stock_ml) - (quantity * size*.4)
-            if (newSize < 0){
-                return {success: false, message: "Negative new size", status: 400}
-            }
-            const updateProductQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2;`;
-            await client.query(updateProductQuery, [newSize, id])
 
+            const oilNeeded = quantity * size * 0.4;
+            const newSize = Number(
+                (Number(product.stock_ml) - oilNeeded).toFixed(2)
+            );
+            if (newSize < 0){
+                return {success: false, message: "Not enough oil stock", status: 400}
+            }
+            const updateProductQuery = `
+                UPDATE products 
+                SET stock_ml = $1 
+                WHERE id = $2 
+                RETURNING stock_ml;
+            `;
+            const updateResult = await client.query(updateProductQuery, [newSize, id]);
+
+            if (updateResult.rowCount === 0){
+                return {success: false, message: "Failed to update stock", status: 400}
+            }
         }catch(err){
-            console.error(err);
+            console.error("ACTUAL STOCK ERROR:", err);
             return {success: false, message: "Failed to decrease product stock", status: 400}
         }
         return {success: true}
@@ -888,11 +901,28 @@ class Orders{
                     if (!result.success){
                         throw new DBError("Failed to decrease blend stock");
                     }
-                    total += result.data.price
+
+                    const blendRes = await client.query(
+                        `SELECT size_ml FROM blends WHERE id = $1`,
+                        [itemid]
+                    );
+
+                    const blend = blendRes.rows[0];
+                    if (!blend){
+                        throw new DBError("Blend not found");
+                    }
+
+                    const size_ml = blend.size_ml;
+
+                    let blendPrice = 0;
+                    if (size_ml === 30) blendPrice = 50;
+                    else if (size_ml === 50) blendPrice = 75;
+                    else throw new DBError(`Unsupported blend size: ${size_ml}ml`);
+
+                    total += blendPrice * quantity;
                 }
                 items.push({itemid, quantity, type, item})
             }
-
             const id = uuidv4()
             const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
             order = (await client.query(query, [id, customerid, JSON.stringify(items), total])).rows[0];
@@ -1019,6 +1049,22 @@ class Orders{
             throw new DBError("Failed to get customer orders")
         }
         return {success: true, data: {orders}}
+    }
+
+    async getOrders(client){
+        if (!client){
+            return prepareRollback((c) => this.getOrders(c));
+        }
+
+        try{
+            const query = `SELECT * FROM orders ORDER BY created DESC`;
+            const res = await client.query(query);
+            return {success: true, data: {orders: res.rows}};
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get orders");
+        }
     }
 }
 

@@ -325,6 +325,17 @@ async function deleteOrder(req, res) {
   return res.json(result)
 }
 
+// path: GET /orders
+async function getOrders(req, res) {
+  const result = await orders.getOrders();
+
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+
+  return res.json(result);
+}
+
 
 // blends
 
@@ -566,6 +577,8 @@ updateOrderStatus = handleError(updateOrderStatus);
 getUserOrders = handleError(getUserOrders);
 getUploadURL = handleError(getUploadURL);
 
+getOrders = handleError(getOrders);
+
 saveBlend = handleError(saveBlend);
 addBlendToCart = handleError(addBlendToCart);
 getUserBlends = handleError(getUserBlends);
@@ -584,7 +597,7 @@ module.exports = {
   getUser, getUsers, createUser, deleteUser, updateLastLogin,
   getProduct, getRelatedProducts, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
-  cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders,
+  cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders,
   saveBlend, addBlendToCart, getUserBlends, deleteUserBlend, getBlendById,
   createCartItem, deleteCartItem, getCart, clearCart, updateCart,
   getUploadURL,

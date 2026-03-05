@@ -291,6 +291,22 @@ async function deleteOrderReq(id){
     return data;
 }
 
+async function getOrdersReq() {
+    const token = await getToken(); // <-- make sure to await here
+    const response = await fetch(backendURL + `/orders`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+        console.error(data.message || "req failed");
+    }
+
+    return data;
+}
+
+
 // blends
 async function saveBlendReq({ userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml }) {
     const response = await fetch(backendURL + `/blends/save`, {
@@ -600,6 +616,7 @@ getOrderReq = handleError(getOrderReq);
 createOrderReq = handleError(createOrderReq);
 deleteOrderReq = handleError(deleteOrderReq);
 getUserOrdersReq = handleError(getUserOrdersReq);
+getOrdersReq = handleError(getOrdersReq);
 
 // Blends
 saveBlendReq = handleError(saveBlendReq);
@@ -633,7 +650,7 @@ export {
     getUserReq, getUsersReq, createUserReq, deleteUserReq,
     getProductReq, getRelatedProductsReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
-    cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,
+    cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq, getOrdersReq,
     saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq, getBlendByIdReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     getRecommendationsReq,
