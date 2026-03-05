@@ -202,6 +202,9 @@ const ForgotPassword = () => {
                                     marginTop="-.2rem"
                                     value={newPassword}
                                     onChange={handlePasswordChange}
+                                    inputStyles={{
+                                        paddingRight: "1rem",
+                                    }}
                                     innerEndComponent={
                                         <View
                                             as="button"
@@ -233,6 +236,9 @@ const ForgotPassword = () => {
                                     marginTop="-.2rem"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
+                                    inputStyles={{
+                                        paddingRight: "1rem",
+                                    }}
                                     innerEndComponent={
                                     <View
                                         as="button"

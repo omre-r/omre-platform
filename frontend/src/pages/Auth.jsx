@@ -444,6 +444,9 @@ export default function Auth() {
                             value={password}
                             onChange={handlePasswordChange}
                             width="100%"
+                            inputStyles={{
+                                paddingRight: "1rem",
+                            }}
                             innerEndComponent={
                                 <View
                                     as="button"
@@ -479,6 +482,9 @@ export default function Auth() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         width="100%"
+                        inputStyles={{
+                            paddingRight: "1rem",
+                        }}
                         innerEndComponent={
                                 <View
                                     as="button"
@@ -605,7 +611,3 @@ export default function Auth() {
     </>
   );
 }
-
-
-// Notes on future improvements:
-// TODO: Remove scent choice part and make it part of its own page
