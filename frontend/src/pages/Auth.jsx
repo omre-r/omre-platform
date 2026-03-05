@@ -73,6 +73,14 @@ export default function Auth() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    // If a user misses a field when signing up or signing in -------------------------------
+    const [showMissingField, setShowMissingField] = useState(false);
+    const emailMissing = showMissingField && !email.trim();
+    const passwordMissing = showMissingField && !password.trim();
+    const confirmPasswordMissing = showMissingField && !confirmPassword.trim();
+    const firstnameMissing = showMissingField && !firstname.trim();
+    const lastnameMissing = showMissingField && !lastname.trim();
+
     // Real-time password requirements checker
     const handlePasswordChange = (e) => {
     const value = e.target.value;
@@ -123,10 +131,12 @@ export default function Auth() {
         setAuthError("");
         setAuthSuccess("");
         if (!email || !password || !confirmPassword || !firstname || !lastname) {
+            setShowMissingField(true);
             setAuthError("Please fill out all required fields.");
             return;
         }
         if (password !== confirmPassword) {
+            setShowMissingField(true);
             setAuthError("Passwords do not match.");
             return;
         }
@@ -205,6 +215,7 @@ export default function Auth() {
         setAuthError("");
         setAuthSuccess("");
         if (!email || !password) {
+            setShowMissingField(true);
             setAuthError("Please fill out all required fields.");
             return;
         }
@@ -395,7 +406,11 @@ export default function Auth() {
                             <TextField
                                 color="#2B1E1A"
                                 style={luxuryBodyStyle}
-                                label="Enter First Name"
+                                label={
+                                    <span>Enter First Name{" "}
+                                        <span style={{ color: firstnameMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                                    </span>
+                                }
                                 placeholder="e.g., John"
                                 maxLength={20}
                                 type="text"
@@ -407,7 +422,11 @@ export default function Auth() {
                             <TextField
                                 color="#2B1E1A"
                                 style={luxuryBodyStyle}
-                                label="Enter Last Name"
+                                label={
+                                    <span>Enter Last Name{" "}
+                                        <span style={{ color: lastnameMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                                    </span>
+                                }
                                 placeholder="e.g., Smith"
                                 maxLength={20}
                                 type="text"
@@ -422,27 +441,41 @@ export default function Auth() {
                     <TextField 
                         color="#2B1E1A" 
                         style={luxuryBodyStyle}
-                        label="Email"
+                        label={
+                            <span>Email{" "}
+                                <span style={{ color: emailMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                            </span>
+                        }
                         type="email"
                         placeholder="e.g., john.smith@email.com"
                         maxLength={50}
                         required
                         marginTop="-.2rem"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+                        }}
+                        hasError={emailMissing}
                     />
 
                     <Flex direction="row" alignItems="flex-end" gap="0.5rem" marginTop="-.2rem">
                         <TextField
                             color="#2B1E1A"
                             style={luxuryBodyStyle}
-                            label="Password"
+                            label={
+                            <span>Password{" "}
+                                <span style={{ color: passwordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                            </span>
+                            }
                             type={showPassword ? "text" : "password"}
                             placeholder="************"
                             maxLength={50}
                             required
                             value={password}
-                            onChange={handlePasswordChange}
+                            onChange={(e) => {
+                                handlePasswordChange(e);
+                            }}
+                            hasError={passwordMissing}
                             width="100%"
                             inputStyles={{
                                 paddingRight: "1rem",
@@ -475,7 +508,11 @@ export default function Auth() {
                     <TextField
                         color="#2B1E1A"
                         style={luxuryBodyStyle}
-                        label="Confirm Password"
+                        label={
+                            <span>Confirm Password{" "}
+                                <span style={{ color: confirmPasswordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                            </span>
+                        }
                         type={showConfirmPassword ? "text" : "password"}
                         required
                         placeholder="************"
@@ -588,6 +625,7 @@ export default function Auth() {
                             setMode(isLogin ? "signup" : "login");
                             setAuthError("");
                             setAuthSuccess("");
+                            setShowMissingField(false);
                         }}                        
                         alignSelf="center"
                         marginTop=".8rem"

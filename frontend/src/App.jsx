@@ -10,7 +10,6 @@ import Mixology from "./pages/Mixology";
 import Fragrances from "./pages/Fragrances";
 import AboutUs from "./pages/AboutUs";
 import Cart from "./pages/Cart";
-import Contact from "./pages/Contact";
 import Product from "./pages/Product";
 
 import './App.css'
@@ -29,8 +28,6 @@ function App() {
         <Route path="/Fragrances" element={<Fragrances />} />
         <Route path="/AboutUs" element={<AboutUs />} />
         <Route path="/Cart" element={<Cart />} />
-        <Route path="/Contact" element={<Contact />} />
-
         <Route path="/Fragrances/:parentid" element={<Product/>}/>
         
       </Routes>

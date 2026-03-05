@@ -62,6 +62,12 @@ const ForgotPassword = () => {
     const [authError, setAuthError] = useState("");
     const [authSuccess, setAuthSuccess] = useState("");
 
+    // Making sure fields are filled in -----------------------------
+    const [showMissingField, setShowMissingField] = useState(false);
+    const verificationMissing = showMissingField && !verificationCode.trim();
+    const passwordMissing = showMissingField && !newPassword.trim();
+    const confirmPasswordMissing = showMissingField && !confirmPassword.trim();
+
 
     // Real-time password requirements checker -----------------------------------------
     const handlePasswordChange = (e) => {
@@ -105,10 +111,12 @@ const ForgotPassword = () => {
         setAuthError("");
         setAuthSuccess("");
         if (!email || !verificationCode || !newPassword || !confirmPassword) {
+            setShowMissingField(true);
             setAuthError("Please fill out all required fields.");
             return;
         }
         if (newPassword !== confirmPassword) {
+            setShowMissingField(true);
             setAuthError("Passwords do not match.");
             return;
         }
@@ -183,7 +191,11 @@ const ForgotPassword = () => {
                             <TextField
                                 color="#2B1E1A"
                                 style={luxuryBodyStyle}
-                                label="Verification Code"
+                                label={
+                                    <span>Enter Verification Code{" "}
+                                        <span style={{ color: verificationMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                                    </span>
+                                    }
                                 placeholder="123456"
                                 type="text"
                                 required
@@ -194,7 +206,11 @@ const ForgotPassword = () => {
                                 <TextField
                                     color="#2B1E1A"
                                     style={luxuryBodyStyle}
-                                    label="Enter new password"
+                                    label={
+                                    <span>Enter Password{" "}
+                                        <span style={{ color: passwordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                                    </span>
+                                    }
                                     placeholder="************"
                                     maxLength={50}
                                     type={showPassword ? "text" : "password"}
@@ -228,7 +244,11 @@ const ForgotPassword = () => {
                                 <TextField
                                     color="#2B1E1A"
                                     style={luxuryBodyStyle}
-                                    label="Confirm new password"
+                                    label={
+                                    <span>Confirm Password{" "}
+                                        <span style={{ color: confirmPasswordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                                    </span>
+                                    }
                                     placeholder="************"
                                     type={showConfirmPassword ? "text" : "password"}
                                     maxLength={50}
