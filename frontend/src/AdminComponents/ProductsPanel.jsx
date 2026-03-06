@@ -582,8 +582,9 @@ export default function ProductsPanel() {
                         {sortedProducts.map((prodList) => {
                             return (
                             <Flex
-                            direction={"column"}
-                            gap={0}
+                                direction={"column"}
+                                gap="0.6rem"
+                                marginBottom="0.6rem"
                             >
                                 {
                                     selectedProduct?.parentid === prodList[0].parentid 
@@ -598,7 +599,7 @@ export default function ProductsPanel() {
                                         borderRadius="6px"
                                         >
                                         <Text>
-                                            {selectedProduct.name} — {selectedProduct.stock_ml}ml {selectedProduct.stock_ml < 1000 && "(LOW!)"}
+                                            {selectedProduct.name} — {selectedProduct.stock_ml}ml {selectedProduct.stock_ml < 1000 && "(LOW STOCK!)"}
                                         </Text>
                                     </Button>
                                     :

@@ -144,6 +144,7 @@ async function viewOrder(orderId) {
             {orders.map((order) => (
               <Button
                 key={order.id}
+                style={luxuryBodyStyle}
                 variation="link"
                 marginBottom=".5rem"
                 border=".5px solid #111"

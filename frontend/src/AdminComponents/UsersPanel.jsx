@@ -136,6 +136,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                         {sortedUsers.map((currentUser) => (
                             <Button
                                 key={currentUser.user_id}
+                                style={luxuryBodyStyle}
                                 variation="link"
                                 marginBottom=".5rem"
                                 border=".5px solid #111"
