@@ -2,7 +2,7 @@ import Navbar from "../components/Navbar";
 import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, Heading, ToggleButton } from "@aws-amplify/ui-react";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useEffect, useState } from "react";
-import {getUserSavedBlendsReq, getActiveProductsReq } from "../requests.js";
+import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq,addBlendToCartReq,createCartItemReq } from "../requests.js";
 
 // Fonts ----------------------------------------------
 const luxuryHeadingStyle = {
@@ -53,11 +53,11 @@ export default function Profile() {
     const [selectedNotes, setSelectedNotes] = useState([]); 
     const [loadedBlends, setLoadedBlends] = useState([]);
     const [products, setProducts] = useState([]);
+    const [blendLoading, setBlendLoading] = useState(false);
 
     // Load products from backend ---------------------------------------
     async function loadProducts() {
         setMessage("");
-        setLoadingProducts(true);
         try {
             const data = await getActiveProductsReq();  
             if (!data.success){
@@ -67,9 +67,6 @@ export default function Profile() {
         }
         catch (error) {
             setMessage(error.message || "Error loading products.");
-        }
-        finally {
-            setLoadingProducts(false);
         }
     }
 
@@ -96,6 +93,109 @@ export default function Profile() {
             setMessage(error.message || "Error loading saved blends.");
         }
     }
+
+    // Build payload from a previously saved blend ----------------------------------
+    function buildBlendPayloadFromSavedBlend(blend) {
+        let userid;
+        for (let key of Object.keys(localStorage)){
+            if (key.includes("idToken")){
+                const idToken = localStorage.getItem(key)        
+                const base64 = idToken.split(".")[1]
+                const decoded = JSON.parse(atob(base64))
+                userid = decoded.sub
+                break
+            };
+        }
+        return {
+            userid,
+            frag1_productid: blend.frag1_productid,
+            frag2_productid: blend.frag2_productid,
+            frag3_productid: blend.frag3_productid || null,
+            frag1_pct: blend.frag1_pct,
+            frag2_pct: blend.frag2_pct,
+            frag3_pct: blend.frag3_pct || null,
+            size_ml: Number(blend.size_ml),
+        };
+    }
+
+    async function handleDeleteBlend(blendId) {
+        let userid;
+        for (let key of Object.keys(localStorage)){
+            if (key.includes("idToken")){
+                const idToken = localStorage.getItem(key)        
+                const base64 = idToken.split(".")[1]
+                const decoded = JSON.parse(atob(base64))
+                userid = decoded.sub
+                break
+            };
+        }
+        setMessage("");
+        try {
+            const data = await deleteUserBlendReq(userid, blendId);
+            if (!data.success) {
+                setMessage(data.message || "Failed to delete blend.");
+                return;
+            }
+            // Remove deleted blend from loaded blends to update table
+            // This is done here after a successful delete request to the backend to ensure the frontend state matches the backend data
+            setLoadedBlends((prev) => prev.filter((b) => b.id !== blendId));
+
+            setMessage("Blend deleted successfully!");
+        } catch (err) {
+            setMessage("Failed to delete blend.");
+        }
+    }
+
+    // Taking a saved blend and adding it to the cart ---------------------------------------
+// Making sure that we create the payload, check userid, product stock,
+async function handleAddSavedBlendToCart(savedBlend) {
+    setBlendLoading(true);
+    setMessage("");
+    try {
+        const blendPayload = buildBlendPayloadFromSavedBlend(savedBlend);
+        if (!blendPayload.userid) {
+            setMessage("User not found. Please log in again.");
+            return;
+        }
+
+        const res = await addBlendToCartReq(blendPayload);
+        if (res.stockUnavailable) {
+            setMessage(res.message || "Not enough stock for this blend.");
+            return;
+        }
+        if (!res.success) {
+            setMessage(res.message || "Failed to add blend to cart.");
+            return;
+        }
+
+        const blendId = res.data.blend.id;
+        if (!blendId) {
+            setMessage("Failed getting blendId");
+            return;
+        }
+
+        const cartRes = await createCartItemReq({
+            customerid: blendPayload.userid,
+            itemid: blendId,
+            type: "blend",
+        });
+
+        if (!cartRes.success) {
+            setMessage(cartRes.message || "Issue adding blend to cart.");
+            return;
+        }
+
+        setMessage("Blend added to cart!");
+    } 
+    catch (err) {
+        console.error(err);
+        setMessage("Failed to add blend to cart.");
+        } 
+    finally {
+        setBlendLoading(false);
+    }
+}
+
 
     // Get product ID from product object, accounting for different possible key names ---------------------------
     function getProductId(product) {
@@ -126,11 +226,12 @@ export default function Profile() {
     };
 
     // If activeTab mixes will load blends --------------------------------------
+    // Making sure to check length of products to begin the load
     useEffect(() => {
-        if (activeTab === "mixes") {
+        if (activeTab === "mixes" && products.length > 0) {
             loadBlends();
         }
-    }, [activeTab]);
+    }, [activeTab, products]);
 
     // Load products on component mount ---------------------------------------
     useEffect(() => {
@@ -216,6 +317,16 @@ export default function Profile() {
                                 style={luxurySubheadingStyle}>
                                 Your Saved Blends
                             </Text>
+                            {message && (
+                            <Text
+                                style={{
+                                    ...luxuryBodyStyle,
+                                    marginTop: "0.5rem",
+                                    color: "#2B1E1A"
+                                }}
+                            >
+                                {message}
+                            </Text>)}
                             {/* If no blends are currently saved to users profile */}
                             {loadedBlends.length === 0 ? (
                                 <Text style={luxuryBodyStyle}>
@@ -276,12 +387,12 @@ export default function Profile() {
 
                     {activeTab === "preferences" && (
                         <View>
-                            <Heading level={3} 
+                            <Text
                                 color="#2B1E1A" 
-                                style={luxuryBodyStyle}
+                                style={luxuryHeadingStyle}
                                 >
                                 {"Which notes are you drawn to?"}
-                            </Heading>
+                            </Text>
 
                             <Grid
                                 templateColumns="repeat(2, 1fr)"
