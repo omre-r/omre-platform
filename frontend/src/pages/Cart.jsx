@@ -414,7 +414,10 @@ async function checkout() {
                     border="1px solid rgba(151, 33, 0, 0.72)"
                     borderRadius="8px"
                     >
-                    <Link to={`/fragrances/${prod.parentid}`}>
+                    <Link 
+                      to={`/fragrances/${prod.parentid}`}
+                      style={{ textDecoration: "none" }}
+                    >
                         <img
                             src={prod.images?.[0]}
                             alt={prod.name}

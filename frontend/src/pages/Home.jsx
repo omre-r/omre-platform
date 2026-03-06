@@ -86,7 +86,10 @@ export default function Home() {
               border="1px solid rgba(151, 33, 0, 0.72)"
               borderRadius="8px"
             >
-              <Link to={`/fragrances/${prod.parentid}`}>
+              <Link 
+                to={`/fragrances/${prod.parentid}`}
+                style={{ textDecoration: "none" }}
+              >
                 <img
                     src={prod.images?.[0]}
                     alt={prod.name}
@@ -113,7 +116,8 @@ export default function Home() {
     </Flex>
 
         <Flex justifyContent="flex-end">
-          <Link to="/fragrances">
+          <Link to="/fragrances"
+          style={{ textDecoration: "none" }}>
             <View
               padding="0.75rem 1.75rem"
               border="1px solid rgba(255,255,255,0.5)"
