@@ -134,6 +134,10 @@ export default function Product(){
             </>
         );
     }
+
+    // Filter recommendations so they do not match the current product page
+    const filteredRecommendations = recommendations.filter((prod) => String(prod.parentid) !== String(params.parentid));
+
     return (
         <>
         <Navbar/>
@@ -497,7 +501,7 @@ export default function Product(){
             <Flex 
                 wrap="wrap"
                 justifyContent="center">
-                {recommendations.map((prod) => (
+                {filteredRecommendations.map((prod) => (
                     <Card
                     key={prod.id}
                     variation="elevated"
