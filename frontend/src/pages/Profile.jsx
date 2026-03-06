@@ -147,54 +147,58 @@ export default function Profile() {
     }
 
     // Taking a saved blend and adding it to the cart ---------------------------------------
-// Making sure that we create the payload, check userid, product stock,
-async function handleAddSavedBlendToCart(savedBlend) {
-    setBlendLoading(true);
-    setMessage("");
-    try {
-        const blendPayload = buildBlendPayloadFromSavedBlend(savedBlend);
-        if (!blendPayload.userid) {
-            setMessage("User not found. Please log in again.");
-            return;
-        }
+    // Making sure that we create the payload, check userid, product stock,
+    async function handleAddSavedBlendToCart(savedBlend) {
+        setBlendLoading(true);
+        setMessage("");
+        try {
+            const blendPayload = buildBlendPayloadFromSavedBlend(savedBlend);
+            if (!blendPayload.userid) {
+                setMessage("User not found. Please log in again.");
+                return;
+            }
 
-        const res = await addBlendToCartReq(blendPayload);
-        if (res.stockUnavailable) {
-            setMessage(res.message || "Not enough stock for this blend.");
-            return;
-        }
-        if (!res.success) {
-            setMessage(res.message || "Failed to add blend to cart.");
-            return;
-        }
+            const res = await addBlendToCartReq(blendPayload);
+            if (res.stockUnavailable) {
+                setMessage(res.message || "Not enough stock for this blend.");
+                return;
+            }
+            if (!res.success) {
+                setMessage(res.message || "Failed to add blend to cart.");
+                return;
+            }
 
-        const blendId = res.data.blend.id;
-        if (!blendId) {
-            setMessage("Failed getting blendId");
-            return;
-        }
+            const blendId = res.data.blend.id;
+            if (!blendId) {
+                setMessage("Failed getting blendId");
+                return;
+            }
 
-        const cartRes = await createCartItemReq({
-            customerid: blendPayload.userid,
-            itemid: blendId,
-            type: "blend",
-        });
+            const cartRes = await createCartItemReq({
+                customerid: blendPayload.userid,
+                itemid: blendId,
+                type: "blend",
+            });
 
-        if (!cartRes.success) {
-            setMessage(cartRes.message || "Issue adding blend to cart.");
-            return;
-        }
+            if (!cartRes.success) {
+                setMessage(cartRes.message || "Issue adding blend to cart.");
+                return;
+            }
 
-        setMessage("Blend added to cart!");
-    } 
-    catch (err) {
-        console.error(err);
-        setMessage("Failed to add blend to cart.");
+            setMessage("Blend added to cart!");
         } 
-    finally {
-        setBlendLoading(false);
+        catch (err) {
+            console.error(err);
+            setMessage("Failed to add blend to cart.");
+            } 
+        finally {
+            setBlendLoading(false);
+        }
     }
-}
+
+    async function saveFragranceToProfile() { 
+        
+    }
 
 
     // Get product ID from product object, accounting for different possible key names ---------------------------
@@ -387,16 +391,14 @@ async function handleAddSavedBlendToCart(savedBlend) {
 
                     {activeTab === "preferences" && (
                         <View>
-                            <Text
-                                color="#2B1E1A" 
-                                style={luxuryHeadingStyle}
-                                >
-                                {"Which notes are you drawn to?"}
+                            <Text 
+                                style={luxurySubheadingStyle}>
+                                Which notes are you drawn to?
                             </Text>
 
                             <Grid
-                                templateColumns="repeat(2, 1fr)"
-                                gap="0.5rem"
+                                templateColumns="repeat(3, 1fr)"
+                                gap="0.3rem"
                                 marginBottom="1rem">
                                 <ToggleButton isPressed={selectedNotes.includes("Vanilla")} onClick={() => toggleNote("Vanilla")}>Vanilla</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Rose")} onClick={() => toggleNote("Rose")}>Rose</ToggleButton>
@@ -406,7 +408,39 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                 <ToggleButton isPressed={selectedNotes.includes("Jasmine")} onClick={() => toggleNote("Jasmine")}>Jasmine</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Cedarwood")} onClick={() => toggleNote("Cedarwood")}>Cedarwood</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Amber")} onClick={() => toggleNote("Amber")}>Amber</ToggleButton>
+                                
+                                <ToggleButton isPressed={selectedNotes.includes("Honey")} onClick={() => toggleNote("Honey")}>Honey</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Coconut")} onClick={() => toggleNote("Coconut")}>Coconut</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Coffee")} onClick={() => toggleNote("Coffee")}>Coffee</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Chocolate")} onClick={() => toggleNote("Chocolate")}>Chocolate</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Almond")} onClick={() => toggleNote("Almond")}>Almond</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Peony")} onClick={() => toggleNote("Peony")}>Peony</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Gardenia")} onClick={() => toggleNote("Gardenia")}>Gardenia</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Patchouli")} onClick={() => toggleNote("Patchouli")}>Patchouli</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Oak")} onClick={() => toggleNote("Oak")}>Oak</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Pine")} onClick={() => toggleNote("Pine")}>Pine</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Lemon")} onClick={() => toggleNote("Lemon")}>Lemon</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Mandarin")} onClick={() => toggleNote("Mandarin")}>Mandarin</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Mint")} onClick={() => toggleNote("Mint")}>Mint</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Cinnamon")} onClick={() => toggleNote("Cinnamon")}>Cinnamon</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Ginger")} onClick={() => toggleNote("Ginger")}>Ginger</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Saffron")} onClick={() => toggleNote("Saffron")}>Saffron</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Musk")} onClick={() => toggleNote("Musk")}>Musk</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Leather")} onClick={() => toggleNote("Leather")}>Leather</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Tobacco")} onClick={() => toggleNote("Tobacco")}>Tobacco</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Suede")} onClick={() => toggleNote("Suede")}>Suede</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Benzoin")} onClick={() => toggleNote("Benzoin")}>Benzoin</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Clove")} onClick={() => toggleNote("Clove")}>Clove</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Fig")} onClick={() => toggleNote("Fig")}>Fig</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Eucalyptus")} onClick={() => toggleNote("Eucalyptus")}>Eucalyptus</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Yuzu")} onClick={() => toggleNote("Yuzu")}>Yuzu</ToggleButton>
                             </Grid>
+                            <Button
+                                style={luxuryBodyStyle}
+                                >
+                                 {/* onClick={() => saveFragrancesToProfile()}> */}
+                                Save To Profile
+                            </Button>
                         </View>
                     )}
                 </View>
