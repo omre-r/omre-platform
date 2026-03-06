@@ -31,6 +31,7 @@ export default function OrdersPanel() {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingOrder, setLoadingOrder] = useState(false);
   const [msg, setMessage] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   async function getToken() {
     try {
@@ -131,9 +132,25 @@ async function viewOrder(orderId) {
         <Flex direction="column" height="100%">
           <Flex justifyContent="space-between" alignItems="center">
             <Text style={luxuryHeadingStyle}>Orders</Text>
-            <Button style={luxuryBodyStyle} onClick={loadOrders}>
-              Refresh
-            </Button>
+            <Flex gap="0.5rem" alignItems="center">
+              <SelectField
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                height="3rem"
+                marginTop="-0.5rem"
+              >
+                <option value="all">All</option>
+                <option value="ordered">Ordered</option>
+                <option value="pending">Pending</option>
+                <option value="mixing">Mixing</option>
+                <option value="ready">Ready</option>
+                <option value="fulfilled">Fulfilled</option>
+                <option value="canceled">Canceled</option>
+              </SelectField>
+              <Button style={luxuryBodyStyle} onClick={loadOrders}>
+                Refresh
+              </Button>
+            </Flex>
           </Flex>
 
           {msg && <Text color="Black" style={luxuryBodyStyle} marginTop="0.5rem">{msg}</Text>}
@@ -141,7 +158,8 @@ async function viewOrder(orderId) {
           <View overflow="auto" height="20rem" marginTop="1rem">
             {orders.length === 0 && <Text style={luxuryBodyStyle}>No orders found.</Text>}
 
-            {orders.map((order) => (
+            {orders.filter((order) =>
+              statusFilter === "all" ? true : order.status === statusFilter).map((order) => (
               <Button
                 key={order.id}
                 style={luxuryBodyStyle}

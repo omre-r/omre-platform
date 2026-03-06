@@ -84,18 +84,21 @@ async function loadCart() {
         setCart([]);
       return;
     }
+
 const fullCart = await Promise.all(
   cartRows.map(async (row) => {
     let item;
+
     if (row.type === "blend") {
       const blendRes = await getBlendByIdReq(row.itemid);
       const blend = blendRes?.data?.data?.blend || blendRes?.data?.blend;
-      if (!blend) return { ...row, item: null };
-
+      if (!blend) {
+        await deleteCartItemReq(row.id);
+        return null;
+      }
       let price = 0;
       if (blend.size_ml === 30) price = 50;
       if (blend.size_ml === 50) price = 75;
-
       const frag1Res = await getProductReq(blend.frag1_productid);
       const frag2Res = await getProductReq(blend.frag2_productid);
       const frag1 = frag1Res?.data?.data?.product || frag1Res?.data?.product;
@@ -105,29 +108,44 @@ const fullCart = await Promise.all(
         const frag3Res = await getProductReq(blend.frag3_productid);
         frag3 = frag3Res?.data?.data?.product || frag3Res?.data?.product;
       }
-
+      if (
+        !frag1 ||
+        !frag2 ||
+        frag1.ishidden ||
+        frag2.ishidden ||
+        (frag3 && frag3.ishidden)
+      ) {
+        await deleteCartItemReq(row.id);
+        return null;
+      }
       const imageArray = frag1?.images || [];
-      const name = `${frag1?.name || "Unknown"} ${blend.frag1_pct}% / 
+      const name = `${frag1?.name || "Unknown"} ${blend.frag1_pct}% /
                     ${frag2?.name || "Unknown"} ${blend.frag2_pct}%${
                       frag3 ? ` / ${frag3.name} ${blend.frag3_pct}%` : ""
-                    } Blend`.replace(/\s+/g, " ").trim();
-
+                    } Blend`
+        .replace(/\s+/g, " ")
+        .trim();
       item = {
         name,
         price,
         images: imageArray,
         size_ml: blend.size_ml,
       };
+
     } else {
       const productRes = await getProductReq(row.itemid);
       item = productRes?.data?.data?.product || productRes?.data?.product;
+      if (!item || item.ishidden) {
+        await deleteCartItemReq(row.id);
+        return null;
+      }
     }
 
     return { ...row, item };
   })
 );
 
-    setCart(fullCart);
+setCart(fullCart.filter(Boolean));
   } catch (err) {
     console.error(err);
     setMessage("Failed to load cart.");
@@ -139,7 +157,6 @@ const fullCart = await Promise.all(
   useEffect(() => {
     loadCart();
   }, []);
-
 
 async function loadRecommendations() {
         const idToken = getIDToken();
@@ -269,7 +286,8 @@ async function checkout() {
         )}
 
         {!loadingCart && cart.length === 0 && (
-          <Flex justifyContent="center">
+          <Flex direction="column" alignItems="center" gap="1rem">
+            <Text style={luxuryBodyStyleBlack}>Your cart is empty.</Text>
             <Link to="/fragrances">
               <View style={buttonViewStyle}>
                 <Text style={luxuryBodyStyle}>Shop All</Text>
