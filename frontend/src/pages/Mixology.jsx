@@ -422,7 +422,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
 
     // Colors for the liquid in the bottl ---------------------------------------------------
     // Mock for now, fragrances may include color details in the backend in the future
-    const color1 =  "#b07ac4"; 
+    const color1 = "#b07ac4"; 
     const color2 = "#e3615b"; 
     const color3 = "#a12d0f"; 
 
@@ -430,6 +430,9 @@ async function handleAddSavedBlendToCart(savedBlend) {
     useEffect(() => {
         loadProducts();
     }, []);
+
+    // Getting the sorted list of products ------------------------------------------
+    const sortedProducts = [...products].sort((a, b) => a.name.localeCompare(b.name));
 
 
     return (
@@ -571,7 +574,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                         {/* Removed text as prof doesnt want placeholders */}
                                         {/* Select a fragrance */}
                                 </option>
-                                {products.map((product) => (
+                                {sortedProducts.map((product) => (
                                     <option 
                                         key={getProductId(product)} 
                                         value={getProductId(product)}
@@ -604,7 +607,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                     value="" 
                                     disabled hidden>
                                 </option>
-                                {products.map((product) => (
+                                {sortedProducts.map((product) => (
                                     <option 
                                         key={getProductId(product)} 
                                         value={getProductId(product)}
@@ -641,7 +644,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                     value="" 
                                     disabled hidden>
                                 </option>
-                                {products.map((product) => (
+                                {sortedProducts.map((product) => (
                                     <option 
                                         key={getProductId(product)} 
                                         value={getProductId(product)}

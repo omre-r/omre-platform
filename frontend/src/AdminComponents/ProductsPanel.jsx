@@ -516,6 +516,10 @@ export default function ProductsPanel() {
             Loading Products...
         </Text>);
     }
+
+    // List of sorted products ---------------------------------------
+    // Have to do this way because groupOfRelevantElements because a is grouped array of product variations (30ml, 50ml)
+    const sortedProducts = [...products].sort((a, b) => a[0].name.localeCompare(b[0].name));
     
     return (
         <Flex 
@@ -575,7 +579,7 @@ export default function ProductsPanel() {
                     )}
                     <View overflow="auto" height="20rem" marginTop="1rem"> 
                         {/* Below creating a list of all the products ---------------------------- */}
-                        {products.map((prodList) => {
+                        {sortedProducts.map((prodList) => {
                             return (
                             <Flex
                             direction={"column"}

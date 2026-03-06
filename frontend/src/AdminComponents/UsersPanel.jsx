@@ -87,6 +87,9 @@ export default function UsersPanel() {
     }
 console.log("selectedUser object:", selectedUser);
 
+// Getting the sorted list of users ------------------------------------------
+const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
+
     return (
         <Flex 
             direction="row" 
@@ -130,7 +133,7 @@ console.log("selectedUser object:", selectedUser);
                         overflow="auto" 
                         height="20rem"
                         marginTop="1rem">
-                        {users.map((currentUser) => (
+                        {sortedUsers.map((currentUser) => (
                             <Button
                                 key={currentUser.user_id}
                                 variation="link"
@@ -188,9 +191,10 @@ console.log("selectedUser object:", selectedUser);
                             <Text>Email: {selectedUser.email}</Text>
                             <Text>Name: {selectedUser.first_name} {selectedUser.last_name}</Text>
                             <Text>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
-                            <Text>Admin Permissions: {selectedUser.is_admin ? "Yes" : "No"}</Text>
+                            <Text>isAdmin: {selectedUser.is_admin ? "Yes" : "No"}</Text>
                             <Text>Created: {new Date(selectedUser.created_at).toLocaleString()}</Text>
-                            <Text>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString(): "--"}</Text>
+                            {/* TODO: Have last login implemented */}
+                            {/* <Text>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString(): "--"}</Text> */}
 
                             <Button 
                                 style={luxuryBodyStyle}
