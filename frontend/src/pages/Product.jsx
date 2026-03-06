@@ -109,20 +109,30 @@ export default function Product(){
         setLoadingRecommendations(false);
         setRecommendations(data?.data?.recommendations || []);
     }
-    if (loadingProduct){
+    if (loadingProduct) {
         return (
-            <Card
-            display={"flex"}
-            direction={"column"}
-            padding={0}
-            height={"100vh"}
-            width={"100vw"}
-            backgroundColor={"transparent"}
-            >
-                <Navbar/>
-            </Card>
-        )
-
+            <>
+                <Navbar />
+                <View
+                    width="100%"
+                    minHeight="100vh"
+                    paddingTop="3rem"
+                    paddingLeft="3rem"
+                    paddingRight="3rem"
+                    paddingBottom="3rem"
+                    style={{
+                        backgroundImage: `url(${LuxuryBackground})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        backgroundRepeat: "repeat",
+                    }}
+                >
+                    <Flex justifyContent="center" alignItems="center" height="60vh">
+                        <Text style={headingStyle}>Loading product...</Text>
+                    </Flex>
+                </View>
+            </>
+        );
     }
     return (
         <>
