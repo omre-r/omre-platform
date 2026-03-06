@@ -699,9 +699,10 @@ async function handleAddSavedBlendToCart(savedBlend) {
                         <Text
                             style={{
                                 ...luxuryBodyStyle,
-                                color: message === "Blend Ready!" || message === "Blend saved successfully!" ? "#2d6a2d" : "#8B0000",
+                                color: message === "Blend Ready!" || message === "Blend saved successfully!" || message === "Blend added to cart!" || message === "Blend deleted successfully!" ? "#2d6a2d" : "#8B0000",
                                 textAlign: "center",
-                                marginTop: "0.75rem"
+                                marginTop: "2.3rem",
+                                fontSize: "1.6rem"
                             }}>
                             {message}
                         </Text>
