@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Card, Flex, Text, Button, View, TextField, SwitchField, Grid } from "@aws-amplify/ui-react";
+import { Card, Flex, Text, Button, View, TextField, TextAreaField, SwitchField, Grid, SelectField } from "@aws-amplify/ui-react";
 
-import {getProductReq, updateProductReq, deleteProductReq, getProductsReq, createProductReq, createProductFlowReq_LOCAL} from'../requests.js';
+import {getProductReq, updateProductReq, updateProductStockReq, deleteProductReq, getProductsReq, createProductReq, createProductFlowReq_LOCAL, uploadAndGetURlsReq} from'../requests.js';
 
+
+import EditIcon from "../assets/edit_icon.png"
 
 // Custom Styling for fonts and amplify ui -------------------------------------- 
 const luxuryHeadingStyle = {
@@ -20,13 +22,13 @@ const luxuryBodyStyle = {
 const compactStyle = {
     fontFamily: "'Cormorant Garamond', serif",
     fontWeight: 200,
-    fontSize: "0.8rem",
+    fontSize: "1rem",
     letterSpacing: "0.1px",
 };
 const MODES = {
     IDLE: "idle",
-    VIEW: "view",
     ADD: "add",
+    APPEND: "append",
     EDIT: "edit",
     REMOVE: "remove",
 };
@@ -39,7 +41,8 @@ const defaultProductDraft = {
         name: '',
         variation: '',
         price: '',
-        quantity: '',
+        stock_ml: '',
+        description: ``,
         notes: {
             top: [],
             heart: [],
@@ -51,7 +54,7 @@ const defaultProductDraft = {
 };
 
 // Products Admin Panel ---------------------------------------------
-// Will give user the option to view, add, edit, and remove products from this dashboard
+// Will give user the option to add, edit, and remove products from this dashboard
 export default function ProductsPanel() {
 
     // Products states ----------------------------------------------------
@@ -64,11 +67,15 @@ export default function ProductsPanel() {
     const [message, setMessage] = useState("");
 
     // UI mode switch ---------------------------------------
-    // Will switch depending on viewing, editing, removing, or adding
+    // Will switch depending on editing, removing, or adding
     const [activeMode, setActiveMode] = useState(MODES.IDLE);
 
     // Set draft based on default draft or product editing and use that information --------------------------------
     const [draft, setDraft] = useState(defaultProductDraft);
+
+    const [showImages, setShowImages] = useState(false)
+    const [files, setFiles]  = useState([])
+    const [isUploading, setIsUploading] = useState(false);
 
     // When editing or adding to draft, name and type cannot be left blank but other information can
     const canSave = draft.type.trim() !== "" && draft.name.trim() !== "";
@@ -93,7 +100,8 @@ export default function ProductsPanel() {
             name: product.name ?? "",
             variation: product.variation ?? "",
             price: product.price != null ? String(product.price) : "",
-            quantity: product.quantity != null ? String(product.quantity) : "",
+            stock_ml: product.stock_ml != null ? String(product.stock_ml) : "",
+            description: product.description ?? ``,
             notes: {
                 top: product.notes?.top ?? [],
                 heart: product.notes?.heart ?? [],
@@ -101,39 +109,236 @@ export default function ProductsPanel() {
             },
             isfeatured: product.isfeatured,
             ishidden: product.ishidden,
-            images: [] // Images are list of file products (Requests.js)
+            images: product.images 
         };
     }
 
     // For images uploaded when editing or creating ------------------------------------------------------  
     function onImagesSelected(e) {
-        const files = Array.from(e.target.files || []);
-        setDraft(prev => ({
-            ...prev,
-            images: files
-        }));
+        const numAllowedFiles = 5 - draft.images.length
+        const newFiles = Array.from(e.target.files || []).slice(0,numAllowedFiles);
+        e.target.value = ""
+        if (newFiles.length === 0 || numAllowedFiles <= 0) return; 
+        
+        const validFiles = []
+
+        //check no duplicates
+        for (const file of newFiles){    // when files is not empty, theuser is prompted to upload.
+
+            //no unique ids available, so just comparing name + size + last modified
+            if (files.some(f => `${f.name}${f.size}${f.lastModified}` === `${file.name}${file.size}${file.lastModified}`)){
+                continue
+            }
+            validFiles.push(file)
+            file.url = URL.createObjectURL(file)
+        }
+        if (validFiles.length === 0){
+            return
+        }
+        setFiles(prev => [...prev, ...validFiles])
     }
 
+    async function uploadImages(){
+        if (files.length === 0) return;
+
+        const newFiles = [...files]
+        for (const f of newFiles){
+            URL.revokeObjectURL(f.url);
+            delete f.url;
+        }
+        //files => urls
+        /*files are tagged temporary on S3, 
+        so unused images will be deleted in 2 days (may change)*/
+        setIsUploading(true);
+        const imageurls = await uploadAndGetURlsReq(newFiles);
+        setIsUploading(false);
+        setDraft(prev => {
+            return {
+                ...prev,
+                images: [...prev.images, ...imageurls]
+            }
+        })
+        setFiles([])
+    }
+
+    //Used when rearranging images
+    async function handleImageDrag(event, i) {
+        event.preventDefault()
+        const elem = event.currentTarget;
+        const scrollContainer = elem.parentElement;
+
+        const initialElemRect = elem.getBoundingClientRect();
+        initialElemRect.index = i;
+        
+        const initialX = event.clientX;
+        const initialScrollLeft = scrollContainer.scrollLeft;
+        const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth
+        let newPosition = i;
+        let scrollLeftInterval;
+        let scrollRightInterval;
+
+        let lastClientX = event.clientX;
+        const startDrag = (e) => {
+            lastClientX = e.clientX;
+
+            const shift =  (e.clientX - initialX) + (scrollContainer.scrollLeft - initialScrollLeft);
+            elem.style.transform = `translate(${shift}px,0)`;
+
+            //get sorted list of rects of image containers in increasing order
+            let allImageRects = Array.from(document.querySelectorAll(".product-image-draggable"))
+            .filter(item => item !== elem)
+            .map(item => {
+                const rect = item.getBoundingClientRect();
+                rect.index = Number(item.dataset.index)
+                return rect
+            });
+            allImageRects.push(initialElemRect);
+            allImageRects.sort((a, b) => a.right - b.right)
+
+            //checks who is closest to the mouse
+            let closest = [99999999, i];
+            for (const rect of allImageRects){
+                const distance = Math.abs((rect.left + (rect.right - rect.left) / 2) - e.clientX)
+                if (distance < closest[0]){
+                    closest = [distance, rect.index]
+                }
+            }
+            newPosition = closest[1];
+
+            //move scroll container if near left/right end
+            /*main reason for complexity is that when mouse stops moving,
+             so does dragged image and scrolling */
+            const scrollRect = scrollContainer.getBoundingClientRect()
+            if (e.clientX < (scrollRect.left + 150)){
+                clearInterval(scrollRightInterval);
+                scrollRightInterval = null;
+
+                scrollLeftInterval = scrollLeftInterval 
+                ? scrollLeftInterval
+                : setInterval(() => {
+                    scrollContainer.scrollLeft -= 4;
+                    const shift =  (lastClientX - initialX) + (scrollContainer.scrollLeft - initialScrollLeft);
+                    elem.style.transform = `translate(${shift}px,0)`;
+                }, 16);
+            }else if (e.clientX > (scrollRect.right - 150)){
+                clearInterval(scrollLeftInterval);
+                scrollLeftInterval = null;
+
+                scrollRightInterval = scrollRightInterval 
+                ? scrollRightInterval
+                : setInterval(() => {
+                    if (scrollContainer.scrollLeft > maxScroll) return;
+                    scrollContainer.scrollLeft += 4;
+                    const shift =  (lastClientX - initialX) + (scrollContainer.scrollLeft - initialScrollLeft);
+                    elem.style.transform = `translate(${shift}px,0)`;
+                }, 16);
+            }else{
+                clearInterval(scrollLeftInterval)
+                clearInterval(scrollRightInterval)
+                scrollLeftInterval = null;
+                scrollRightInterval = null;
+            }
+        }
+        const endDrag = (e) => {
+            elem.style.zIndex = "auto";
+            elem.style.transform = ``;
+            clearInterval(scrollLeftInterval)
+            clearInterval(scrollRightInterval)
+            if (newPosition !== i){
+                const newImages = [...draft.images];
+                const temp1 = newImages[newPosition];
+                newImages[newPosition] = newImages[i];
+                newImages[i] = temp1;
+                setDraft(prev => {
+                    return {
+                        ...prev,
+                        images: newImages
+                    }
+                })
+            }
+            document.removeEventListener("mousemove", startDrag);
+            document.removeEventListener("mouseup", endDrag);
+        }
+        elem.style.zIndex = "1000";
+        document.addEventListener("mousemove", startDrag);
+        document.addEventListener("mouseup", endDrag);
+    }
+
+
     // Form helper for #'s
-    function validateNumbers(price, quantity) {
-        if (!Number.isFinite(price) || price < 0) return "Price must be a valid number.";
-        if (!Number.isFinite(quantity) || quantity < 0) return "Quantity must be a valid number.";
+    function validateNumbers(price, stock_ml) {
+        if (price && (!Number.isFinite(price) || price < 0)) return "Price must be a valid number.";
+        if (stock_ml && (!Number.isFinite(stock_ml) || stock_ml < 0)) return "Stock must be a valid number.";
         return null;
     }
 
     function resetToIdle() {
+        for (const file of files){
+            URL.revokeObjectURL(file.url)
+        }
+        setFiles([])
         setSelectedProduct(null);
         setDraft(defaultProductDraft);
         setActiveMode(MODES.IDLE);
     }
 
+    function resetToAdd(){
+        for (const file of files){
+            URL.revokeObjectURL(file.url)
+        }
+        setFiles([])
+        setSelectedProduct(null);
+        setDraft(defaultProductDraft);
+        setActiveMode(MODES.ADD);
+    }
+
+    //Prefills fields. For when we want a new product based off another and of a different variation
+    function resetToAppend(prod){
+        for (const file of files){
+            URL.revokeObjectURL(file.url)
+        }
+        setFiles([])
+        setDraft({
+            ...makeDraftFromProduct(prod),
+            variation: "",
+            images: []
+        });
+        setActiveMode(MODES.APPEND);
+    }
+
+    function resetToEdit(prod){
+        for (const file of files){
+            URL.revokeObjectURL(file.url)
+        }
+        setFiles([])
+        setSelectedProduct(prod);
+        setDraft(makeDraftFromProduct(prod));
+        setActiveMode(MODES.EDIT);
+    }
+
+    function groupRelevantElements(productList){
+        const parents = {};
+        for (const p of productList){
+            parents?.[p.parentid] ? parents[p.parentid].push(p) : parents[p.parentid] = [p];
+        }
+        // sort variations [50ml, 30ml, 70ml] => [30ml, 50ml, 70ml]
+        const groups = Object.values(parents);
+        for (const group of groups){
+            group.sort((a, b) => Number(a?.variation?.split("ml")?.[0]) - Number(b?.variation?.split("ml")?.[0]))
+        }
+        return Object.values(parents);
+    }
+    
     // Left card  loading---------------------------------------------------------------
     async function loadProducts() {
         setMessage("");
         setLoadingProducts(true);
         try {
-            const prods = await getProductsReq();
-            setProducts(prods || [])
+            const data = await getProductsReq();
+            if (!data.success){
+                throw new Error(data.message)
+            }
+            setProducts(groupRelevantElements(data.data.products));
         }
         catch (error) {
             setMessage(error.message || "Error loading products.");
@@ -143,23 +348,6 @@ export default function ProductsPanel() {
         }
     }
 
-    // View product on the right card ----------------------------------------------------------
-    async function viewProduct(productId) {
-        setMessage("");
-        setLoadingProduct(true);
-        try {
-            setActiveMode(MODES.VIEW);
-            await new Promise(resolve => setTimeout(resolve, 300));
-            const product = await getProductReq(productId);
-            setSelectedProduct(product);
-        }
-        catch (error) {
-            setMessage(error.message || "Error viewing product.");
-        }
-        finally {
-            setLoadingProduct(false);
-        }
-    }
 
     // Removing a product ---------------------------------------------------------------------------------
     // get the product id of the select product and send the id to the backend deleteProductReq function
@@ -175,7 +363,10 @@ export default function ProductsPanel() {
                 return;
             }
 
-            await deleteProductReq(id);
+            const data = await deleteProductReq(id);
+            if (!data.success){
+                throw new Error(data.message);
+            }
             setMessage("Deleted product: " + selectedProduct.name);
             resetToIdle();
             await loadProducts();
@@ -202,7 +393,10 @@ export default function ProductsPanel() {
             // Check if product is hidden, will hide or unhide depending on which
             const hiddenStatus = !selectedProduct.ishidden;
 
-            await updateProductReq(id, { ishidden: hiddenStatus });
+            const data = await updateProductReq(id, { ishidden: hiddenStatus });
+            if (!data.success){
+                throw new Error(data.message);
+            }
             setMessage(`${hiddenStatus ? "Hidden" : "Unhidden"}: ${selectedProduct.name}`);
             await loadProducts();
             resetToIdle();
@@ -221,13 +415,19 @@ export default function ProductsPanel() {
                 setMessage("Type and name are required.");
                 return;
             }
+            if (draft.images.length === 0){
+                setMessage("At least 1 image is required.");
+                return;
+            }
             // Pull info from draft 
             const form = {
+                parentid: activeMode === MODES.APPEND ? selectedProduct.parentid : null,
                 type: draft.type.trim(),
                 name: draft.name.trim(),
                 variation: draft.variation.trim(),
                 price: draft.price === "" ? 0 : Number(draft.price),
-                quantity: draft.quantity === "" ? 0 : Number(draft.quantity),
+                stock_ml: draft.stock_ml === "" ? 0 : Number(draft.stock_ml),
+                description: draft.description.trim(),
                 // To match the backend format of the notes, we have top, heart, and base
                 // which will be respectively their own scents.
                 notes: {
@@ -235,18 +435,24 @@ export default function ProductsPanel() {
                     heart: draft.notes.heart,
                     base: draft.notes.base,
                 },
-                description: "test description",
                 isfeatured: !!draft.isfeatured,
                 ishidden: !!draft.ishidden,
                 images: draft.images ?? [],
             };
-            const validNums = validateNumbers(form.price, form.quantity)
+            const validNums = validateNumbers(form.price, form.stock_ml)
             if (validNums) {
                 setMessage(validNums);
                 return;
             }
-            const newProduct = await createProductFlowReq_LOCAL(form);
-            console.log("createProductReq returned:", newProduct);
+            if (!form.variation){
+                setMessage("Please select a variation");
+                return
+            }
+            const data = await createProductReq(form);
+            if (!data.success){
+                throw new Error(data.message);
+            }
+            const newProduct = data.data.product;
             setMessage(`Created: ${newProduct.name}`);
             resetToIdle();
             await loadProducts();
@@ -279,7 +485,7 @@ export default function ProductsPanel() {
                 name: draft.name.trim(),
                 variation: draft.variation.trim(),
                 price: draft.price === "" ? 0 : Number(draft.price),
-                quantity: draft.quantity === "" ? 0 : Number(draft.quantity),
+                description: draft.description.trim(),
                 notes: {
                     top: draft.notes.top,
                     heart: draft.notes.heart,
@@ -287,8 +493,9 @@ export default function ProductsPanel() {
                 },
                 isfeatured: !!draft.isfeatured,
                 ishidden: !!draft.ishidden,
+                images: draft.images
             };
-            const validNums = validateNumbers(form.price, form.quantity)
+            const validNums = validateNumbers(form.price, null)
             if (validNums) {
                 setMessage(validNums);
                 return;
@@ -297,8 +504,40 @@ export default function ProductsPanel() {
             if (draft.images.length > 0) {
                 form.images = draft.images;
             }
-            await updateProductReq(id, form);
+            const data = await updateProductReq(id, form);
+            if (!data.success){
+                throw new Error(data.message);
+            }
             setMessage(`Updated: ${form.name}`);
+            await loadProducts();
+            resetToIdle();
+        }
+        catch(error) {
+            setMessage(error.message || "Error updating product.");
+        }
+    }
+
+    // stock updates get a specific function as they are outside normal flow -------------------------------------------------- 
+    async function updateProductStock() {
+        setMessage("")
+        try {
+            if(!selectedProduct) {
+                return;
+            }
+
+            // makeDraftFromProduct function will be called and that will be setting the draft with the existing info
+            const form = {
+                stock_ml: draft.stock_ml === "" ? 0 : Number(draft.stock_ml),
+            };
+            const validNums = validateNumbers(null, form.stock_ml)
+            if (validNums) {
+                setMessage(validNums);
+                return;
+            }
+            const data = await updateProductStockReq(selectedProduct.parentid, form.stock_ml);
+            if (!data.success){
+                throw new Error(data.message);
+            }
             await loadProducts();
             resetToIdle();
         }
@@ -311,7 +550,6 @@ export default function ProductsPanel() {
         loadProducts();
     }, []);
 
-
     if (loadingProducts) {
         return (
         <Text 
@@ -319,6 +557,10 @@ export default function ProductsPanel() {
             Loading Products...
         </Text>);
     }
+
+    // List of sorted products ---------------------------------------
+    // Have to do this way because groupOfRelevantElements because a is grouped array of product variations (30ml, 50ml)
+    const sortedProducts = [...products].sort((a, b) => a[0].name.localeCompare(b[0].name));
     
     return (
         <Flex 
@@ -353,11 +595,7 @@ export default function ProductsPanel() {
                             {/* Button : add mode -------------------------------------------------- */}
                             <Button 
                                 style={luxuryBodyStyle}
-                                onClick={() => {
-                                    setActiveMode(MODES.ADD);
-                                    setSelectedProduct(null);
-                                    setDraft(defaultProductDraft);
-                                }}
+                                onClick={resetToAdd}
                                 >
                                 Add
                             </Button>
@@ -372,19 +610,6 @@ export default function ProductsPanel() {
                                 >
                                 Remove
                             </Button>
-                            {/* Button : edit mode ------------------------------- */}
-                            <Button 
-                                style={luxuryBodyStyle}
-                                disabled={!selectedProduct}
-                                onClick={() => {
-                                    if (!selectedProduct) return;
-                                    setActiveMode(MODES.EDIT);
-                                    // Create draft from backend product information
-                                    setDraft(makeDraftFromProduct(selectedProduct));
-                                }}
-                                >
-                                Edit
-                            </Button>
                         </Flex>
                     </Flex>
 
@@ -395,47 +620,133 @@ export default function ProductsPanel() {
                     )}
                     <View overflow="auto" height="20rem" marginTop="1rem"> 
                         {/* Below creating a list of all the products ---------------------------- */}
-                        {products.map((prod) => (
-                            <Button
-                                key={getProductId(prod)}
-                                style={luxuryBodyStyle}
-                                variation="link"
-                                justifyContent="flex-start"
-                                width="100%"
-                                marginBottom=".5rem"
-                                border=".5px solid #111"
-                                borderRadius="6px"
-                                onClick={() => {
-                                    // On click we activate viewing that specific product based on the id
-                                    const id = getProductId(prod);
-                                    if (!id) {
-                                        setMessage("Product ID missing.");
-                                        return;
-                                    }
-                                    viewProduct(id);
-                                }}
-                                >
-                                <Text>
-                                    {prod.name} — qty: {prod.quantity} {prod.quantity <= 5 && "(LOW!)"}
-                                </Text>
-                            </Button>
-                        ))}
+                        {sortedProducts.map((prodList) => {
+                            return (
+                            <Flex
+                                direction={"column"}
+                                gap="0.6rem"
+                                marginBottom="0.6rem"
+                            >
+                                {
+                                    selectedProduct?.parentid === prodList[0].parentid 
+                                    ? 
+                                    <Button
+                                        key={prodList[0].parentid}
+                                        style={luxuryBodyStyle}
+                                        variation="link"
+                                        justifyContent="flex-start"
+                                        width="100%"
+                                        border=".5px solid #111"
+                                        borderRadius="6px"
+                                        >
+                                        <Text textAlign={"left"}>
+                                            <strong>{selectedProduct.name}</strong>
+                                            <br />
+                                            <Text>— {selectedProduct.stock_ml}ml {selectedProduct.stock_ml < 1000 && "(LOW!)"}</Text>
+                                        </Text>
+                                    </Button>
+                                    :
+                                    <Button
+                                        key={prodList[0].parentid}
+                                        style={luxuryBodyStyle}
+                                        variation="link"
+                                        justifyContent="flex-start"
+                                        width="100%"
+                                        border=".5px solid #111"
+                                        borderRadius="6px"
+                                        onClick={() => {
+                                            const id = getProductId(prodList[0]);
+                                            if (!id) {
+                                                setMessage("Product ID missing.");
+                                                return;
+                                            }
+                                            setMessage("");
+                                            resetToEdit(prodList[0]);
+                                        }}
+                                        >
+                                        <Text textAlign={"left"}>
+                                            <strong>{prodList[0].name} </strong>
+                                            <br />
+                                            <Text>— {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"}</Text>
+                                        </Text>
+                                    </Button>
+                                }
+                                {selectedProduct?.parentid === prodList[0].parentid &&
+                                <Flex>
+                                    <Flex
+                                    alignItems={"center"}
+                                    justifyContent={"left"}
+                                    gap={"5px"}>
+                                        <Text>Stock</Text>
+                                        <input 
+                                            style={{width: "100px", padding: "5px 10px", borderRadius: "5px"}}
+                                            placeholder="Stock (ml)"
+                                            type="number"
+                                            value={draft.stock_ml} 
+                                            onChange={(e) => setDraftField("stock_ml", e.target.value)} 
+                                        />
+                                        {Math.floor(draft.stock_ml) !== Math.floor(selectedProduct.stock_ml) &&
+                                            <button
+                                            onClick={updateProductStock}
+                                            style={{
+                                                overflow: "hidden", 
+                                                width: "30px", 
+                                                height: "30px", 
+                                                padding:"0", 
+                                                border: "none"}}
+                                                >
+                                                <img src={EditIcon} width={"100%"} alt="Edit" />
+                                            </button>
+                                        }
+                                    </Flex>
+                                    <Flex 
+                                    wrap={"wrap"}
+                                    gap={"5px"}
+                                    justifyContent={"center"}
+                                    marginBlock={"10px"}>
+                                        {prodList.map(prod => (
+                                            <Button
+                                            style={selectedProduct.id === prod.id ? {opacity: ".7", boxShadow: "0 0 5px inset"} : {}}
+                                            padding={"5px 10px"}
+                                            onClick={() => {
+                                                resetToEdit(prod)
+                                            }}>
+                                                {prod.variation}
+                                            </Button>
+                                        ))}
+                                            <Button
+                                            padding={"5px 10px"}
+                                            style={activeMode === MODES.APPEND ? {opacity: ".7", boxShadow: "0 0 5px inset"} : {}}
+                                            onClick={() => {
+                                                resetToAppend(selectedProduct);
+                                            }}>
+                                                +
+                                            </Button>
+                                    </Flex>
+                                </Flex>
+
+                                }
+
+                            </Flex>
+                        )})}
                     </View>
                 </Flex>
             </Card>
         
-            {/* Right card views, edit, delete, or adds information ----------------------------------------- */}
+            {/* Right card edit, delete, or adds information ----------------------------------------- */}
             <Card
                 flex="1.0"  
                 height="100%" 
                 padding="1rem" 
-                backgroundColor="whitesmoke">
+                backgroundColor="whitesmoke"
+                overflow="auto">
                 <Flex 
                     direction="column"
                     height="100%"
                     width="100%"
-                    justifyContent="center"
-                    alignItems="center">
+                    justifyContent="flex-start"
+                    alignItems="center"
+                    style={{ minWidth: 0 }}>
                     {loadingProduct && (
                     <Flex direction="column" gap="0.25rem">
                         <Text style={luxuryHeadingStyle}>Product Information</Text>
@@ -445,30 +756,44 @@ export default function ProductsPanel() {
 
                     {/* Add mode: Will pull up a blank draft to be filled out with information of a product they want to add */}
                     {/* Edit mode: Will take existing product and show its information in the draft instead of being blank */}
-                    {(activeMode === MODES.ADD || activeMode === MODES.EDIT) && (
+                    {(activeMode === MODES.ADD || activeMode === MODES.EDIT || activeMode === MODES.APPEND) && (
                         <Grid 
-                            templateColumns="12rem 10rem"
-                            gap="0.3rem" 
+                            templateColumns="1fr 1fr"
+                            gap="0.4rem"
                             marginTop="-.2rem"
+                            width="100%"
+                            style={{ minWidth: 0 }}
                             >
-                            <TextField 
-                                style={compactStyle}
-                                placeholder="Type"
-                                value={draft.type} 
-                                onChange={(e) => setDraftField("type", e.target.value)} 
-                            />
                             <TextField 
                                 style={compactStyle}
                                 placeholder="Name"
                                 value={draft.name} 
                                 onChange={(e) => setDraftField("name", e.target.value)} 
                             />
-                            <TextField 
+                            <SelectField
                                 style={compactStyle}
-                                placeholder="Variation"
+                                value={draft.type} 
+                                onChange={(e) => setDraftField("type", e.target.value)} 
+                            >
+                                <option value="" disabled>Type</option>
+                                {!["Men's Cologne", "Women's Perfume"].includes(draft.type) && ![MODES.ADD, MODES.APPEND].includes(activeMode) &&
+                                <option value={draft.type} disabled>{draft.type}</option>}
+                                <option value="Men's Cologne">Men's Cologne</option>
+                                <option value="Women's Perfume">Women's Perfume</option>
+                            </SelectField>
+
+                            {/* Includes an invalid variation as a disabled option, so admin can see the invalid state but not reselect it */}
+                            <SelectField
+                                style={compactStyle}
                                 value={draft.variation} 
                                 onChange={(e) => setDraftField("variation", e.target.value)} 
-                            />
+                            >
+                                <option value="" disabled>Variation</option>
+                                {!["30ml", "50ml"].includes(draft.variation) && ![MODES.ADD, MODES.APPEND].includes(activeMode) &&
+                                <option value={draft.variation} disabled>{draft.variation}</option>}
+                                <option value="30ml">30ml</option>
+                                <option value="50ml">50ml</option>
+                            </SelectField>
                             <TextField 
                                 style={compactStyle}
                                 placeholder="Price"
@@ -476,15 +801,9 @@ export default function ProductsPanel() {
                                 value={draft.price} 
                                 onChange={(e) => setDraftField("price", e.target.value)} 
                             />
-                            <TextField 
-                                style={compactStyle}
-                                placeholder="Quantity"
-                                type="number"
-                                value={draft.quantity} 
-                                onChange={(e) => setDraftField("quantity", e.target.value)} 
-                            />
                             {/* Entering Top, Heart, and Base notes ------------------------------------------------------------*/}
                             <TextField
+                                columnSpan={2}
                                 style={compactStyle}
                                 placeholder="Notes Top (, separated)"
                                 // If array exists for top use it and separate by commas
@@ -500,6 +819,7 @@ export default function ProductsPanel() {
                                 }}
                             />
                             <TextField
+                                columnSpan={2}
                                 style={compactStyle}
                                 placeholder="Notes Heart (, separated)"
                                 value={(draft.notes.heart || []).join(",")}   
@@ -514,6 +834,7 @@ export default function ProductsPanel() {
                                 }}
                             />
                             <TextField
+                                columnSpan={2}
                                 style={compactStyle}
                                 placeholder="Notes Base (, separated)"
                                 value={(draft.notes.base || []).join(",")}   
@@ -527,44 +848,355 @@ export default function ProductsPanel() {
                                     }));
                                 }}
                             />
+                            <View columnSpan={2}>
+                                <TextAreaField
+                                textAlign={"left"}
+                                style={{height: "50px"}}
+                                placeholder={"Description"}
+                                value={draft.description}
+                                onChange={(e) => {
+                                    setDraft(prev => ({
+                                        ...prev,
+                                        description: e.target.value
+                                    }))
+                                }}
+                                onFocus={(e) => {e.target.style.height = "100px"}}
+                                onBlur={(e) => {e.target.style.height = "50px"}}
+                                />
+                            </View>
                             {/* Hidden or featured switches -------------------- */}
-                            <SwitchField
-                                style={compactStyle}
-                                label="Hidden?"
-                                isChecked={draft.ishidden} 
-                                onChange={(e) => setDraftField("ishidden", e.target.checked)} 
-                            />
-                            <SwitchField 
-                                style={compactStyle}
-                                label="Featured"
-                                isChecked={draft.isfeatured}
-                                onChange={(e) => setDraftField("isfeatured", e.target.checked)} 
-                            />
-                            {/* Inputting image files ---------------------------------------------------- */}
+                            <Flex
+                            columnSpan={2}
+                            justifyContent={"center"}
+                            >
+                                <SwitchField
+                                    style={compactStyle}
+                                    label="Hidden?"
+                                    isChecked={draft.ishidden} 
+                                    onChange={(e) => setDraftField("ishidden", e.target.checked)} 
+                                />
+                                <SwitchField 
+                                    style={compactStyle}
+                                    label="Featured"
+                                    isChecked={draft.isfeatured}
+                                    onChange={(e) => setDraftField("isfeatured", e.target.checked)} 
+                                />
+                            </Flex>
                             <View
                                 columnSpan={2}>
-                                <input 
-                                    id="product-images" 
-                                    type="file" 
-                                    multiple accept="image/*" 
-                                    style={{display: "none"}} 
-                                    onChange={onImagesSelected}/>
                                 <Text 
-                                    style={compactStyle}
-                                    marginTop="-1rem">
-                                    {/* Making sure it is array, will display images length or 0 if nothing has been uploaded */}
-                                    Selected: {draft.images.length}
+                                fontSize={".9em"}>
+                                    Images: {draft.images.length}
                                 </Text>
+
+                                <Button
+                                style={compactStyle}
+                                border="1px solid #111"
+                                borderRadius="6px"
+                                padding="0.35rem 0.75rem"
+                                as="label"
+                                >
+
+                                    <input 
+                                        id="product-images" 
+                                        type="file" 
+                                        multiple accept="image/*" 
+                                        style={{display: "none"}} 
+                                        onChange={onImagesSelected}
+                                        />
+                                    Upload Images
+                                </Button>
                                 <Button
                                     style={compactStyle}
-                                    as="label"
-                                    htmlFor="product-images"
                                     border="1px solid #111"
                                     borderRadius="6px"
                                     padding="0.35rem 0.75rem"
+                                    onClick={e => setShowImages(prev => !prev)}
                                 >
-                                    Choose Images
+                                    {showImages ? "Hide Images" : "Show Images"}
                                 </Button>
+                                {showImages && 
+                                <View
+                                position={"fixed"}
+                                top={0}
+                                left={0}
+                                display={"flex"}
+                                width={"100vw"}
+                                height={"100vh"}
+                                style={{backdropFilter: "blur(4px)"}}
+                                justifyContent={"center"}
+                                alignItems={"center"}
+                                >
+
+                                    <Card
+                                    display={"flex"}
+                                    width={"800px"}
+                                    minHeight={"200px"}
+                                    padding={0}
+                                    border={"solid black"}
+                                    borderWidth={"10px"}
+                                    borderRadius={"20px"}
+                                    backgroundColor={"#27231e"}
+                                    color={"white"}
+                                    position={"relative"}
+                                    >
+                                        <View
+                                        position={"absolute"}
+                                        top={0}
+                                        right={0}
+                                        transform={"translate(50%,-50%)"}
+                                        color={"black"}
+                                        backgroundColor={"white"}
+                                        width={"40px"}
+                                        height={"40px"}
+                                        borderRadius={"40%"}
+                                        border={"solid black"}
+                                        display={"flex"}
+                                        justifyContent={"center"}
+                                        alignItems={"center"}
+                                        fontSize={"1.3em"}
+                                        onClick={e => setShowImages(prev => !prev)}
+                                        >
+                                            <strong>X</strong>
+                                        </View>
+                                        <Flex
+                                        direction={"column"}
+                                        flex={1}
+                                        width={"100%"}
+                                        
+                                        >
+                                            <h2>View / Rearrange Images</h2>
+                                            <Flex
+                                            border={"solid black"}
+                                            borderRadius={"20px"}
+                                            padding={"10px"}
+                                            width={"100%"}
+                                            height={"200px"}
+                                            wrap={"nowrap"}
+                                            gap={"12px"}
+                                            alignItems={"center"}
+                                            backgroundColor={"rgb(253, 248, 245)"}
+                                            style={{overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none"}}
+                                            >
+                                                {draft.images.map((url, i) => {
+                                                    return (
+                                                    <View 
+                                                    key={url}
+                                                    width={"200px"}
+                                                    shrink={0}
+                                                    border={"solid gray"}
+                                                    borderWidth={"5px"}
+                                                    borderRadius={"10px"}
+                                                    height={"100%"}     
+                                                    display={"flex"}
+                                                    alignItems={"center"}  
+                                                    position={"relative"}   
+                                                    onMouseDown={(e) => handleImageDrag(e, i)}
+                                                    className="product-image-draggable"
+                                                    data-index={i}
+                                                    >
+                                                        <img src={url} alt="img" 
+                                                        style={{
+                                                            width: "100%",
+                                                            height: "100%",
+                                                            objectFit:"cover"
+                                                            }} />
+
+                                                        <View
+                                                        position={"absolute"}
+                                                        top={0}
+                                                        right={0}
+                                                        transform={"translate(50%,-50%)"}
+                                                        color={"white"}
+                                                        backgroundColor={"maroon"}
+                                                        width={"30px"}
+                                                        height={"30px"}
+                                                        borderRadius={"40%"}
+                                                        border={"solid black"}
+                                                        display={"flex"}
+                                                        justifyContent={"center"}
+                                                        alignItems={"center"}
+                                                        fontSize={"1.3em"}
+                                                        onClick={e => {
+                                                            if (draft.images.length <= 1) return
+                                                            setDraft(prev => {
+                                                                return {
+                                                                    ...prev,
+                                                                    images: prev.images.filter(u => u !== url)
+                                                                }
+                                                            })
+                                                        }}
+                                                        >
+                                                            <strong>X</strong>
+                                                        </View>
+                                                        {i === 0 &&
+                                                        <Text
+                                                        position={"absolute"}
+                                                        bottom={0}
+                                                        left={"50%"}
+                                                        transform={"translateX(-50%)"}
+                                                        backgroundColor={"white"}
+                                                        width={"100%"}
+                                                        opacity={.8}
+                                                        color={"black"}
+                                                        fontSize={"1.2em"}
+                                                        >
+                                                            Cover Photo
+                                                        </Text>
+                                                        }
+                                                        
+                                                    </View>)
+                                                })}
+                                            </Flex>
+                                        </Flex>
+                                        
+                                    </Card>
+                                </View>
+                                }
+                                {files.length !== 0 &&
+                                <View
+                                position={"fixed"}
+                                top={0}
+                                left={0}
+                                display={"flex"}
+                                width={"100vw"}
+                                height={"100vh"}
+                                style={{backdropFilter: "blur(4px)"}}
+                                justifyContent={"center"}
+                                alignItems={"center"}
+                                >
+
+                                    <Card
+                                    display={"flex"}
+                                    width={"800px"}
+                                    minHeight={"200px"}
+                                    padding={0}
+                                    border={"solid black"}
+                                    borderWidth={"10px"}
+                                    borderRadius={"20px"}
+                                    backgroundColor={"#27231e"}
+                                    color={"white"}
+                                    position={"relative"}
+                                    >
+                                        <View
+                                        position={"absolute"}
+                                        top={0}
+                                        right={0}
+                                        transform={"translate(50%,-50%)"}
+                                        color={"black"}
+                                        backgroundColor={"white"}
+                                        width={"40px"}
+                                        height={"40px"}
+                                        borderRadius={"40%"}
+                                        border={"solid black"}
+                                        display={"flex"}
+                                        justifyContent={"center"}
+                                        alignItems={"center"}
+                                        fontSize={"1.3em"}
+                                        onClick={e => {
+                                            for (const f of files){
+                                                URL.revokeObjectURL(f.url)
+                                            }
+                                            setFiles([])
+                                        }}
+                                        >
+                                            <strong>X</strong>
+                                        </View>
+                                        {isUploading
+                                        ? 
+                                        <Flex
+                                        direction={"column"}
+                                        justifyContent={"center"}
+                                        alignItems={"center"}
+                                        flex={1}
+                                        width={"100%"}
+                                        >
+                                            <h2>Uploading...</h2>
+                                        </Flex>
+                                        :
+                                        <Flex
+                                        direction={"column"}
+                                        justifyContent={"center"}
+                                        alignItems={"center"}
+                                        flex={1}
+                                        width={"100%"}
+                                        >
+                                            <h2>Upload Images</h2>
+                                            <Flex
+                                            border={"solid black"}
+                                            borderRadius={"20px"}
+                                            padding={"10px"}
+                                            width={"100%"}
+                                            height={"200px"}
+                                            wrap={"nowrap"}
+                                            gap={"12px"}
+                                            alignItems={"center"}
+                                            backgroundColor={"rgb(253, 248, 245)"}
+                                            style={{overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none"}}
+                                            >
+                                                {files.map((f, i) => {
+                                                    return (
+                                                    <View 
+                                                    key={f.url}
+                                                    width={"200px"}
+                                                    shrink={0}
+                                                    border={"solid gray"}
+                                                    borderWidth={"5px"}
+                                                    borderRadius={"10px"}
+                                                    height={"100%"}     
+                                                    display={"flex"}
+                                                    alignItems={"center"}  
+                                                    position={"relative"}   
+                                                    >
+                                                        <img src={f.url} alt="img" 
+                                                        style={{
+                                                            width: "100%",
+                                                            height: "100%",
+                                                            objectFit:"cover"
+                                                            }} />
+
+                                                        <View
+                                                        position={"absolute"}
+                                                        top={0}
+                                                        right={0}
+                                                        transform={"translate(50%,-50%)"}
+                                                        color={"white"}
+                                                        backgroundColor={"maroon"}
+                                                        width={"30px"}
+                                                        height={"30px"}
+                                                        borderRadius={"40%"}
+                                                        border={"solid black"}
+                                                        display={"flex"}
+                                                        justifyContent={"center"}
+                                                        alignItems={"center"}
+                                                        fontSize={"1.3em"}
+                                                        onClick={e => {
+                                                            URL.revokeObjectURL(f.url)
+                                                            setFiles(prev => prev.filter(file => file !== f))
+                                                        }}
+                                                        >
+                                                            <strong>X</strong>
+                                                        </View>                     
+                                                    </View>)
+                                                })}
+                                            </Flex>
+                                            <Button
+                                            style={compactStyle}
+                                            border="1px solid #111"
+                                            borderRadius="6px"
+                                            padding="0.35rem 0.75rem"
+                                            fontSize={"1.5em"}
+                                            fontWeight={"bold"}
+                                            margin={"auto"}
+                                            onClick={uploadImages}
+                                            >
+                                                Upload
+                                            </Button>
+                                        </Flex>
+                                        }
+                                    </Card>
+                                </View>
+                                }
                             </View>
                             <View 
                                 columnSpan={2}>
@@ -580,7 +1212,8 @@ export default function ProductsPanel() {
                                                 setMessage("Please fill out type and name information.");
                                                 return;
                                             }
-                                            if (activeMode === MODES.ADD) addProduct();
+                                            // in case of append, it will include the parentid of the selected product
+                                            if (activeMode === MODES.ADD || activeMode === MODES.APPEND) addProduct();
                                             else updateProduct();
                                             
                                         }}
@@ -591,14 +1224,6 @@ export default function ProductsPanel() {
                                     <Button
                                         style={compactStyle}
                                         onClick={() => {
-                                            if (activeMode === MODES.EDIT && selectedProduct) {
-                                                // Context : If you are editing the selected product, just take the products orignal
-                                                // info and set it back as draft as if no changes were made
-                                                setDraft(makeDraftFromProduct(selectedProduct)); 
-                                                setActiveMode(MODES.VIEW);
-                                                return;
-                                            }
-                                            // If adding a product and cancel just to default and return to no active mode
                                             setMessage("");
                                             resetToIdle();
                                         }}
@@ -627,7 +1252,8 @@ export default function ProductsPanel() {
                                     onClick={() => {
                                         setMessage("");
                                         if (selectedProduct) {
-                                            setActiveMode(MODES.VIEW);
+                                            setActiveMode(MODES.IDLE);
+                                            setSelectedProduct(null);
                                             return;
                                         }
                                         setActiveMode(MODES.IDLE)
@@ -663,7 +1289,7 @@ export default function ProductsPanel() {
                         <Text style={luxuryBodyStyle}>Type: {selectedProduct.type}</Text>
                         <Text style={luxuryBodyStyle}>Variation: {selectedProduct.variation}</Text>
                         <Text style={luxuryBodyStyle}>Price: ${selectedProduct.price}</Text>
-                        <Text style={luxuryBodyStyle}>Quantity: {selectedProduct.quantity}</Text>
+                        <Text style={luxuryBodyStyle}>Stock: {selectedProduct.stock_ml} ml</Text>
                         <Text style={luxuryBodyStyle}>Featured: {selectedProduct.isfeatured ? "Yes" : "No"}</Text>
                         <Text style={luxuryBodyStyle}>Hidden: {selectedProduct.ishidden ? "Yes" : "No"}</Text>
                         <Text style={luxuryBodyStyle}>

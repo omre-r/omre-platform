@@ -102,5 +102,30 @@ button.amplify-togglebutton {
 .amplify-button {
   border-radius: 6px !important;
   border: 2px solid rgba(7, 1, 1, 0.25) !important;
-  color:"#2B1E1A" !important;
+  color: #2B1E1A !important;
+}
+
+/* Colors of the slider fields when enabled */
+.amplify-sliderfield {
+  --amplify-components-sliderfield-range-background-color: #6b2e22 !important;
+  --amplify-components-sliderfield-thumb-background-color: #ffffff !important;
+}
+
+/* When mixology is toggled to disable button 3 grays all information out showing it is not toggled! */
+.mixology-disabled .amplify-sliderfield {
+  --amplify-components-sliderfield-range-background-color: #9a8f8782 !important;
+  --amplify-components-sliderfield-track-background-color: #9a8f8782 !important;
+  --amplify-components-sliderfield-thumb-background-color: #9a8f8782 !important;
+}
+.mixology-disabled .amplify-sliderfield descriptiveText {
+  color: #9a8f8782 !important;
+}
+.mixology-disabled .amplify-label {
+  color: #9a8f8782 !important;
+}
+.mixology-disabled .amplify-field__description {
+  color: #9a8f8782 !important;
+}
+.mixology-disabled .amplify-select {
+  color: #9a8f8782 !important;
 }

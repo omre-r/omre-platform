@@ -6,7 +6,7 @@ function handleError(fn){
       return await fn(...args)
     }catch(err){
       console.error(err)
-      return null
+      return {success: false, message: `Error: ${err}`}
     }
   }
 }
@@ -19,9 +19,9 @@ async function getUserReq(id) {
     });
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.user;
+    return data;
 }
 
 async function getUsersReq() {
@@ -30,9 +30,9 @@ async function getUsersReq() {
     });
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.users;
+    return data;
 }
 
 async function createUserReq({id, email, firstname, lastname, preferrednotes}){
@@ -43,9 +43,9 @@ async function createUserReq({id, email, firstname, lastname, preferrednotes}){
     });
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.user;
+    return data;
 }
 
 async function deleteUserReq(id){
@@ -55,7 +55,7 @@ async function deleteUserReq(id){
     });
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
     return data;
 }
@@ -65,22 +65,24 @@ async function getProductReq(id){
     const response = await fetch(backendURL + `/products/${id}`);
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.product;
+
+    return data;
 }
+
+async function getRelatedProductsReq(parentid){
+    const response = await fetch(backendURL + `/products/related/${parentid}`);
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
 
 // It would probably be better if the frontend ensured if images were URLs before calling update
 async function updateProductReq(id, updatedFields){
-    // if (updatedFields.hasOwn("images")){
-    //     if (!validateAllImages(updatedFields.images).valid) throw new Error("invalid images");
-    //     const uploadUrls = await Promise.all(updatedFields.images.map(f => getPresignedUrlReq_LOCAL(f)));
-    //     if (uploadUrls.some(url => url === null)) return null;
-        
-    //     const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, updatedFields.images[i])));
-    //     if (uploadResults.some(res => res === null)) return null;
-    //     updatedFields.images = uploadUrls.map(data => data.publicUrl);
-    // }
     const response = await fetch(backendURL + `/products/${id}`, {
         method: "PUT",
         headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
@@ -88,7 +90,20 @@ async function updateProductReq(id, updatedFields){
     });
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+async function updateProductStockReq(parentid, stock_ml){
+    const response = await fetch(backendURL + `/products/stock/${parentid}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
+        body: JSON.stringify({stock_ml})
+    });
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed")
     }
     return data;
 }
@@ -100,7 +115,7 @@ async function deleteProductReq(id){
     });
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
     return data;
 }
@@ -109,31 +124,40 @@ async function getActiveProductsReq(){
     const response = await fetch(backendURL + `/products/active`);
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.products;
+    return data;
 }
 
-async function createProductReq({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden}){
+async function getFilteredProductsReq(filters){
+    const response = await fetch(backendURL + `/products/filter?filters=${JSON.stringify(filters)}`);
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+async function createProductReq({parentid = null, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden}){
     const response = await fetch(backendURL + `/products`, {
         method: "POST",
         headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
-        body: JSON.stringify({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden})
+        body: JSON.stringify({parentid, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden})
     });
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.product;
+    return data;
 }
 
 async function getProductsReq() {
     const response = await fetch(backendURL + `/products`);
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.products;
+    return data;
 }
 
 
@@ -142,18 +166,18 @@ async function getProductReviewsReq(productid){
     const response = await fetch(backendURL + `/reviews/product/${productid}`);
     const data = await response.json()
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.reviews;
+    return data;
 }
 
 async function getUserReviewsReq(customerid){
     const response = await fetch(backendURL + `/reviews/user/${customerid}`);
     const data = await response.json()
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.reviews;
+    return data;
 }
 
 //as of now, can only update "responses"
@@ -165,7 +189,7 @@ async function updateReviewReq(id, updatedFields){
     });
     const data = await response.json()
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
     return data
 }
@@ -179,18 +203,18 @@ async function createReviewReq({customerid, productid, message, rating, images})
     });
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.review
+    return data
 }
 
 async function getReviewsReq(){
     const response = await fetch(backendURL + `/reviews`);
     const data = await response.json()
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.reviews;
+    return data;
 }
 
 async function deleteReviewReq(id){
@@ -200,7 +224,7 @@ async function deleteReviewReq(id){
     });
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
     return data;
 }
@@ -214,19 +238,20 @@ async function cancelOrderReq(id, cancelreason) {
     });
     const data = await response.json()
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
     return data;
 }
 
-async function completeOrderReq(id) {
-    const response = await fetch(backendURL + `/orders/complete/${id}`, {
+async function updateOrderStatusReq(id, status) {
+    const response = await fetch(backendURL + `/orders/${id}`, {
         method: "PUT",
-        headers: {"Authorization": `Bearer ${getToken()}`}
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
+        body: JSON.stringify({status})
     });
     const data = await response.json()
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
     return data;
 }
@@ -237,22 +262,34 @@ async function getOrderReq(id){
     });
     const data = await response.json()
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.order;
+    return data;
 }
 
-async function createOrderReq({customerid, items, total}){
+async function getUserOrdersReq(customerid){
+    const response = await fetch(backendURL + `/orders/user/${customerid}`, {
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
+    const data = await response.json()
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+
+async function createOrderReq({customerid}){
     const response = await fetch(backendURL + `/orders`, {
         method: "POST",
         headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
-        body: JSON.stringify({customerid, items, total})
+        body: JSON.stringify({customerid})
     });
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
     }
-    return data.data.order;
+    return data;
 }
 
 async function deleteOrderReq(id){
@@ -262,13 +299,166 @@ async function deleteOrderReq(id){
     });
     const data = await response.json();
     if (!data.success){
-        throw new Error(data.message || "req failed");
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+async function getOrdersReq() {
+    const token = await getToken(); // <-- make sure to await here
+    const response = await fetch(backendURL + `/orders`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+        console.error(data.message || "req failed");
+    }
+
+    return data;
+}
+
+
+// blends
+async function saveBlendReq({ userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml }) {
+    const response = await fetch(backendURL + `/blends/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
+        body: JSON.stringify({ userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml })
+    });
+    const data = await response.json();
+    if (!data.success) {
+        console.error(data.message || "req failed");
+    }
+    return data;
+}
+
+async function addBlendToCartReq({ userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml }) {
+    const response = await fetch(backendURL + `/blends/cart`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
+        body: JSON.stringify({ userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml })
+    });
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    // stockUnavailable is NOT a throw — return it so the frontend can show the right message
+    return data;
+}
+
+// Getting user saved blends to show in mixology page, also for users to load previous blends
+async function getUserSavedBlendsReq(userid) {
+    const response = await fetch(backendURL + `/blends/${userid}`, {
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
+    });
+    const data = await response.json();
+    if (!data.success) {
+        console.error(data.message || "req failed")
+    }
+    return data; 
+}
+
+// Deleting a user saved blend from the mixology page
+async function deleteUserBlendReq(userid, blendid) {
+    const response = await fetch(backendURL + `/blends/${blendid}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
+        body: JSON.stringify({userid})
+    });
+    const data = await response.json();
+    if (!data.success) {
+        console.error(data.message || "req failed")
+    }
+    return data; 
+}
+
+// get blend by ID
+async function getBlendByIdReq(id) {
+    const response = await fetch(backendURL + `/blends/item/${id}`, {
+        headers: { "Authorization": `Bearer ${getToken()}` }
+    });
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+// cart items
+async function createCartItemReq({customerid, itemid, type}) {
+    const response = await fetch(backendURL + `/cartitems`, {
+        method: "POST",
+        headers: {"Authorization": `Bearer ${getToken()}`, "Content-Type": "application/json"},
+        body: JSON.stringify({customerid, itemid, type})
+    });
+    const data = await response.json()
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+async function deleteCartItemReq(id) {
+    const response = await fetch(backendURL + `/cartitems/${id}`, {
+        method: "DELETE",
+        headers: {"Authorization": `Bearer ${getToken()}`},
+    });
+    const data = await response.json()
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+async function getCartReq(customerid) {
+    const response = await fetch(backendURL + `/cartitems/${customerid}`, {
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
+    const data = await response.json()
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+async function updateCartReq(customerid, items) {
+    const response = await fetch(backendURL + `/cartitems/${customerid}`, {
+        method: "PUT",
+        headers: {"Authorization": `Bearer ${getToken()}`, "Content-Type": "application/json"},
+        body: JSON.stringify({items})
+    });
+    const data = await response.json()
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data; //no "item" field per object (compared to getCartReq)
+}
+
+async function clearCartReq(customerid) {
+    const response = await fetch(backendURL + `/cartitems/clear/${customerid}`, {
+        method: "DELETE",
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
+    const data = await response.json()
+    if (!data.success){
+        console.error(data.message || "req failed")
     }
     return data;
 }
 
 
-
+async function getRecommendationsReq(userid) {
+    const response = await fetch(backendURL + `/recommendations/${userid}`, {
+        headers: { "Authorization": `Bearer ${getToken()}` }
+    });
+    const data = await response.json();
+    if (!data.success) {
+        console.error(data.message || "req failed");
+    }
+    return data;
+}
 
 // miscellaneous
 
@@ -315,15 +505,23 @@ async function getPresignedUrlReq_LOCAL(file) {
   return response.json();
 }
 
-async function createProductFlowReq_LOCAL({type, name, variation, price, images, quantity, notes, description, isfeatured, ishidden}){
+async function uploadAndGetURlsReq(imageFiles) {
+    if (!validateAllImages(imageFiles).valid) throw new Error("invalid images");
+    const uploadUrls = await Promise.all(imageFiles.map(f => getPresignedUrlReq_LOCAL(f)));
+    const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, imageFiles[i])));
+    if (uploadResults.some(res => res === null)) return null
+    return uploadUrls.map(data => data.publicUrl)
+}
+
+async function createProductFlowReq_LOCAL({parentid = null, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden}){
     if (!validateAllImages(images).valid) throw new Error("invalid images");
     const uploadUrls = await Promise.all(images.map(f => getPresignedUrlReq_LOCAL(f)));
-    if (uploadUrls.some(url => url === null)) return null
+    if (uploadUrls.some(url => url === null)) throw new Error("Failed to get upload URLs");
     
     const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, images[i])));
-    if (uploadResults.some(res => res === null)) return null
+    if (uploadResults.some(res => res === null)) throw new Error("Failed to upload images");
 
-    return await createProductReq({type, name, variation, price, images: uploadUrls.map(data => data.publicUrl), quantity, notes, description, isfeatured, ishidden})
+    return await createProductReq({parentid, type, name, variation, price, images: uploadUrls.map(data => data.publicUrl), stock_ml, notes, description, isfeatured, ishidden})
 }
 
 
@@ -387,20 +585,37 @@ function getToken(){
     return ""
 }
 
+//gets DECODED id token
+function getIDToken(){
+    for (let key of Object.keys(localStorage)){
+        if (key.includes("idToken")) {
+            const idToken = localStorage.getItem(key)
+            const base64 = idToken.split(".")[1]
+            const decoded = JSON.parse(atob(base64))
+            return decoded
+        }
+    }
+    return ""
+}
 
-
+// Users
 getUserReq = handleError(getUserReq);
 getUsersReq = handleError(getUsersReq);
 createUserReq = handleError(createUserReq);
 deleteUserReq = handleError(deleteUserReq);
 
+// Products
 getProductReq = handleError(getProductReq);
+getRelatedProductsReq = handleError(getRelatedProductsReq);
 updateProductReq = handleError(updateProductReq);
+updateProductStockReq - handleError(updateProductStockReq);
 deleteProductReq = handleError(deleteProductReq);
 getActiveProductsReq = handleError(getActiveProductsReq);
 createProductReq = handleError(createProductReq);
 getProductsReq = handleError(getProductsReq);
+getFilteredProductsReq = handleError(getFilteredProductsReq);
 
+// Product Reviews
 getProductReviewsReq = handleError(getProductReviewsReq);
 getUserReviewsReq = handleError(getUserReviewsReq);
 updateReviewReq = handleError(updateReviewReq);
@@ -408,12 +623,36 @@ createReviewReq = handleError(createReviewReq);
 getReviewsReq = handleError(getReviewsReq);
 deleteReviewReq = handleError(deleteReviewReq);
 
+// Orders
 cancelOrderReq = handleError(cancelOrderReq);
-completeOrderReq = handleError(completeOrderReq);
+updateOrderStatusReq = handleError(updateOrderStatusReq);
 getOrderReq = handleError(getOrderReq);
 createOrderReq = handleError(createOrderReq);
 deleteOrderReq = handleError(deleteOrderReq);
+getUserOrdersReq = handleError(getUserOrdersReq);
+getOrdersReq = handleError(getOrdersReq);
 
+// Blends
+saveBlendReq = handleError(saveBlendReq);
+addBlendToCartReq = handleError(addBlendToCartReq);
+getUserSavedBlendsReq = handleError(getUserSavedBlendsReq);
+deleteUserBlendReq = handleError(deleteUserBlendReq);
+
+getBlendByIdReq = handleError(getBlendByIdReq);
+
+// Cart
+createCartItemReq = handleError(createCartItemReq);
+deleteCartItemReq = handleError(deleteCartItemReq);
+getCartReq = handleError(getCartReq);
+clearCartReq = handleError(clearCartReq);
+updateCartReq = handleError(updateCartReq);
+
+// Recommendations
+getRecommendationsReq = handleError(getRecommendationsReq);
+
+
+// Misc
+uploadAndGetURlsReq = handleError(uploadAndGetURlsReq)
 uploadImageToS3Req = handleError(uploadImageToS3Req);
 getPresignedUrlReq_LOCAL = handleError(getPresignedUrlReq);
 createProductFlowReq_LOCAL = handleError(createProductFlowReq_LOCAL)
@@ -421,11 +660,14 @@ getPresignedUrlReq = handleError(getPresignedUrlReq);
 createProductAWSReq = handleError(createProductAWSReq);
 createProductAWSFlowReq = handleError(createProductAWSFlowReq);
 
-
 export {
     getUserReq, getUsersReq, createUserReq, deleteUserReq,
-    getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq,
+    getProductReq, getRelatedProductsReq, updateProductReq, updateProductStockReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
-    cancelOrderReq, completeOrderReq, getOrderReq, createOrderReq, deleteOrderReq,
-    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, createProductAWSReq, createProductAWSFlowReq
+    cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq, getOrdersReq,
+    saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq, getBlendByIdReq,
+    createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
+    getRecommendationsReq,
+    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, 
+    createProductAWSReq, createProductAWSFlowReq, uploadAndGetURlsReq, getIDToken
 }

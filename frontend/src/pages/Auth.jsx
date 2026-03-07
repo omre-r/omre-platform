@@ -14,6 +14,7 @@ import { Card, View, Flex, Heading, Text, TextField, Button, ToggleButton, Link,
 import { signUp, confirmSignUp, signIn, resendSignUpCode} from "aws-amplify/auth";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useAuth } from "../context/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 
 
 /*
@@ -32,6 +33,12 @@ const luxuryBodyStyle = {
   fontWeight: 400,
   fontSize: "1.3rem",   
   letterSpacing: "0.3px",
+};
+const luxuryCompactStyle = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 200,
+  fontSize: "1.1rem",   
+  letterSpacing: "0.15px",
 };
 
 
@@ -57,6 +64,36 @@ export default function Auth() {
     const [firstname, setFirstName] = useState("");
     const [lastname, setLastName] = useState("");
     const [selectedNotes, setSelectedNotes] = useState([]); // MAY NOT BE SIGN UP ONLY LATER !!!
+    const [passwordRequirements, setPasswordRequirements] = useState({
+        length: false,
+        uppercase: false,
+        number: false,
+        specialChar: false,
+        });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // If a user misses a field when signing up or signing in -------------------------------
+    const [showMissingField, setShowMissingField] = useState(false);
+    const emailMissing = showMissingField && !email.trim();
+    const passwordMissing = showMissingField && !password.trim();
+    const confirmPasswordMissing = showMissingField && !confirmPassword.trim();
+    const firstnameMissing = showMissingField && !firstname.trim();
+    const lastnameMissing = showMissingField && !lastname.trim();
+
+    // Real-time password requirements checker
+    const handlePasswordChange = (e) => {
+    const value = e.target.value;
+        setPassword(value);
+
+        setPasswordRequirements({
+            length: value.length >= 8,
+            uppercase: /[A-Z]/.test(value),
+            number: /[0-9]/.test(value),
+            // Special character is any character that is not these characters "^"
+            specialChar: /[^A-Za-z0-9]/.test(value)
+        });
+    };
 
     // Verification ----------------------------------------------
     // sets the code and email when submitting sign up
@@ -94,10 +131,12 @@ export default function Auth() {
         setAuthError("");
         setAuthSuccess("");
         if (!email || !password || !confirmPassword || !firstname || !lastname) {
+            setShowMissingField(true);
             setAuthError("Please fill out all required fields.");
             return;
         }
         if (password !== confirmPassword) {
+            setShowMissingField(true);
             setAuthError("Passwords do not match.");
             return;
         }
@@ -124,6 +163,13 @@ export default function Auth() {
             setAuthUI("verify");
             setAuthSuccess("Sign up successful! Check email for verification code.");
         } catch (error) {
+            if (error.code === "UsernameExistsException") {
+                setVerifyEmail(email);
+                setAuthUI("verify");
+                await handleResendCode(email);
+                setAuthError("Email already exists. Please verify your email or log in.");
+                return;
+            }
             setAuthError(error.message || "Sign up failed.");
         }
     }
@@ -169,6 +215,7 @@ export default function Auth() {
         setAuthError("");
         setAuthSuccess("");
         if (!email || !password) {
+            setShowMissingField(true);
             setAuthError("Please fill out all required fields.");
             return;
         }
@@ -177,14 +224,15 @@ export default function Auth() {
                 username: email,
                 password: password, 
             });
-            // How to make conditional where if user is not verified they will have to resend verification and reconfirm
-            // What would this line of code look like? Have to do more research
-            // if (result) ... {
-            // setVerifyEmail(email);
-            // setAuthUI("verify");
-            // await handleResendCode;
-            // return;
-            // }
+            // Making sure user has verified their email and signIn result is not successful because of that, if so will switch to verify UI and resend code just in case
+            if (!result?.isSignedIn && result?.nextStep?.signInStep === "CONFIRM_SIGN_UP") {
+                setVerifyEmail(email);
+                setAuthUI("verify");
+
+                await handleResendCode(email);
+                setMessage("Please verify your email before signing in.");
+                return;
+            }
 
             await refreshAuth();
             navigate("/");
@@ -199,6 +247,10 @@ export default function Auth() {
         setAuthError("");
         setAuthSuccess("");
         try {
+            if (!email) {
+                setAuthError("Missing email to resend code.");
+                return;
+            }
             await resendSignUpCode({ 
                 username: email,  
             });
@@ -241,7 +293,7 @@ export default function Auth() {
                 margin="1rem auto" 
                 padding="2rem" 
                 marginTop={ isVerify ? "-38rem" : 
-                    isLogin ? "-25rem" : "2rem" 
+                    isLogin ? "-23rem" : "-5rem" 
                 }
                 backgroundColor="#f6f1ecbc" 
                 border="none"
@@ -286,21 +338,31 @@ export default function Auth() {
                                 style={luxuryBodyStyle}
                                 label="Verification Code"
                                 type="text"
-                                placeholder="Enter verification code"
                                 required
                                 marginTop="-.2rem"
                                 value={verificationCode}
                                 onChange={(e) => setVerificationCode(e.target.value)}
                             />
-                            <Button
-                                variation="primary"
-                                color="#2B1E1A"
-                                style={luxuryBodyStyle}
-                                marginTop="1rem"
-                                onClick={handleVerifyCode}
-                                >
-                                Verify
-                            </Button>
+                            <Flex direction="row" justifyContent="space-between" gap="1rem">
+                                <Button
+                                    variation="primary"
+                                    color="#2B1E1A"
+                                    style={luxuryBodyStyle}
+                                    marginTop="1rem"
+                                    onClick={handleVerifyCode}
+                                    >
+                                    Verify
+                                </Button>
+                                <Button
+                                    variation="primary"
+                                    color="#2B1E1A"
+                                    style={luxuryBodyStyle}
+                                    marginTop=".5rem"
+                                    onClick={() => handleResendCode(verifyEmail)}
+                                    >
+                                    Resend Code
+                                </Button>
+                            </Flex>
                         </>
                     ) 
                     : 
@@ -344,9 +406,14 @@ export default function Auth() {
                             <TextField
                                 color="#2B1E1A"
                                 style={luxuryBodyStyle}
-                                label="Enter First Name"
+                                label={
+                                    <span>Enter First Name{" "}
+                                        <span style={{ color: firstnameMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                                    </span>
+                                }
+                                placeholder="e.g., John"
+                                maxLength={20}
                                 type="text"
-                                placeholder="First Name"
                                 required
                                 marginTop="-.2rem"
                                 value={firstname}
@@ -355,9 +422,14 @@ export default function Auth() {
                             <TextField
                                 color="#2B1E1A"
                                 style={luxuryBodyStyle}
-                                label="Enter Last Name"
+                                label={
+                                    <span>Enter Last Name{" "}
+                                        <span style={{ color: lastnameMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                                    </span>
+                                }
+                                placeholder="e.g., Smith"
+                                maxLength={20}
                                 type="text"
-                                placeholder="Last Name"
                                 required
                                 marginTop="-.2rem"
                                 value={lastname}
@@ -369,38 +441,128 @@ export default function Auth() {
                     <TextField 
                         color="#2B1E1A" 
                         style={luxuryBodyStyle}
-                        label="Email"
+                        label={
+                            <span>Email{" "}
+                                <span style={{ color: emailMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                            </span>
+                        }
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder="e.g., john.smith@email.com"
+                        maxLength={50}
                         required
                         marginTop="-.2rem"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+                        }}
+                        hasError={emailMissing}
                     />
 
-                    <TextField color="#2B1E1A" style={luxuryBodyStyle}
-                        label="Password"
-                        type="password"
-                        placeholder="Enter your password"
-                        required
-                        marginTop="-.2rem"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-
-                    {!isLogin && (
-                        <>
+                    <Flex direction="row" alignItems="flex-end" gap="0.5rem" marginTop="-.2rem">
                         <TextField
                             color="#2B1E1A"
                             style={luxuryBodyStyle}
-                            label="Confirm Password"
-                            type="password"
-                            placeholder="Confirm your password"
+                            label={
+                            <span>Password{" "}
+                                <span style={{ color: passwordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                            </span>
+                            }
+                            type={showPassword ? "text" : "password"}
+                            placeholder="************"
+                            maxLength={50}
                             required
-                            marginTop="-.2rem"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            value={password}
+                            onChange={(e) => {
+                                handlePasswordChange(e);
+                            }}
+                            hasError={passwordMissing}
+                            width="100%"
+                            inputStyles={{
+                                paddingRight: "1rem",
+                            }}
+                            innerEndComponent={
+                                <View
+                                    as="button"
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{
+                                    all: "unset",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    paddingRight: "0.5rem",
+                                    height: "100%",
+                                    pointerEvents: "auto",
+                                    }}
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </View>
+                            }
                         />
+                    </Flex>
+
+                    {!isLogin && (
+                        <>
+                    <Flex direction="row" alignItems="flex-end" gap="0.5rem" marginTop="-.2rem">
+                    <TextField
+                        color="#2B1E1A"
+                        style={luxuryBodyStyle}
+                        label={
+                            <span>Confirm Password{" "}
+                                <span style={{ color: confirmPasswordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                            </span>
+                        }
+                        type={showConfirmPassword ? "text" : "password"}
+                        required
+                        placeholder="************"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        width="100%"
+                        inputStyles={{
+                            paddingRight: "1rem",
+                        }}
+                        innerEndComponent={
+                                <View
+                                    as="button"
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    style={{
+                                    all: "unset",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    paddingRight: "0.5rem",
+                                    height: "100%",
+                                    pointerEvents: "auto",
+                                    }}
+                                >
+                                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </View>
+                            }
+                        />
+                    </Flex>
+
+                    {!isLogin && (
+                    <View marginTop="-.6rem">
+                        <Text style={luxuryBodyStyle}>Password must include:</Text>
+                        <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.length ? "green" : "red" }}>
+                          At least 8 characters
+                        </Text>
+                        <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.uppercase ? "green" : "red" }}>
+                          At least one uppercase letter
+                        </Text>
+                        <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.number ? "green" : "red" }}>
+                          At least one number
+                        </Text>
+                        <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.specialChar ? "green" : "red" }}>
+                          At least one special character
+                        </Text>
+                    </View>
+                    )}
+
+                        {/* 
                         <Heading level={3} 
                             color="#2B1E1A" 
                             style={luxuryBodyStyle}
@@ -422,6 +584,7 @@ export default function Auth() {
                             <ToggleButton isPressed={selectedNotes.includes("Cedarwood")} onClick={() => toggleNote("Cedarwood")}>Cedarwood</ToggleButton>
                             <ToggleButton isPressed={selectedNotes.includes("Amber")} onClick={() => toggleNote("Amber")}>Amber</ToggleButton>
                         </Grid>
+                        */}
                         </>
                     )}
 
@@ -458,7 +621,12 @@ export default function Auth() {
                         color="#2B1E1A" 
                         style={luxuryBodyStyle}
                         isPressed={!isLogin}
-                        onClick={() => setMode(isLogin ? "signup" : "login")}
+                        onClick={() => {
+                            setMode(isLogin ? "signup" : "login");
+                            setAuthError("");
+                            setAuthSuccess("");
+                            setShowMissingField(false);
+                        }}                        
                         alignSelf="center"
                         marginTop=".8rem"
                         marginBottom=".5rem"
@@ -481,12 +649,3 @@ export default function Auth() {
     </>
   );
 }
-
-
-// Notes on future improvements:
-// TODO: Remove scent choice part and make it part of its own page
-
-// TODO: When signing up make sure that verification is done, can sign up, leave verification page and sign in. 
-// Made HandleResendCode helper, will be send to the specific email but need to figure out how conditonal
-// will look for HandleSignIn so we can see that this person is not verified and force them to verify
-// as well maybe on verify ui make a button to resend verification code. 

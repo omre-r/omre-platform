@@ -1,7 +1,7 @@
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require("uuid");
-const {Users, Products, Reviews, Orders} = require("./config/db.js")
+const { Users, Products, Reviews, Orders, Blends, CartItems, Recommendations } = require("./config/db.js")
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -10,6 +10,7 @@ const BUCKET_NAME = process.env.BUCKET_NAME;
 const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN;
 const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
 const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
+const USE_ACCESS_TOKENS = process.env.USE_ACCESS_TOKENS === "true";
 
 // working with images 
 const s3Client = new S3Client({ 
@@ -25,8 +26,9 @@ const users = new Users()
 const products = new Products()
 const reviews = new Reviews()
 const orders = new Orders()
-
-
+const blends = new Blends()
+const cartItems = new CartItems()
+const recommendations = new Recommendations()
 
 // General wrapper to prevent server crashing
 function handleError(fn){
@@ -89,6 +91,26 @@ async function deleteUser(req, res) {
   return res.json(result)
 }
 
+// path: PUT /users/:id/last-login
+async function updateLastLogin(req, res) {
+  const sub = req.tokenPayload?.sub;
+  const query = `UPDATE users SET last_login = NOW() WHERE id = $1`; 
+
+  if (!sub) {
+    return res.status(400).json({ success: false, message: "Missing user identifier" });
+  }
+
+  const result = await users.updateLastLogin(sub);
+
+  if (!result.success) {
+    return res.status(result.status || 500).json(result);
+  }
+
+  return res.json({ success: true, message: "Last login updated", data: result.data });
+}
+
+
+
 
 
 
@@ -104,10 +126,31 @@ async function getProduct(req, res) {
   return res.json(result)
 }
 
+// path: GET /products/related/:parentid
+async function getRelatedProducts(req, res) {
+  const {parentid} = req.params;
+  const result = await products.getRelatedProducts(parentid);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result)
+}
+
 // path: PUT /products/:id
 async function updateProduct(req, res) {
   const {id} = req.params;
   const result = await products.updateProduct(id, req.body);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result)
+}
+
+// path: PUT /products/stock/:parentid
+async function updateProductStock(req, res) {
+  const {parentid} = req.params;
+  const {stock_ml} = req.body;
+  const result = await products.updateProductStock(parentid, stock_ml);
   if (!result.success){
     return res.status(result.status).json(result);
   }
@@ -127,6 +170,19 @@ async function deleteProduct(req, res) {
 // path: GET /products/active
 async function getActiveProducts(req, res) {
   const result = await products.getActiveProducts();
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result)
+}
+
+// path: GET /products/filter
+async function getFilteredProducts(req, res) {
+  if (!req.query?.filters){
+    throw new Error("No filters query param")
+  }
+  const filters = JSON.parse(req.query.filters)
+  const result = await products.getFilteredProducts(filters);
   if (!result.success){
     return res.status(result.status).json(result);
   }
@@ -229,10 +285,11 @@ async function cancelOrder(req, res) {
   return res.json(result);
 }
 
-//path: PUT /orders/complete/:id
-async function completeOrder(req, res) {
+// path: PUT /orders/:id
+async function updateOrderStatus(req, res) {
   const {id} = req.params;
-  const result = await orders.completeOrder(id);
+  const {status} = req.body;
+  const result = await orders.updateOrderStatus(id, status);
   if (!result.success){
     return res.status(result.status).json(result);
   }
@@ -249,9 +306,20 @@ async function getOrder(req, res) {
   return res.json(result);
 }
 
+// path: GET /orders/user/:customerid
+async function getUserOrders(req, res) {
+  const {customerid} = req.params;
+  const result = await orders.getUserOrders(customerid);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
 // path: POST /orders
 async function createOrder(req, res) {
-  const result = await orders.createOrder(req.body);
+  const {customerid} = req.body
+  const result = await orders.createOrder(customerid);
   if (!result.success){
     return res.status(result.status).json(result);
   }
@@ -266,6 +334,96 @@ async function deleteOrder(req, res) {
     return res.status(result.status).json(result);
   }
   return res.json(result)
+}
+
+// path: GET /orders
+async function getOrders(req, res) {
+  const result = await orders.getOrders();
+
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+
+  return res.json(result);
+}
+
+
+// blends
+
+// path: POST /blends/save
+async function saveBlend(req, res) {
+    if (USE_ACCESS_TOKENS){
+      const {userid} = req.body
+      if (userid !== req.tokenPayload.sub){
+        return res.status(401).json({ success: false, message: "Not authenticated" })
+      }
+    }
+    const result = await blends.saveBlend(req.body);
+    if (!result.success) return res.status(result.status || 400).json(result);
+    return res.json(result);
+}
+
+// path: POST /blends/cart
+async function addBlendToCart(req, res) {
+    const {userid} = req.body
+    if (USE_ACCESS_TOKENS){
+      if (userid !== req.tokenPayload.sub){
+        return res.status(401).json({ success: false, message: "Not authenticated" })
+      }
+    }
+    const result = await blends.addBlendToCart({ userid, ...req.body });
+    // stockUnavailable is a valid business response, not a server error — always 200
+    if (!result.success && !result.stockUnavailable) {
+        return res.status(result.status || 400).json(result);
+    } 
+    return res.json(result);
+}
+
+// path: GET /blends
+async function getUserBlends(req, res) {
+    const {userid} = req.params
+    if (USE_ACCESS_TOKENS){
+      if (userid !== req.tokenPayload.sub){
+        return res.status(401).json({ success: false, message: "Not authenticated" })
+      }
+    }
+    const result = await blends.getUserBlends(userid);
+    if (!result.success) return res.status(result.status || 400).json(result);
+    return res.json(result);
+}
+
+
+// path: GET /blends/item/:id
+async function getBlendById(req, res) {
+    const { id } = req.params; // blend id
+
+    // Call the DB method
+    const result = await blends.getBlendById(id);
+
+    if (!result.success) {
+        return res.status(result.status || 404).json(result);
+    }
+
+    return res.json(result);
+}
+
+// path: DELETE /blends/:blendid
+// Gets logged in user, pulls blend id from params, calls db function with userid and blendid 
+async function deleteUserBlend(req, res) {
+    const {userid} = req.body;
+    if (USE_ACCESS_TOKENS){
+      if (userid !== req.tokenPayload.sub){
+        return res.status(401).json({ success: false, message: "Not authenticated" })
+      }
+    }
+
+    const {blendid} = req.params;
+    if (!blendid) return res.status(400).json({ success: false, message: "Missing blend id" });
+
+    const result = await blends.deleteUserBlend(userid, blendid);
+
+    if (!result.success) return res.status(result.status || 400).json(result);
+    return res.json(result);
 }
 
 // miscellaneous
@@ -316,6 +474,74 @@ async function getUploadURL(req, res) {
   return res.json({success: true, data: {uploadUrl, publicUrl, expiresIn: PRESIGNED_URL_EXPIRATION}});
 };
 
+// cart items
+// path: POST /cartitems
+async function createCartItem(req, res) {
+  const result = await cartItems.createCartItem(req.body);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: DELETE /cartitems/:id
+async function deleteCartItem(req, res) {
+  const {id} = req.params
+  const result = await cartItems.deleteCartItem(id);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: GET /cartitems/:customerid
+async function getCart(req, res) {
+  const {customerid} = req.params;
+  const result = await cartItems.getCart(customerid);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: DELETE /cartitems/clear/:customerid
+async function clearCart(req, res) {
+  const {customerid} = req.params;
+  const result = await cartItems.clearCart(customerid);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: PUT /cartitems/:customerid
+async function updateCart(req, res) {
+  const {customerid} = req.params;
+  const {items} = req.body
+  const result = await cartItems.updateCart(customerid, items);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: GET /recommendations/:userid
+async function getRecommendations(req, res) {
+    const {userid} = req.params;
+    if (USE_ACCESS_TOKENS){
+      if (userid !== req.tokenPayload.sub){
+        return res.status(401).json({ success: false, message: "Not authenticated" })
+      }
+    }
+    if (!userid) {
+        return res.status(401).json({ success: false, message: "Missing user identifier" });
+    }
+    const result = await recommendations.getRecommendations(userid);
+    if (!result.success) {
+        return res.status(result.status || 500).json(result);
+    }
+    return res.json(result);
+}
 
 /* 
 Though probably not needed, we can use wrappers down the line that
@@ -328,6 +554,9 @@ function handleOtherService(fn){
   }
 }
 */
+
+
+
 getServerHTML = handleError(getServerHTML);
 
 getUser = handleError(getUser);
@@ -336,11 +565,14 @@ createUser = handleError(createUser);
 deleteUser = handleError(deleteUser);
 
 getProduct = handleError(getProduct);
+getRelatedProducts = handleError(getRelatedProducts);
 updateProduct = handleError(updateProduct);
+updateProductStock = handleError(updateProductStock);
 deleteProduct = handleError(deleteProduct);
 getActiveProducts = handleError(getActiveProducts);
 createProduct = handleError(createProduct);
 getProducts = handleError(getProducts);
+getFilteredProducts = handleError(getFilteredProducts);
 
 getProductReviews = handleError(getProductReviews);
 getUserReviews = handleError(getUserReviews);
@@ -350,20 +582,36 @@ createReview = handleError(createReview);
 deleteReview = handleError(deleteReview);
 
 cancelOrder = handleError(cancelOrder)
-completeOrder = handleError(completeOrder);
 getOrder = handleError(getOrder);
 createOrder = handleError(createOrder);
 deleteOrder = handleError(deleteOrder);
-
+updateOrderStatus = handleError(updateOrderStatus);
+getUserOrders = handleError(getUserOrders);
 getUploadURL = handleError(getUploadURL);
 
+getOrders = handleError(getOrders);
+
+saveBlend = handleError(saveBlend);
+addBlendToCart = handleError(addBlendToCart);
+getUserBlends = handleError(getUserBlends);
+getRecommendations = handleError(getRecommendations); 
+
+createCartItem = handleError(createCartItem);
+deleteCartItem = handleError(deleteCartItem);
+getCart = handleError(getCart);
+clearCart = handleError(clearCart);
+updateCart = handleError(updateCart);
+deleteUserBlend = handleError(deleteUserBlend);
 
 
 module.exports = {
   getServerHTML,
-  getUser, getUsers, createUser, deleteUser,
-  getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts,
+  getUser, getUsers, createUser, deleteUser, updateLastLogin,
+  getProduct, getRelatedProducts, updateProduct, updateProductStock, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts, 
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
-  cancelOrder, completeOrder, getOrder, createOrder, deleteOrder,
-  getUploadURL
+  cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders,
+  saveBlend, addBlendToCart, getUserBlends, deleteUserBlend, getBlendById,
+  createCartItem, deleteCartItem, getCart, clearCart, updateCart,
+  getUploadURL,
+  getRecommendations,
 };

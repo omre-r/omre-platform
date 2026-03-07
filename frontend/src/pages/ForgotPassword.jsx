@@ -9,6 +9,7 @@ import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { Card, View, Flex, Link, Text, TextField, Button, Heading } from "@aws-amplify/ui-react";
 import {resetPassword, confirmResetPassword} from "aws-amplify/auth";
+import { Eye, EyeOff } from "lucide-react";
 
 /*
 Custom Styles ------------------------------------------------------------------------------------------------
@@ -27,6 +28,13 @@ const luxuryBodyStyle = {
   fontSize: "1.3rem",   
   letterSpacing: "0.3px",
 };
+const luxuryCompactStyle = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 200,
+  fontSize: "1.1rem",   
+  letterSpacing: "0.15px",
+};
+
 
 // Forgot Password -----------------------------------------------------------------------------------------
 // If user has forgot password will go throough the process of sending a reset code to their email and then 
@@ -41,9 +49,39 @@ const ForgotPassword = () => {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
+    const [passwordRequirements, setPasswordRequirements] = useState({
+        length: false,
+        uppercase: false,
+        number: false,
+        specialChar: false,
+        });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     // Feedback Messages ------------------------------------------------------------------------
     const [authError, setAuthError] = useState("");
     const [authSuccess, setAuthSuccess] = useState("");
+
+    // Making sure fields are filled in -----------------------------
+    const [showMissingField, setShowMissingField] = useState(false);
+    const verificationMissing = showMissingField && !verificationCode.trim();
+    const passwordMissing = showMissingField && !newPassword.trim();
+    const confirmPasswordMissing = showMissingField && !confirmPassword.trim();
+
+
+    // Real-time password requirements checker -----------------------------------------
+    const handlePasswordChange = (e) => {
+    const value = e.target.value;
+        setNewPassword(value);
+
+        setPasswordRequirements({
+            length: value.length >= 8,
+            uppercase: /[A-Z]/.test(value),
+            number: /[0-9]/.test(value),
+            // Special character is any character that is not these characters "^"
+            specialChar: /[^A-Za-z0-9]/.test(value)
+        });
+    };
 
     // Function to send reset code -------------------------------------------------------
     // user enters email (username), if no error will send and change ui to verification mode
@@ -73,10 +111,12 @@ const ForgotPassword = () => {
         setAuthError("");
         setAuthSuccess("");
         if (!email || !verificationCode || !newPassword || !confirmPassword) {
+            setShowMissingField(true);
             setAuthError("Please fill out all required fields.");
             return;
         }
         if (newPassword !== confirmPassword) {
+            setShowMissingField(true);
             setAuthError("Passwords do not match.");
             return;
         }
@@ -116,7 +156,7 @@ const ForgotPassword = () => {
                         width="30rem"
                         margin="1rem auto"
                         padding="2rem"
-                        marginTop= { isVerify ? "-25rem" : "-30rem" }
+                        marginTop= { isVerify ? "-15rem" : "-30rem" }
                         backgroundColor="#f6f1ecbc"
                         border="none"
                         box-shadow="0 14px 36px rgba(75, 15, 15, 0.15)"
@@ -151,36 +191,109 @@ const ForgotPassword = () => {
                             <TextField
                                 color="#2B1E1A"
                                 style={luxuryBodyStyle}
-                                label="Verification Code"
+                                label={
+                                    <span>Enter Verification Code{" "}
+                                        <span style={{ color: verificationMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                                    </span>
+                                    }
+                                placeholder="123456"
                                 type="text"
-                                placeholder="Enter verification code"
                                 required
                                 marginTop="-.2rem"
                                 value={verificationCode}
                                 onChange={(e) => setVerificationCode(e.target.value)}
                             />
-                            <TextField
-                                color="#2B1E1A"
-                                style={luxuryBodyStyle}
-                                label="Enter new password"
-                                type="password"
-                                placeholder="Enter new password"
-                                required
-                                marginTop="-.2rem"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                            />
-                            <TextField
-                                color="#2B1E1A"
-                                style={luxuryBodyStyle}
-                                label="Confirm new password"
-                                type="password"
-                                placeholder="Confirm new password"
-                                required
-                                marginTop="-.2rem"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                            />
+                                <TextField
+                                    color="#2B1E1A"
+                                    style={luxuryBodyStyle}
+                                    label={
+                                    <span>Enter Password{" "}
+                                        <span style={{ color: passwordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                                    </span>
+                                    }
+                                    placeholder="************"
+                                    maxLength={50}
+                                    type={showPassword ? "text" : "password"}
+                                    required
+                                    marginTop="-.2rem"
+                                    value={newPassword}
+                                    onChange={handlePasswordChange}
+                                    inputStyles={{
+                                        paddingRight: "1rem",
+                                    }}
+                                    innerEndComponent={
+                                        <View
+                                            as="button"
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            style={{
+                                            all: "unset",
+                                            cursor: "pointer",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            paddingRight: "0.5rem",
+                                            height: "100%",
+                                            pointerEvents: "auto",
+                                            }}
+                                        >
+                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                        </View>
+                                    }
+                                />
+                                <TextField
+                                    color="#2B1E1A"
+                                    style={luxuryBodyStyle}
+                                    label={
+                                    <span>Confirm Password{" "}
+                                        <span style={{ color: confirmPasswordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
+                                    </span>
+                                    }
+                                    placeholder="************"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    maxLength={50}
+                                    required
+                                    marginTop="-.2rem"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    inputStyles={{
+                                        paddingRight: "1rem",
+                                    }}
+                                    innerEndComponent={
+                                    <View
+                                        as="button"
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        style={{
+                                        all: "unset",
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        paddingRight: "0.5rem",
+                                        height: "100%",
+                                        pointerEvents: "auto",
+                                        }}
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </View>
+                                    }
+                                />
+                                <View marginTop="-.6rem">
+                                    <Text style={luxuryBodyStyle}>Password must include:</Text>
+                                    <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.length ? "green" : "red" }}>
+                                        At least 8 characters
+                                    </Text>
+                                    <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.uppercase ? "green" : "red" }}>
+                                        At least one uppercase letter
+                                    </Text>
+                                    <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.number ? "green" : "red" }}>
+                                        At least one number
+                                    </Text>
+                                    <Text style={{ ...luxuryCompactStyle, color: passwordRequirements.specialChar ? "green" : "red" }}>
+                                        At least one special character
+                                    </Text>
+                                </View>
                             <Button
                                 variation="primary"
                                 marginTop="1rem"
@@ -230,7 +343,8 @@ const ForgotPassword = () => {
                                 style={luxuryBodyStyle}
                                 label="Email"
                                 type="email"
-                                placeholder="Enter your email"
+                                placeholder="e.g., john.smith@email.com"
+                                maxLength={50}
                                 required
                                 marginTop="-0rem"
                                 value={email}

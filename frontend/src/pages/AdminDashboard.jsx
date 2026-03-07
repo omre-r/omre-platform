@@ -8,7 +8,7 @@ import LuxuryBackground from "../assets/Luxury Background2.png";
 
 import UsersPanel from "../AdminComponents/UsersPanel";
 import ProductsPanel from "../AdminComponents/ProductsPanel";
-//import OrdersPanel from "../AdminComponents/OrdersPanel";
+import OrdersPanel from "../AdminComponents/OrdersPanel";
 
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -47,7 +47,7 @@ export default function AdminDashboard() {
         <>
             <Navbar />
                 <View
-                    height="150vh"
+                    height="160vh"
                     width="100%"
                     padding="1rem"
                     style={{
@@ -61,8 +61,8 @@ export default function AdminDashboard() {
                 >   
                     <Card
                         variation="elevated"
-                        height="auto" // was "auto"
-                        width="70rem"
+                        height="35rem" // was "auto"
+                        width="90rem"
                         margin="1rem auto"
                         padding="2rem"
                         marginTop="-30rem"
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
                         <Flex direction="row" gap="1.5rem" alignItems="stretch">
 
                             {/* Sidebar flex showing tabs to choose from ---------------------------------- */}
-                            <Flex direction="column" gap="6.0rem" alignItems="stretch">
+                            <Flex direction="column" gap=".8rem" alignItems="stretch">
                                 <Button 
                                     color="#2B1E1A"
                                     justifyContent="center"
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
                             {/* Card to hold the actual dashboard information ---------------------- */}
                             {/* Depending on which button is clicked will show appropriate mode */}
                             <Card
-                                height="25rem" // was "auto"
+                                height="30rem" // was "auto"
                                 width="80rem"
                                 margin="1rem auto"
                                 padding="2rem"
@@ -121,15 +121,8 @@ export default function AdminDashboard() {
 
                             {productsMode && <ProductsPanel />}
 
-                            {/* Come back to this one later */}
-                            {ordersMode && (
-                                <Text 
-                                    color="#000000" 
-                                    style={luxuryBodyStyle}
-                                    marginTop="-1.2rem">
-                                    Orders panel
-                                </Text>
-                            )}
+                            {ordersMode && <OrdersPanel />}
+
                             </Card>
                         </Flex>
                     </Card>

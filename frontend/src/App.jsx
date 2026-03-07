@@ -6,6 +6,11 @@ import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
 import ForgotPassword from "./pages/ForgotPassword";
+import Mixology from "./pages/Mixology";
+import Fragrances from "./pages/Fragrances";
+import AboutUs from "./pages/AboutUs";
+import Cart from "./pages/Cart";
+import Product from "./pages/Product";
 
 import './App.css'
 
@@ -19,6 +24,12 @@ function App() {
         <Route path="/Auth" element={<Auth />} />
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/Mixology" element={<Mixology />} />
+        <Route path="/Fragrances" element={<Fragrances />} />
+        <Route path="/AboutUs" element={<AboutUs />} />
+        <Route path="/Cart" element={<Cart />} />
+        <Route path="/Fragrances/:parentid" element={<Product/>}/>
+        
       </Routes>
     </Router>
     </div>

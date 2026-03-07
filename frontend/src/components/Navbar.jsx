@@ -13,6 +13,7 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/Logo.png";
 import "../styles/Navbar.css";
 import { useAuth } from "../context/AuthContext";
+import cartIcon from "../assets/cartIcon.png";
 
 const luxuryBodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -37,11 +38,29 @@ const Navbar = () => {
 
   return (
     <header className="navbar">
-      {/* Navbar Logo ------------------------------------------------------------------------------------------ */}
-      {/* On click will take user back to home page */}
-      <Link to="/" className="logo-link">
-        <img src={logo} alt="OMRE Logo" className="logo-image" />
-      </Link>
+      <div className="nav-left">
+        {/* Navbar Logo ------------------------------------------------------------------------------------------ */}
+        {/* On click will take user back to home page */}
+        <Link to="/" className="logo-link">
+          <img src={logo} alt="OMRE Logo" className="logo-image" />
+        </Link>
+
+        <Link
+          to="/fragrances"
+          className="nav-item"
+          style={luxuryBodyStyle}
+          >
+          Fragrances
+        </Link>
+
+        <Link
+          to="/AboutUs"
+          className="nav-item"
+          style={luxuryBodyStyle}
+          >
+          About Us
+        </Link>
+      </div>
 
       {/* Navbar Links ---------------------------------------------------------------------------------------- */}
       {/* Link to auth is shown if loadingAuth false & is not authenticated */}
@@ -58,6 +77,12 @@ const Navbar = () => {
           style={luxuryBodyStyle}>Admin Dashboard</Link>
         )}
 
+        {!loadingAuth && isAuthenticated && (
+          <Link to="/Mixology" 
+          className="nav-item"
+          style={luxuryBodyStyle} >Mixology</Link>
+        )}
+
         {/* If loadingAuth is false (complete) and user is authenticated, will have ability to log out */}
         {!loadingAuth && isAuthenticated && (
           <Link 
@@ -70,7 +95,11 @@ const Navbar = () => {
             Sign Out
           </Link>
         )}
-        
+        {!loadingAuth && isAuthenticated && (
+          <Link to="/Cart" className="nav-item">
+            <img src={cartIcon} alt="Cart" className="cart-icon" />
+          </Link>
+      )}
       </nav>
     </header>
   );
