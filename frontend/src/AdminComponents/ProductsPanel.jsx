@@ -738,13 +738,15 @@ export default function ProductsPanel() {
                 flex="1.0"  
                 height="100%" 
                 padding="1rem" 
-                backgroundColor="whitesmoke">
+                backgroundColor="whitesmoke"
+                overflow="auto">
                 <Flex 
                     direction="column"
                     height="100%"
                     width="100%"
-                    justifyContent="center"
-                    alignItems="center">
+                    justifyContent="flex-start"
+                    alignItems="center"
+                    style={{ minWidth: 0 }}>
                     {loadingProduct && (
                     <Flex direction="column" gap="0.25rem">
                         <Text style={luxuryHeadingStyle}>Product Information</Text>
@@ -756,9 +758,11 @@ export default function ProductsPanel() {
                     {/* Edit mode: Will take existing product and show its information in the draft instead of being blank */}
                     {(activeMode === MODES.ADD || activeMode === MODES.EDIT || activeMode === MODES.APPEND) && (
                         <Grid 
-                            templateColumns="12rem 10rem"
-                            gap="0.1rem" 
+                            templateColumns="1fr 1fr"
+                            gap="0.4rem"
                             marginTop="-.2rem"
+                            width="100%"
+                            style={{ minWidth: 0 }}
                             >
                             <TextField 
                                 style={compactStyle}
