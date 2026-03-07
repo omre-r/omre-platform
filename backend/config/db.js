@@ -661,8 +661,8 @@ class Products{
             if (newSize < 0){
                 return {success: false, message: "Negative new size", status: 400}
             }
-            const updateProductQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2;`;
-            await client.query(updateProductQuery, [newSize, id])
+            const updateProductQuery = `UPDATE products SET stock_ml = $1 WHERE parentid = $2;`;
+            await client.query(updateProductQuery, [newSize, product.parentid])
 
         }catch(err){
             console.error(err);
@@ -678,11 +678,12 @@ class Products{
 
         try{
             const retrieveProductQuery = `SELECT * FROM products WHERE id = $1;`;
-            const product = (await client.query(retrieveProductQuery, [id]))?.rows?.[0];
+            const product = (await client.query(retrieveProductQuery, [parentid]))?.rows?.[0];
 
            if (!product){
                 return {success: false, message: "Product does not exist", status: 400}
             }
+            
 
             const size = Number(product?.variation?.toLowerCase().replace("ml", ""));
             if (!size){
@@ -699,10 +700,10 @@ class Products{
             const updateProductQuery = `
                 UPDATE products 
                 SET stock_ml = $1 
-                WHERE id = $2 
+                WHERE parentid = $2 
                 RETURNING stock_ml;
             `;
-            const updateResult = await client.query(updateProductQuery, [newSize, id]);
+            const updateResult = await client.query(updateProductQuery, [newSize, product.parentid]);
 
             if (updateResult.rowCount === 0){
                 return {success: false, message: "Failed to update stock", status: 400}
@@ -1316,7 +1317,6 @@ async getBlendById(blendid, client) {
             blend.frag1_pct /= 100;
             blend.frag2_pct /= 100;
             if (blend.frag3_productid) blend.frag3_pct /= 100;
-
             const oil = blend.size_ml * .4;
 
             const productIds = [blend.frag1_productid, blend.frag2_productid];
@@ -1335,15 +1335,16 @@ async getBlendById(blendid, client) {
                 if (size < 0) throw new DBError("Not enough stock for this blend");
             }
             
-            const productUpdateQuery = `UPDATE products SET stock_ml = $1 WHERE id = $2 RETURNING *`;
-            const product1UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[0], blend.frag1_productid]))?.rows?.[0];
-            if (!product1UpdateRes) throw new DBError(`Failed to update blend product 1 with id ${blend.frag1_productid}`)
-            const product2UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[1], blend.frag2_productid]))?.rows?.[0];
-            if (!product2UpdateRes) throw new DBError(`Failed to update blend product 2 with id ${blend.frag2_productid}`)
+            const productUpdateQuery = `UPDATE products SET stock_ml = $1 WHERE parentid = $2 RETURNING *`;
+            const product1UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[0], productsUsed[0].parentid]))?.rows?.[0];
+            if (!product1UpdateRes) throw new DBError(`Failed to update blend product 1 with parentid ${productsUsed[0].parentid}`)
+            const product2UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[1], productsUsed[1].parentid]))?.rows?.[0];
+            if (!product2UpdateRes) throw new DBError(`Failed to update blend product 2 with parentid ${productsUsed[1].parentid}`)
             if (blend.frag3_productid){
-                const product3UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[2], blend.frag3_productid]))?.rows?.[0];
-                if (!product3UpdateRes) throw new DBError(`Failed to update blend product 3 with id ${blend.frag3_productid}`)
-            }
+                const product3UpdateRes = (await client.query(productUpdateQuery, [newProductSizes[2], productsUsed[2].parentid]))?.rows?.[0];
+                if (!product3UpdateRes) throw new DBError(`Failed to update blend product 3 with parentid ${productsUsed[2].parentid}`)
+            }   
+
 
             const pricePerML1 = (Number(productsUsed[0].price) / Number(productsUsed[0].variation.split("ml")?.[0]));
             price += pricePerML1 * (blend.size_ml * blend.frag1_pct);
