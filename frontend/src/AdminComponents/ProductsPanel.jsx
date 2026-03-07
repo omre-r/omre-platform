@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Card, Flex, Text, Button, View, TextField, TextAreaField, SwitchField, Grid } from "@aws-amplify/ui-react";
+import { Card, Flex, Text, Button, View, TextField, TextAreaField, SwitchField, Grid, SelectField } from "@aws-amplify/ui-react";
 
 import {getProductReq, updateProductReq, updateProductStockReq, deleteProductReq, getProductsReq, createProductReq, createProductFlowReq_LOCAL, uploadAndGetURlsReq} from'../requests.js';
 
@@ -22,7 +22,7 @@ const luxuryBodyStyle = {
 const compactStyle = {
     fontFamily: "'Cormorant Garamond', serif",
     fontWeight: 200,
-    fontSize: "0.8rem",
+    fontSize: "1rem",
     letterSpacing: "0.1px",
 };
 const MODES = {
@@ -635,7 +635,9 @@ export default function ProductsPanel() {
                                         borderRadius="6px"
                                         >
                                         <Text>
-                                            {selectedProduct.name} — {selectedProduct.stock_ml}ml {selectedProduct.stock_ml < 1000 && "(LOW STOCK!)"}
+                                            <strong>{selectedProduct.name}</strong>
+                                            <br />
+                                            <Text textAlign={"left"}>— {selectedProduct.stock_ml}ml {selectedProduct.stock_ml < 1000 && "(LOW!)"}</Text>
                                         </Text>
                                     </Button>
                                     :
@@ -658,7 +660,9 @@ export default function ProductsPanel() {
                                         }}
                                         >
                                         <Text>
-                                            {prodList[0].name} — {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"}
+                                            <strong>{prodList[0].name} </strong>
+                                            <br />
+                                            <Text textAlign={"left"}>— {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"}</Text>
                                         </Text>
                                     </Button>
                                 }
@@ -763,12 +767,18 @@ export default function ProductsPanel() {
                                 value={draft.type} 
                                 onChange={(e) => setDraftField("type", e.target.value)} 
                             />
-                            <TextField 
+                            {/* Includes an invalid variation as a disabled option, so admin can see the invalid state but not reselect it */}
+                            <SelectField
                                 style={compactStyle}
-                                placeholder="Variation"
                                 value={draft.variation} 
                                 onChange={(e) => setDraftField("variation", e.target.value)} 
-                            />
+                            >
+                                <option value="" disabled>Variation</option>
+                                {!["30ml", "50ml"].includes(selectedProduct.variation) &&
+                                <option value={selectedProduct.variation} disabled>{selectedProduct.variation}</option>}
+                                <option value="30ml">30ml</option>
+                                <option value="50ml">50ml</option>
+                            </SelectField>
                             <TextField 
                                 style={compactStyle}
                                 placeholder="Price"
