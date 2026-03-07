@@ -1,0 +1,106 @@
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  max-width: none;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+body {
+  background:
+    /* Linear gradient similar to Omre original home page colors going downward */
+    linear-gradient(
+      180deg,
+      #f3e6dc 0%,   
+      #e0bfae 22%,   
+      #b07a63 45%,   
+      #6b2e22 70%,   
+      #3b1a12 100%
+    );
+  display: block;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+
+/* BELOW WE USE !IMPORTANT BECAUSE: It will override any preset for the amplify components
+   This lets us override the base blues for toggles that we cannot edit and it will follow theming
+   for other future pages in the future*/
+
+/* typed text */
+.amplify-input {
+  color: #2B1E1A !important;
+}
+
+/* placeholder text for when entering name or email or password */
+.amplify-input::placeholder {
+  color: #9A8F87 !important;
+  opacity: 1;
+}
+
+.amplify-label {
+  color: #2B1E1A !important;
+}
+
+/* label styling for the font and font size */
+.amplify-field .amplify-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+
+/* input background. made it a transparent brown */
+.amplify-field-group__control {
+  background-color: #FAF7F3 !important;
+  border: 1px solid rgba(75, 15, 15, 0.25) !important;
+}
+
+/* Base toggle button edits
+  text color white, border color the same as others
+*/
+.amplify-togglebutton {
+  background-color: #FAF7F3 !important;
+  color: #2B1E1A !important;
+  border: 1px solid rgba(75, 15, 15, 0.25) !important;
+  transition: all 0.2s ease; /* smooth transition active states */
+}
+
+/* Active toggle button edits
+  darker background when active, border color the same as others, text white
+*/
+.amplify-togglebutton[aria-pressed="true"] {
+  background-color: #ded6cd !important;
+  border: 1px solid rgba(75, 15, 15, 0.25);
+}
+
+/* toggle button styling for the fonts */
+button.amplify-togglebutton {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.3px;
+}
+
+.amplify-switchfield label {
+  color: black !important;
+}
+
+.amplify-button {
+  border-radius: 6px !important;
+  border: 2px solid rgba(7, 1, 1, 0.25) !important;
+  color:"#2B1E1A" !important;
+}

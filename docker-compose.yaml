@@ -1,0 +1,20 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5001:5001"
+    env_file:
+      - backend/.env
+    environment:
+      DB_HOST: db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+  db:
+    image: postgres:16
+    env_file:
+      - "backend/.env"
+    ports:
+      - "5433:5432"
