@@ -146,6 +146,17 @@ async function updateProduct(req, res) {
   return res.json(result)
 }
 
+// path: PUT /products/stock/:parentid
+async function updateProductStock(req, res) {
+  const {parentid} = req.params;
+  const {stock_ml} = req.body;
+  const result = await products.updateProductStock(parentid, stock_ml);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result)
+}
+
 // path: DELETE /products/:id
 async function deleteProduct(req, res) {
   const {id} = req.params;
@@ -556,6 +567,7 @@ deleteUser = handleError(deleteUser);
 getProduct = handleError(getProduct);
 getRelatedProducts = handleError(getRelatedProducts);
 updateProduct = handleError(updateProduct);
+updateProductStock = handleError(updateProductStock);
 deleteProduct = handleError(deleteProduct);
 getActiveProducts = handleError(getActiveProducts);
 createProduct = handleError(createProduct);
@@ -595,7 +607,7 @@ deleteUserBlend = handleError(deleteUserBlend);
 module.exports = {
   getServerHTML,
   getUser, getUsers, createUser, deleteUser, updateLastLogin,
-  getProduct, getRelatedProducts, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts,
+  getProduct, getRelatedProducts, updateProduct, updateProductStock, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts, 
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders,
   saveBlend, addBlendToCart, getUserBlends, deleteUserBlend, getBlendById,

@@ -343,7 +343,7 @@ in different situations (changePassword / updateLogin), but a product is
 likely updated in a single setting. Therefore, a single updateProduct is provided.
 */
 class Products{
-    static modifiableFields = ["type", "name", "variation", "price", "images", "stock_ml", "notes", "description", "ishidden", "isfeatured"];
+    static modifiableFields = ["type", "name", "variation", "price", "images", "notes", "description", "ishidden", "isfeatured"];
     static filterableFields = ["type", "name", "variation", "price", "notes", "stock_ml", "isfeatured"]
     
     async createProduct(options, client){
@@ -641,6 +641,25 @@ class Products{
         return {success: true}
     }
 
+    async updateProductStock(parentid, stock_ml, client) {
+        if (!client){
+            return prepareRollback((c) => this.updateProductStock(parentid, stock_ml, c));
+        }
+
+        try{
+            const query = `UPDATE products SET stock_ml = $1 WHERE parentid = $2 RETURNING *;`;
+            const updateResult = await client.query(query, [stock_ml, parentid]);
+            if (!updateResult?.rows?.[0]){
+                throw new DBError("Failed to update products");
+            }
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to update product stock.")
+        }
+        return {success: true}
+    }
+
     async increaseProductStock(id, quantity, client){
         if (!client){
             return prepareRollback((c) => this.increaseProductStock(id, quantity, c));
@@ -678,7 +697,7 @@ class Products{
 
         try{
             const retrieveProductQuery = `SELECT * FROM products WHERE id = $1;`;
-            const product = (await client.query(retrieveProductQuery, [parentid]))?.rows?.[0];
+            const product = (await client.query(retrieveProductQuery, [id]))?.rows?.[0];
 
            if (!product){
                 return {success: false, message: "Product does not exist", status: 400}

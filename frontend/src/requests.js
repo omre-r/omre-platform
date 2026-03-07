@@ -95,6 +95,19 @@ async function updateProductReq(id, updatedFields){
     return data;
 }
 
+async function updateProductStockReq(parentid, stock_ml){
+    const response = await fetch(backendURL + `/products/stock/${parentid}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
+        body: JSON.stringify({stock_ml})
+    });
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
 async function deleteProductReq(id){
     const response = await fetch(backendURL + `/products/${id}`, {
         method: "DELETE",
@@ -595,6 +608,7 @@ deleteUserReq = handleError(deleteUserReq);
 getProductReq = handleError(getProductReq);
 getRelatedProductsReq = handleError(getRelatedProductsReq);
 updateProductReq = handleError(updateProductReq);
+updateProductStockReq - handleError(updateProductStockReq);
 deleteProductReq = handleError(deleteProductReq);
 getActiveProductsReq = handleError(getActiveProductsReq);
 createProductReq = handleError(createProductReq);
@@ -648,7 +662,7 @@ createProductAWSFlowReq = handleError(createProductAWSFlowReq);
 
 export {
     getUserReq, getUsersReq, createUserReq, deleteUserReq,
-    getProductReq, getRelatedProductsReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
+    getProductReq, getRelatedProductsReq, updateProductReq, updateProductStockReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq, getOrdersReq,
     saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq, getBlendByIdReq,

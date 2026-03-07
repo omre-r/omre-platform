@@ -77,6 +77,7 @@ app.put("/users/:id/last-login", [verifyToken], async (req, res) => {
 
 // products
 app.get("/products/related/:parentid", controllers.getRelatedProducts);
+app.put("/products/stock/:parentid", controllers.updateProductStock);
 
 app.get("/products/active", controllers.getActiveProducts);
 app.get("/products/filter", controllers.getFilteredProducts);
@@ -118,6 +119,7 @@ app.post("/blends/cart", [verifyToken], controllers.addBlendToCart);
 app.get("/blends/:userid", [verifyToken], controllers.getUserBlends);
 app.delete("/blends/:blendid", [verifyToken], controllers.deleteUserBlend);
 app.get("/blends/item/:id", [verifyToken], controllers.getBlendById);
+
 // cart items
 app.delete("/cartitems/clear/:customerid", [verifyToken], controllers.clearCart)
 
