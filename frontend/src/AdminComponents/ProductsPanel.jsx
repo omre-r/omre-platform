@@ -321,6 +321,11 @@ export default function ProductsPanel() {
         for (const p of productList){
             parents?.[p.parentid] ? parents[p.parentid].push(p) : parents[p.parentid] = [p];
         }
+        // sort variations [50ml, 30ml, 70ml] => [30ml, 50ml, 70ml]
+        const groups = Object.values(parents);
+        for (const group of groups){
+            group.sort((a, b) => Number(a?.variation?.split("ml")?.[0]) - Number(b?.variation?.split("ml")?.[0]))
+        }
         return Object.values(parents);
     }
     
