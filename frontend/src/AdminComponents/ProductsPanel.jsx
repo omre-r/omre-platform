@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Card, Flex, Text, Button, View, TextField, SwitchField, Grid } from "@aws-amplify/ui-react";
+import { Card, Flex, Text, Button, View, TextField, TextAreaField, SwitchField, Grid } from "@aws-amplify/ui-react";
 
-import {getProductReq, updateProductReq, deleteProductReq, getProductsReq, createProductReq, createProductFlowReq_LOCAL, uploadAndGetURlsReq} from'../requests.js';
+import {getProductReq, updateProductReq, updateProductStockReq, deleteProductReq, getProductsReq, createProductReq, createProductFlowReq_LOCAL, uploadAndGetURlsReq} from'../requests.js';
 
+
+import EditIcon from "../assets/edit_icon.png"
 
 // Custom Styling for fonts and amplify ui -------------------------------------- 
 const luxuryHeadingStyle = {
@@ -40,6 +42,7 @@ const defaultProductDraft = {
         variation: '',
         price: '',
         stock_ml: '',
+        description: ``,
         notes: {
             top: [],
             heart: [],
@@ -72,6 +75,7 @@ export default function ProductsPanel() {
 
     const [showImages, setShowImages] = useState(false)
     const [files, setFiles]  = useState([])
+    const [isUploading, setIsUploading] = useState(false);
 
     // When editing or adding to draft, name and type cannot be left blank but other information can
     const canSave = draft.type.trim() !== "" && draft.name.trim() !== "";
@@ -97,6 +101,7 @@ export default function ProductsPanel() {
             variation: product.variation ?? "",
             price: product.price != null ? String(product.price) : "",
             stock_ml: product.stock_ml != null ? String(product.stock_ml) : "",
+            description: product.description ?? ``,
             notes: {
                 top: product.notes?.top ?? [],
                 heart: product.notes?.heart ?? [],
@@ -133,7 +138,7 @@ export default function ProductsPanel() {
         setFiles(prev => [...prev, ...validFiles])
     }
 
-    async function getS3Urls(){
+    async function uploadImages(){
         if (files.length === 0) return;
 
         const newFiles = [...files]
@@ -144,7 +149,9 @@ export default function ProductsPanel() {
         //files => urls
         /*files are tagged temporary on S3, 
         so unused images will be deleted in 2 days (may change)*/
+        setIsUploading(true);
         const imageurls = await uploadAndGetURlsReq(newFiles);
+        setIsUploading(false);
         setDraft(prev => {
             return {
                 ...prev,
@@ -260,8 +267,8 @@ export default function ProductsPanel() {
 
     // Form helper for #'s
     function validateNumbers(price, stock_ml) {
-        if (!Number.isFinite(price) || price < 0) return "Price must be a valid number.";
-        if (!Number.isFinite(stock_ml) || stock_ml < 0) return "Stock must be a valid number.";
+        if (price && (!Number.isFinite(price) || price < 0)) return "Price must be a valid number.";
+        if (stock_ml && (!Number.isFinite(stock_ml) || stock_ml < 0)) return "Stock must be a valid number.";
         return null;
     }
 
@@ -415,6 +422,7 @@ export default function ProductsPanel() {
                 variation: draft.variation.trim(),
                 price: draft.price === "" ? 0 : Number(draft.price),
                 stock_ml: draft.stock_ml === "" ? 0 : Number(draft.stock_ml),
+                description: draft.description.trim(),
                 // To match the backend format of the notes, we have top, heart, and base
                 // which will be respectively their own scents.
                 notes: {
@@ -422,7 +430,6 @@ export default function ProductsPanel() {
                     heart: draft.notes.heart,
                     base: draft.notes.base,
                 },
-                description: "test description",
                 isfeatured: !!draft.isfeatured,
                 ishidden: !!draft.ishidden,
                 images: draft.images ?? [],
@@ -473,7 +480,7 @@ export default function ProductsPanel() {
                 name: draft.name.trim(),
                 variation: draft.variation.trim(),
                 price: draft.price === "" ? 0 : Number(draft.price),
-                stock_ml: draft.stock_ml === "" ? 0 : Number(draft.stock_ml),
+                description: draft.description.trim(),
                 notes: {
                     top: draft.notes.top,
                     heart: draft.notes.heart,
@@ -483,7 +490,7 @@ export default function ProductsPanel() {
                 ishidden: !!draft.ishidden,
                 images: draft.images
             };
-            const validNums = validateNumbers(form.price, form.stock_ml)
+            const validNums = validateNumbers(form.price, null)
             if (validNums) {
                 setMessage(validNums);
                 return;
@@ -497,6 +504,35 @@ export default function ProductsPanel() {
                 throw new Error(data.message);
             }
             setMessage(`Updated: ${form.name}`);
+            await loadProducts();
+            resetToIdle();
+        }
+        catch(error) {
+            setMessage(error.message || "Error updating product.");
+        }
+    }
+
+    // stock updates get a specific function as they are outside normal flow -------------------------------------------------- 
+    async function updateProductStock() {
+        setMessage("")
+        try {
+            if(!selectedProduct) {
+                return;
+            }
+
+            // makeDraftFromProduct function will be called and that will be setting the draft with the existing info
+            const form = {
+                stock_ml: draft.stock_ml === "" ? 0 : Number(draft.stock_ml),
+            };
+            const validNums = validateNumbers(null, form.stock_ml)
+            if (validNums) {
+                setMessage(validNums);
+                return;
+            }
+            const data = await updateProductStockReq(selectedProduct.parentid, form.stock_ml);
+            if (!data.success){
+                throw new Error(data.message);
+            }
             await loadProducts();
             resetToIdle();
         }
@@ -627,6 +663,33 @@ export default function ProductsPanel() {
                                     </Button>
                                 }
                                 {selectedProduct?.parentid === prodList[0].parentid &&
+                                <Flex>
+                                    <Flex
+                                    alignItems={"center"}
+                                    justifyContent={"left"}
+                                    gap={"5px"}>
+                                        <Text>Stock</Text>
+                                        <input 
+                                            style={{width: "100px", padding: "5px 10px", borderRadius: "5px"}}
+                                            placeholder="Stock (ml)"
+                                            type="number"
+                                            value={draft.stock_ml} 
+                                            onChange={(e) => setDraftField("stock_ml", e.target.value)} 
+                                        />
+                                        {Math.floor(draft.stock_ml) !== Math.floor(selectedProduct.stock_ml) &&
+                                            <button
+                                            onClick={updateProductStock}
+                                            style={{
+                                                overflow: "hidden", 
+                                                width: "30px", 
+                                                height: "30px", 
+                                                padding:"0", 
+                                                border: "none"}}
+                                                >
+                                                <img src={EditIcon} width={"100%"} alt="Edit" />
+                                            </button>
+                                        }
+                                    </Flex>
                                     <Flex 
                                     wrap={"wrap"}
                                     gap={"5px"}
@@ -651,6 +714,8 @@ export default function ProductsPanel() {
                                                 +
                                             </Button>
                                     </Flex>
+                                </Flex>
+
                                 }
 
                             </Flex>
@@ -683,20 +748,20 @@ export default function ProductsPanel() {
                     {(activeMode === MODES.ADD || activeMode === MODES.EDIT || activeMode === MODES.APPEND) && (
                         <Grid 
                             templateColumns="12rem 10rem"
-                            gap="0.3rem" 
+                            gap="0.1rem" 
                             marginTop="-.2rem"
                             >
-                            <TextField 
-                                style={compactStyle}
-                                placeholder="Type"
-                                value={draft.type} 
-                                onChange={(e) => setDraftField("type", e.target.value)} 
-                            />
                             <TextField 
                                 style={compactStyle}
                                 placeholder="Name"
                                 value={draft.name} 
                                 onChange={(e) => setDraftField("name", e.target.value)} 
+                            />
+                            <TextField 
+                                style={compactStyle}
+                                placeholder="Type"
+                                value={draft.type} 
+                                onChange={(e) => setDraftField("type", e.target.value)} 
                             />
                             <TextField 
                                 style={compactStyle}
@@ -711,15 +776,9 @@ export default function ProductsPanel() {
                                 value={draft.price} 
                                 onChange={(e) => setDraftField("price", e.target.value)} 
                             />
-                            <TextField 
-                                style={compactStyle}
-                                placeholder="Stock (ml)"
-                                type="number"
-                                value={draft.stock_ml} 
-                                onChange={(e) => setDraftField("stock_ml", e.target.value)} 
-                            />
                             {/* Entering Top, Heart, and Base notes ------------------------------------------------------------*/}
                             <TextField
+                                columnSpan={2}
                                 style={compactStyle}
                                 placeholder="Notes Top (, separated)"
                                 // If array exists for top use it and separate by commas
@@ -735,6 +794,7 @@ export default function ProductsPanel() {
                                 }}
                             />
                             <TextField
+                                columnSpan={2}
                                 style={compactStyle}
                                 placeholder="Notes Heart (, separated)"
                                 value={(draft.notes.heart || []).join(",")}   
@@ -749,6 +809,7 @@ export default function ProductsPanel() {
                                 }}
                             />
                             <TextField
+                                columnSpan={2}
                                 style={compactStyle}
                                 placeholder="Notes Base (, separated)"
                                 value={(draft.notes.base || []).join(",")}   
@@ -762,47 +823,40 @@ export default function ProductsPanel() {
                                     }));
                                 }}
                             />
+                            <View columnSpan={2}>
+                                <TextAreaField
+                                textAlign={"left"}
+                                style={{height: "50px"}}
+                                placeholder={"Description"}
+                                value={draft.description}
+                                onChange={(e) => {
+                                    setDraft(prev => ({
+                                        ...prev,
+                                        description: e.target.value
+                                    }))
+                                }}
+                                onFocus={(e) => {e.target.style.height = "100px"}}
+                                onBlur={(e) => {e.target.style.height = "50px"}}
+                                />
+                            </View>
                             {/* Hidden or featured switches -------------------- */}
-                            <SwitchField
-                                style={compactStyle}
-                                label="Hidden?"
-                                isChecked={draft.ishidden} 
-                                onChange={(e) => setDraftField("ishidden", e.target.checked)} 
-                            />
-                            <SwitchField 
-                                style={compactStyle}
-                                label="Featured"
-                                isChecked={draft.isfeatured}
-                                onChange={(e) => setDraftField("isfeatured", e.target.checked)} 
-                            />
-                            {/* Inputting image files ---------------------------------------------------- */}
-                            {
-                            //     <View
-                            //     columnSpan={2}>
-                            //     <input 
-                            //         id="product-images" 
-                            //         type="file" 
-                            //         multiple accept="image/*" 
-                            //         style={{display: "none"}} 
-                            //         onChange={onImagesSelected}/>
-                            //     <Text 
-                            //         style={compactStyle}
-                            //         marginTop="-1rem">
-                            //         {/* Making sure it is array, will display images length or 0 if nothing has been uploaded */}
-                            //         Selected: {draft.images.length}
-                            //     </Text>
-                            //     <Button
-                            //         style={compactStyle}
-                            //         as="label"
-                            //         htmlFor="product-images"
-                            //         border="1px solid #111"
-                            //         borderRadius="6px"
-                            //         padding="0.35rem 0.75rem"
-                            //     >
-                            //         Choose Images
-                            //     </Button>
-                            // </View>
-                            }
+                            <Flex
+                            columnSpan={2}
+                            justifyContent={"center"}
+                            >
+                                <SwitchField
+                                    style={compactStyle}
+                                    label="Hidden?"
+                                    isChecked={draft.ishidden} 
+                                    onChange={(e) => setDraftField("ishidden", e.target.checked)} 
+                                />
+                                <SwitchField 
+                                    style={compactStyle}
+                                    label="Featured"
+                                    isChecked={draft.isfeatured}
+                                    onChange={(e) => setDraftField("isfeatured", e.target.checked)} 
+                                />
+                            </Flex>
                             <View
                                 columnSpan={2}>
                                 <Text 
@@ -1023,8 +1077,22 @@ export default function ProductsPanel() {
                                         >
                                             <strong>X</strong>
                                         </View>
+                                        {isUploading
+                                        ? 
                                         <Flex
                                         direction={"column"}
+                                        justifyContent={"center"}
+                                        alignItems={"center"}
+                                        flex={1}
+                                        width={"100%"}
+                                        >
+                                            <h2>Uploading...</h2>
+                                        </Flex>
+                                        :
+                                        <Flex
+                                        direction={"column"}
+                                        justifyContent={"center"}
+                                        alignItems={"center"}
                                         flex={1}
                                         width={"100%"}
                                         >
@@ -1095,17 +1163,16 @@ export default function ProductsPanel() {
                                             fontSize={"1.5em"}
                                             fontWeight={"bold"}
                                             margin={"auto"}
-                                            onClick={getS3Urls}
+                                            onClick={uploadImages}
                                             >
                                                 Upload
                                             </Button>
                                         </Flex>
-                                        
+                                        }
                                     </Card>
                                 </View>
                                 }
                             </View>
-                            
                             <View 
                                 columnSpan={2}>
                                 <Flex 
