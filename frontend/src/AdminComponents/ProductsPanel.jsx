@@ -639,10 +639,10 @@ export default function ProductsPanel() {
                                         border=".5px solid #111"
                                         borderRadius="6px"
                                         >
-                                        <Text>
+                                        <Text textAlign={"left"}>
                                             <strong>{selectedProduct.name}</strong>
                                             <br />
-                                            <Text textAlign={"left"}>— {selectedProduct.stock_ml}ml {selectedProduct.stock_ml < 1000 && "(LOW!)"}</Text>
+                                            <Text>— {selectedProduct.stock_ml}ml {selectedProduct.stock_ml < 1000 && "(LOW!)"}</Text>
                                         </Text>
                                     </Button>
                                     :
@@ -664,10 +664,10 @@ export default function ProductsPanel() {
                                             resetToEdit(prodList[0]);
                                         }}
                                         >
-                                        <Text>
+                                        <Text textAlign={"left"}>
                                             <strong>{prodList[0].name} </strong>
                                             <br />
-                                            <Text textAlign={"left"}>— {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"}</Text>
+                                            <Text>— {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"}</Text>
                                         </Text>
                                     </Button>
                                 }
@@ -766,12 +766,18 @@ export default function ProductsPanel() {
                                 value={draft.name} 
                                 onChange={(e) => setDraftField("name", e.target.value)} 
                             />
-                            <TextField 
+                            <SelectField
                                 style={compactStyle}
-                                placeholder="Type"
                                 value={draft.type} 
                                 onChange={(e) => setDraftField("type", e.target.value)} 
-                            />
+                            >
+                                <option value="" disabled>Type</option>
+                                {!["Men's Cologne", "Women's Perfume"].includes(draft.type) && ![MODES.ADD, MODES.APPEND].includes(activeMode) &&
+                                <option value={draft.type} disabled>{draft.type}</option>}
+                                <option value="Men's Cologne">Men's Cologne</option>
+                                <option value="Women's Perfume">Women's Perfume</option>
+                            </SelectField>
+
                             {/* Includes an invalid variation as a disabled option, so admin can see the invalid state but not reselect it */}
                             <SelectField
                                 style={compactStyle}
@@ -779,8 +785,8 @@ export default function ProductsPanel() {
                                 onChange={(e) => setDraftField("variation", e.target.value)} 
                             >
                                 <option value="" disabled>Variation</option>
-                                {!["30ml", "50ml"].includes(selectedProduct.variation) &&
-                                <option value={selectedProduct.variation} disabled>{selectedProduct.variation}</option>}
+                                {!["30ml", "50ml"].includes(draft.variation) && ![MODES.ADD, MODES.APPEND].includes(activeMode) &&
+                                <option value={draft.variation} disabled>{draft.variation}</option>}
                                 <option value="30ml">30ml</option>
                                 <option value="50ml">50ml</option>
                             </SelectField>

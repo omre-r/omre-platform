@@ -310,16 +310,21 @@ export default function Product(){
                         Description
                     </h2>
                     <Text
+                    className="scrollbar"
                     textAlign={"left"}
                     backgroundColor="rgba(255,255,255,.6)"
                     borderRadius ="8px"
                     padding={"8px"}
                     style={{
                         fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: "1.35rem"
+                        fontSize: "1.35rem",
+                        whiteSpace: "pre-line",
+                        maxHeight: "300px",
+                        overflowY: "auto",
                     }}
                     >
                         {selectedProduct.description}
+                       
                     </Text>
                 <hr style={{border: "1px solid rgba(0,0,0,.2)"}} />
 

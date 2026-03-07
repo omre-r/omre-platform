@@ -38,3 +38,14 @@
 .read-the-docs {
   color: #888;
 }
+
+.scrollbar::-webkit-scrollbar {
+  width: 5px;
+  background: #949494;
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: #f8f7f7;
+}
+
