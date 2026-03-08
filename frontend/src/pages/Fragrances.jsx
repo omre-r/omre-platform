@@ -34,11 +34,23 @@ const bodyStyle2 = {
   letterSpacing: "0.5px",
   color: "#000000",
 };
+
+const tabStyles = {
+  // border: "1px solid",
+  padding: "10px 5px",
+  background: "linear-gradient(rgba(0,0,0,0), white)",
+  textDecoration: "underline",
+  // borderRadius: "10px",
+  margin: "5px"
+}
 // functions //
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [message, setMessage] = useState("");
+
+  // Can be All, Men's Cologne, or Women's Perfume
+  const [tab, setTab] = useState("All");
 
   // these states will be for saving filter information
   const [minimum, setMinimum] = useState("")
@@ -61,19 +73,36 @@ export default function Home() {
 // make sure it loads //
   useEffect(() => {
     loadProducts();
-  }, []);
+  }, [tab]);
 
   async function loadProducts() {
     try {
-      const data = await getActiveProductsReq();
-      if (!data.success){
-        throw Error(data.message || "Error getting active products");
+      let returnedProducts;
+      if (tab === "All"){
+        const data = await getActiveProductsReq();
+        if (!data.success){
+          throw Error(data.message || "Error getting active products");
+        }
+        returnedProducts= data.data.products;
+      }else if (tab === "Men's Cologne"){
+        const data = await getFilteredProductsReq({type: "Men's Cologne"});
+        if (!data.success){
+          throw Error(data.message || "Error getting Men's Cologne products");
+        }
+        returnedProducts = data.data.products;
+      }else if (tab === "Women's Perfume"){
+        const data = await getFilteredProductsReq({type: "Women's Perfume"});
+        if (!data.success){
+          throw Error(data.message || "Error getting Women's Perfume products");
+        }
+        returnedProducts= data.data.products;
+      }else{
+        return
       }
-      
       //By default, sorts by featured
       const featured = [];
       const others = [];
-      for (const prod of data.data.products){
+      for (const prod of returnedProducts){
         prod.isfeatured ? featured.push(prod) : others.push(prod);
       }
       setProducts([...featured, ...others]);
@@ -143,6 +172,28 @@ export default function Home() {
       justifyContent={"center"}
       gap={"3px"}
       >
+        <View
+        height={"40px"}
+        margin={"5px"}
+        >
+          <select 
+          name="type-filter" 
+          id="type-filter"
+          style={{
+            ...bodyStyle2,
+            height:"100%",
+            justifySelf: "flex-start",
+            fontWeight: "bold",
+            borderRadius: "10px",
+            textAlign: "center"
+          }}
+          onChange={(e) => setTab(e.target.value)}  
+          >
+            <option value="All">All</option>
+            <option value="Men's Cologne">Men's Cologne</option>
+            <option value="Women's Perfume">Women's Perfume</option>
+          </select>
+        </View>
         <View
         height={"40px"}
         margin={"5px"}

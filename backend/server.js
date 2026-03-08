@@ -56,21 +56,14 @@ app.get("/", controllers.getServerHTML);
 // users
 
 // path: PUT /users/last-login
-app.put("/users/last-login", [verifyToken], controllers.updateLastLogin);
+app.put("/users/:id/last-login", [verifyToken], controllers.updateLastLogin);
 
 app.get("/users/:id", [verifyToken], controllers.getUser);
 app.delete("/users/:id", [verifyToken, checkAdminPerm], controllers.deleteUser);
 
 app.get("/users", [verifyToken, checkAdminPerm], controllers.getUsers);
 app.post("/users", [verifyToken], controllers.createUser);
-app.put("/users/:id/last-login", [verifyToken], async (req, res) => {
-    const { id } = req.params;
-    const result = await users.updateLastLogin(id);
-    if (!result.success) {
-        return res.status(result.status).json(result);
-    }
-    return res.json(result);
-});
+
 
 
 

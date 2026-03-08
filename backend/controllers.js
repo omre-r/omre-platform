@@ -93,20 +93,14 @@ async function deleteUser(req, res) {
 
 // path: PUT /users/:id/last-login
 async function updateLastLogin(req, res) {
-  const sub = req.tokenPayload?.sub;
-  const query = `UPDATE users SET last_login = NOW() WHERE id = $1`; 
-
-  if (!sub) {
-    return res.status(400).json({ success: false, message: "Missing user identifier" });
-  }
-
-  const result = await users.updateLastLogin(sub);
+  const {id} = req.params;
+  const result = await users.updateLastLogin(id);
 
   if (!result.success) {
-    return res.status(result.status || 500).json(result);
+    return res.status(result.status).json(result);
   }
 
-  return res.json({ success: true, message: "Last login updated", data: result.data });
+  return res.json(result);
 }
 
 

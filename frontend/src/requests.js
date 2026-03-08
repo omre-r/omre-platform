@@ -60,6 +60,19 @@ async function deleteUserReq(id){
     return data;
 }
 
+async function updateLastLoginReq(id){
+    const response = await fetch(backendURL + `/users/${id}/last-login`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
+        body: JSON.stringify({id})
+    });
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
 // products
 async function getProductReq(id){
     const response = await fetch(backendURL + `/products/${id}`);
@@ -591,6 +604,7 @@ getUserReq = handleError(getUserReq);
 getUsersReq = handleError(getUsersReq);
 createUserReq = handleError(createUserReq);
 deleteUserReq = handleError(deleteUserReq);
+updateLastLoginReq = handleError(updateLastLoginReq);
 
 // Products
 getProductReq = handleError(getProductReq);
@@ -648,7 +662,7 @@ createProductAWSReq = handleError(createProductAWSReq);
 createProductAWSFlowReq = handleError(createProductAWSFlowReq);
 
 export {
-    getUserReq, getUsersReq, createUserReq, deleteUserReq,
+    getUserReq, getUsersReq, createUserReq, deleteUserReq, updateLastLoginReq,
     getProductReq, getRelatedProductsReq, updateProductReq, updateProductStockReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq, getOrdersReq,
