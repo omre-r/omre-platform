@@ -321,7 +321,7 @@ class Users{
         if (!client){
             return prepareRollback((c) => this.updateLastLogin(id, c));
         }
-        const query = `UPDATE users SET last_login = NOW() WHERE id = $1`;
+        const query = `UPDATE users SET last_login = NOW() WHERE cognito_sub = $1 RETURNING *`;
 
         try {
             const res = await client.query(query, [id]);
@@ -329,7 +329,7 @@ class Users{
                 throw new DBError("User not found", 404);
             }
         } catch (err) {
-            console.error("Failed to update last_login:", err);
+            console.error(err);
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to update last_login")
         }

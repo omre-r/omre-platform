@@ -15,6 +15,7 @@ import { signUp, confirmSignUp, signIn, resendSignUpCode} from "aws-amplify/auth
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useAuth } from "../context/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
+import { updateLastLoginReq, getIDToken } from "../requests";
 
 
 /*
@@ -233,8 +234,13 @@ export default function Auth() {
                 setMessage("Please verify your email before signing in.");
                 return;
             }
-
             await refreshAuth();
+
+            //This could be awaited, change this if you prefer.
+            const userid = getIDToken()?.sub;
+            updateLastLoginReq(userid)
+            .then(res => !res.success && console.log("failed to update lastlogin"));
+            
             navigate("/");
         }
         catch (error) {

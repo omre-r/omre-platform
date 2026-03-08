@@ -208,6 +208,8 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             <Text>Name: {selectedUser.first_name} {selectedUser.last_name}</Text>
                             <Text>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
                             <Text>Created: {new Date(selectedUser.created_at).toLocaleString()}</Text>
+                            <Text>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString() : "Never"}</Text>
+
                             {/* TODO: Have last login implemented */}
                             {/* <Text>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString(): "--"}</Text> */}
 
