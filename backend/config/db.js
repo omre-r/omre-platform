@@ -993,15 +993,16 @@ class Orders{
                 throw new DBError("Order does not exist or already canceled.");
             }
 
+            //If a product, blend, or products used in a blend don't exist, we continue because items that don't exist don't need their stock restored
             for (const {itemid, quantity, type} of order.items){
                 if (type === "product"){
                     const result = await this.products.increaseProductStock(itemid, quantity, client);
-                    if (!result.success){
+                    if (!result.success && result.message !== "Product does not exist"){
                         throw new DBError("Failed to increase product stock");
                     }
                 }else{
                     const result = await this.blends.increaseBlendStock(itemid, quantity, client);
-                    if (!result.success){
+                    if (!result.success && (result.message !== "Blend does not exist" && result.message !== "Failed to retrieve products") ){
                         throw new DBError("Failed to increase blend stock");
                     }
                 }
@@ -1331,7 +1332,7 @@ async getBlendById(blendid, client) {
             const retrieveBlendQuery = `SELECT * FROM blends WHERE id = $1;`;
             const blend = (await client.query(retrieveBlendQuery, [id]))?.rows?.[0];
             if (!blend){
-                return {success: false, message: "Blend does not exist", status: 400}
+                return {success: false, message: "Blend does not exist", status: 400} //Do not change error message
             }
             blend.frag1_pct /= 100;
             blend.frag2_pct /= 100;
@@ -1345,7 +1346,7 @@ async getBlendById(blendid, client) {
             const productsUsed = (await client.query(getProductsUsedQuery, [productIds]))?.rows;
 
             if (!productsUsed || (blend.frag3_productid && productsUsed.length !== 3) || (!blend.frag3_productid && productsUsed.length !== 2)){
-                throw new DBError("Failed to retrieve products for increasing blend");
+                throw new DBError("Failed to retrieve products"); //Do not change error message
             }
 
             const newProductSizes = [Number(productsUsed[0].stock_ml) + (quantity * oil * blend.frag1_pct), Number(productsUsed[1].stock_ml) + (quantity * oil * blend.frag2_pct)]

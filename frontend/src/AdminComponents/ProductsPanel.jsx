@@ -690,10 +690,14 @@ export default function ProductsPanel() {
                                             onClick={updateProductStock}
                                             style={{
                                                 overflow: "hidden", 
-                                                width: "30px", 
-                                                height: "30px", 
-                                                padding:"0", 
-                                                border: "none"}}
+                                                width: "40px", 
+                                                height: "40px", 
+                                                padding:"5px", 
+                                                border: "solid",
+                                                borderWidth: "1px",
+                                                borderRadius: "4px",
+                                                boxShadow: "0 0 4px inset"
+                                            }}
                                                 >
                                                 <img src={EditIcon} width={"100%"} alt="Edit" />
                                             </button>

@@ -140,7 +140,6 @@ async function viewOrder(orderId) {
                 marginTop="-0.5rem"
               >
                 <option value="all">All</option>
-                <option value="ordered">Ordered</option>
                 <option value="pending">Pending</option>
                 <option value="mixing">Mixing</option>
                 <option value="ready">Ready</option>
