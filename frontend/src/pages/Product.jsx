@@ -232,6 +232,7 @@ export default function Product(){
                     borderRadius: "10px 10px"
                 }}
                 >
+                    <small style={{fontSize: ".7em", marginBottom: "25px", display: "block"}}>{selectedProduct.type}</small>
                     {selectedProduct.name}
                 </h1>
 
