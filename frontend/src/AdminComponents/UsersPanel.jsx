@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, Flex, Text, Button, View } from "@aws-amplify/ui-react";
 
+import AdminIcon from "../assets/admin_icon.png"
 
 // Custom Styling for fonts and amplify ui --------------------------------------
 const luxuryHeadingStyle = {
@@ -158,6 +159,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     height="100%" 
                     padding="1rem" 
                     backgroundColor="whitesmoke"
+                    position={"relative"}
                 >
                     <Flex>
                         <Text 
@@ -189,10 +191,22 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                         direction="column"
                         gap=".2rem" 
                         >
+                            {
+                                selectedUser.is_admin && 
+                                <View 
+                                position={"absolute"}
+                                top={0}
+                                right={0}
+                                width={"80px"}
+                                opacity={.7}
+                                >
+                                    <img src={AdminIcon} width={"100%"} alt="admin" />
+                                </View>
+                            }
+
                             <Text>Email: {selectedUser.email}</Text>
                             <Text>Name: {selectedUser.first_name} {selectedUser.last_name}</Text>
                             <Text>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
-                            <Text>isAdmin: {selectedUser.is_admin ? "Yes" : "No"}</Text>
                             <Text>Created: {new Date(selectedUser.created_at).toLocaleString()}</Text>
                             {/* TODO: Have last login implemented */}
                             {/* <Text>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString(): "--"}</Text> */}
