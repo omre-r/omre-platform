@@ -1188,94 +1188,6 @@ async getBlendById(blendid, client) {
     If any fragrance is short → returns stockUnavailable (NOT saved, NOT an error)
     If all good              → saves with status = 'cart', returns "Blend Ready!"
     */
-    async addBlendToCart(options, client) {
-        if (!client){
-            return prepareRollback((c) => this.addBlendToCart(options, c));
-        }
-        this.validateBlendInput(options);
-
-        const {
-            userid,
-            frag1_productid,
-            frag2_productid,
-            frag3_productid = null,
-            frag1_pct,
-            frag2_pct,
-            frag3_pct = null,
-            size_ml
-        } = options;
-
-        const total_oil_ml = Number(size_ml) * 0.40;
-
-        // Build the list of fragrances to stock-check
-        const fragsToCheck = [
-            { productid: frag1_productid, pct: Number(frag1_pct) },
-            { productid: frag2_productid, pct: Number(frag2_pct) },
-        ];
-        if (frag3_productid && frag3_pct !== null) {
-            fragsToCheck.push({ productid: frag3_productid, pct: Number(frag3_pct) });
-        }
-
-        // Check stock for each fragrance
-        for (const frag of fragsToCheck) {
-            let product;
-            try {
-                const res = await client.query(`SELECT id, name, stock_ml FROM products WHERE id = $1;`, [frag.productid]);
-                product = res.rows?.[0];
-            } catch (err) {
-                console.error(err);
-                throw new DBError("Failed to check product stock");
-            }
-
-            if (!product) throw new DBError(`Product not found: ${frag.productid}`, 404);
-
-            const oil_needed = total_oil_ml * (frag.pct / 100);
-
-            if (Number(product.stock_ml) < oil_needed) {
-                // Stock check failed — do NOT save, return a clean response
-                return {
-                    success: false,
-                    stockUnavailable: true,
-                    message: `"${product.name}" doesn't have enough stock for this blend. Save your blend to order when restocked.`
-                };
-            }
-        }
-
-        // All stock checks passed — save with status 'cart'
-        const id = uuidv4();
-
-        const query = `
-            INSERT INTO blends (id, userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml, status)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'cart')
-            RETURNING *;
-        `;
-
-        let result;
-        try {
-            result = await client.query(query, [
-                id,
-                userid,
-                frag1_productid,
-                frag2_productid,
-                frag3_productid,
-                Number(frag1_pct),
-                Number(frag2_pct),
-                frag3_pct !== null ? Number(frag3_pct) : null,
-                Number(size_ml)
-            ]);
-        } catch (err) {
-            console.error(err);
-            if (err instanceof DBError) throw err;
-            throw new DBError("Failed to save blend to cart");
-        }
-
-        return {
-            success: true,
-            cartReady: true,
-            message: "Blend Ready!",
-            data: { blend: result.rows?.[0] }
-        };
-    }
 
     // Get all blends belonging to the logged in user
     async getUserBlends(userid, client) {
@@ -1478,6 +1390,49 @@ class CartItems{
         }
         const {customerid, itemid, type} = options;
         const id = uuidv4();
+
+        // Blend stock check — product path below is completely untouched
+        if (type === "blend") {
+            let blend;
+            try {
+                const blendRes = await client.query(`SELECT * FROM blends WHERE id = $1;`, [itemid]);
+                blend = blendRes.rows?.[0];
+            } catch (err) {
+                console.error(err);
+                throw new DBError("Failed to fetch blend for stock check");
+            }
+
+            if (!blend) throw new DBError("Blend not found", 404);
+
+            const total_oil_ml = Number(blend.size_ml) * 0.40;
+            const fragsToCheck = [
+                { productid: blend.frag1_productid, pct: Number(blend.frag1_pct) },
+                { productid: blend.frag2_productid, pct: Number(blend.frag2_pct) },
+            ];
+            if (blend.frag3_productid) {
+                fragsToCheck.push({ productid: blend.frag3_productid, pct: Number(blend.frag3_pct) });
+            }
+
+            for (const frag of fragsToCheck) {
+                let product;
+                try {
+                    const res = await client.query(`SELECT id, name, stock_ml FROM products WHERE id = $1;`, [frag.productid]);
+                    product = res.rows?.[0];
+                } catch (err) {
+                    console.error(err);
+                    throw new DBError("Failed to check product stock");
+                }
+                if (!product) throw new DBError(`Product not found: ${frag.productid}`, 404);
+                const oil_needed = total_oil_ml * (frag.pct / 100);
+                if (Number(product.stock_ml) < oil_needed) {
+                    return {
+                        success: false,
+                        stockUnavailable: true,
+                        message: `"${product.name}" doesn't have enough stock for this blend. Save your blend to order when restocked.`
+                    };
+                }
+            }
+        }
 
         let result;
         try{

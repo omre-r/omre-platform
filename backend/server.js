@@ -115,7 +115,6 @@ app.get("/orders", [verifyToken], controllers.getOrders);
 
 // blends
 app.post("/blends/save", [verifyToken], controllers.saveBlend);
-app.post("/blends/cart", [verifyToken], controllers.addBlendToCart);
 app.get("/blends/:userid", [verifyToken], controllers.getUserBlends);
 app.delete("/blends/:blendid", [verifyToken], controllers.deleteUserBlend);
 app.get("/blends/item/:id", [verifyToken], controllers.getBlendById);

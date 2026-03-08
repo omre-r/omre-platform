@@ -334,19 +334,7 @@ async function saveBlendReq({ userid, frag1_productid, frag2_productid, frag3_pr
     return data;
 }
 
-async function addBlendToCartReq({ userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml }) {
-    const response = await fetch(backendURL + `/blends/cart`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
-        body: JSON.stringify({ userid, frag1_productid, frag2_productid, frag3_productid, frag1_pct, frag2_pct, frag3_pct, size_ml })
-    });
-    const data = await response.json();
-    if (!data.success){
-        console.error(data.message || "req failed")
-    }
-    // stockUnavailable is NOT a throw — return it so the frontend can show the right message
-    return data;
-}
+
 
 // Getting user saved blends to show in mixology page, also for users to load previous blends
 async function getUserSavedBlendsReq(userid) {
@@ -634,7 +622,6 @@ getOrdersReq = handleError(getOrdersReq);
 
 // Blends
 saveBlendReq = handleError(saveBlendReq);
-addBlendToCartReq = handleError(addBlendToCartReq);
 getUserSavedBlendsReq = handleError(getUserSavedBlendsReq);
 deleteUserBlendReq = handleError(deleteUserBlendReq);
 
@@ -665,7 +652,7 @@ export {
     getProductReq, getRelatedProductsReq, updateProductReq, updateProductStockReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq, getOrdersReq,
-    saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq, getBlendByIdReq,
+    saveBlendReq, getUserSavedBlendsReq, deleteUserBlendReq, getBlendByIdReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     getRecommendationsReq,
     validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, 

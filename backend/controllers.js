@@ -363,21 +363,7 @@ async function saveBlend(req, res) {
     return res.json(result);
 }
 
-// path: POST /blends/cart
-async function addBlendToCart(req, res) {
-    const {userid} = req.body
-    if (USE_ACCESS_TOKENS){
-      if (userid !== req.tokenPayload.sub){
-        return res.status(401).json({ success: false, message: "Not authenticated" })
-      }
-    }
-    const result = await blends.addBlendToCart({ userid, ...req.body });
-    // stockUnavailable is a valid business response, not a server error — always 200
-    if (!result.success && !result.stockUnavailable) {
-        return res.status(result.status || 400).json(result);
-    } 
-    return res.json(result);
-}
+
 
 // path: GET /blends
 async function getUserBlends(req, res) {
@@ -478,8 +464,9 @@ async function getUploadURL(req, res) {
 // path: POST /cartitems
 async function createCartItem(req, res) {
   const result = await cartItems.createCartItem(req.body);
-  if (!result.success){
-    return res.status(result.status).json(result);
+  // stockUnavailable is a valid business response, not a server error — always 200
+  if (!result.success && !result.stockUnavailable) {
+    return res.status(result.status || 400).json(result);
   }
   return res.json(result);
 }
@@ -592,7 +579,6 @@ getUploadURL = handleError(getUploadURL);
 getOrders = handleError(getOrders);
 
 saveBlend = handleError(saveBlend);
-addBlendToCart = handleError(addBlendToCart);
 getUserBlends = handleError(getUserBlends);
 getRecommendations = handleError(getRecommendations); 
 
@@ -610,7 +596,7 @@ module.exports = {
   getProduct, getRelatedProducts, updateProduct, updateProductStock, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts, 
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders,
-  saveBlend, addBlendToCart, getUserBlends, deleteUserBlend, getBlendById,
+  saveBlend, getUserBlends, deleteUserBlend, getBlendById,
   createCartItem, deleteCartItem, getCart, clearCart, updateCart,
   getUploadURL,
   getRecommendations,

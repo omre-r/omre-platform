@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, Flex, Text, Button, SelectField, Grid, SliderField, Table, TableRow, TableCell, TableHead } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getActiveProductsReq, saveBlendReq, addBlendToCartReq, getUserSavedBlendsReq, deleteUserBlendReq, createCartItemReq } from "../requests.js";
+import { getActiveProductsReq, saveBlendReq, getUserSavedBlendsReq, deleteUserBlendReq, createCartItemReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import Omre2 from "../assets/Mixology/OMRE2.png";
@@ -323,42 +323,38 @@ export default function Mixology() {
         }
     }
 
-    async function handleAddToCart() {
+async function handleAddToCart() {
     if (!validateBlendSelections()) return;
     setBlendLoading(true);
     setMessage("");
     try {
         const blendPayload = buildBlendPayload();
-        const res = await addBlendToCartReq(blendPayload);
 
-        // stockUnavailable comes back as success: false but is NOT a crash
-        if (res.stockUnavailable) {
-            setMessage(res.message || "Not enough stock for this blend.");
+        // Save blend first to get a persistent blend ID
+        const saveRes = await saveBlendReq(blendPayload);
+        if (!saveRes.success) {
+            setMessage(saveRes.message || "Failed to save blend.");
             return;
         }
-        if (!res.success) {
-            setMessage(res.message || "Failed to add blend to cart.");
-            return;
-        }
-
-        // success + cartReady
-        // Create cart items row pointing to the blend
-        // Taking the responses data and grabbing the blend by id
-        const blendId = res.data.blend.id;
+        const blendId = saveRes.data.blend.id;
         if (!blendId) {
-            setMessage("Failed getting blendId");
+            setMessage("Failed getting blendId.");
             return;
         }
 
-        // Write information to cart_item table
+        // createCartItem now handles the stock check
         const cartRes = await createCartItemReq({
             customerid: blendPayload.userid,
             itemid: blendId,
             type: "blend",
         });
 
+        if (cartRes.stockUnavailable) {
+            setMessage(cartRes.message || "Not enough stock for this blend.");
+            return;
+        }
         if (!cartRes.success) {
-            setMessage(cartRes.message || "Issue adding blend to cart.");
+            setMessage(cartRes.message || "Failed to add blend to cart.");
             return;
         }
 
@@ -370,56 +366,52 @@ export default function Mixology() {
     }
 }
 
+
 // Taking a saved blend and adding it to the cart ---------------------------------------
 // Making sure that we create the payload, check userid, product stock,
 async function handleAddSavedBlendToCart(savedBlend) {
     setBlendLoading(true);
     setMessage("");
     try {
-        const blendPayload = buildBlendPayloadFromSavedBlend(savedBlend);
-        if (!blendPayload.userid) {
+        let userid;
+        for (let key of Object.keys(localStorage)){
+            if (key.includes("idToken")){
+                const idToken = localStorage.getItem(key)        
+                const base64 = idToken.split(".")[1]
+                const decoded = JSON.parse(atob(base64))
+                userid = decoded.sub
+                break
+            };
+        }
+        if (!userid) {
             setMessage("User not found. Please log in again.");
             return;
         }
 
-        const res = await addBlendToCartReq(blendPayload);
-        if (res.stockUnavailable) {
-            setMessage(res.message || "Not enough stock for this blend.");
-            return;
-        }
-        if (!res.success) {
-            setMessage(res.message || "Failed to add blend to cart.");
-            return;
-        }
-
-        const blendId = res.data.blend.id;
-        if (!blendId) {
-            setMessage("Failed getting blendId");
-            return;
-        }
-
+        // Pass existing blend ID directly — no new blend row created
         const cartRes = await createCartItemReq({
-            customerid: blendPayload.userid,
-            itemid: blendId,
+            customerid: userid,
+            itemid: savedBlend.id,
             type: "blend",
         });
 
+        if (cartRes.stockUnavailable) {
+            setMessage(cartRes.message || "Not enough stock for this blend.");
+            return;
+        }
         if (!cartRes.success) {
-            setMessage(cartRes.message || "Issue adding blend to cart.");
+            setMessage(cartRes.message || "Failed to add blend to cart.");
             return;
         }
 
         setMessage("Blend added to cart!");
-    } 
-    catch (err) {
+    } catch (err) {
         console.error(err);
         setMessage("Failed to add blend to cart.");
-        } 
-    finally {
+    } finally {
         setBlendLoading(false);
     }
 }
-
     // Colors for the liquid in the bottl ---------------------------------------------------
     // Mock for now, fragrances may include color details in the backend in the future
     const color1 = "#b07ac4"; 
