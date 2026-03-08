@@ -406,12 +406,14 @@ async function checkout() {
         )}
         {message && (
           <Text
-            style={{
-              ...luxuryBodyStyleBlack,
-              marginTop: "1.5rem"
-            }}
-          >
-            {message}
+              style={{
+                  ...luxuryBodyStyle,
+                  color: message === "Order placed successfully!" ? "#2d6a2d" : "#8B0000",
+                  textAlign: "center",
+                  marginTop: "2.3rem",
+                  fontSize: "1.6rem"
+              }}>
+              {message}
           </Text>
         )}
         <View>

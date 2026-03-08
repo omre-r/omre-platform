@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Flex, Text, Button, SelectField, Grid, SliderField, Table, TableRow, TableCell, TableHead } from "@aws-amplify/ui-react";
+import { Card, View, Flex, Text, Button, SelectField, Grid, SliderField, Table, TableRow, TableCell, TableHead } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { getActiveProductsReq, saveBlendReq, getUserSavedBlendsReq, deleteUserBlendReq, createCartItemReq } from "../requests.js";
 import Navbar from "../components/Navbar";
@@ -449,43 +449,55 @@ async function handleAddSavedBlendToCart(savedBlend) {
                 Mixology
             </Text>
             <Flex 
-                direction="row"
-                alignItems="center"
-                justifyContent="Center">
-                    <Text
-                        style={luxurySubheadingStyle}
-                        marginTop="-.5rem">   
-                        Create your own custom fragrance blend by selecting up to three of your favorite fragrances!
-                    </Text>
-                    <Text
-                        style={{ 
-                            fontSize: "1.6rem",
-                            marginLeft: "-.75rem",
-                            color: showInstructions ? "darkgray" : "black"
-                        }}
-                        variation="link"
-                        onClick={() => setShowInstructions((prev) => !prev)}
-                    >
-                    🛈
-                    </Text>
-                </Flex>
+                direction="column" 
+                alignItems="center" 
+                gap="0.5rem">
+                <Text
+                    style={luxurySubheadingStyle}
+                    marginTop="-.5rem"
+                    textAlign="center">   
+                    Create your own custom fragrance blend by selecting up to three of your favorite fragrances!
+                </Text>
+                <Button
+                    style={{ ...luxuryBodyStyle, fontSize: "1rem" }}
+                    onClick={() => setShowInstructions(prev => !prev)}>
+                    {showInstructions ? "Hide Instructions" : "How to Use Mixology"}
+                </Button>
+            </Flex>
                 {showInstructions && (
-                    <View>
-                        <Text
-                            style={{...luxurySubheadingStyle, fontSize: "1.35rem", textDecoration: "underline"}}>
-                            Instructions<br/> 
-                        </Text>
-                        
-                        <Text
-                            style={{...luxurySubheadingStyle, fontSize: "1.25rem", textAlign: "left", marginLeft: "25rem"}}>
-                            1. Select desired fragrance size. <br/>
-                            2. Select desired fragrances from drop down fields. <br/>
-                            3. If wanted, can select "Add 3rd Fragrance" button to add a 3rd fragrance to the mix. <br/>
-                            4. Can use sliders to change percentages of fragrances within mix. <br/>
-                            5. When satisfied user can add blend to their cart or save blend to their profile. <br/>
-                            6. User can press "Load Blends" button to show a table below of all previously made blends. <br/>
-                        </Text>
-                    </View>
+                    <Flex 
+                        justifyContent="center" 
+                        marginTop="1rem" 
+                        marginBottom="1rem">
+                        <Card
+                            width="820px"
+                            maxWidth="90%"
+                            padding="1.75rem 2rem"
+                            backgroundColor="rgba(255, 255, 255, 0.55)"
+                            borderRadius="14px">    
+                            <View>
+                                <Text
+                                    style={{...luxurySubheadingStyle, fontSize: "1.35rem", textDecoration: "underline"}}>
+                                    Instructions<br/> 
+                                </Text>
+                                <Text
+                                    style={{...luxurySubheadingStyle, fontSize: "1.25rem", textAlign: "Left"}}>
+                                    <br></br>
+                                    1. Choose a bottle size (30ML or 50ML). <br></br>
+                                    <br></br>
+                                    2. Select your first two fragrances from the dropdown menus. <br></br>
+                                    <br></br>
+                                    3. Adjust the sliders to control how much of each fragrance is used. <br></br>
+                                    <br></br>
+                                    4. (Optional) Click "Add 3rd Fragrance" if you want a more complex blend. <br></br>
+                                    <br></br>
+                                    5. When you are happy with the blend, click "Add to Cart" to purchase it or "Save Fragrance" to store it in your profile.<br></br>
+                                    <br></br>
+                                    6. Click "Load Blends" to view or reuse blends you previously saved.<br></br>
+                                </Text>
+                            </View>
+                        </Card>
+                    </Flex>
                 )}
             <Flex direction="column" alignItems="center" gap="1.25rem">
                 <View 
