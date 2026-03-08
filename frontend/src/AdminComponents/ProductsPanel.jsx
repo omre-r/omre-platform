@@ -115,6 +115,7 @@ export default function ProductsPanel() {
 
     // For images uploaded when editing or creating ------------------------------------------------------  
     function onImagesSelected(e) {
+        const MAX_SIZE = 1024 * 1024 * 5
         const numAllowedFiles = 5 - draft.images.length
         const newFiles = Array.from(e.target.files || []).slice(0,numAllowedFiles);
         e.target.value = ""
@@ -128,6 +129,15 @@ export default function ProductsPanel() {
             //no unique ids available, so just comparing name + size + last modified
             if (files.some(f => `${f.name}${f.size}${f.lastModified}` === `${file.name}${file.size}${file.lastModified}`)){
                 continue
+            }
+            if (file.size >= MAX_SIZE){
+                setFiles([])
+                setMessage("You can't upload images over 5MB");
+                setTimeout(() => setMessage(""), 5000);
+                for (const f of validFiles){
+                    URL.revokeObjectURL(defaultProductDraft.url);
+                }
+                return
             }
             validFiles.push(file)
             file.url = URL.createObjectURL(file)
@@ -152,6 +162,10 @@ export default function ProductsPanel() {
         setIsUploading(true);
         const imageurls = await uploadAndGetURlsReq(newFiles);
         setIsUploading(false);
+        if (!imageurls){
+            setFiles([]);
+            setMessage("Failed to upload images");
+        }
         setDraft(prev => {
             return {
                 ...prev,
