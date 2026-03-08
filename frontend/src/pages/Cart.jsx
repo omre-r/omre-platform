@@ -288,7 +288,7 @@ async function checkout() {
         {!loadingCart && cart.length === 0 && (
           <Flex direction="column" alignItems="center" gap="1rem">
             <Text style={luxuryBodyStyleBlack}>Your cart is empty.</Text>
-            <Link to="/fragrances">
+            <Link to="/fragrances" style={{ textDecoration: "none" }}>
               <View style={buttonViewStyle}>
                 <Text style={luxuryBodyStyle}>Shop All</Text>
               </View>
