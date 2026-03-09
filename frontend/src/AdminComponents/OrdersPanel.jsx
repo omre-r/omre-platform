@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
-import { Card, Flex, Text, Button, View, SelectField } from "@aws-amplify/ui-react";
+import { Card, Flex, Text, Button, View, SelectField, TextField} from "@aws-amplify/ui-react";
 import { fetchAuthSession } from "aws-amplify/auth";
-import {
-  getOrdersReq,
-  getOrderReq,
-  cancelOrderReq,
-  updateOrderStatusReq
-} from "../requests";
+import { getOrdersReq, getOrderReq,  cancelOrderReq,  updateOrderStatusReq} from "../requests";
 
 // Custom Styling 
 const luxuryHeadingStyle = {
@@ -32,6 +27,7 @@ export default function OrdersPanel() {
   const [loadingOrder, setLoadingOrder] = useState(false);
   const [msg, setMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [cancelReason, setCancelReason] = useState("");
 
   async function getToken() {
     try {
@@ -101,19 +97,22 @@ async function viewOrder(orderId) {
   }
 
 // Cancel Order 
-  async function cancelOrder(orderId) {
-    const reason = prompt("Enter cancellation reason:");
-    if (!reason) return;
-
-    try {
-      const token = await getToken();
-      await cancelOrderReq(orderId, reason, token);
-      await loadOrders();
-      setSelectedOrder(null);
-    } catch (error) {
-      setMessage(error.message || "Error cancelling order.");
-    }
+async function cancelOrder(orderId) {
+  if (!cancelReason) {
+    setMessage("Please enter a cancellation reason.");
+    return;
   }
+
+  try {
+    const token = await getToken();
+    await cancelOrderReq(orderId, cancelReason, token);
+    await loadOrders();
+    setSelectedOrder(null);
+    setCancelReason("");
+  } catch (error) {
+    setMessage(error.message || "Error cancelling order.");
+  }
+}
 
   useEffect(() => {
     loadOrders();
@@ -214,16 +213,37 @@ async function viewOrder(orderId) {
                 {selectedOrder.cancelreason && (
                   <Text>Cancel Reason: {selectedOrder.cancelreason}</Text>
                 )}
-
                 <Text marginTop="1rem" fontWeight="bold">
                   Items
                   </Text>
-                  {selectedOrder.items?.map((item, i) => (
-                  <Text key={i}>
-                      {item.item?.name || item.type} x{item.quantity}
-                    </Text>
-                  ))}
+                  {selectedOrder.items?.map((orderItem, i) => {
 
+                  if (orderItem.type === "product") {
+                    return (
+                      <Text key={i}>
+                        {orderItem.item?.name} x{orderItem.quantity}
+                      </Text>
+                    );
+                  }
+
+                    if (orderItem.type === "blend") {
+                      const blend = orderItem.item;
+                      return (
+                        <View key={i} marginBottom="0.5rem">
+                          <Text>Custom Blend – {blend.size_ml}ml x{orderItem.quantity}</Text>
+                          {blend.frag1_productid && (
+                            <Text>• {blend.frag1_pct}% {blend.frag1_name || "Unknown Fragrance"}</Text>
+                          )}
+                          {blend.frag2_productid && (
+                            <Text>• {blend.frag2_pct}% {blend.frag2_name || "Unknown Fragrance"}</Text>
+                          )}
+                          {blend.frag3_productid && (
+                            <Text>• {blend.frag3_pct}% {blend.frag3_name || "Unknown Fragrance"}</Text>
+                          )}
+                        </View>
+                      );
+                    }
+                  })}
                   {selectedOrder.status !== "canceled" && (
                     <>
                       <SelectField
@@ -240,12 +260,18 @@ async function viewOrder(orderId) {
                       <Button style={luxuryBodyStyle} onClick={updateStatus}>
                         Update Status
                       </Button>
+                      <TextField
+                      label="Cancel Reason"
+                      placeholder="e.g., Oil spill"
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                    />
                       <Button
-                        style={luxuryBodyStyle}
-                        onClick={() => cancelOrder(selectedOrder.id)}
-                      >
-                        Cancel Order
-                      </Button>
+                      style={luxuryBodyStyle}
+                      onClick={() => cancelOrder(selectedOrder.id)}
+                    >
+                      Cancel Order
+                    </Button>
                     </>
                   )}
 

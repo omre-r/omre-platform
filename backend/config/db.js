@@ -1042,10 +1042,15 @@ class Orders{
         }
         const query = `SELECT * FROM orders WHERE id = $1`
         let order;
-
         try{
             const res = await client.query(query, [id]);
-            order = res.rows[0]
+            order = res.rows[0];
+            if (order?.items) {
+                if (typeof order.items === "string") {
+                    order.items = JSON.parse(order.items);
+                }
+                order.items = await this.addBlendNames(order.items, client);
+            }
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
@@ -1076,16 +1081,53 @@ class Orders{
         if (!client){
             return prepareRollback((c) => this.getOrders(c));
         }
-
         try{
             const query = `SELECT * FROM orders ORDER BY created DESC`;
             const res = await client.query(query);
-            return {success: true, data: {orders: res.rows}};
+            const orders = res.rows;
+            for (const order of orders) {
+                if (order?.items) {
+                    if (typeof order.items === "string") {
+                        order.items = JSON.parse(order.items);
+                    }
+                    order.items = await this.addBlendNames(order.items, client);
+                }
+            }
+            return {success: true, data: {orders}};
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to get orders");
         }
+    }
+
+    async addBlendNames(items, client) {
+        if (!items) return items;
+        for (const orderItem of items) {
+            if (orderItem.type === "blend") {
+                const blend = orderItem.item;
+                const ids = [
+                    blend.frag1_productid,
+                    blend.frag2_productid,
+                    blend.frag3_productid
+                ].filter(Boolean);
+
+                if (ids.length === 0) continue;
+                const res = await client.query(
+                    `SELECT id, name FROM products WHERE id = ANY($1)`,
+                    [ids]
+                );
+                const map = {};
+
+                for (const p of res.rows) {
+                    map[p.id] = p.name;
+                }
+                blend.frag1_name = map[blend.frag1_productid];
+                blend.frag2_name = map[blend.frag2_productid];
+                blend.frag3_name = map[blend.frag3_productid];
+            }
+        }
+        return items;
     }
 }
 
