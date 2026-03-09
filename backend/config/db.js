@@ -302,7 +302,7 @@ class Users{
         if (!client){
             return prepareRollback((c) => this.getUser(id, c));
         }
-        const query = `SELECT * FROM users WHERE id = $1`
+        const query = `SELECT * FROM users WHERE cognito_sub = $1`;
         
         let user;
         try{

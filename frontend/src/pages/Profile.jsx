@@ -2,7 +2,7 @@ import Navbar from "../components/Navbar";
 import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, Heading, ToggleButton } from "@aws-amplify/ui-react";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useEffect, useState } from "react";
-import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq,addBlendToCartReq,createCartItemReq, updatePreferredNotesReq } from "../requests.js";
+import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq,addBlendToCartReq,createCartItemReq, updatePreferredNotesReq, getUserReq } from "../requests.js";
 
 // Fonts ----------------------------------------------
 const luxuryHeadingStyle = {
@@ -223,6 +223,34 @@ export default function Profile() {
     }
 
 
+    // Function to load users saved favorite notes -------------------------
+    // Will have them displayed on overview and favorite notes ta
+    // Favorite notes tab will have buttons pressed because the array will be loaded
+    async function loadSavedFavoriteNotes() {
+        let userid;
+        for (let key of Object.keys(localStorage)) {
+            if (key.includes("idToken")) {
+                const idToken = localStorage.getItem(key);
+                const base64 = idToken.split(".")[1];
+                const decoded = JSON.parse(atob(base64));
+                userid = decoded.sub;
+                break;
+            }
+        }
+        try {
+            const data = await getUserReq(userid);
+            if (!data.success) {
+                throw new Error(data.message);
+            }
+            const notesString = data.data.user.favorite_notes || "";
+            const notesArray = notesString ? notesString.split(",").map((note) => note.trim()).filter(Boolean) : [];
+            setSelectedNotes(notesArray);
+        } catch (error) {
+            console.error("Failed to load saved favorite notes:", error);
+        }
+    }
+
+
     // Get product ID from product object, accounting for different possible key names ---------------------------
     function getProductId(product) {
         return product.productid || product.product_id || product.id;
@@ -262,6 +290,7 @@ export default function Profile() {
     // Load products on component mount ---------------------------------------
     useEffect(() => {
         loadProducts();
+        loadSavedFavoriteNotes();
     }, []);
 
     return (
@@ -299,7 +328,7 @@ export default function Profile() {
                     { key: "overview", label: "Overview" },
                     { key: "orders", label: "Orders" },
                     { key: "mixes", label: "Saved Mixes" },
-                    { key: "preferences", label: "Preferred Fragrances" },].map((tab) => (
+                    { key: "preferences", label: "Favorite Notes" },].map((tab) => (
                     <Text
                         key={tab.key}
                         style={{
@@ -325,9 +354,15 @@ export default function Profile() {
                     }}
                     >
                     {activeTab === "overview" && (
-                        <Text style={luxuryBodyStyle}>
-                            Overview
-                        </Text>
+                        <View>
+                            <Text style={luxurySubheadingStyle}>
+                                Overview
+                            </Text>
+
+                            <Text style={luxurySubheadingStyle}>
+                                    Favorite Notes: {selectedNotes.length > 0 ? selectedNotes.join(", ") : "None saved yet"}
+                            </Text>
+                        </View>
                     )}
 
                     {activeTab === "orders" && (
@@ -413,9 +448,8 @@ export default function Profile() {
 
                     {activeTab === "preferences" && (
                         <View>
-                            <Text 
-                                style={luxurySubheadingStyle}>
-                                Previously saved favorite notes: 
+                            <Text style={luxurySubheadingStyle}>
+                                Previously saved favorite notes: {selectedNotes.length > 0 ? selectedNotes.join(", ") : "None saved yet"}
                             </Text>
 
                             <Text 
