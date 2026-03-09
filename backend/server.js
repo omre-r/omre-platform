@@ -71,6 +71,7 @@ app.put("/users/:id/last-login", [verifyToken], async (req, res) => {
     }
     return res.json(result);
 });
+app.put("/users/:id/preferrednotes", [verifyToken], controllers.updatePreferredNotes);
 
 
 

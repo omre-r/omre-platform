@@ -60,6 +60,24 @@ async function deleteUserReq(id){
     return data;
 }
 
+// User can update their preferred notes string 
+async function updatePreferredNotesReq(id, preferrednotes) {
+    const response = await fetch(backendURL + `/users/${id}/preferrednotes`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ preferrednotes })
+    });
+
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed");
+    }
+    return data;
+}
+
 // products
 async function getProductReq(id){
     const response = await fetch(backendURL + `/products/${id}`);
@@ -540,6 +558,7 @@ getUserReq = handleError(getUserReq);
 getUsersReq = handleError(getUsersReq);
 createUserReq = handleError(createUserReq);
 deleteUserReq = handleError(deleteUserReq);
+updatePreferredNotesReq = handleError(updatePreferredNotesReq);
 
 // Products
 getProductReq = handleError(getProductReq);
@@ -593,7 +612,7 @@ createProductAWSReq = handleError(createProductAWSReq);
 createProductAWSFlowReq = handleError(createProductAWSFlowReq);
 
 export {
-    getUserReq, getUsersReq, createUserReq, deleteUserReq,
+    getUserReq, getUsersReq, createUserReq, deleteUserReq, updatePreferredNotesReq,
     getProductReq, updateProductReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq,

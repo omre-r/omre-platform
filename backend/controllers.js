@@ -109,6 +109,17 @@ async function updateLastLogin(req, res) {
   return res.json({ success: true, message: "Last login updated", data: result.data });
 }
 
+// path: PUT /users/:id/preferrednotes
+async function updatePreferredNotes(req, res) {
+    const {id} = req.params;
+    const {preferrednotes} = req.body;
+    const result = await users.updatePreferredNotes(id, preferrednotes);
+    if (!result.success){
+        return res.status(result.status || 400).json(result);
+    }
+    return res.json(result);
+}
+
 
 
 
@@ -511,6 +522,7 @@ getUser = handleError(getUser);
 getUsers = handleError(getUsers);
 createUser = handleError(createUser);
 deleteUser = handleError(deleteUser);
+updatePreferredNotes = handleError(updatePreferredNotes)
 
 getProduct = handleError(getProduct);
 updateProduct = handleError(updateProduct);
@@ -551,7 +563,7 @@ deleteUserBlend = handleError(deleteUserBlend);
 
 module.exports = {
   getServerHTML,
-  getUser, getUsers, createUser, deleteUser, updateLastLogin,
+  getUser, getUsers, createUser, deleteUser, updateLastLogin, updatePreferredNotes,
   getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts,
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders,

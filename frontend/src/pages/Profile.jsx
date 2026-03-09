@@ -2,7 +2,7 @@ import Navbar from "../components/Navbar";
 import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, Heading, ToggleButton } from "@aws-amplify/ui-react";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useEffect, useState } from "react";
-import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq,addBlendToCartReq,createCartItemReq } from "../requests.js";
+import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq,addBlendToCartReq,createCartItemReq, updatePreferredNotesReq } from "../requests.js";
 
 // Fonts ----------------------------------------------
 const luxuryHeadingStyle = {
@@ -196,8 +196,30 @@ export default function Profile() {
         }
     }
 
-    async function saveFragranceToProfile() { 
-        
+    // function to save user selected fragrances to profile ------------------------------------------
+    async function saveFragranceToProfile() {
+        let userid;
+        for (let key of Object.keys(localStorage)) {
+            if (key.includes("idToken")) {
+                const idToken = localStorage.getItem(key);
+                const base64 = idToken.split(".")[1];
+                const decoded = JSON.parse(atob(base64));
+                userid = decoded.sub;
+                break;
+            }
+        }
+        setMessage("");
+        // update preferred notes sending the selectedNotes array with userId
+        try {
+            const data = await updatePreferredNotesReq(userid, selectedNotes);
+            if (!data.success) {
+                throw new Error(data.message);
+            }
+            setMessage("Preferred fragrances saved to profile!");
+        } 
+        catch (error) {
+            setMessage(error.message || "Failed to save fragrance preferences.");
+        }
     }
 
 
@@ -393,6 +415,11 @@ export default function Profile() {
                         <View>
                             <Text 
                                 style={luxurySubheadingStyle}>
+                                Previously saved favorite notes: 
+                            </Text>
+
+                            <Text 
+                                style={luxurySubheadingStyle}>
                                 Which notes are you drawn to?
                             </Text>
 
@@ -435,8 +462,21 @@ export default function Profile() {
                                 <ToggleButton isPressed={selectedNotes.includes("Eucalyptus")} onClick={() => toggleNote("Eucalyptus")}>Eucalyptus</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Yuzu")} onClick={() => toggleNote("Yuzu")}>Yuzu</ToggleButton>
                             </Grid>
+                            {message && (
+                            <Text
+                                style={{
+                                    ...luxuryBodyStyle,
+                                    color: message === "Preferred fragrances saved to profile!" ? "#2d6a2d" : "#8B0000",
+                                    textAlign: "center",
+                                    marginTop: "2.3rem",
+                                    fontSize: "1.6rem"
+                                }}>
+                                {message}
+                            </Text>
+                            )}
                             <Button
                                 style={luxuryBodyStyle}
+                                onClick={saveFragranceToProfile}
                                 >
                                  {/* onClick={() => saveFragrancesToProfile()}> */}
                                 Save To Profile
