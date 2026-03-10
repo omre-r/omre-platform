@@ -47,7 +47,7 @@ export default function AdminDashboard() {
         <>
             <Navbar />
                 <View
-                    minHeight="80vh"
+                    minHeight="100vh"
                     width="100%"
                     padding="1rem"
                     style={{

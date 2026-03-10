@@ -241,7 +241,13 @@ async function checkout() {
   try {
     const response = await createOrderReq({ customerid });
     if (!response?.success) {
-      setMessage("Checkout failed.");
+      const backendMessage = response?.message || "";
+      if (backendMessage.includes("Failed to decrease product stock")) {
+        setMessage("Product out of stock.");
+      } 
+      else {
+        setMessage(backendMessage || "Checkout failed.");
+      }
       return;
     }
     await clearCartReq(customerid);

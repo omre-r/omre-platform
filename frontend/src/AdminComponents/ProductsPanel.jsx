@@ -19,7 +19,7 @@ const bodyStyle2 = {
 const luxuryHeadingStyle = {
     fontFamily: "'Cormorant Garamond', serif",
     fontWeight: 700,
-    fontSize: "1.5rem",
+    fontSize: "2.5rem",
     letterSpacing: "0.5px",
 };
 const luxuryBodyStyle = {
