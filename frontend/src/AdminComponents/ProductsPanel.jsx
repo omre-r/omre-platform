@@ -663,7 +663,7 @@ export default function ProductsPanel() {
             alignItems={"center"}
             justifyContent={"center"}
             gap={"3px"}
-            style={{zIndex: "1000", background: "linear-gradient(to right, white, rgba(209, 178, 178, 0.35), white)"}}
+            style={{zIndex: "1000", background: "linear-gradient(to right, white, whitesmoke, white)"}}
             >
 
                 <View
@@ -675,6 +675,8 @@ export default function ProductsPanel() {
                     textAlign={"left"}
                     width={"300px"}
                     style={{borderRadius:"10px", ...bodyStyle2}}
+                    border=".5px solid #111"
+                    borderRadius="10px"
                     onKeyDown={e => {
                         if (e.key !== "Enter") return;
                         resetToIdle();

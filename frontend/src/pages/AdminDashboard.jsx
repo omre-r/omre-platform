@@ -47,25 +47,27 @@ export default function AdminDashboard() {
         <>
             <Navbar />
                 <View
-                    height="160vh"
+                    minHeight="80vh"
                     width="100%"
                     padding="1rem"
                     style={{
                         backgroundImage: `url(${LuxuryBackground})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
+                        backgroundRepeat: "repeat",
                     }}
                     display="flex"
                     justifyContent="center"
-                    alignItems="center"
+                    alignItems="flex-start"
                 >   
                     <Card
                         variation="elevated"
                         // height="35rem" // was "auto"
-                        width="90rem"
+                        width="100%"
+                        maxWidth="1500px"
                         margin="1rem auto"
-                        padding="2rem"
-                        marginTop="-30rem"
+                        padding="1.5rem"
+                        marginTop="rem"
                         backgroundColor="rgba(0, 0, 0, 0.75)"
                         borderRadius="8px"
                         >   

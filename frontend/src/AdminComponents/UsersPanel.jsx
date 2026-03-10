@@ -170,7 +170,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
             alignItems={"center"}
             justifyContent={"center"}
             gap={"3px"}
-            style={{zIndex: "2000", background: "linear-gradient(to right, white, rgba(209, 178, 178, 0.35), white)"}}
+            style={{zIndex: "2000", background: "linear-gradient(to right, white, whitesmoke, white)"}}
             >
 
                 <View
@@ -182,6 +182,8 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     textAlign={"left"}
                     width={"300px"}
                     style={{borderRadius:"10px", ...bodyStyle2}}
+                    border=".5px solid #111"
+                    borderRadius="10px"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     onKeyDown={async (e) =>  {
