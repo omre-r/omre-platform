@@ -74,7 +74,9 @@ async function updateLastLoginReq(id){
 }
 
 async function getFilteredUsersReq(filters){
-    const response = await fetch(backendURL + `/users/filter?filters=${JSON.stringify(filters)}`);
+    const response = await fetch(backendURL + `/users/filter?filters=${JSON.stringify(filters)}`, {
+        headers: {"Authorization": `Bearer ${getToken()}`},
+    });
     const data = await response.json();
     if (!data.success){
         console.error(data.message || "req failed")
