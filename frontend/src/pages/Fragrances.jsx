@@ -60,6 +60,7 @@ export default function Home() {
   const [selectedNotes, setSelectedNotes] = useState([])
   const [onlyFeatured, setOnlyFeatured] = useState(false)
   const [includeSearch, setIncludeSearch] = useState(false)
+  const [simpleFilter, setSimpleFilter] = useState("featured")
 
   const [priceErrorMsg, setPriceErrorMsg] = useState("")
   const priceErrorTimer = useRef(null)
@@ -70,42 +71,17 @@ export default function Home() {
 
 
 
-// make sure it loads //
   useEffect(() => {
     loadProducts();
-  }, [tab]);
+  }, []);
 
   async function loadProducts() {
     try {
-      let returnedProducts;
-      if (tab === "All"){
-        const data = await getActiveProductsReq();
-        if (!data.success){
-          throw Error(data.message || "Error getting active products");
-        }
-        returnedProducts= data.data.products;
-      }else if (tab === "Men's Cologne"){
-        const data = await getFilteredProductsReq({type: "Men's Cologne"});
-        if (!data.success){
-          throw Error(data.message || "Error getting Men's Cologne products");
-        }
-        returnedProducts = data.data.products;
-      }else if (tab === "Women's Perfume"){
-        const data = await getFilteredProductsReq({type: "Women's Perfume"});
-        if (!data.success){
-          throw Error(data.message || "Error getting Women's Perfume products");
-        }
-        returnedProducts= data.data.products;
-      }else{
-        return
+      const data = await getActiveProductsReq();
+      if (!data.success){
+        throw Error(data.message || "Error getting active products");
       }
-      //By default, sorts by featured
-      const featured = [];
-      const others = [];
-      for (const prod of returnedProducts){
-        prod.isfeatured ? featured.push(prod) : others.push(prod);
-      }
-      setProducts(groupRelevantElements([...featured, ...others]));
+      setProducts(data.data.products);
     } catch (err) {
       console.error(err);
       setMessage("Failed to load products.");
@@ -114,27 +90,15 @@ export default function Home() {
     }
   }
 
-  function groupRelevantElements(productList){
-    const parents = {};
-    for (const p of productList){
-        parents?.[p.parentid] ? parents[p.parentid].push(p) : parents[p.parentid] = [p];
-    }
-    // sort variations [50ml, 30ml, 70ml] => [30ml, 50ml, 70ml]
-    const groups = Object.values(parents);
-    for (const group of groups){
-        group.sort((a, b) => Number(a?.variation?.split("ml")?.[0]) - Number(b?.variation?.split("ml")?.[0]))
-    }
-    return Object.values(parents);
-}
-
   async function filterProducts(filters){
       try {
+        setLoadingProducts(true);
         const data = await getFilteredProductsReq(filters);
         if (!data.success){
           throw Error(data.message || "Error getting filtered products");
         }
         
-        setProducts(groupRelevantElements(data.data.products));
+        setProducts(data.data.products);
       } catch (err) {
         console.error(err);
         setMessage("Failed to get filtered products.");
@@ -143,8 +107,46 @@ export default function Home() {
       }
   }
 
+  function getFilteredParents(listOfProducts){
+    // group products into related products
+    const parents = {};
+    for (const p of listOfProducts){
+        parents?.[p.parentid] ? parents[p.parentid].push(p) : parents[p.parentid] = [p];
+    }
+
+    // sort variations [50ml, 30ml, 70ml] => [30ml, 50ml, 70ml]
+    const groups = Object.values(parents);
+    for (const group of groups){
+        group.sort((a, b) => Number(a?.variation?.split("ml")?.[0]) - Number(b?.variation?.split("ml")?.[0]))
+    }
+    let newProducts = Object.values(parents);
+    // Apply simple filter 1 
+    switch (simpleFilter){
+      case "featured":{
+          newProducts = newProducts.map(prodList => [...prodList.filter(prod => prod.isfeatured),...prodList.filter(prod => !prod.isfeatured)])
+        break
+      }
+      case "pricehighlow":{
+          newProducts.sort((a, b) => Number(b?.[0]?.price) - Number(a?.[0]?.price))
+        break
+      }
+      case "pricelowhigh":{
+          newProducts.sort((a, b) => Number(a?.[0]?.price) - Number(b?.[0]?.price))
+        break
+      }
+    }
+
+
+    // Apply simple filter 2
+    if (tab === "All"){
+      return newProducts;
+    }
+    return newProducts.map(prodList => prodList.filter(prod => prod.type === tab));
+  }
+
   function handleFilterSubmit(){
     const filters = {}
+
     if (minimum !== "" || maximum !== "") {
       if (minimum !== "" && maximum !== "" && Number(minimum) > Number(maximum)){
         setPriceErrorMsg("Minimum can't be greater than Maximum.")
@@ -222,39 +224,8 @@ export default function Home() {
             borderRadius: "10px",
             textAlign: "center"
           }}
-          onChange={e => {
-            switch (e.target.value){
-              case "featured":{
-                setProducts(prev => {
-                  const featured = []
-                  const others = []
-                  for (const prodList of prev){
-                    for (const prod of prodList){
-                      prod.isfeatured ? featured.push(prod) : others.push(prod)
-                    }
-                  }
-                  return groupRelevantElements([...featured, ...others])
-                 })
-                break
-              }
-              case "pricehighlow":{
-                setProducts(prev => {
-                  const newProducts = [...prev]
-                  newProducts.sort((a, b) => Number(b?.[0]?.price) - Number(a?.[0]?.price))
-                  return newProducts
-                })
-                break
-              }
-              case "pricelowhigh":{
-                setProducts(prev => {
-                  const newProducts = [...prev]
-                  newProducts.sort((a, b) => Number(a?.[0]?.price) - Number(b?.[0]?.price))
-                  return newProducts
-                })
-                break
-              }
-            }
-          }}  
+          value={simpleFilter}
+          onChange={e => setSimpleFilter(e.target.value)}  
           >
             
             <option value="featured">Featured</option>
@@ -470,8 +441,10 @@ export default function Home() {
         </Text>
 
         <Flex wrap="wrap">
-          {!loadingProducts && products.map((prodList) => {
+          {!loadingProducts && getFilteredParents(products).map((prodList) => {
+            if (prodList.length === 0) return null;
             const prod = prodList?.[0];
+            if (!prod){ return null}
             return (<Card
               key={prod.id}
               variation="elevated"
