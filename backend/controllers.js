@@ -104,6 +104,18 @@ async function updateLastLogin(req, res) {
 }
 
 
+// path: GET /users/filter
+async function getFilteredUsers(req, res) {
+  if (!req.query?.filters){
+    throw new Error("No filters query param")
+  }
+  const filters = JSON.parse(req.query.filters)
+  const result = await users.getFilteredUsers(filters);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result)
+}
 
 
 
@@ -544,6 +556,9 @@ getUser = handleError(getUser);
 getUsers = handleError(getUsers);
 createUser = handleError(createUser);
 deleteUser = handleError(deleteUser);
+updateLastLogin = handleError(updateLastLogin);
+getFilteredUsers= handleError(getFilteredUsers);
+
 
 getProduct = handleError(getProduct);
 getRelatedProducts = handleError(getRelatedProducts);
@@ -586,7 +601,7 @@ deleteUserBlend = handleError(deleteUserBlend);
 
 module.exports = {
   getServerHTML,
-  getUser, getUsers, createUser, deleteUser, updateLastLogin,
+  getUser, getUsers, createUser, deleteUser, updateLastLogin, getFilteredUsers,
   getProduct, getRelatedProducts, updateProduct, updateProductStock, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts, 
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders,

@@ -228,6 +228,8 @@ class DBError extends Error{
 }
 
 class Users{
+    static filterableFields = ["email"]
+
     //This function will be useless for now
     //modifications made to make it match Ayman's lambda function 'omre-cognito-post-confirmation'
     // 
@@ -316,6 +318,45 @@ class Users{
         return {success: true, data: {user}}
     }
 
+    async getFilteredUsers(filters, client){
+        if (!client){
+            return prepareRollback((c) => this.getFilteredUsers(filters, c));
+        }
+        if (Object.keys(filters).length <= 0){
+            throw new DBError("At least 1 filter required");
+        }
+
+        let query = `SELECT * FROM users WHERE `
+        let values = []
+
+        //builds a cosntraint in query for each filter
+        for (const filter of Object.keys(filters)){
+            switch (filter){
+                case "email":{
+                    query += `email ILIKE $${values.length + 1} AND `
+                    values.push(`%${filters[filter]}%`)
+                    break
+                }
+                default:{
+                    throw new DBError(`${filter} is not a valid filter`);
+                }
+            }
+        }
+        //removes last 'AND '
+        query = query.slice(0,-4);
+
+
+        let users;
+        try{
+            const res = await client.query(query, values);
+            users = res.rows;
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get filtered users")
+        }
+        return {success: true, data: {users}}
+    }
     
     async updateLastLogin(id, client) {
         if (!client){

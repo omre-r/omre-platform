@@ -58,6 +58,7 @@ app.get("/", controllers.getServerHTML);
 // path: PUT /users/last-login
 app.put("/users/:id/last-login", [verifyToken], controllers.updateLastLogin);
 
+app.get("/users/filter", [verifyToken, checkAdminPerm],controllers.getFilteredUsers);
 app.get("/users/:id", [verifyToken], controllers.getUser);
 app.delete("/users/:id", [verifyToken, checkAdminPerm], controllers.deleteUser);
 
