@@ -1,12 +1,21 @@
-import { useEffect, useState } from "react";
-import { Card, Flex, Text, Button, View, TextField, TextAreaField, SwitchField, Grid, SelectField } from "@aws-amplify/ui-react";
+import { useEffect, useState, useRef } from "react";
+import { Card, Flex, Text, Button, View, TextField, TextAreaField, SwitchField, Grid, SelectField, Input, ToggleButtonGroup, ToggleButton} from "@aws-amplify/ui-react";
 
-import {getProductReq, updateProductReq, updateProductStockReq, deleteProductReq, getProductsReq, createProductReq, createProductFlowReq_LOCAL, uploadAndGetURlsReq} from'../requests.js';
+import {getProductReq, getFilteredProductsReq, updateProductReq, updateProductStockReq, deleteProductReq, getProductsReq, createProductReq, createProductFlowReq_LOCAL, uploadAndGetURlsReq} from'../requests.js';
 
-
+import OptionsIcon from "../assets/options_icon.png"
+import SearchIcon from "../assets/search_icon.png"
 import EditIcon from "../assets/edit_icon.png"
 
 // Custom Styling for fonts and amplify ui -------------------------------------- 
+const bodyStyle2 = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 400,
+  fontSize: "1.3rem",
+  letterSpacing: "0.5px",
+  color: "#000000",
+};
+
 const luxuryHeadingStyle = {
     fontFamily: "'Cormorant Garamond', serif",
     fontWeight: 700,
@@ -76,6 +85,22 @@ export default function ProductsPanel() {
     const [showImages, setShowImages] = useState(false)
     const [files, setFiles]  = useState([])
     const [isUploading, setIsUploading] = useState(false);
+
+    //search and filter
+    const [search, setSearch] = useState("");
+    const [minimum, setMinimum] = useState("")
+    const [maximum, setMaximum] = useState("")
+    const [showFilters, setShowFilters] = useState(false)
+    const [selectedSizes, setSelectedSizes] = useState([])
+    const [selectedNotes, setSelectedNotes] = useState([])
+    const [onlyFeatured, setOnlyFeatured] = useState(false)
+    const [includeSearch, setIncludeSearch] = useState(false)
+
+    const [priceErrorMsg, setPriceErrorMsg] = useState("")
+    const priceErrorTimer = useRef(null)
+
+  
+  const fragranceOptions =  ["Vanilla", "Cinnamon", "Marshmallow", "Ice Cream", "Brown Sugar", "Jasmine", "Amber", "Saffron"]
 
     // When editing or adding to draft, name and type cannot be left blank but other information can
     const canSave = draft.type.trim() !== "" && draft.name.trim() !== "";
@@ -342,6 +367,58 @@ export default function ProductsPanel() {
         }
         return Object.values(parents);
     }
+
+    async function filterProducts(filters){
+        setMessage("");
+        setLoadingProducts(true);
+        try {
+            const data = await getFilteredProductsReq({...filters});
+            if (!data.success){
+                throw Error(data.message || "Error getting filtered products");
+            }
+            setProducts(groupRelevantElements(data.data.products));
+        }
+        catch (error) {
+            setMessage(error.message || "Failed to get filtered products.");
+        }
+        finally {
+            setLoadingProducts(false);
+        }
+    }
+
+    function handleFilterSubmit(){
+        const filters = {}
+        if (minimum !== "" || maximum !== "") {
+        if (minimum !== "" && maximum !== "" && Number(minimum) > Number(maximum)){
+            setPriceErrorMsg("Minimum can't be greater than Maximum.")
+            clearTimeout(priceErrorTimer.current)
+            priceErrorTimer.current = setTimeout(() => {
+            setPriceErrorMsg("")
+            }, 4000)
+            return
+        }
+        if (minimum < 0){
+            setPriceErrorMsg("Negative numbers are not allowed.")
+            clearTimeout(priceErrorTimer.current)
+            priceErrorTimer.current = setTimeout(() => {
+            setPriceErrorMsg("")
+            }, 4000)
+            return
+        }
+        filters.price = [minimum || null, maximum || null]
+        }
+        if (selectedSizes.length !== 0) filters.variation = selectedSizes;
+        if (onlyFeatured) filters.isfeatured = true;
+        if (includeSearch) filters.name = search;
+        if (selectedNotes.length !== 0) filters.notes = selectedNotes;
+        if (Object.keys(filters).length === 0){
+            resetToIdle();
+            loadProducts();
+            return;
+        }
+        resetToIdle();
+        filterProducts(filters)
+    }
     
     // Left card  loading---------------------------------------------------------------
     async function loadProducts() {
@@ -577,751 +654,957 @@ export default function ProductsPanel() {
     const sortedProducts = [...products].sort((a, b) => a[0].name.localeCompare(b[0].name));
     
     return (
-        <Flex 
+        <Flex
+        direction={"column"}
+        height="100%"
+        >
+            <Flex  
+            padding={"5px"}    
+            alignItems={"center"}
+            justifyContent={"center"}
+            gap={"3px"}
+            style={{zIndex: "2000", background: "linear-gradient(to right, white, rgba(209, 178, 178, 0.35), white)"}}
+            >
+
+                <View
+                position={"relative"}>
+                <TextField
+                    labelHidden
+                    type="text"
+                    placeholder="Find products..."
+                    textAlign={"left"}
+                    width={"300px"}
+                    style={{borderRadius:"10px", ...bodyStyle2}}
+                    onKeyDown={e => {
+                        if (e.key !== "Enter") return;
+                        resetToIdle();
+                        filterProducts({name: e.target.value});
+                    }}
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                />
+                <section 
+                style={{
+                    display: "flex",
+                    width:"30px", 
+                    paddingRight: "5px",
+                    overflow:"hidden",
+                    position:"absolute",
+                    right:"0",
+                    top: "50%",
+                    transform: "translateY(-50%)"}}
+                    onClick={e => {}}>
+                    <img src={SearchIcon} alt="search" style={{width: "100%"}} />
+                </section>
+                </View>
+                <View 
+                position={"relative"}
+                padding={"2px"}
+                backgroundColor={"white"}
+                borderRadius={"10px"}
+                style={{width: "40px"}}
+                onClick={e => {e.currentTarget.blur(); setShowFilters(prev=>!prev);}}
+                >
+                <img src={OptionsIcon} alt="options" style={{width:"100%", display:"block"}}/>
+                {showFilters && 
+                <Card
+
+                position={"absolute"}
+                top={"110%"}
+                left={"50%"}
+                transform={"translateX(-50%)"}
+                border={"1px solid"}
+                borderRadius={"10px"}
+                onClick={e => e.stopPropagation()}
+                >
+                    <Flex 
+                    direction={"column"}
+                    gap={0}>
+                    {priceErrorMsg && 
+                    <Text
+                    color={"red"}
+                    lineHeight={"17px"}
+                    marginBottom={"5px"}>{priceErrorMsg}</Text>}
+                    {/* price container */}
+                    <Flex
+                    alignItems={"center"}>
+                        <Text
+                        marginRight={"auto"}>Price: </Text>
+                        <Input 
+                        min={0} 
+                        max={200} 
+                        type={"number"} 
+                        placeholder="Minimum"
+                        padding={0}
+                        width={"100px"}
+                        value={minimum}
+                        style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
+                        onChange={e => setMinimum(e.target.value)}></Input>
+                        <Input
+                        min={0} 
+                        max={200} 
+                        type={"number"} 
+                        placeholder="Maximum"
+                        padding={0}
+                        width={"100px"}
+                        value={maximum}
+                        style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
+                        onChange={e => setMaximum(e.target.value)}>
+                        </Input>
+                    </Flex>
+                    <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+                    {/* size container */}
+                    <Flex
+                    alignItems={"center"}>
+                        <Text
+                        marginRight={"auto"}>Size:</Text>
+                        <ToggleButtonGroup
+                        value={selectedSizes}
+                        onChange={v => setSelectedSizes(v)}
+                        isExclusive={false}
+                        gap={"5px"}
+                        >
+                        <ToggleButton 
+                        padding={"6px"} value="30ml">30 ml</ToggleButton>
+                        <ToggleButton 
+                        padding={"6px"} value="50ml">50 ml</ToggleButton>
+                        </ToggleButtonGroup>
+                    </Flex>
+                    <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+                    {/* featured container */}
+                    <Flex
+                    alignItems={"center"}>
+                        <Text
+                        marginRight={"auto"}>Only Featured:</Text>
+                        <SwitchField 
+                        isChecked={onlyFeatured}
+                        onChange={e => setOnlyFeatured(e.target.checked)}>
+                        </SwitchField>
+                    </Flex>
+                    <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+                    {/* "include search" container */}
+                    <Flex
+                    direction={"column"}
+                    gap={"3px"}
+                    alignItems={"center"}>
+                        <Flex
+                        width={"100%"}>
+                        <Text
+                        marginRight={"auto"}>
+                            Include Search:
+                        </Text>
+                        <SwitchField 
+                        isChecked={includeSearch}
+                        onChange={e => setIncludeSearch(e.target.checked)}>
+                        </SwitchField>
+                        </Flex>
+                        {includeSearch && <Text style={{fontSize: ".8rem"}}>"{search}"</Text>}
+                    </Flex>
+                    <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+                    {/* notes container */}
+                    <Flex
+                    direction={'column'}>
+                    <Flex
+                        alignItems={"center"}>
+                        <Text
+                        marginRight={"auto"}>Notes:</Text>
+                        <select 
+                        name="notes" 
+                        id="notes"
+                        style={{
+                            padding: "4px",
+                            height:"100%",
+                            justifySelf: "flex-start",
+                            fontWeight: "bold",
+                            borderRadius: "10px",
+                            textAlign: "center"}} 
+                        onChange={e => setSelectedNotes(prev => !prev.includes(e.target.value) && e.target.value ? [...prev, e.target.value] : prev)}
+                        >
+                            <option value="">Notes</option>
+                            {fragranceOptions.map(f => <option key={f} disabled={selectedNotes.includes(f)} value={f}>{f}</option>)}
+
+
+
+                        </select>
+                        </Flex>  
+                        <Flex 
+                        wrap={"wrap"}
+                        gap={0}>
+                        {selectedNotes.map(note => {
+                            return (
+                            <Button
+                            key={note}
+                            padding={"3px"}
+                            fontSize={".7rem"}
+                            onClick={e => setSelectedNotes(prev => prev.filter(n => note !== n))}
+                            >
+                            {note}
+                            </Button>)
+                        })}
+                        </Flex>    
+                    </Flex>
+                    <hr style={{width: "100%", marginBlock: "10px"}}/>
+                    <Button 
+                    onClick={handleFilterSubmit}>
+                        Filter
+                    </Button>
+                    </Flex>
+                </Card>
+                }
+                </View>
+
+            </Flex>
+            <Flex
             direction="row" 
             gap="1rem" 
-            height="100%">
-
-            {/* Left card holding products ---------------------------------------------*/}
-            {/* Will be shown as a list where each product is clickable  */}
-            <Card
-                flex="1.2" 
-                height="100%" 
-                padding="1rem" 
-                backgroundColor="whitesmoke"
-                >
-                <Flex 
-                    direction="column" 
-                    height="100%">
+            flex={1}
+            >                
+                {/* Left card holding products ---------------------------------------------*/}
+                {/* Will be shown as a list where each product is clickable  */}
+                <Card
+                    flex="1.2" 
+                    height="100%" 
+                    padding="1rem" 
+                    backgroundColor="whitesmoke"
+                    >
                     <Flex 
-                        justifyContent="space-between" 
-                        alignItems="center"
-                        wrap="wrap">
-                        <Text 
-                            style={luxuryHeadingStyle}>
-                            Products
-                        </Text>
+                        direction="column" 
+                        height="100%">
                         <Flex 
-                            direction="row"
-                            gap="0.75rem" 
-                            wrap="wrap" 
-                            justifyContent="flex-end">
-                            {/* Button : add mode -------------------------------------------------- */}
-                            <Button 
-                                style={luxuryBodyStyle}
-                                onClick={resetToAdd}
-                                >
-                                Add
-                            </Button>
-                            {/* Button : remove mode ---------------------------------------------------- */}
-                            <Button 
-                                style={luxuryBodyStyle}
-                                disabled={!selectedProduct}
-                                onClick={() => {
-                                    if (!selectedProduct) return;
-                                    setActiveMode(MODES.REMOVE);
-                                }}
-                                >
-                                Remove
-                            </Button>
-                        </Flex>
-                    </Flex>
-
-                    {message && (
-                    <Text style={luxuryBodyStyle} marginTop="0.5rem" color="black">
-                        {message}
-                    </Text>
-                    )}
-                    <View overflow="auto" height="20rem" marginTop="1rem"> 
-                        {/* Below creating a list of all the products ---------------------------- */}
-                        {sortedProducts.map((prodList) => {
-                            return (
-                            <Flex
-                                direction={"column"}
-                                gap="0.6rem"
-                                marginBottom="0.6rem"
-                            >
-                                {
-                                    selectedProduct?.parentid === prodList[0].parentid 
-                                    ? 
-                                    <Button
-                                        key={prodList[0].parentid}
-                                        style={luxuryBodyStyle}
-                                        variation="link"
-                                        justifyContent="flex-start"
-                                        width="100%"
-                                        border=".5px solid #111"
-                                        borderRadius="6px"
-                                        >
-                                        <Text textAlign={"left"}>
-                                            <strong>{selectedProduct.name}</strong>
-                                            <br />
-                                            <Text>— {selectedProduct.stock_ml}ml {selectedProduct.stock_ml < 1000 && "(LOW!)"}</Text>
-                                        </Text>
-                                    </Button>
-                                    :
-                                    <Button
-                                        key={prodList[0].parentid}
-                                        style={luxuryBodyStyle}
-                                        variation="link"
-                                        justifyContent="flex-start"
-                                        width="100%"
-                                        border=".5px solid #111"
-                                        borderRadius="6px"
-                                        onClick={() => {
-                                            const id = getProductId(prodList[0]);
-                                            if (!id) {
-                                                setMessage("Product ID missing.");
-                                                return;
-                                            }
-                                            setMessage("");
-                                            resetToEdit(prodList[0]);
-                                        }}
-                                        >
-                                        <Text textAlign={"left"}>
-                                            <strong>{prodList[0].name} </strong>
-                                            <br />
-                                            <Text>— {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"}</Text>
-                                        </Text>
-                                    </Button>
-                                }
-                                {selectedProduct?.parentid === prodList[0].parentid &&
-                                <Flex>
-                                    <Flex
-                                    alignItems={"center"}
-                                    justifyContent={"left"}
-                                    gap={"5px"}>
-                                        <Text>Stock</Text>
-                                        <input 
-                                            style={{width: "100px", padding: "5px 10px", borderRadius: "5px"}}
-                                            placeholder="Stock (ml)"
-                                            type="number"
-                                            value={draft.stock_ml} 
-                                            onChange={(e) => setDraftField("stock_ml", e.target.value)} 
-                                        />
-                                        {Math.floor(draft.stock_ml) !== Math.floor(selectedProduct.stock_ml) &&
-                                            <button
-                                            onClick={updateProductStock}
-                                            style={{
-                                                overflow: "hidden", 
-                                                width: "40px", 
-                                                height: "40px", 
-                                                padding:"5px", 
-                                                border: "solid",
-                                                borderWidth: "1px",
-                                                borderRadius: "4px",
-                                                boxShadow: "0 0 4px inset"
-                                            }}
-                                                >
-                                                <img src={EditIcon} width={"100%"} alt="Edit" />
-                                            </button>
-                                        }
-                                    </Flex>
-                                    <Flex 
-                                    wrap={"wrap"}
-                                    gap={"5px"}
-                                    justifyContent={"center"}
-                                    marginBlock={"10px"}>
-                                        {prodList.map(prod => (
-                                            <Button
-                                            style={selectedProduct.id === prod.id ? {opacity: ".7", boxShadow: "0 0 5px inset"} : {}}
-                                            padding={"5px 10px"}
-                                            onClick={() => {
-                                                resetToEdit(prod)
-                                            }}>
-                                                {prod.variation}
-                                            </Button>
-                                        ))}
-                                            <Button
-                                            padding={"5px 10px"}
-                                            style={activeMode === MODES.APPEND ? {opacity: ".7", boxShadow: "0 0 5px inset"} : {}}
-                                            onClick={() => {
-                                                resetToAppend(selectedProduct);
-                                            }}>
-                                                +
-                                            </Button>
-                                    </Flex>
-                                </Flex>
-
-                                }
-
-                            </Flex>
-                        )})}
-                    </View>
-                </Flex>
-            </Card>
-        
-            {/* Right card edit, delete, or adds information ----------------------------------------- */}
-            <Card
-                flex="1.0"  
-                height="100%" 
-                padding="1rem" 
-                backgroundColor="whitesmoke"
-                overflow="auto">
-                <Flex 
-                    direction="column"
-                    height="100%"
-                    width="100%"
-                    justifyContent="flex-start"
-                    alignItems="center"
-                    style={{ minWidth: 0 }}>
-                    {loadingProduct && (
-                    <Flex direction="column" gap="0.25rem">
-                        <Text style={luxuryHeadingStyle}>Product Information</Text>
-                        <Text style={luxuryBodyStyle}>Loading Product...</Text>
-                    </Flex>
-                    )}
-
-                    {/* Add mode: Will pull up a blank draft to be filled out with information of a product they want to add */}
-                    {/* Edit mode: Will take existing product and show its information in the draft instead of being blank */}
-                    {(activeMode === MODES.ADD || activeMode === MODES.EDIT || activeMode === MODES.APPEND) && (
-                        <Grid 
-                            templateColumns="1fr 1fr"
-                            gap="0.4rem"
-                            marginTop="-.2rem"
-                            width="100%"
-                            style={{ minWidth: 0 }}
-                            >
-                            <TextField 
-                                style={compactStyle}
-                                placeholder="Name"
-                                value={draft.name} 
-                                onChange={(e) => setDraftField("name", e.target.value)} 
-                            />
-                            <SelectField
-                                style={compactStyle}
-                                value={draft.type} 
-                                onChange={(e) => setDraftField("type", e.target.value)} 
-                            >
-                                <option value="" disabled>Type</option>
-                                {!["Men's Cologne", "Women's Perfume"].includes(draft.type) && ![MODES.ADD, MODES.APPEND].includes(activeMode) &&
-                                <option value={draft.type} disabled>{draft.type}</option>}
-                                <option value="Men's Cologne">Men's Cologne</option>
-                                <option value="Women's Perfume">Women's Perfume</option>
-                            </SelectField>
-
-                            {/* Includes an invalid variation as a disabled option, so admin can see the invalid state but not reselect it */}
-                            <SelectField
-                                style={compactStyle}
-                                value={draft.variation} 
-                                onChange={(e) => setDraftField("variation", e.target.value)} 
-                            >
-                                <option value="" disabled>Variation</option>
-                                {!["30ml", "50ml"].includes(draft.variation) && ![MODES.ADD, MODES.APPEND].includes(activeMode) &&
-                                <option value={draft.variation} disabled>{draft.variation}</option>}
-                                <option value="30ml">30ml</option>
-                                <option value="50ml">50ml</option>
-                            </SelectField>
-                            <TextField 
-                                style={compactStyle}
-                                placeholder="Price"
-                                type="number"
-                                value={draft.price} 
-                                onChange={(e) => setDraftField("price", e.target.value)} 
-                            />
-                            {/* Entering Top, Heart, and Base notes ------------------------------------------------------------*/}
-                            <TextField
-                                columnSpan={2}
-                                style={compactStyle}
-                                placeholder="Notes Top (, separated)"
-                                // If array exists for top use it and separate by commas
-                                value={(draft.notes.top || []).join(",")}   
-                                onChange={(e) => {
-                                    const arr = e.target.value
-                                    .split(",") 
-                                    .map(s => s.trim()) 
-                                    setDraft(prev => ({
-                                        ...prev,
-                                        notes: { ...prev.notes, top: arr }
-                                    }));
-                                }}
-                            />
-                            <TextField
-                                columnSpan={2}
-                                style={compactStyle}
-                                placeholder="Notes Heart (, separated)"
-                                value={(draft.notes.heart || []).join(",")}   
-                                onChange={(e) => {
-                                    const arr = e.target.value
-                                    .split(",")
-                                    .map(s => s.trim())
-                                    setDraft(prev => ({
-                                        ...prev,
-                                        notes: { ...prev.notes, heart: arr }
-                                    }));
-                                }}
-                            />
-                            <TextField
-                                columnSpan={2}
-                                style={compactStyle}
-                                placeholder="Notes Base (, separated)"
-                                value={(draft.notes.base || []).join(",")}   
-                                onChange={(e) => {
-                                    const arr = e.target.value
-                                    .split(",")
-                                    .map(s => s.trim())
-                                    setDraft(prev => ({
-                                        ...prev,
-                                        notes: { ...prev.notes, base: arr }
-                                    }));
-                                }}
-                            />
-                            <View columnSpan={2}>
-                                <TextAreaField
-                                textAlign={"left"}
-                                style={{height: "50px"}}
-                                placeholder={"Description"}
-                                value={draft.description}
-                                onChange={(e) => {
-                                    setDraft(prev => ({
-                                        ...prev,
-                                        description: e.target.value
-                                    }))
-                                }}
-                                onFocus={(e) => {e.target.style.height = "100px"}}
-                                onBlur={(e) => {e.target.style.height = "50px"}}
-                                />
-                            </View>
-                            {/* Hidden or featured switches -------------------- */}
-                            <Flex
-                            columnSpan={2}
-                            justifyContent={"center"}
-                            >
-                                <SwitchField
-                                    style={compactStyle}
-                                    label="Hidden?"
-                                    isChecked={draft.ishidden} 
-                                    onChange={(e) => setDraftField("ishidden", e.target.checked)} 
-                                />
-                                <SwitchField 
-                                    style={compactStyle}
-                                    label="Featured"
-                                    isChecked={draft.isfeatured}
-                                    onChange={(e) => setDraftField("isfeatured", e.target.checked)} 
-                                />
-                            </Flex>
-                            <View
-                                columnSpan={2}>
-                                <Text 
-                                fontSize={".9em"}>
-                                    Images: {draft.images.length}
-                                </Text>
-
-                                <Button
-                                style={compactStyle}
-                                border="1px solid #111"
-                                borderRadius="6px"
-                                padding="0.35rem 0.75rem"
-                                as="label"
-                                >
-
-                                    <input 
-                                        id="product-images" 
-                                        type="file" 
-                                        multiple accept="image/*" 
-                                        style={{display: "none"}} 
-                                        onChange={onImagesSelected}
-                                        />
-                                    Upload Images
+                            justifyContent="space-between" 
+                            alignItems="center"
+                            wrap="wrap">
+                            <Text 
+                                style={luxuryHeadingStyle}>
+                                Products
+                            </Text>
+                            <Flex 
+                                direction="row"
+                                gap="0.75rem" 
+                                wrap="wrap" 
+                                justifyContent="flex-end">
+                                {/* Button : add mode -------------------------------------------------- */}
+                                <Button 
+                                    style={luxuryBodyStyle}
+                                    onClick={resetToAdd}
+                                    >
+                                    Add
                                 </Button>
-                                <Button
+                                {/* Button : remove mode ---------------------------------------------------- */}
+                                <Button 
+                                    style={luxuryBodyStyle}
+                                    disabled={!selectedProduct}
+                                    onClick={() => {
+                                        if (!selectedProduct) return;
+                                        setActiveMode(MODES.REMOVE);
+                                    }}
+                                    >
+                                    Remove
+                                </Button>
+                            </Flex>
+                        </Flex>
+
+                        {message && (
+                        <Text style={luxuryBodyStyle} marginTop="0.5rem" color="black">
+                            {message}
+                        </Text>
+                        )}
+                        <View overflow="auto" height="20rem" marginTop="1rem"> 
+                            {/* Below creating a list of all the products ---------------------------- */}
+                            {sortedProducts.map((prodList) => {
+                                return (
+                                <Flex
+                                    direction={"column"}
+                                    gap="0.6rem"
+                                    marginBottom="0.6rem"
+                                >
+                                    {
+                                        selectedProduct?.parentid === prodList[0].parentid 
+                                        ? 
+                                        <Button
+                                            key={prodList[0].parentid}
+                                            style={luxuryBodyStyle}
+                                            variation="link"
+                                            justifyContent="flex-start"
+                                            width="100%"
+                                            border=".5px solid #111"
+                                            borderRadius="6px"
+                                            >
+                                            <Text textAlign={"left"}>
+                                                <strong>{selectedProduct.name}</strong>
+                                                <br />
+                                                <Text>— {selectedProduct.stock_ml}ml {selectedProduct.stock_ml < 1000 && "(LOW!)"}</Text>
+                                            </Text>
+                                        </Button>
+                                        :
+                                        <Button
+                                            key={prodList[0].parentid}
+                                            style={luxuryBodyStyle}
+                                            variation="link"
+                                            justifyContent="flex-start"
+                                            width="100%"
+                                            border=".5px solid #111"
+                                            borderRadius="6px"
+                                            onClick={() => {
+                                                const id = getProductId(prodList[0]);
+                                                if (!id) {
+                                                    setMessage("Product ID missing.");
+                                                    return;
+                                                }
+                                                setMessage("");
+                                                resetToEdit(prodList[0]);
+                                            }}
+                                            >
+                                            <Text textAlign={"left"}>
+                                                <strong>{prodList[0].name} </strong>
+                                                <br />
+                                                <Text>— {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"}</Text>
+                                            </Text>
+                                        </Button>
+                                    }
+                                    {selectedProduct?.parentid === prodList[0].parentid &&
+                                    <Flex>
+                                        <Flex
+                                        alignItems={"center"}
+                                        justifyContent={"left"}
+                                        gap={"5px"}>
+                                            <Text>Stock</Text>
+                                            <input 
+                                                style={{width: "100px", padding: "5px 10px", borderRadius: "5px"}}
+                                                placeholder="Stock (ml)"
+                                                type="number"
+                                                value={draft.stock_ml} 
+                                                onChange={(e) => setDraftField("stock_ml", e.target.value)} 
+                                            />
+                                            {Math.floor(draft.stock_ml) !== Math.floor(selectedProduct.stock_ml) &&
+                                                <button
+                                                onClick={updateProductStock}
+                                                style={{
+                                                    overflow: "hidden", 
+                                                    width: "40px", 
+                                                    height: "40px", 
+                                                    padding:"5px", 
+                                                    border: "solid",
+                                                    borderWidth: "1px",
+                                                    borderRadius: "4px",
+                                                    boxShadow: "0 0 4px inset"
+                                                }}
+                                                    >
+                                                    <img src={EditIcon} width={"100%"} alt="Edit" />
+                                                </button>
+                                            }
+                                        </Flex>
+                                        <Flex 
+                                        wrap={"wrap"}
+                                        gap={"5px"}
+                                        justifyContent={"center"}
+                                        marginBlock={"10px"}>
+                                            {prodList.map(prod => (
+                                                <Button
+                                                style={selectedProduct.id === prod.id ? {opacity: ".7", boxShadow: "0 0 5px inset"} : {}}
+                                                padding={"5px 10px"}
+                                                onClick={() => {
+                                                    resetToEdit(prod)
+                                                }}>
+                                                    {prod.variation}
+                                                </Button>
+                                            ))}
+                                                <Button
+                                                padding={"5px 10px"}
+                                                style={activeMode === MODES.APPEND ? {opacity: ".7", boxShadow: "0 0 5px inset"} : {}}
+                                                onClick={() => {
+                                                    resetToAppend(selectedProduct);
+                                                }}>
+                                                    +
+                                                </Button>
+                                        </Flex>
+                                    </Flex>
+
+                                    }
+
+                                </Flex>
+                            )})}
+                        </View>
+                    </Flex>
+                </Card>
+            
+                {/* Right card edit, delete, or adds information ----------------------------------------- */}
+                <Card
+                    flex="1.0"  
+                    height="100%" 
+                    padding="1rem" 
+                    backgroundColor="whitesmoke"
+                    overflow="auto">
+                        
+                    <Flex 
+                        direction="column"
+                        height="100%"
+                        width="100%"
+                        justifyContent="flex-start"
+                        alignItems="center"
+                        style={{ minWidth: 0 }}>
+                        {loadingProduct && (
+                        <Flex direction="column" gap="0.25rem">
+                            <Text style={luxuryHeadingStyle}>Product Information</Text>
+                            <Text style={luxuryBodyStyle}>Loading Product...</Text>
+                        </Flex>
+                        )}
+
+                        {/* Add mode: Will pull up a blank draft to be filled out with information of a product they want to add */}
+                        {/* Edit mode: Will take existing product and show its information in the draft instead of being blank */}
+                        {(activeMode === MODES.ADD || activeMode === MODES.EDIT || activeMode === MODES.APPEND) && (
+                            <Grid 
+                                templateColumns="1fr 1fr"
+                                gap="0.4rem"
+                                marginTop="-.2rem"
+                                width="100%"
+                                style={{ minWidth: 0 }}
+                                >
+                                <TextField 
+                                    style={compactStyle}
+                                    placeholder="Name"
+                                    value={draft.name} 
+                                    onChange={(e) => setDraftField("name", e.target.value)} 
+                                />
+                                <SelectField
+                                    style={compactStyle}
+                                    value={draft.type} 
+                                    onChange={(e) => setDraftField("type", e.target.value)} 
+                                >
+                                    <option value="" disabled>Type</option>
+                                    {!["Men's Cologne", "Women's Perfume"].includes(draft.type) && ![MODES.ADD, MODES.APPEND].includes(activeMode) &&
+                                    <option value={draft.type} disabled>{draft.type}</option>}
+                                    <option value="Men's Cologne">Men's Cologne</option>
+                                    <option value="Women's Perfume">Women's Perfume</option>
+                                </SelectField>
+
+                                {/* Includes an invalid variation as a disabled option, so admin can see the invalid state but not reselect it */}
+                                <SelectField
+                                    style={compactStyle}
+                                    value={draft.variation} 
+                                    onChange={(e) => setDraftField("variation", e.target.value)} 
+                                >
+                                    <option value="" disabled>Variation</option>
+                                    {!["30ml", "50ml"].includes(draft.variation) && ![MODES.ADD, MODES.APPEND].includes(activeMode) &&
+                                    <option value={draft.variation} disabled>{draft.variation}</option>}
+                                    <option value="30ml">30ml</option>
+                                    <option value="50ml">50ml</option>
+                                </SelectField>
+                                <TextField 
+                                    style={compactStyle}
+                                    placeholder="Price"
+                                    type="number"
+                                    value={draft.price} 
+                                    onChange={(e) => setDraftField("price", e.target.value)} 
+                                />
+                                {/* Entering Top, Heart, and Base notes ------------------------------------------------------------*/}
+                                <TextField
+                                    columnSpan={2}
+                                    style={compactStyle}
+                                    placeholder="Notes Top (, separated)"
+                                    // If array exists for top use it and separate by commas
+                                    value={(draft.notes.top || []).join(",")}   
+                                    onChange={(e) => {
+                                        const arr = e.target.value
+                                        .split(",") 
+                                        .map(s => s.trim()) 
+                                        setDraft(prev => ({
+                                            ...prev,
+                                            notes: { ...prev.notes, top: arr }
+                                        }));
+                                    }}
+                                />
+                                <TextField
+                                    columnSpan={2}
+                                    style={compactStyle}
+                                    placeholder="Notes Heart (, separated)"
+                                    value={(draft.notes.heart || []).join(",")}   
+                                    onChange={(e) => {
+                                        const arr = e.target.value
+                                        .split(",")
+                                        .map(s => s.trim())
+                                        setDraft(prev => ({
+                                            ...prev,
+                                            notes: { ...prev.notes, heart: arr }
+                                        }));
+                                    }}
+                                />
+                                <TextField
+                                    columnSpan={2}
+                                    style={compactStyle}
+                                    placeholder="Notes Base (, separated)"
+                                    value={(draft.notes.base || []).join(",")}   
+                                    onChange={(e) => {
+                                        const arr = e.target.value
+                                        .split(",")
+                                        .map(s => s.trim())
+                                        setDraft(prev => ({
+                                            ...prev,
+                                            notes: { ...prev.notes, base: arr }
+                                        }));
+                                    }}
+                                />
+                                <View columnSpan={2}>
+                                    <TextAreaField
+                                    textAlign={"left"}
+                                    style={{height: "50px"}}
+                                    placeholder={"Description"}
+                                    value={draft.description}
+                                    onChange={(e) => {
+                                        setDraft(prev => ({
+                                            ...prev,
+                                            description: e.target.value
+                                        }))
+                                    }}
+                                    onFocus={(e) => {e.target.style.height = "100px"}}
+                                    onBlur={(e) => {e.target.style.height = "50px"}}
+                                    />
+                                </View>
+                                {/* Hidden or featured switches -------------------- */}
+                                <Flex
+                                columnSpan={2}
+                                justifyContent={"center"}
+                                >
+                                    <SwitchField
+                                        style={compactStyle}
+                                        label="Hidden?"
+                                        isChecked={draft.ishidden} 
+                                        onChange={(e) => setDraftField("ishidden", e.target.checked)} 
+                                    />
+                                    <SwitchField 
+                                        style={compactStyle}
+                                        label="Featured"
+                                        isChecked={draft.isfeatured}
+                                        onChange={(e) => setDraftField("isfeatured", e.target.checked)} 
+                                    />
+                                </Flex>
+                                <View
+                                    columnSpan={2}>
+                                    <Text 
+                                    fontSize={".9em"}>
+                                        Images: {draft.images.length}
+                                    </Text>
+
+                                    <Button
                                     style={compactStyle}
                                     border="1px solid #111"
                                     borderRadius="6px"
                                     padding="0.35rem 0.75rem"
-                                    onClick={e => setShowImages(prev => !prev)}
-                                >
-                                    {showImages ? "Hide Images" : "Show Images"}
-                                </Button>
-                                {showImages && 
-                                <View
-                                position={"fixed"}
-                                top={0}
-                                left={0}
-                                display={"flex"}
-                                width={"100vw"}
-                                height={"100vh"}
-                                style={{backdropFilter: "blur(4px)"}}
-                                justifyContent={"center"}
-                                alignItems={"center"}
-                                >
-
-                                    <Card
-                                    display={"flex"}
-                                    width={"800px"}
-                                    minHeight={"200px"}
-                                    padding={0}
-                                    border={"solid black"}
-                                    borderWidth={"10px"}
-                                    borderRadius={"20px"}
-                                    backgroundColor={"#27231e"}
-                                    color={"white"}
-                                    position={"relative"}
+                                    as="label"
                                     >
-                                        <View
-                                        position={"absolute"}
-                                        top={0}
-                                        right={0}
-                                        transform={"translate(50%,-50%)"}
-                                        color={"black"}
-                                        backgroundColor={"white"}
-                                        width={"40px"}
-                                        height={"40px"}
-                                        borderRadius={"40%"}
-                                        border={"solid black"}
-                                        display={"flex"}
-                                        justifyContent={"center"}
-                                        alignItems={"center"}
-                                        fontSize={"1.3em"}
-                                        onClick={e => setShowImages(prev => !prev)}
-                                        >
-                                            <strong>X</strong>
-                                        </View>
-                                        <Flex
-                                        direction={"column"}
-                                        flex={1}
-                                        width={"100%"}
-                                        
-                                        >
-                                            <h2>View / Rearrange Images</h2>
-                                            <Flex
-                                            border={"solid black"}
-                                            borderRadius={"20px"}
-                                            padding={"10px"}
-                                            width={"100%"}
-                                            height={"200px"}
-                                            wrap={"nowrap"}
-                                            gap={"12px"}
-                                            alignItems={"center"}
-                                            backgroundColor={"rgb(253, 248, 245)"}
-                                            style={{overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none"}}
-                                            >
-                                                {draft.images.map((url, i) => {
-                                                    return (
-                                                    <View 
-                                                    key={url}
-                                                    width={"200px"}
-                                                    shrink={0}
-                                                    border={"solid gray"}
-                                                    borderWidth={"5px"}
-                                                    borderRadius={"10px"}
-                                                    height={"100%"}     
-                                                    display={"flex"}
-                                                    alignItems={"center"}  
-                                                    position={"relative"}   
-                                                    onMouseDown={(e) => handleImageDrag(e, i)}
-                                                    className="product-image-draggable"
-                                                    data-index={i}
-                                                    >
-                                                        <img src={url} alt="img" 
-                                                        style={{
-                                                            width: "100%",
-                                                            height: "100%",
-                                                            objectFit:"cover"
-                                                            }} />
 
-                                                        <View
-                                                        position={"absolute"}
-                                                        top={0}
-                                                        right={0}
-                                                        transform={"translate(50%,-50%)"}
-                                                        color={"white"}
-                                                        backgroundColor={"maroon"}
-                                                        width={"30px"}
-                                                        height={"30px"}
-                                                        borderRadius={"40%"}
-                                                        border={"solid black"}
-                                                        display={"flex"}
-                                                        justifyContent={"center"}
-                                                        alignItems={"center"}
-                                                        fontSize={"1.3em"}
-                                                        onClick={e => {
-                                                            if (draft.images.length <= 1) return
-                                                            setDraft(prev => {
-                                                                return {
-                                                                    ...prev,
-                                                                    images: prev.images.filter(u => u !== url)
-                                                                }
-                                                            })
-                                                        }}
-                                                        >
-                                                            <strong>X</strong>
-                                                        </View>
-                                                        {i === 0 &&
-                                                        <Text
-                                                        position={"absolute"}
-                                                        bottom={0}
-                                                        left={"50%"}
-                                                        transform={"translateX(-50%)"}
-                                                        backgroundColor={"white"}
-                                                        width={"100%"}
-                                                        opacity={.8}
-                                                        color={"black"}
-                                                        fontSize={"1.2em"}
-                                                        >
-                                                            Cover Photo
-                                                        </Text>
-                                                        }
-                                                        
-                                                    </View>)
-                                                })}
-                                            </Flex>
-                                        </Flex>
-                                        
-                                    </Card>
-                                </View>
-                                }
-                                {files.length !== 0 &&
-                                <View
-                                position={"fixed"}
-                                top={0}
-                                left={0}
-                                display={"flex"}
-                                width={"100vw"}
-                                height={"100vh"}
-                                style={{backdropFilter: "blur(4px)"}}
-                                justifyContent={"center"}
-                                alignItems={"center"}
-                                >
-
-                                    <Card
-                                    display={"flex"}
-                                    width={"800px"}
-                                    minHeight={"200px"}
-                                    padding={0}
-                                    border={"solid black"}
-                                    borderWidth={"10px"}
-                                    borderRadius={"20px"}
-                                    backgroundColor={"#27231e"}
-                                    color={"white"}
-                                    position={"relative"}
-                                    >
-                                        <View
-                                        position={"absolute"}
-                                        top={0}
-                                        right={0}
-                                        transform={"translate(50%,-50%)"}
-                                        color={"black"}
-                                        backgroundColor={"white"}
-                                        width={"40px"}
-                                        height={"40px"}
-                                        borderRadius={"40%"}
-                                        border={"solid black"}
-                                        display={"flex"}
-                                        justifyContent={"center"}
-                                        alignItems={"center"}
-                                        fontSize={"1.3em"}
-                                        onClick={e => {
-                                            for (const f of files){
-                                                URL.revokeObjectURL(f.url)
-                                            }
-                                            setFiles([])
-                                        }}
-                                        >
-                                            <strong>X</strong>
-                                        </View>
-                                        {isUploading
-                                        ? 
-                                        <Flex
-                                        direction={"column"}
-                                        justifyContent={"center"}
-                                        alignItems={"center"}
-                                        flex={1}
-                                        width={"100%"}
-                                        >
-                                            <h2>Uploading...</h2>
-                                        </Flex>
-                                        :
-                                        <Flex
-                                        direction={"column"}
-                                        justifyContent={"center"}
-                                        alignItems={"center"}
-                                        flex={1}
-                                        width={"100%"}
-                                        >
-                                            <h2>Upload Images</h2>
-                                            <Flex
-                                            border={"solid black"}
-                                            borderRadius={"20px"}
-                                            padding={"10px"}
-                                            width={"100%"}
-                                            height={"200px"}
-                                            wrap={"nowrap"}
-                                            gap={"12px"}
-                                            alignItems={"center"}
-                                            backgroundColor={"rgb(253, 248, 245)"}
-                                            style={{overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none"}}
-                                            >
-                                                {files.map((f, i) => {
-                                                    return (
-                                                    <View 
-                                                    key={f.url}
-                                                    width={"200px"}
-                                                    shrink={0}
-                                                    border={"solid gray"}
-                                                    borderWidth={"5px"}
-                                                    borderRadius={"10px"}
-                                                    height={"100%"}     
-                                                    display={"flex"}
-                                                    alignItems={"center"}  
-                                                    position={"relative"}   
-                                                    >
-                                                        <img src={f.url} alt="img" 
-                                                        style={{
-                                                            width: "100%",
-                                                            height: "100%",
-                                                            objectFit:"cover"
-                                                            }} />
-
-                                                        <View
-                                                        position={"absolute"}
-                                                        top={0}
-                                                        right={0}
-                                                        transform={"translate(50%,-50%)"}
-                                                        color={"white"}
-                                                        backgroundColor={"maroon"}
-                                                        width={"30px"}
-                                                        height={"30px"}
-                                                        borderRadius={"40%"}
-                                                        border={"solid black"}
-                                                        display={"flex"}
-                                                        justifyContent={"center"}
-                                                        alignItems={"center"}
-                                                        fontSize={"1.3em"}
-                                                        onClick={e => {
-                                                            URL.revokeObjectURL(f.url)
-                                                            setFiles(prev => prev.filter(file => file !== f))
-                                                        }}
-                                                        >
-                                                            <strong>X</strong>
-                                                        </View>                     
-                                                    </View>)
-                                                })}
-                                            </Flex>
-                                            <Button
-                                            style={compactStyle}
-                                            border="1px solid #111"
-                                            borderRadius="6px"
-                                            padding="0.35rem 0.75rem"
-                                            fontSize={"1.5em"}
-                                            fontWeight={"bold"}
-                                            margin={"auto"}
-                                            onClick={uploadImages}
-                                            >
-                                                Upload
-                                            </Button>
-                                        </Flex>
-                                        }
-                                    </Card>
-                                </View>
-                                }
-                            </View>
-                            <View 
-                                columnSpan={2}>
-                                <Flex 
-                                    direction="row" 
-                                    gap="0.08rem" 
-                                    justifyContent="center">
-                                    {/* Save button --------------------------------------------------- */}
-                                    <Button
-                                        style={compactStyle}
-                                        onClick={() => {
-                                            if (!canSave) {
-                                                setMessage("Please fill out type and name information.");
-                                                return;
-                                            }
-                                            // in case of append, it will include the parentid of the selected product
-                                            if (activeMode === MODES.ADD || activeMode === MODES.APPEND) addProduct();
-                                            else updateProduct();
-                                            
-                                        }}
-                                    >
-                                        Save
+                                        <input 
+                                            id="product-images" 
+                                            type="file" 
+                                            multiple accept="image/*" 
+                                            style={{display: "none"}} 
+                                            onChange={onImagesSelected}
+                                            />
+                                        Upload Images
                                     </Button>
-                                    {/* Cancel button ------------------------------------------------------------------- */}
                                     <Button
                                         style={compactStyle}
+                                        border="1px solid #111"
+                                        borderRadius="6px"
+                                        padding="0.35rem 0.75rem"
+                                        onClick={e => setShowImages(prev => !prev)}
+                                    >
+                                        {showImages ? "Hide Images" : "Show Images"}
+                                    </Button>
+                                    {showImages && 
+                                    <View
+                                    position={"fixed"}
+                                    top={0}
+                                    left={0}
+                                    display={"flex"}
+                                    width={"100vw"}
+                                    height={"100vh"}
+                                    style={{backdropFilter: "blur(4px)"}}
+                                    justifyContent={"center"}
+                                    alignItems={"center"}
+                                    >
+
+                                        <Card
+                                        display={"flex"}
+                                        width={"800px"}
+                                        minHeight={"200px"}
+                                        padding={0}
+                                        border={"solid black"}
+                                        borderWidth={"10px"}
+                                        borderRadius={"20px"}
+                                        backgroundColor={"#27231e"}
+                                        color={"white"}
+                                        position={"relative"}
+                                        >
+                                            <View
+                                            position={"absolute"}
+                                            top={0}
+                                            right={0}
+                                            transform={"translate(50%,-50%)"}
+                                            color={"black"}
+                                            backgroundColor={"white"}
+                                            width={"40px"}
+                                            height={"40px"}
+                                            borderRadius={"40%"}
+                                            border={"solid black"}
+                                            display={"flex"}
+                                            justifyContent={"center"}
+                                            alignItems={"center"}
+                                            fontSize={"1.3em"}
+                                            onClick={e => setShowImages(prev => !prev)}
+                                            >
+                                                <strong>X</strong>
+                                            </View>
+                                            <Flex
+                                            direction={"column"}
+                                            flex={1}
+                                            width={"100%"}
+                                            
+                                            >
+                                                <h2>View / Rearrange Images</h2>
+                                                <Flex
+                                                border={"solid black"}
+                                                borderRadius={"20px"}
+                                                padding={"10px"}
+                                                width={"100%"}
+                                                height={"200px"}
+                                                wrap={"nowrap"}
+                                                gap={"12px"}
+                                                alignItems={"center"}
+                                                backgroundColor={"rgb(253, 248, 245)"}
+                                                style={{overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none"}}
+                                                >
+                                                    {draft.images.map((url, i) => {
+                                                        return (
+                                                        <View 
+                                                        key={url}
+                                                        width={"200px"}
+                                                        shrink={0}
+                                                        border={"solid gray"}
+                                                        borderWidth={"5px"}
+                                                        borderRadius={"10px"}
+                                                        height={"100%"}     
+                                                        display={"flex"}
+                                                        alignItems={"center"}  
+                                                        position={"relative"}   
+                                                        onMouseDown={(e) => handleImageDrag(e, i)}
+                                                        className="product-image-draggable"
+                                                        data-index={i}
+                                                        >
+                                                            <img src={url} alt="img" 
+                                                            style={{
+                                                                width: "100%",
+                                                                height: "100%",
+                                                                objectFit:"cover"
+                                                                }} />
+
+                                                            <View
+                                                            position={"absolute"}
+                                                            top={0}
+                                                            right={0}
+                                                            transform={"translate(50%,-50%)"}
+                                                            color={"white"}
+                                                            backgroundColor={"maroon"}
+                                                            width={"30px"}
+                                                            height={"30px"}
+                                                            borderRadius={"40%"}
+                                                            border={"solid black"}
+                                                            display={"flex"}
+                                                            justifyContent={"center"}
+                                                            alignItems={"center"}
+                                                            fontSize={"1.3em"}
+                                                            onClick={e => {
+                                                                if (draft.images.length <= 1) return
+                                                                setDraft(prev => {
+                                                                    return {
+                                                                        ...prev,
+                                                                        images: prev.images.filter(u => u !== url)
+                                                                    }
+                                                                })
+                                                            }}
+                                                            >
+                                                                <strong>X</strong>
+                                                            </View>
+                                                            {i === 0 &&
+                                                            <Text
+                                                            position={"absolute"}
+                                                            bottom={0}
+                                                            left={"50%"}
+                                                            transform={"translateX(-50%)"}
+                                                            backgroundColor={"white"}
+                                                            width={"100%"}
+                                                            opacity={.8}
+                                                            color={"black"}
+                                                            fontSize={"1.2em"}
+                                                            >
+                                                                Cover Photo
+                                                            </Text>
+                                                            }
+                                                            
+                                                        </View>)
+                                                    })}
+                                                </Flex>
+                                            </Flex>
+                                            
+                                        </Card>
+                                    </View>
+                                    }
+                                    {files.length !== 0 &&
+                                    <View
+                                    position={"fixed"}
+                                    top={0}
+                                    left={0}
+                                    display={"flex"}
+                                    width={"100vw"}
+                                    height={"100vh"}
+                                    style={{backdropFilter: "blur(4px)"}}
+                                    justifyContent={"center"}
+                                    alignItems={"center"}
+                                    >
+
+                                        <Card
+                                        display={"flex"}
+                                        width={"800px"}
+                                        minHeight={"200px"}
+                                        padding={0}
+                                        border={"solid black"}
+                                        borderWidth={"10px"}
+                                        borderRadius={"20px"}
+                                        backgroundColor={"#27231e"}
+                                        color={"white"}
+                                        position={"relative"}
+                                        >
+                                            <View
+                                            position={"absolute"}
+                                            top={0}
+                                            right={0}
+                                            transform={"translate(50%,-50%)"}
+                                            color={"black"}
+                                            backgroundColor={"white"}
+                                            width={"40px"}
+                                            height={"40px"}
+                                            borderRadius={"40%"}
+                                            border={"solid black"}
+                                            display={"flex"}
+                                            justifyContent={"center"}
+                                            alignItems={"center"}
+                                            fontSize={"1.3em"}
+                                            onClick={e => {
+                                                for (const f of files){
+                                                    URL.revokeObjectURL(f.url)
+                                                }
+                                                setFiles([])
+                                            }}
+                                            >
+                                                <strong>X</strong>
+                                            </View>
+                                            {isUploading
+                                            ? 
+                                            <Flex
+                                            direction={"column"}
+                                            justifyContent={"center"}
+                                            alignItems={"center"}
+                                            flex={1}
+                                            width={"100%"}
+                                            >
+                                                <h2>Uploading...</h2>
+                                            </Flex>
+                                            :
+                                            <Flex
+                                            direction={"column"}
+                                            justifyContent={"center"}
+                                            alignItems={"center"}
+                                            flex={1}
+                                            width={"100%"}
+                                            >
+                                                <h2>Upload Images</h2>
+                                                <Flex
+                                                border={"solid black"}
+                                                borderRadius={"20px"}
+                                                padding={"10px"}
+                                                width={"100%"}
+                                                height={"200px"}
+                                                wrap={"nowrap"}
+                                                gap={"12px"}
+                                                alignItems={"center"}
+                                                backgroundColor={"rgb(253, 248, 245)"}
+                                                style={{overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none"}}
+                                                >
+                                                    {files.map((f, i) => {
+                                                        return (
+                                                        <View 
+                                                        key={f.url}
+                                                        width={"200px"}
+                                                        shrink={0}
+                                                        border={"solid gray"}
+                                                        borderWidth={"5px"}
+                                                        borderRadius={"10px"}
+                                                        height={"100%"}     
+                                                        display={"flex"}
+                                                        alignItems={"center"}  
+                                                        position={"relative"}   
+                                                        >
+                                                            <img src={f.url} alt="img" 
+                                                            style={{
+                                                                width: "100%",
+                                                                height: "100%",
+                                                                objectFit:"cover"
+                                                                }} />
+
+                                                            <View
+                                                            position={"absolute"}
+                                                            top={0}
+                                                            right={0}
+                                                            transform={"translate(50%,-50%)"}
+                                                            color={"white"}
+                                                            backgroundColor={"maroon"}
+                                                            width={"30px"}
+                                                            height={"30px"}
+                                                            borderRadius={"40%"}
+                                                            border={"solid black"}
+                                                            display={"flex"}
+                                                            justifyContent={"center"}
+                                                            alignItems={"center"}
+                                                            fontSize={"1.3em"}
+                                                            onClick={e => {
+                                                                URL.revokeObjectURL(f.url)
+                                                                setFiles(prev => prev.filter(file => file !== f))
+                                                            }}
+                                                            >
+                                                                <strong>X</strong>
+                                                            </View>                     
+                                                        </View>)
+                                                    })}
+                                                </Flex>
+                                                <Button
+                                                style={compactStyle}
+                                                border="1px solid #111"
+                                                borderRadius="6px"
+                                                padding="0.35rem 0.75rem"
+                                                fontSize={"1.5em"}
+                                                fontWeight={"bold"}
+                                                margin={"auto"}
+                                                onClick={uploadImages}
+                                                >
+                                                    Upload
+                                                </Button>
+                                            </Flex>
+                                            }
+                                        </Card>
+                                    </View>
+                                    }
+                                </View>
+                                <View 
+                                    columnSpan={2}>
+                                    <Flex 
+                                        direction="row" 
+                                        gap="0.08rem" 
+                                        justifyContent="center">
+                                        {/* Save button --------------------------------------------------- */}
+                                        <Button
+                                            style={compactStyle}
+                                            onClick={() => {
+                                                if (!canSave) {
+                                                    setMessage("Please fill out type and name information.");
+                                                    return;
+                                                }
+                                                // in case of append, it will include the parentid of the selected product
+                                                if (activeMode === MODES.ADD || activeMode === MODES.APPEND) addProduct();
+                                                else updateProduct();
+                                                
+                                            }}
+                                        >
+                                            Save
+                                        </Button>
+                                        {/* Cancel button ------------------------------------------------------------------- */}
+                                        <Button
+                                            style={compactStyle}
+                                            onClick={() => {
+                                                setMessage("");
+                                                resetToIdle();
+                                            }}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </Flex>
+                                </View>
+                            </Grid>
+                            
+                        )}    
+                        {/* Removal mode -------------------------------------------------- */}
+                        {activeMode === MODES.REMOVE && selectedProduct && 
+                        (
+                            <Flex direction="column" gap="0.05rem" wrap="wrap">
+                                <Flex direction="row" gap="0.05rem" wrap="wrap">
+                                    <Button
+                                        onClick={() => hideProduct()}>
+                                        {selectedProduct.ishidden ? "Unhide" : "Hide"}
+                                    </Button>
+                                    <Button
+                                    onClick={() => removeProduct()}>
+                                        Delete
+                                    </Button>
+                                    <Button
                                         onClick={() => {
                                             setMessage("");
-                                            resetToIdle();
+                                            if (selectedProduct) {
+                                                setActiveMode(MODES.IDLE);
+                                                setSelectedProduct(null);
+                                                return;
+                                            }
+                                            setActiveMode(MODES.IDLE)
                                         }}
                                     >
                                         Cancel
                                     </Button>
                                 </Flex>
-                            </View>
-                        </Grid>
-                        
-                    )}    
-                    {/* Removal mode -------------------------------------------------- */}
-                    {activeMode === MODES.REMOVE && selectedProduct && 
-                    (
-                        <Flex direction="column" gap="0.05rem" wrap="wrap">
-                            <Flex direction="row" gap="0.05rem" wrap="wrap">
-                                <Button
-                                    onClick={() => hideProduct()}>
-                                    {selectedProduct.ishidden ? "Unhide" : "Hide"}
-                                </Button>
-                                <Button
-                                onClick={() => removeProduct()}>
-                                    Delete
-                                </Button>
-                                <Button
-                                    onClick={() => {
-                                        setMessage("");
-                                        if (selectedProduct) {
-                                            setActiveMode(MODES.IDLE);
-                                            setSelectedProduct(null);
-                                            return;
-                                        }
-                                        setActiveMode(MODES.IDLE)
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
                             </Flex>
-                        </Flex>
-                    )}   
-                    {/* Base mode when no product is selected ----------------------------------------------- */}
-                    {activeMode === MODES.IDLE && (
-                    <> 
-                    <Flex
-                        direction="column" 
-                        gap="0.05rem" 
-                        wrap="wrap">
-                            <Text 
-                                style={luxuryHeadingStyle}>
-                                Product Information
+                        )}   
+                        {/* Base mode when no product is selected ----------------------------------------------- */}
+                        {activeMode === MODES.IDLE && (
+                        <> 
+                        <Flex
+                            direction="column" 
+                            gap="0.05rem" 
+                            wrap="wrap">
+                                <Text 
+                                    style={luxuryHeadingStyle}>
+                                    Product Information
+                                </Text>
+                                <Text 
+                                    style={luxuryBodyStyle}>
+                                    Please select a product
+                                </Text>
+                            </Flex>
+                        </>
+                        )}
+                        {/* View product ------------------------------------------------- */}
+                        {activeMode === MODES.VIEW && selectedProduct &&  !loadingProduct && (
+                        <Flex direction="column" gap="0.1rem" wrap="wrap" textAlign="center">
+                            <Text style={luxuryBodyStyle}>Name: {selectedProduct.name}</Text>
+                            <Text style={luxuryBodyStyle}>Type: {selectedProduct.type}</Text>
+                            <Text style={luxuryBodyStyle}>Variation: {selectedProduct.variation}</Text>
+                            <Text style={luxuryBodyStyle}>Price: ${selectedProduct.price}</Text>
+                            <Text style={luxuryBodyStyle}>Stock: {selectedProduct.stock_ml} ml</Text>
+                            <Text style={luxuryBodyStyle}>Featured: {selectedProduct.isfeatured ? "Yes" : "No"}</Text>
+                            <Text style={luxuryBodyStyle}>Hidden: {selectedProduct.ishidden ? "Yes" : "No"}</Text>
+                            <Text style={luxuryBodyStyle}>
+                                {/* Display the selected products Top, Heart, and Base notes in one line */}
+                                Notes: Top[{selectedProduct.notes?.top.join(", ") || "—"}] / Heart[{selectedProduct.notes?.heart.join(", ") || "—"}] / Base[{selectedProduct.notes?.base.join(", ") || "—"}]
                             </Text>
                             <Text 
                                 style={luxuryBodyStyle}>
-                                Please select a product
+                                Images: {Array.isArray(selectedProduct.images) ? selectedProduct.images.length : 0}
                             </Text>
                         </Flex>
-                    </>
-                    )}
-                    {/* View product ------------------------------------------------- */}
-                    {activeMode === MODES.VIEW && selectedProduct &&  !loadingProduct && (
-                    <Flex direction="column" gap="0.1rem" wrap="wrap" textAlign="center">
-                        <Text style={luxuryBodyStyle}>Name: {selectedProduct.name}</Text>
-                        <Text style={luxuryBodyStyle}>Type: {selectedProduct.type}</Text>
-                        <Text style={luxuryBodyStyle}>Variation: {selectedProduct.variation}</Text>
-                        <Text style={luxuryBodyStyle}>Price: ${selectedProduct.price}</Text>
-                        <Text style={luxuryBodyStyle}>Stock: {selectedProduct.stock_ml} ml</Text>
-                        <Text style={luxuryBodyStyle}>Featured: {selectedProduct.isfeatured ? "Yes" : "No"}</Text>
-                        <Text style={luxuryBodyStyle}>Hidden: {selectedProduct.ishidden ? "Yes" : "No"}</Text>
-                        <Text style={luxuryBodyStyle}>
-                            {/* Display the selected products Top, Heart, and Base notes in one line */}
-                            Notes: Top[{selectedProduct.notes?.top.join(", ") || "—"}] / Heart[{selectedProduct.notes?.heart.join(", ") || "—"}] / Base[{selectedProduct.notes?.base.join(", ") || "—"}]
-                        </Text>
-                        <Text 
-                            style={luxuryBodyStyle}>
-                            Images: {Array.isArray(selectedProduct.images) ? selectedProduct.images.length : 0}
-                        </Text>
+                        )} 
                     </Flex>
-                    )} 
-                </Flex>
-            </Card>
+                </Card>
+            </Flex>
         </Flex>
     );
 }
