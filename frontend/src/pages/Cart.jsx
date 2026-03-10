@@ -153,7 +153,6 @@ setCart(fullCart.filter(Boolean));
     setLoadingCart(false);
   }
 }
-
   useEffect(() => {
     loadCart();
   }, []);
@@ -186,24 +185,26 @@ async function loadRecommendations() {
   async function increaseQuantity(id) {
     const customerid = await getCustomerId();
     if (!customerid) return;
-
-  const updatedCart = cart.map(item =>
-    item.id === id
-      ? { ...item, quantity: item.quantity + 1 }
-      : item
-  );
-
-  setCart(updatedCart);
-
-  await updateCartReq(
-    customerid,
-    updatedCart.map(item => ({
-    itemid: item.itemid,
-    quantity: item.quantity,
-    type: item.type
-  }))
-  );
-}
+    const targetItem = cart.find(item => item.id === id);
+    if (targetItem.quantity >= 10) {
+      setMessage("Maximum quantity per item is 10.");
+      return;
+    }
+    const updatedCart = cart.map(item =>
+      item.id === id
+        ? { ...item, quantity: item.quantity + 1 }
+        : item
+    );
+    setCart(updatedCart);
+    await updateCartReq(
+      customerid,
+      updatedCart.map(item => ({
+        itemid: item.itemid,
+        quantity: item.quantity,
+        type: item.type
+      }))
+    );
+  }
 
   async function decreaseQuantity(id) {
   const customerid = await getCustomerId();
@@ -216,9 +217,7 @@ async function loadRecommendations() {
         : item
     )
     .filter(item => item.quantity > 0);
-
   setCart(updatedCart);
-
   await updateCartReq(
     customerid,
     updatedCart.map(item => ({
@@ -357,8 +356,16 @@ async function checkout() {
                       </View>
 
                       <View
-                        style={buttonViewStyle}
-                        onClick={() => increaseQuantity(cartItem.id)}
+                        style={{
+                          ...buttonViewStyle,
+                          opacity: cartItem.quantity >= 10 ? 0.4 : 1,
+                          cursor: cartItem.quantity >= 10 ? "not-allowed" : "pointer"
+                        }}
+                        onClick={() => {
+                          if (cartItem.quantity < 10) {
+                            increaseQuantity(cartItem.id);
+                          }
+                        }}
                       >
                         <Text style={luxuryBodyStyle}>+</Text>
                       </View>
