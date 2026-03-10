@@ -1,9 +1,20 @@
 import { useEffect, useState } from "react";
-import { Card, Flex, Text, Button, View } from "@aws-amplify/ui-react";
+import { Card, Flex, Text, Button, View, TextField } from "@aws-amplify/ui-react";
 
 import AdminIcon from "../assets/admin_icon.png"
+import SearchIcon from "../assets/search_icon.png"
+import { getFilteredUsersReq } from "../requests";
+
 
 // Custom Styling for fonts and amplify ui --------------------------------------
+const bodyStyle2 = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 400,
+  fontSize: "1.3rem",
+  letterSpacing: "0.5px",
+  color: "#000000",
+};
+
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 800,
@@ -30,6 +41,9 @@ export default function UsersPanel() {
     const [loadingUsers, setLoadingUsers] = useState(true);
     const [loadingUser, setLoadingUser] = useState(false);
     const [msg, setMessage] = useState("");
+
+    // search and filter
+    const [search, setSearch] = useState("")
 
     // Load users ------------------------------------------------------------------
     // Pull user information from API URL and if fails show error message
@@ -92,11 +106,56 @@ console.log("selectedUser object:", selectedUser);
 const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
 
     return (
-        <Flex 
+        <Flex
+        direction={"column"}
+        >
+            <Flex  
+            padding={"5px"}    
+            alignItems={"center"}
+            justifyContent={"center"}
+            gap={"3px"}
+            style={{zIndex: "2000", background: "linear-gradient(to right, white, rgba(209, 178, 178, 0.35), white)"}}
+            >
+
+                <View
+                position={"relative"}>
+                <TextField
+                    labelHidden
+                    type="text"
+                    placeholder="Search by email..."
+                    textAlign={"left"}
+                    width={"300px"}
+                    style={{borderRadius:"10px", ...bodyStyle2}}
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    onKeyDown={async (e) =>  {
+                        if (e.key !== "Enter") return;
+                        const res = await getFilteredUsersReq({email: search});
+                        console.log(res)
+                        setUsers(res.data.users)
+                    }}
+                />
+                <section 
+                style={{
+                    display: "flex",
+                    width:"30px", 
+                    paddingRight: "5px",
+                    overflow:"hidden",
+                    position:"absolute",
+                    right:"0",
+                    top: "50%",
+                    transform: "translateY(-50%)"}}
+                    onClick={e => {}}>
+                    <img src={SearchIcon} alt="search" style={{width: "100%"}} />
+                </section>
+                </View>
+
+            </Flex>
+            <Flex
             direction="row" 
             gap="1rem" 
-            height="100%">
-
+            height="100%"
+            >
             {/* Left card holding emails ---------------------------------------------*/}
             <Card
                 flex="1.2" 
@@ -223,6 +282,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     </Flex>
                 )} 
             </Card>
+            </Flex>
         </Flex>
     );
 }

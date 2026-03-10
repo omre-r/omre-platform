@@ -905,6 +905,15 @@ export default function ProductsPanel() {
                                     >
                                     Remove
                                 </Button>
+                                <Button 
+                                    style={luxuryBodyStyle}
+                                    onClick={() => {
+                                        resetToIdle();
+                                        loadProducts();
+                                    }}
+                                    >
+                                    Refresh
+                                </Button>
                             </Flex>
                         </Flex>
 
