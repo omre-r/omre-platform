@@ -2,7 +2,7 @@ import Navbar from "../components/Navbar";
 import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, Heading, ToggleButton } from "@aws-amplify/ui-react";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useEffect, useState } from "react";
-import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq,addBlendToCartReq,createCartItemReq, updatePreferredNotesReq, getUserReq } from "../requests.js";
+import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq,addBlendToCartReq,createCartItemReq, updatePreferredNotesReq, getUserReq, getUserOrdersReq } from "../requests.js";
 
 // Fonts ----------------------------------------------
 const luxuryHeadingStyle = {
@@ -54,6 +54,9 @@ export default function Profile() {
     const [loadedBlends, setLoadedBlends] = useState([]);
     const [products, setProducts] = useState([]);
     const [blendLoading, setBlendLoading] = useState(false);
+
+    const [userOrders, setUserOrders] = useState([]);
+    const [ordersLoading, setOrdersLoading] = useState(false);
 
     // Load products from backend ---------------------------------------
     async function loadProducts() {
@@ -250,6 +253,52 @@ export default function Profile() {
         }
     }
 
+async function loadUserOrders() {
+    let userid;
+    for (let key of Object.keys(localStorage)) {
+        if (key.includes("idToken")) {
+            const idToken = localStorage.getItem(key);
+            const base64 = idToken.split(".")[1];
+            const decoded = JSON.parse(atob(base64));
+            userid = decoded.sub;
+            break;
+        }
+    }
+    setMessage("");
+    setOrdersLoading(true);
+    try {
+        const orders = await getUserOrdersReq(userid);
+        if (!orders.success) {
+            throw new Error(orders.message);
+        }
+        const parsedOrders = (orders.data.orders || []).map((order) => {
+            let parsedItems = order.items;
+
+            if (typeof parsedItems === "string") {
+                try {
+                    parsedItems = JSON.parse(parsedItems);
+                } catch (err) {
+                    console.error("Failed to parse order items:", err);
+                    parsedItems = [];
+                }
+            }
+            // creating new order object by ...order (spread operator) from original order (copying all original information) but updating the items with the parsedItems
+            return {
+                ...order,
+                items: parsedItems || [],
+            };
+        });
+        parsedOrders.sort((a, b) => new Date(b.created) - new Date(a.created));
+        setUserOrders(parsedOrders);
+    } 
+    catch (error) {
+        setMessage(error.message || "Error loading orders.");
+    }
+    finally {
+        setOrdersLoading(false);
+    }
+}
+
 
     // Get product ID from product object, accounting for different possible key names ---------------------------
     function getProductId(product) {
@@ -287,10 +336,25 @@ export default function Profile() {
         }
     }, [activeTab, products]);
 
-    // Load products on component mount ---------------------------------------
+    // Load products, favorite notes, and user orders on component mount ---------------------------------------
     useEffect(() => {
         loadProducts();
         loadSavedFavoriteNotes();
+        loadUserOrders();
+
+        for (let key of Object.keys(localStorage)) {
+            if (key.includes("idToken")) {
+                const idToken = localStorage.getItem(key);
+                const base64 = idToken.split(".")[1];
+                const decoded = JSON.parse(atob(base64));
+                // cognito stores first name as given_name in user pool
+                if (decoded.given_name) {
+                    setfirstName(decoded.given_name);
+                }
+                break;
+            }
+    }
+
     }, []);
 
     return (
@@ -316,7 +380,7 @@ export default function Profile() {
                 <Text 
                     style={luxuryHeadingStyle}
                     marginTop="1rem">
-                    Welcome "FIRSTNAME"!
+                    Welcome {firstName || "Guest"}!
                 </Text>
                 <Flex
                     direction="row"
@@ -366,9 +430,106 @@ export default function Profile() {
                     )}
 
                     {activeTab === "orders" && (
-                        <Text style={luxuryBodyStyle}>
-                            Orders
-                        </Text>
+                        <View>
+                            <Text style={luxurySubheadingStyle}>
+                                Your Orders
+                            </Text>
+                            {ordersLoading ? (
+                                <Text style={luxuryBodyStyle}>Loading orders...</Text>
+                            ) 
+                            : userOrders.length === 0 ? (
+                                <Text style={luxuryBodyStyle}>No orders found yet.</Text>
+                            ) 
+                            : (
+                                <View marginTop="1rem">
+                                    <Table>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell style={tableHeaderStyle}>Order ID</TableCell>
+                                                <TableCell style={tableHeaderStyle}>Order Items</TableCell>
+                                                <TableCell style={tableHeaderStyle}>Status</TableCell>
+                                                <TableCell style={tableHeaderStyle}>Total</TableCell>
+                                                <TableCell style={tableHeaderStyle}>Created</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+
+                                        {userOrders.map((order) => (
+                                            <TableRow
+                                                key={order.id}
+                                                style={{
+                                                    borderTop: "1px solid rgba(0, 0, 0, 0.15)"
+                                                }}
+                                            >
+                                                <TableCell style={tableBodyStyle}>
+                                                    {order.id.slice(0, 8)}
+                                                </TableCell>
+                                                <TableCell style={{...tableBodyStyle, textAlign: "left"}}>
+                                                    <View
+                                                        style={{marginLeft: "7rem"}}>
+                                                        {Array.isArray(order.items) && order.items.length > 0 ? (
+                                                            order.items.map((orderItem, index) => {
+                                                                if (orderItem.type === "product") {
+                                                                    return (
+                                                                        <Text key={index} style={luxuryBodyStyle}>
+                                                                            {orderItem.item.name || "Product"} x{orderItem.quantity}
+                                                                        </Text>
+                                                                    );
+                                                                }
+                                                                if (orderItem.type === "blend") {
+                                                                    const blend = orderItem.item;
+                                                                    return (
+                                                                        <View key={index} marginBottom="0.5rem">
+                                                                            <Text style={luxuryBodyStyle}>
+                                                                                Custom Blend - {blend?.size_ml}ml x{orderItem.quantity}
+                                                                            </Text>
+
+                                                                            {blend.frag1_productid && (
+                                                                                <Text style={luxuryBodyStyle}>
+                                                                                    • {blend.frag1_pct}% {getProductNameById(blend.frag1_productid) || "Unknown Fragrance"}
+                                                                                </Text>
+                                                                            )}
+
+                                                                            {blend.frag2_productid && (
+                                                                                <Text style={luxuryBodyStyle}>
+                                                                                    • {blend.frag2_pct}% {getProductNameById(blend.frag2_productid) || "Unknown Fragrance"}
+                                                                                </Text>
+                                                                            )}
+
+                                                                            {blend.frag3_productid && (
+                                                                                <Text style={luxuryBodyStyle}>
+                                                                                    • {blend.frag3_pct}% {getProductNameById(blend.frag3_productid) || "Unknown Fragrance"}
+                                                                                </Text>
+                                                                            )}
+                                                                        </View>
+                                                                    );
+                                                                }
+
+                                                                return (
+                                                                    <Text key={index} style={luxuryBodyStyle}>
+                                                                        Unknown item
+                                                                    </Text>
+                                                                );
+                                                            })
+                                                        ) : (
+                                                            <Text style={luxuryBodyStyle}>No items found</Text>
+                                                        )}
+                                                    </View>
+                                                </TableCell>
+                                                <TableCell style={tableBodyStyle}>
+                                                    {order.status}
+                                                </TableCell>
+                                                <TableCell style={tableBodyStyle}>
+                                                    ${order.total}
+                                                </TableCell>
+                                                <TableCell style={tableBodyStyle}>
+                                                    {new Date(order.created).toLocaleString()}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </Table>
+                                </View>
+                            )}
+                        </View>
                     )}
 
                     
@@ -448,11 +609,7 @@ export default function Profile() {
 
                     {activeTab === "preferences" && (
                         <View>
-                            <Text style={luxurySubheadingStyle}>
-                                Previously saved favorite notes: {selectedNotes.length > 0 ? selectedNotes.join(", ") : "None saved yet"}
-                            </Text>
-
-                            <Text 
+                            <Text marginBottom="1.5rem"
                                 style={luxurySubheadingStyle}>
                                 Which notes are you drawn to?
                             </Text>
@@ -460,41 +617,40 @@ export default function Profile() {
                             <Grid
                                 templateColumns="repeat(3, 1fr)"
                                 gap="0.3rem"
-                                marginBottom="1rem">
-                                <ToggleButton isPressed={selectedNotes.includes("Vanilla")} onClick={() => toggleNote("Vanilla")}>Vanilla</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Rose")} onClick={() => toggleNote("Rose")}>Rose</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Oud")} onClick={() => toggleNote("Oud")}>Oud</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Bergamot")} onClick={() => toggleNote("Bergamot")}>Bergamot</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Sandalwood")} onClick={() => toggleNote("Sandalwood")}>Sandalwood</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Jasmine")} onClick={() => toggleNote("Jasmine")}>Jasmine</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Cedarwood")} onClick={() => toggleNote("Cedarwood")}>Cedarwood</ToggleButton>
+                                marginBottom=".5rem">
+                                <ToggleButton isPressed={selectedNotes.includes("Almond")} onClick={() => toggleNote("Almond")}>Almond</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Amber")} onClick={() => toggleNote("Amber")}>Amber</ToggleButton>
-                                
-                                <ToggleButton isPressed={selectedNotes.includes("Honey")} onClick={() => toggleNote("Honey")}>Honey</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Benzoin")} onClick={() => toggleNote("Benzoin")}>Benzoin</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Bergamot")} onClick={() => toggleNote("Bergamot")}>Bergamot</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Cedarwood")} onClick={() => toggleNote("Cedarwood")}>Cedarwood</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Chocolate")} onClick={() => toggleNote("Chocolate")}>Chocolate</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Cinnamon")} onClick={() => toggleNote("Cinnamon")}>Cinnamon</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Clove")} onClick={() => toggleNote("Clove")}>Clove</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Coconut")} onClick={() => toggleNote("Coconut")}>Coconut</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Coffee")} onClick={() => toggleNote("Coffee")}>Coffee</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Chocolate")} onClick={() => toggleNote("Chocolate")}>Chocolate</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Almond")} onClick={() => toggleNote("Almond")}>Almond</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Peony")} onClick={() => toggleNote("Peony")}>Peony</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Eucalyptus")} onClick={() => toggleNote("Eucalyptus")}>Eucalyptus</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Fig")} onClick={() => toggleNote("Fig")}>Fig</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Gardenia")} onClick={() => toggleNote("Gardenia")}>Gardenia</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Patchouli")} onClick={() => toggleNote("Patchouli")}>Patchouli</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Oak")} onClick={() => toggleNote("Oak")}>Oak</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Pine")} onClick={() => toggleNote("Pine")}>Pine</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Ginger")} onClick={() => toggleNote("Ginger")}>Ginger</ToggleButton>   
+                                <ToggleButton isPressed={selectedNotes.includes("Honey")} onClick={() => toggleNote("Honey")}>Honey</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Jasmine")} onClick={() => toggleNote("Jasmine")}>Jasmine</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Leather")} onClick={() => toggleNote("Leather")}>Leather</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Lemon")} onClick={() => toggleNote("Lemon")}>Lemon</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Mandarin")} onClick={() => toggleNote("Mandarin")}>Mandarin</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Mint")} onClick={() => toggleNote("Mint")}>Mint</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Cinnamon")} onClick={() => toggleNote("Cinnamon")}>Cinnamon</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Ginger")} onClick={() => toggleNote("Ginger")}>Ginger</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Saffron")} onClick={() => toggleNote("Saffron")}>Saffron</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Musk")} onClick={() => toggleNote("Musk")}>Musk</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Leather")} onClick={() => toggleNote("Leather")}>Leather</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Tobacco")} onClick={() => toggleNote("Tobacco")}>Tobacco</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Oak")} onClick={() => toggleNote("Oak")}>Oak</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Oud")} onClick={() => toggleNote("Oud")}>Oud</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Patchouli")} onClick={() => toggleNote("Patchouli")}>Patchouli</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Peony")} onClick={() => toggleNote("Peony")}>Peony</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Pine")} onClick={() => toggleNote("Pine")}>Pine</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Rose")} onClick={() => toggleNote("Rose")}>Rose</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Saffron")} onClick={() => toggleNote("Saffron")}>Saffron</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Sandalwood")} onClick={() => toggleNote("Sandalwood")}>Sandalwood</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Suede")} onClick={() => toggleNote("Suede")}>Suede</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Benzoin")} onClick={() => toggleNote("Benzoin")}>Benzoin</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Clove")} onClick={() => toggleNote("Clove")}>Clove</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Fig")} onClick={() => toggleNote("Fig")}>Fig</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Eucalyptus")} onClick={() => toggleNote("Eucalyptus")}>Eucalyptus</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Yuzu")} onClick={() => toggleNote("Yuzu")}>Yuzu</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Tobacco")} onClick={() => toggleNote("Tobacco")}>Tobacco</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Vanilla")} onClick={() => toggleNote("Vanilla")}>Vanilla</ToggleButton>
+                                <ToggleButton isPressed={selectedNotes.includes("Yuzu")} onClick={() => toggleNote("Yuzu")}>Yuzu</ToggleButton>  
                             </Grid>
                             {message && (
                             <Text
@@ -502,7 +658,8 @@ export default function Profile() {
                                     ...luxuryBodyStyle,
                                     color: message === "Preferred fragrances saved to profile!" ? "#2d6a2d" : "#8B0000",
                                     textAlign: "center",
-                                    marginTop: "2.3rem",
+                                    marginTop: "1rem",
+                                    marginBottom: "1rem",
                                     fontSize: "1.6rem"
                                 }}>
                                 {message}
