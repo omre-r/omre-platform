@@ -105,7 +105,7 @@ export default function Home() {
       for (const prod of returnedProducts){
         prod.isfeatured ? featured.push(prod) : others.push(prod);
       }
-      setProducts([...featured, ...others]);
+      setProducts(groupRelevantElements([...featured, ...others]));
     } catch (err) {
       console.error(err);
       setMessage("Failed to load products.");
@@ -114,6 +114,19 @@ export default function Home() {
     }
   }
 
+  function groupRelevantElements(productList){
+    const parents = {};
+    for (const p of productList){
+        parents?.[p.parentid] ? parents[p.parentid].push(p) : parents[p.parentid] = [p];
+    }
+    // sort variations [50ml, 30ml, 70ml] => [30ml, 50ml, 70ml]
+    const groups = Object.values(parents);
+    for (const group of groups){
+        group.sort((a, b) => Number(a?.variation?.split("ml")?.[0]) - Number(b?.variation?.split("ml")?.[0]))
+    }
+    return Object.values(parents);
+}
+
   async function filterProducts(filters){
       try {
         const data = await getFilteredProductsReq(filters);
@@ -121,7 +134,7 @@ export default function Home() {
           throw Error(data.message || "Error getting filtered products");
         }
         
-        setProducts(data.data.products);
+        setProducts(groupRelevantElements(data.data.products));
       } catch (err) {
         console.error(err);
         setMessage("Failed to get filtered products.");
@@ -215,18 +228,19 @@ export default function Home() {
                 setProducts(prev => {
                   const featured = []
                   const others = []
-                  for (const prod of prev){
-                    prod.isfeatured ? featured.push(prod) : others.push(prod)
+                  for (const prodList of prev){
+                    for (const prod of prodList){
+                      prod.isfeatured ? featured.push(prod) : others.push(prod)
+                    }
                   }
-                  return [...featured, ...others]
+                  return groupRelevantElements([...featured, ...others])
                  })
                 break
               }
               case "pricehighlow":{
                 setProducts(prev => {
                   const newProducts = [...prev]
-                  console.log(newProducts)
-                  newProducts.sort((a, b) => Number(b.price) - Number(a.price))
+                  newProducts.sort((a, b) => Number(b?.[0]?.price) - Number(a?.[0]?.price))
                   return newProducts
                 })
                 break
@@ -234,8 +248,7 @@ export default function Home() {
               case "pricelowhigh":{
                 setProducts(prev => {
                   const newProducts = [...prev]
-                  console.log(newProducts)
-                  newProducts.sort((a, b) => Number(a.price) - Number(b.price))
+                  newProducts.sort((a, b) => Number(a?.[0]?.price) - Number(b?.[0]?.price))
                   return newProducts
                 })
                 break
@@ -457,8 +470,9 @@ export default function Home() {
         </Text>
 
         <Flex wrap="wrap">
-          {!loadingProducts && products.map((prod) => (
-            <Card
+          {!loadingProducts && products.map((prodList) => {
+            const prod = prodList?.[0];
+            return (<Card
               key={prod.id}
               variation="elevated"
               height="auto"
@@ -495,7 +509,7 @@ export default function Home() {
                 </Text>
               </Link>
             </Card>
-          ))}
+          )})}
     </Flex>
 
         <Flex justifyContent="flex-end">

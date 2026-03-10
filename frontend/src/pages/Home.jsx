@@ -39,7 +39,7 @@ export default function Home() {
         if (!data.success){
           throw new Error(data.message)
         }
-        setProducts(data.data.products);
+        setProducts(groupRelevantElements(data.data.products));
       } catch (err) {
         console.error(err);
         setMessage("Failed to load products.");
@@ -50,6 +50,19 @@ export default function Home() {
 
     loadProducts();
   }, []);
+
+  function groupRelevantElements(productList){
+    const parents = {};
+    for (const p of productList){
+        parents?.[p.parentid] ? parents[p.parentid].push(p) : parents[p.parentid] = [p];
+    }
+    // sort variations [50ml, 30ml, 70ml] => [30ml, 50ml, 70ml]
+    const groups = Object.values(parents);
+    for (const group of groups){
+        group.sort((a, b) => Number(a?.variation?.split("ml")?.[0]) - Number(b?.variation?.split("ml")?.[0]))
+    }
+    return Object.values(parents);
+}
 
   return (
     <>
@@ -74,8 +87,13 @@ export default function Home() {
         </Text>
 
         <Flex wrap="wrap">
-          {!loadingProducts && products && products.filter((prod) => prod.isfeatured === true).map((prod) => (
-            <Card
+          {!loadingProducts && products && products.map(prodList => {
+            const filteredList = prodList.filter(prod => prod.isfeatured === true);
+            const prod = filteredList?.[0];
+            if (!prod){
+              return null
+            }
+            return (<Card
               key={prod.id}
               variation="elevated"
               height="auto"
@@ -111,8 +129,8 @@ export default function Home() {
                   ${prod.price}
                 </Text>
               </Link>
-            </Card>
-          ))}
+            </Card>)
+          })}
     </Flex>
 
         <Flex justifyContent="flex-end">
