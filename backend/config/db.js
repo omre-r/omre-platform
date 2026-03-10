@@ -228,7 +228,7 @@ class DBError extends Error{
 }
 
 class Users{
-    static filterableFields = ["email"]
+    static filterableFields = ["email", "first_name", "last_name", "is_admin", "last_login"]
 
     //This function will be useless for now
     //modifications made to make it match Ayman's lambda function 'omre-cognito-post-confirmation'
@@ -335,6 +335,32 @@ class Users{
                 case "email":{
                     query += `email ILIKE $${values.length + 1} AND `
                     values.push(`%${filters[filter]}%`)
+                    break
+                }
+                case "first_name":{
+                    query += `first_name ILIKE $${values.length + 1} AND `
+                    values.push(`%${filters[filter]}%`)
+                    break
+                }
+                case "last_name":{
+                    query += `last_name ILIKE $${values.length + 1} AND `
+                    values.push(`%${filters[filter]}%`)
+                    break
+                }
+                case "is_admin":{
+                    if (filters.is_admin){
+                        query += `is_admin IS TRUE AND `
+                    }else{
+                        query += `is_admin IS FALSE AND `
+                    }
+                    break
+                }
+                case "last_login":{
+                    if (filters.last_login){
+                        query += `last_login IS NOT NULL AND `
+                    }else{
+                        query += `last_login IS NULL AND `
+                    }
                     break
                 }
                 default:{
