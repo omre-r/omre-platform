@@ -153,7 +153,7 @@ async function cancelOrder(orderId) {
 
           {msg && <Text color="Black" style={luxuryBodyStyle} marginTop="0.5rem">{msg}</Text>}
 
-          <View overflow="auto" height="20rem" marginTop="1rem">
+          <View overflow="auto" height="25rem" marginTop="1rem">
             {orders.length === 0 && <Text style={luxuryBodyStyle}>No orders found.</Text>}
 
             {orders.filter((order) =>

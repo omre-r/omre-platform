@@ -922,7 +922,7 @@ export default function ProductsPanel() {
                             {message}
                         </Text>
                         )}
-                        <View overflow="auto" height="20rem" marginTop="1rem"> 
+                        <View overflow="auto" height="25rem" marginTop="1rem"> 
                             {/* Below creating a list of all the products ---------------------------- */}
                             {sortedProducts.map((prodList) => {
                                 return (

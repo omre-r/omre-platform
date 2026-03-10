@@ -109,7 +109,7 @@ export default function AdminDashboard() {
                             {/* Card to hold the actual dashboard information ---------------------- */}
                             {/* Depending on which button is clicked will show appropriate mode */}
                             <Card
-                                minHeight="30rem" // was "auto"
+                                minHeight="40em" // was "auto"
                                 width="80rem"
                                 margin="1rem auto"
                                 padding="2rem"

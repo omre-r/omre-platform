@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { Card, Flex, Text, Button, View, TextField } from "@aws-amplify/ui-react";
+import { Card, Flex, Text, Button, View, TextField, SwitchField,  } from "@aws-amplify/ui-react";
 
 import AdminIcon from "../assets/admin_icon.png"
 import SearchIcon from "../assets/search_icon.png"
+import OptionsIcon from "../assets/options_icon.png"
+
 import { getFilteredUsersReq } from "../requests";
+import { data } from "react-router-dom";
 
 
 // Custom Styling for fonts and amplify ui --------------------------------------
@@ -44,6 +47,16 @@ export default function UsersPanel() {
 
     // search and filter
     const [search, setSearch] = useState("")
+    const [includeSearch, setIncludeSearch] = useState(false)
+    const [firstname, setFirstname] = useState("")
+    const [lastname, setLastname] = useState("")
+    const [getAdmins, setGetAdmins] = useState(true)
+    const [getNonadmins, setGetNonadmins] = useState(true)
+    const [getLoggedIn, setGetLoggedIn] = useState(true)
+    const [getNeverLoggedIn, setGetNeverLoggedIn] = useState(true)
+    const [showFilters, setShowFilters] = useState(false)
+    
+
 
     // Load users ------------------------------------------------------------------
     // Pull user information from API URL and if fails show error message
@@ -57,6 +70,24 @@ export default function UsersPanel() {
             }
             const data = await response.json();
             setUsers(data.users);
+        }
+        catch (error) {
+            setMessage(error.message || "Error loading users.");
+        }
+        finally {
+            setLoadingUsers(false);
+        }
+    }
+
+    async function filterUsers(filters) {
+        setMessage("");
+        setLoadingUsers(true);
+        try {
+            const response = await getFilteredUsersReq(filters)
+            if (!response.success) {
+                throw new Error(`Issue with load response: ${response.message}`)
+            }
+            setUsers(response.data.users);
         }
         catch (error) {
             setMessage(error.message || "Error loading users.");
@@ -89,6 +120,31 @@ export default function UsersPanel() {
         }
     }
 
+   function handleFilterSubmit(){
+        const filters = {}
+        if (firstname !== "") filters.first_name = firstname;
+        if (lastname !== "") filters.last_name = lastname;
+        if (!getLoggedIn && !getNeverLoggedIn){
+            setUsers([]);
+            return;
+        }
+        if (getLoggedIn && !getNeverLoggedIn) filters.last_login = true;
+        if (!getLoggedIn && getNeverLoggedIn) filters.last_login = false;
+        if (!getAdmins && !getNonadmins){
+            setUsers([]);
+            return;
+        }
+        if (getAdmins && !getNonadmins) filters.is_admin = true;
+        if (!getAdmins && getNonadmins) filters.is_admin = false;
+        if (includeSearch) filters.email = search;
+
+        if (Object.keys(filters).length === 0){
+            loadUsers();
+            return;
+        }
+        filterUsers(filters)
+    }
+
     useEffect(() => {
         loadUsers();
     }, []);
@@ -100,7 +156,6 @@ export default function UsersPanel() {
             Loading users...
         </Text>);
     }
-console.log("selectedUser object:", selectedUser);
 
 // Getting the sorted list of users ------------------------------------------
 const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
@@ -108,6 +163,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
     return (
         <Flex
         direction={"column"}
+        height={"100%"}
         >
             <Flex  
             padding={"5px"}    
@@ -149,12 +205,137 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     <img src={SearchIcon} alt="search" style={{width: "100%"}} />
                 </section>
                 </View>
+                <View 
+                position={"relative"}
+                padding={"2px"}
+                backgroundColor={"white"}
+                borderRadius={"10px"}
+                style={{width: "40px"}}
+                onClick={e => {e.currentTarget.blur(); setShowFilters(prev=>!prev);}}
+                >
+                <img src={OptionsIcon} alt="options" style={{width:"100%", display:"block"}}/>
+                {showFilters && 
+                <Card
 
+                position={"absolute"}
+                top={"110%"}
+                left={"50%"}
+                transform={"translateX(-50%)"}
+                border={"1px solid"}
+                borderRadius={"10px"}
+                minWidth={"420px"}
+                onClick={e => e.stopPropagation()}
+                >
+                    <Flex 
+                    direction={"column"}
+                    gap={0}>
+                    <Flex>
+                        {/* first name container */}
+                        <Flex
+                        alignItems={"center"}>
+                            <Text
+                            marginRight={"auto"}>First name: </Text>
+                            <TextField 
+                            value={firstname}
+                            onChange={e => setFirstname(e.target.value)}
+                            />
+                        </Flex>
+                        {/* last name container */}
+                        <Flex
+                        alignItems={"center"}>
+                            <Text
+                            marginRight={"auto"}>Last name: </Text>
+                            <TextField 
+                            value={lastname}
+                            onChange={e => setLastname(e.target.value)}
+                            />
+                        </Flex>
+                    </Flex>
+                    <hr style={{width: "100%", marginBlock: "10px"}}/>
+                    <Flex>
+                        {/* get logged in container */}
+                        <Flex
+                        alignItems={"center"}>
+                            <Text
+                            marginRight={"auto"}>Show logged in:</Text>
+                            <SwitchField 
+                            isChecked={getLoggedIn}
+                            onChange={e => setGetLoggedIn(e.target.checked)}>
+                            </SwitchField>
+                        </Flex>
+
+                        {/* get not logged in container */}
+                        <Flex
+                        alignItems={"center"}>
+                            <Text
+                            marginRight={"auto"}>Show never logged in:</Text>
+                            <SwitchField 
+                            isChecked={getNeverLoggedIn}
+                            onChange={e => setGetNeverLoggedIn(e.target.checked)}>
+                            </SwitchField>
+                        </Flex>
+                    </Flex>
+                    <hr style={{width: "100%", marginBlock: "10px"}}/>
+                    <Flex>
+                        {/* get is admin container */}
+                        <Flex
+                        alignItems={"center"}>
+                            <Text
+                            marginRight={"auto"}>Show admins:</Text>
+                            <SwitchField 
+                            isChecked={getAdmins}
+                            onChange={e => setGetAdmins(e.target.checked)}>
+                            </SwitchField>
+                        </Flex>
+
+                        {/* get nonadmins container */}
+                        <Flex
+                        alignItems={"center"}>
+                            <Text
+                            marginRight={"auto"}>Show normal users:</Text>
+                            <SwitchField 
+                            isChecked={getNonadmins}
+                            onChange={e => setGetNonadmins(e.target.checked)}>
+                            </SwitchField>
+                        </Flex>
+                    </Flex>
+
+                    <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+
+                    {/* "include search" container */}
+                    <Flex
+                    direction={"column"}
+                    gap={"3px"}
+                    alignItems={"center"}>
+                        <Flex
+                        width={"100%"}>
+                        <Text
+                        marginRight={"auto"}>
+                            Include Email Search:
+                        </Text>
+                        <SwitchField 
+                        isChecked={includeSearch}
+                        onChange={e => setIncludeSearch(e.target.checked)}>
+                        </SwitchField>
+                        </Flex>
+                        {includeSearch && <Text style={{fontSize: ".8rem"}}>"{search}"</Text>}
+                    </Flex>
+                    <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+                    <Button 
+                    onClick={handleFilterSubmit}>
+                        Filter
+                    </Button>
+                    </Flex>
+                </Card>
+                }
+                </View>
             </Flex>
             <Flex
             direction="row" 
             gap="1rem" 
-            height="100%"
+            flex={"1"}
             >
             {/* Left card holding emails ---------------------------------------------*/}
             <Card
@@ -190,9 +371,11 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     )}
 
                     <View 
-                        overflow="auto" 
-                        height="20rem"
+                        style={{overflowY: "auto"}}
+                        height={"25rem"}
                         marginTop="1rem">
+                        {sortedUsers.length === 0 &&
+                        <Text>No users found!</Text>}
                         {sortedUsers.map((currentUser) => (
                             <Button
                                 key={currentUser.user_id}
@@ -209,6 +392,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             </Button>
                         ))}
                     </View>
+
                     </Flex>
                 </Card>
         
@@ -218,6 +402,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     height="100%" 
                     padding="1rem" 
                     backgroundColor="whitesmoke"
+
                     position={"relative"}
                 >
                     <Flex>
