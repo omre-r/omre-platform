@@ -663,7 +663,7 @@ export default function ProductsPanel() {
             alignItems={"center"}
             justifyContent={"center"}
             gap={"3px"}
-            style={{zIndex: "2000", background: "linear-gradient(to right, white, rgba(209, 178, 178, 0.35), white)"}}
+            style={{zIndex: "1000", background: "linear-gradient(to right, white, rgba(209, 178, 178, 0.35), white)"}}
             >
 
                 <View
@@ -1065,7 +1065,7 @@ export default function ProductsPanel() {
 
                         {/* Add mode: Will pull up a blank draft to be filled out with information of a product they want to add */}
                         {/* Edit mode: Will take existing product and show its information in the draft instead of being blank */}
-                        {(activeMode === MODES.ADD || activeMode === MODES.EDIT || activeMode === MODES.APPEND) && (
+                        {(activeMode === MODES.ADD || activeMode === MODES.EDIT || activeMode === MODES.APPEND) &&(
                             <Grid 
                                 templateColumns="1fr 1fr"
                                 gap="0.4rem"
@@ -1098,10 +1098,25 @@ export default function ProductsPanel() {
                                     onChange={(e) => setDraftField("variation", e.target.value)} 
                                 >
                                     <option value="" disabled>Variation</option>
-                                    {!["30ml", "50ml"].includes(draft.variation) && ![MODES.ADD, MODES.APPEND].includes(activeMode) &&
+                                    {!["30ml", "50ml"].includes(draft.variation) && activeMode === MODES.EDIT &&
                                     <option value={draft.variation} disabled>{draft.variation}</option>}
-                                    <option value="30ml">30ml</option>
-                                    <option value="50ml">50ml</option>
+                                    {activeMode === MODES.ADD || !selectedProduct
+                                    ?
+                                        <>
+                                            <option value="30ml">30ml</option>
+                                            <option value="50ml">50ml</option>
+                                        </>
+                                    :
+                                    ["30ml", "50ml"].map(size => {
+                                        const parentGroup = sortedProducts.find(arr => arr?.[0]?.parentid === selectedProduct.parentid);
+                                        if (parentGroup.some(p => (activeMode === MODES.APPEND || p.id !== selectedProduct.id) && p.variation === size)){
+                                            return <option value={`${size}`} disabled>{size}</option>
+                                        }else{
+                                            return <option value={`${size}`}>{size}</option>
+                                        }
+                                    })
+                                    }
+
                                 </SelectField>
                                 <TextField 
                                     style={compactStyle}
@@ -1232,7 +1247,7 @@ export default function ProductsPanel() {
                                     display={"flex"}
                                     width={"100vw"}
                                     height={"100vh"}
-                                    style={{backdropFilter: "blur(4px)"}}
+                                    style={{backdropFilter: "blur(4px)", zIndex: "9999"}}
                                     justifyContent={"center"}
                                     alignItems={"center"}
                                     >
@@ -1370,7 +1385,7 @@ export default function ProductsPanel() {
                                     display={"flex"}
                                     width={"100vw"}
                                     height={"100vh"}
-                                    style={{backdropFilter: "blur(4px)"}}
+                                    style={{backdropFilter: "blur(4px)", zIndex: "9999"}}
                                     justifyContent={"center"}
                                     alignItems={"center"}
                                     >
