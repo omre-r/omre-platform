@@ -121,7 +121,7 @@ export default function Mixology() {
             // Making sure between the set bounds and that they add to 100%
             // Math example: 
             // Value is 60 for fragrance 1, then fragrance 2 will be set to 40 to add to 100%
-            const p1 = clamp(value, 100 - MAX_PCT, MAX_PCT);
+            const p1 = clamp(value, MIN_PCT, MAX_PCT);
             setfragrancePct1(p1);
             setfragrancePct2(100 - p1);
             return;
@@ -132,13 +132,13 @@ export default function Mixology() {
         // If value is 60 for fragrance 1
         // Min of fragrance 1 will be 5 
         // Max of fragrance 1 will be 95
-        const minP1 = Math.max(MIN_PCT, 5 - fragrancepct2);
-        const maxP1 = Math.min(MAX_PCT, 95 - fragrancepct2);
+        const minP1 = MIN_PCT;
+        const maxP1 = 100 - MIN_PCT - fragrancepct2;
         // Making sure between the set bounds and that fragrance 3 is at least 5% (so fragrance 1 + fragrance 2 is at most 95%)
         const p1 = clamp(value, minP1, maxP1);
         setfragrancePct1(p1);
-        const minP2 = Math.max(MIN_PCT, 5 - p1);
-        const maxP2 = Math.min(MAX_PCT, 95 - p1);
+        const minP2 = MIN_PCT;
+        const maxP2 = 100 - MIN_PCT - p1;
         setfragrancePct2((prevP2) => clamp(prevP2, minP2, maxP2));
     }
 
@@ -148,8 +148,8 @@ export default function Mixology() {
         if (!thirdCologneSelectedMode) {
             return;
         }
-        const minP2 = Math.max(MIN_PCT, 5 - fragrancepct1);
-        const maxP2 = Math.min(MAX_PCT, 95 - fragrancepct1);
+        const minP2 = MIN_PCT;
+        const maxP2 = 100 - MIN_PCT - fragrancepct1;
         setfragrancePct2(clamp(value, minP2, maxP2));
     }
 
