@@ -411,7 +411,7 @@ likely updated in a single setting. Therefore, a single updateProduct is provide
 */
 class Products{
     static modifiableFields = ["type", "name", "variation", "price", "images", "notes", "description", "ishidden", "isfeatured"];
-    static filterableFields = ["type", "name", "variation", "price", "notes", "stock_ml", "isfeatured"]
+    static filterableFields = ["type", "name", "variation", "price", "notes", "stock_ml", "ishidden", "isfeatured",]
     
     async createProduct(options, client){
         if (!client){
@@ -550,7 +550,7 @@ class Products{
             throw new DBError("At least 1 filter required");
         }
 
-        let query = `SELECT * FROM products WHERE ishidden IS FALSE AND `
+        let query = `SELECT * FROM products WHERE `
         let values = []
 
         //builds a cosntraint in query for each filter
@@ -594,6 +594,11 @@ class Products{
                 }
                 case "isfeatured":{
                     query += `isfeatured = $${values.length + 1} AND `
+                    values.push(filters[filter])
+                    break
+                }
+                case "ishidden":{
+                    query += `ishidden = $${values.length + 1} AND `
                     values.push(filters[filter])
                     break
                 }

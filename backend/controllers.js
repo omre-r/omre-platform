@@ -188,6 +188,10 @@ async function getFilteredProducts(req, res) {
     throw new Error("No filters query param")
   }
   const filters = JSON.parse(req.query.filters)
+  filters.ishidden = false;
+  if (!USE_ACCESS_TOKENS || (req.tokenPayload && req.tokenPayload?.["cognito:groups"]?.includes("admin"))){
+    delete filters.ishidden;
+  }
   const result = await products.getFilteredProducts(filters);
   if (!result.success){
     return res.status(result.status).json(result);

@@ -42,6 +42,26 @@ async function verifyToken(req, res, next){
   return next()
 }
 
+// shared by users and admins, admins get extra privileges
+async function verifyOptionalToken(req, res, next){
+  if (!USE_ACCESS_TOKENS) return next();
+  const token = req.headers?.authorization?.split(" ")?.[1];
+
+
+  if (!token || token.split(".").length !== 3){
+    return next();
+  }
+
+  try {
+    const payload = await verifier.verify(token);
+    req.tokenPayload = payload;
+  } catch (err) {
+    return next();
+  }
+  return next()
+}
+
+
 async function checkAdminPerm(req, res, next) {
   if (!USE_ACCESS_TOKENS) return next();
 
@@ -74,7 +94,7 @@ app.get("/products/related/:parentid", controllers.getRelatedProducts);
 app.put("/products/stock/:parentid", controllers.updateProductStock);
 
 app.get("/products/active", controllers.getActiveProducts);
-app.get("/products/filter", controllers.getFilteredProducts);
+app.get("/products/filter", [verifyOptionalToken], controllers.getFilteredProducts);
 
 app.get("/products/:id", controllers.getProduct)
 app.put("/products/:id", [verifyToken, checkAdminPerm], controllers.updateProduct)

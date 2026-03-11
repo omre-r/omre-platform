@@ -695,7 +695,10 @@ export default function ProductsPanel() {
                     right:"0",
                     top: "50%",
                     transform: "translateY(-50%)"}}
-                    onClick={e => {}}>
+                    onClick={e => {
+                        resetToIdle();
+                        filterProducts({name: search});
+                    }}>
                     <img src={SearchIcon} alt="search" style={{width: "100%"}} />
                 </section>
                 </View>
