@@ -302,7 +302,6 @@ async function getUserOrdersReq(customerid){
     return data;
 }
 
-
 async function createOrderReq({customerid}){
     const response = await fetch(backendURL + `/orders`, {
         method: "POST",
@@ -342,6 +341,18 @@ async function getOrdersReq() {
 
     return data;
 }
+
+async function getFilteredOrdersReq(filters){
+    const response = await fetch(backendURL + `/orders/filter?filters=${JSON.stringify(filters)}`, {
+        headers: {"Authorization": `Bearer ${getToken()}`},
+    });
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
 
 
 // blends
@@ -677,7 +688,7 @@ export {
     getUserReq, getUsersReq, createUserReq, deleteUserReq, updateLastLoginReq, getFilteredUsersReq,
     getProductReq, getRelatedProductsReq, updateProductReq, updateProductStockReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
-    cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq, getOrdersReq,
+    cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq, getOrdersReq, getFilteredOrdersReq,
     saveBlendReq, getUserSavedBlendsReq, deleteUserBlendReq, getBlendByIdReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     getRecommendationsReq,

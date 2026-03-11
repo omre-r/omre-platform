@@ -950,6 +950,8 @@ class Reviews{
 }
 
 class Orders{
+    static filterableFields = ["email",]
+
     constructor(){
         this.products = new Products();
         this.blends = new Blends()
@@ -1167,6 +1169,56 @@ class Orders{
             throw new DBError("Failed to get orders");
         }
     }
+
+    async getFilteredOrders(filters, client){
+        if (!client){
+            return prepareRollback((c) => this.getFilteredOrders(filters, c));
+        }
+        if (Object.keys(filters).length <= 0){
+            throw new DBError("At least 1 filter required");
+        }
+
+        let query = `
+        SELECT orders.* 
+        FROM orders 
+        JOIN users ON orders.customerid = users.id WHERE `
+
+        let values = []
+
+        //builds a cosntraint in query for each filter
+        for (const filter of Object.keys(filters)){
+            switch (filter){
+                case "email":{
+                    query += `users.email ILIKE $${values.length + 1} AND `
+                    values.push(`%${filters[filter]}%`)
+                    break
+                }
+                case "id":{
+                    query += `orders.id ILIKE $${values.length + 1} AND `
+                    values.push(`%${filters[filter]}%`)
+                    break
+                }
+                default:{
+                    throw new DBError(`${filter} is not a valid filter`);
+                }
+            }
+        }
+        //removes last 'AND '
+        query = query.slice(0,-4);
+
+
+        let orders;
+        try{
+            const res = await client.query(query, values);
+            orders = res.rows;
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get filtered orders")
+        }
+        return {success: true, data: {orders}}
+    }
+    
 
     async addBlendNames(items, client) {
         if (!items) return items;

@@ -353,6 +353,19 @@ async function getOrders(req, res) {
   return res.json(result);
 }
 
+// path: GET /orders/filter
+async function getFilteredOrders(req, res) {
+  if (!req.query?.filters){
+    throw new Error("No filters query param")
+  }
+  const filters = JSON.parse(req.query.filters)
+  const result = await orders.getFilteredOrders(filters);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result)
+}
+
 
 // blends
 
@@ -583,8 +596,7 @@ createOrder = handleError(createOrder);
 deleteOrder = handleError(deleteOrder);
 updateOrderStatus = handleError(updateOrderStatus);
 getUserOrders = handleError(getUserOrders);
-getUploadURL = handleError(getUploadURL);
-
+getFilteredOrders = handleError(getFilteredOrders);
 getOrders = handleError(getOrders);
 
 saveBlend = handleError(saveBlend);
@@ -598,13 +610,16 @@ clearCart = handleError(clearCart);
 updateCart = handleError(updateCart);
 deleteUserBlend = handleError(deleteUserBlend);
 
+getUploadURL = handleError(getUploadURL);
+
+
 
 module.exports = {
   getServerHTML,
   getUser, getUsers, createUser, deleteUser, updateLastLogin, getFilteredUsers,
   getProduct, getRelatedProducts, updateProduct, updateProductStock, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts, 
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
-  cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders,
+  cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders, getFilteredOrders,
   saveBlend, getUserBlends, deleteUserBlend, getBlendById,
   createCartItem, deleteCartItem, getCart, clearCart, updateCart,
   getUploadURL,

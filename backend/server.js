@@ -100,6 +100,7 @@ app.get("/reviews", controllers.getReviews)
 app.put("/orders/cancel/:id", [verifyToken], controllers.cancelOrder)
 app.get("/orders/user/:customerid", [verifyToken], controllers.getUserOrders)
 
+app.get("/orders/filter", [verifyToken, checkAdminPerm],controllers.getFilteredOrders);
 app.get("/orders/:id", [verifyToken], controllers.getOrder)
 app.delete("/orders/:id", [verifyToken, checkAdminPerm], controllers.deleteOrder)
 app.put("/orders/:id", [verifyToken, checkAdminPerm], controllers.updateOrderStatus);
