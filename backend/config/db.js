@@ -1109,7 +1109,12 @@ class Orders{
         if (!client){
             return prepareRollback((c) => this.getOrder(id, c));
         }
-        const query = `SELECT * FROM orders WHERE id = $1`
+        const query = `
+        SELECT orders.*, users.email
+        FROM orders 
+        JOIN users ON orders.customerid = users.cognito_sub 
+        WHERE orders.id = $1`
+
         let order;
         try{
             const res = await client.query(query, [id]);
@@ -1132,7 +1137,12 @@ class Orders{
         if (!client){
             return prepareRollback((c) => this.getUserOrders(customerid, c));
         }
-        const query = `SELECT * FROM orders WHERE customerid = $1`
+
+        const query = `
+        SELECT orders.*, users.email
+        FROM orders 
+        JOIN users ON orders.customerid = users.cognito_sub 
+        WHERE orders.customerid = $1`
         let orders;
 
         try{
@@ -1179,13 +1189,14 @@ class Orders{
         }
 
         let query = `
-        SELECT orders.* 
+        SELECT orders.*, users.email
         FROM orders 
-        JOIN users ON orders.customerid = users.id WHERE `
+        JOIN users ON orders.customerid = users.cognito_sub 
+        WHERE `
 
         let values = []
 
-        //builds a cosntraint in query for each filter
+        //builds a constraint in query for each filter
         for (const filter of Object.keys(filters)){
             switch (filter){
                 case "email":{

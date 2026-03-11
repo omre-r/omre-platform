@@ -189,7 +189,6 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     onKeyDown={async (e) =>  {
                         if (e.key !== "Enter") return;
                         const res = await getFilteredUsersReq({email: search});
-                        console.log(res)
                         setUsers(res.data.users)
                     }}
                 />
@@ -203,7 +202,10 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     right:"0",
                     top: "50%",
                     transform: "translateY(-50%)"}}
-                    onClick={e => {}}>
+                    onClick={async e => {
+                        const res = await getFilteredUsersReq({email: search});
+                        setUsers(res.data.users)
+                    }}>
                     <img src={SearchIcon} alt="search" style={{width: "100%"}} />
                 </section>
                 </View>

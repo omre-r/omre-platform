@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
 import { Card, Flex, Text, Button, View, SelectField, TextField} from "@aws-amplify/ui-react";
 import { fetchAuthSession } from "aws-amplify/auth";
-import { getOrdersReq, getOrderReq,  cancelOrderReq,  updateOrderStatusReq} from "../requests";
+import { getOrdersReq, getOrderReq,  cancelOrderReq, getFilteredOrdersReq, updateOrderStatusReq} from "../requests";
+
+import SearchIcon from "../assets/search_icon.png"
 
 // Custom Styling 
+const bodyStyle2 = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 400,
+  fontSize: "1.3rem",
+  letterSpacing: "0.5px",
+  color: "#000000",
+};
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 800,
@@ -28,6 +37,9 @@ export default function OrdersPanel() {
   const [msg, setMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [cancelReason, setCancelReason] = useState("");
+
+  const [emailSearch, setEmailSearch] = useState("");
+  const [orderIdSearch, setOrderIdSearch] = useState("");
 
   async function getToken() {
     try {
@@ -67,11 +79,13 @@ async function viewOrder(orderId) {
   try {
     const token = await getToken();
     const data = await getOrderReq(orderId, token);
+    console.log(data, orderId)
     let order = data?.data?.order;
 
     if (order && typeof order.items === "string") {
       order.items = JSON.parse(order.items);
     }
+    console.log(order)
 
     setSelectedOrder(order);
     setStatus(order?.status || "");
@@ -123,9 +137,89 @@ async function cancelOrder(orderId) {
   }
 
   return (
-    <Flex direction="row" gap="1rem" height="100%">
+    <Flex direction={"column"}>
+      <Flex  
+        padding={"5px"}    
+        alignItems={"center"}
+        justifyContent={"center"}
+        gap={"3px"}
+        style={{zIndex: "2000", background: "linear-gradient(to right, white, whitesmoke, white)"}}
+        >
+        <View
+        position={"relative"}>
+        <TextField
+            labelHidden
+            type="text"
+            placeholder="Search by email..."
+            textAlign={"left"}
+            width={"300px"}
+            style={{borderRadius:"10px", ...bodyStyle2}}
+            border=".5px solid #111"
+            borderRadius="10px"
+            value={emailSearch}
+            onChange={e => setEmailSearch(e.target.value)}
+            onKeyDown={async (e) =>  {
+                if (e.key !== "Enter") return;
+                const res = await getFilteredOrdersReq({email: emailSearch});
+                setOrders(res.data.orders)
+            }}
+        />
+        <section 
+        style={{
+            display: "flex",
+            width:"30px", 
+            paddingRight: "5px",
+            overflow:"hidden",
+            position:"absolute",
+            right:"0",
+            top: "50%",
+            transform: "translateY(-50%)"}}
+            onClick={async e => {
+                const res = await getFilteredOrdersReq({email: emailSearch});
+                setOrders(res.data.orders)
+            }}>
+            <img src={SearchIcon} alt="search" style={{width: "100%"}} />
+        </section>
+        </View>
+        <View
+        position={"relative"}>
+        <TextField
+            labelHidden
+            type="text"
+            placeholder="Search by order id..."
+            textAlign={"left"}
+            width={"300px"}
+            style={{borderRadius:"10px", ...bodyStyle2}}
+            border=".5px solid #111"
+            borderRadius="10px"
+            value={orderIdSearch}
+            onChange={e => setOrderIdSearch(e.target.value)}
+            onKeyDown={async (e) =>  {
+                if (e.key !== "Enter") return;
+                const res = await getFilteredOrdersReq({id: orderIdSearch});
+                setOrders(res.data.orders)
+            }}
+        />
+        <section 
+        style={{
+            display: "flex",
+            width:"30px", 
+            paddingRight: "5px",
+            overflow:"hidden",
+            position:"absolute",
+            right:"0",
+            top: "50%",
+            transform: "translateY(-50%)"}}
+            onClick={async e => {
+                const res = await getFilteredOrdersReq({id: orderIdSearch});
+                setOrders(res.data.orders)
+            }}>
+            <img src={SearchIcon} alt="search" style={{width: "100%"}} />
+        </section>
+        </View>
+      </Flex>
 
-      
+      <Flex direction="row" gap="1rem" height="100%">      
       {/* left side card */}
       <Card flex="1.2" height="100%" padding="1rem" backgroundColor="whitesmoke">
         <Flex direction="column" height="100%">
@@ -203,6 +297,8 @@ async function cancelOrder(orderId) {
 
             {!loadingOrder && selectedOrder && (
               <Flex direction="column" gap=".4rem">
+                <Text>Order ID: {selectedOrder.id}</Text>
+                <Text>Email: {selectedOrder.email}</Text>
                 <Text>Status: {selectedOrder.status}</Text>
                 <Text>Total: ${Number(selectedOrder.total).toFixed(2)}</Text>
                 {selectedOrder.created && (
@@ -285,7 +381,8 @@ async function cancelOrder(orderId) {
               )}
             </View>
           </Flex>
-        </Card>
+      </Card>
+      </Flex>
     </Flex>
   );
 }
