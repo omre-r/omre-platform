@@ -448,7 +448,7 @@ async function checkout() {
                     borderRadius="8px"
                     >
                     <Link 
-                      to={`/fragrances/${prod.parentid}`}
+                      to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
                       style={{ textDecoration: "none" }}
                     >
                         <img

@@ -2,7 +2,7 @@ import { Card, Flex, View, Text, Button } from "@aws-amplify/ui-react";
 import { Link } from "react-router-dom";
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken, createCartItemReq } from "../requests";
 
 import Navbar from "../components/Navbar";
@@ -28,6 +28,7 @@ const headingStyle = {
 
 export default function Product(){
     const params = useParams()
+    const [searchParams, setSearchParams] = useSearchParams()
 
     const [products, setProducts] = useState([])
     const [selectedProduct, setSelectedProduct] = useState(null)
@@ -45,7 +46,13 @@ export default function Product(){
     useEffect(() => {
         loadProduct()
         loadRecommendations()
-    },[params])
+    },[params.parentid])
+
+    useEffect(() => {
+        if (!selectedProduct) return;
+        setSearchParams(prev => ({...prev, variation: selectedProduct.variation}))
+    },[selectedProduct])
+
     useEffect(() => {
         if (!selectedProduct) return;
         const id = setInterval(() => {
@@ -89,14 +96,18 @@ export default function Product(){
     async function loadProduct() {
         setLoadingProduct(true);
         const data = await getRelatedProductsReq(params.parentid);
+        
         setLoadingProduct(false)
         if (!data.success){
             setErrorMessage(data.message);
             return;
         }
-        const products = data.data.products;
-        setProducts(products)
-        setSelectedProduct(products[0]);
+        const prods = data.data.products;
+        prods.sort((a,b) => Number(a.variation.split("ml")?.[0]) - Number(b.variation.split("ml")?.[0]))
+        setProducts(prods)
+
+        const variation = searchParams.get("variation");
+        setSelectedProduct(prods.find(p => p.variation === variation));
     }
     async function loadRecommendations() {
         const idToken = getIDToken();
@@ -519,7 +530,7 @@ export default function Product(){
                     borderRadius="8px"
                     >
                     <Link 
-                        to={`/fragrances/${prod.parentid}`}
+                        to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
                         style={{ textDecoration: "none" }}
                     >
                         <img
