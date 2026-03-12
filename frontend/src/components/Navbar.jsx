@@ -14,6 +14,7 @@ import logo from "../assets/Logo.png";
 import "../styles/Navbar.css";
 import { useAuth } from "../context/AuthContext";
 import cartIcon from "../assets/cartIcon.png";
+import profileIcon from "../assets/profileIcon.png";
 
 const luxuryBodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -107,7 +108,13 @@ const Navbar = () => {
           <Link to="/Cart" className="nav-item">
             <img src={cartIcon} alt="Cart" className="cart-icon" />
           </Link>
-      )}
+        )}
+
+        {!loadingAuth && isAuthenticated && (
+            <Link to="/Profile" className="nav-item">
+              <img src={profileIcon} alt="Profile" className="cart-icon" />
+            </Link>
+        )}
       </nav>
     </header>
   );

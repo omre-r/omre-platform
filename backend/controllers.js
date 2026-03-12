@@ -103,6 +103,17 @@ async function updateLastLogin(req, res) {
   return res.json(result);
 }
 
+// path: PUT /users/:id/preferrednotes
+async function updatePreferredNotes(req, res) {
+    const {id} = req.params;
+    const {preferrednotes} = req.body;
+    const result = await users.updatePreferredNotes(id, preferrednotes);
+    if (!result.success){
+        return res.status(result.status || 400).json(result);
+    }
+    return res.json(result);
+}
+
 
 // path: GET /users/filter
 async function getFilteredUsers(req, res) {
@@ -575,6 +586,7 @@ createUser = handleError(createUser);
 deleteUser = handleError(deleteUser);
 updateLastLogin = handleError(updateLastLogin);
 getFilteredUsers= handleError(getFilteredUsers);
+updatePreferredNotes = handleError(updatePreferredNotes);
 
 
 getProduct = handleError(getProduct);
@@ -620,7 +632,7 @@ getUploadURL = handleError(getUploadURL);
 
 module.exports = {
   getServerHTML,
-  getUser, getUsers, createUser, deleteUser, updateLastLogin, getFilteredUsers,
+  getUser, getUsers, createUser, deleteUser, updateLastLogin, getFilteredUsers, updatePreferredNotes,
   getProduct, getRelatedProducts, updateProduct, updateProductStock, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts, 
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders, getFilteredOrders,

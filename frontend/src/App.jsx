@@ -12,6 +12,7 @@ import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
 import Cart from "./pages/Cart";
 import Product from "./pages/Product";
+import Profile from "./pages/Profile";
 
 import './App.css'
 
@@ -31,7 +32,7 @@ function App() {
         <Route path="/ContactUs" element={<ContactUs />} />
         <Route path="/Cart" element={<Cart />} />
         <Route path="/Fragrances/:parentid" element={<Product/>}/>
-        
+        <Route path="/Profile" element={<Profile />} />
       </Routes>
     </Router>
     </div>

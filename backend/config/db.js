@@ -304,7 +304,7 @@ class Users{
         if (!client){
             return prepareRollback((c) => this.getUser(id, c));
         }
-        const query = `SELECT * FROM users WHERE id = $1`
+        const query = `SELECT * FROM users WHERE cognito_sub = $1`;
         
         let user;
         try{
@@ -401,6 +401,27 @@ class Users{
             throw new DBError("Failed to update last_login")
         }
         return {success: true}
+    }
+
+    async updatePreferredNotes(id, preferrednotes, client) {
+        if (!client){
+            return prepareRollback((c) => this.updatePreferredNotes(id, preferrednotes, c));
+        }
+        const notesString = preferrednotes.join(", ");
+        // Update the users favorite notes
+        // const query = `UPDATE users SET favorite_notes = $1 WHERE cognito_sub = $2 RETURNING *;`;
+        const query = `UPDATE users SET favorite_notes = $1 WHERE cognito_sub = $2 RETURNING *;`;
+        let user;
+        try{
+            const res = await client.query(query, [notesString, id]);
+            user = res.rows?.[0];
+        }
+        catch(err) {
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to update preferred notes");
+        }
+        return { success: true, data: { user } };
     }
 }
 

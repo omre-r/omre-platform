@@ -85,7 +85,7 @@ app.delete("/users/:id", [verifyToken, checkAdminPerm], controllers.deleteUser);
 app.get("/users", [verifyToken, checkAdminPerm], controllers.getUsers);
 app.post("/users", [verifyToken], controllers.createUser);
 
-
+app.put("/users/:id/preferrednotes", [verifyToken], controllers.updatePreferredNotes);
 
 
 
