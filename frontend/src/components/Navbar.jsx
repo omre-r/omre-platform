@@ -54,21 +54,26 @@ const Navbar = () => {
           Fragrances
         </Link>
 
-        <Link
-          to="/AboutUs"
-          className="nav-item"
-          style={luxuryBodyStyle}
-          >
-          About Us
-        </Link>
 
-        <Link
-          to="/ContactUs"
-          className="nav-item"
-          style={luxuryBodyStyle}
-          >
-          Contact Us
-        </Link>
+        {!isAdmin && ( 
+          <>
+            <Link
+              to="/AboutUs"
+              className="nav-item"
+              style={luxuryBodyStyle}
+              >
+              About Us
+            </Link>
+
+            <Link
+              to="/ContactUs"
+              className="nav-item"
+              style={luxuryBodyStyle}
+              >
+              Contact Us
+            </Link>
+        </> 
+        )}
       </div>
 
       {/* Navbar Links ---------------------------------------------------------------------------------------- */}
