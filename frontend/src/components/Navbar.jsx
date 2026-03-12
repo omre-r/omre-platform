@@ -60,6 +60,14 @@ const Navbar = () => {
           >
           About Us
         </Link>
+
+        <Link
+          to="/ContactUs"
+          className="nav-item"
+          style={luxuryBodyStyle}
+          >
+          Contact Us
+        </Link>
       </div>
 
       {/* Navbar Links ---------------------------------------------------------------------------------------- */}
