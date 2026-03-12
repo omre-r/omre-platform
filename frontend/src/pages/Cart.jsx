@@ -43,11 +43,14 @@ const luxuryBodyStyleBlack = {
 };
 
 const buttonViewStyle = {
-  padding: "0.75rem 1.75rem",
-  border: "1px solid rgba(255,255,255,0.5)",
-  borderRadius: "25px",
-  backgroundColor: "rgba(0,0,0,0.5)",
+  padding: "0.9rem 2.2rem",
+  border: "1px solid rgba(255,255,255,0.35)",
+  borderRadius: "28px",
+  // navbar color for later reference :  #300a0a
+  background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
   cursor: "pointer",
+  boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+  transition: "all 0.2s ease",
 };
 
 // components
@@ -307,12 +310,19 @@ async function checkout() {
             {/* LEFT 67% */}
             <View width="67%">
               {cart.map((cartItem) => (
+                // BUG: Weird background issues when using backgroundColor on a card like this.
+                //  Had to set the background to nearly transparent and change the styling background
                 <Card
                   key={cartItem.id}
                   marginBottom="1.5rem"
-                  backgroundColor="rgba(0,0,0,0.6)"
-                  borderRadius="20px"
-                  padding="1.5rem"
+                  borderRadius="24px"
+                  padding="1.6rem"
+                  border="1px solid rgba(255,255,255,0.18)"
+                  boxShadow="0 12px 28px rgba(0,0,0,0.18)"
+                  backgroundColor="rgba(255, 255, 255, 0.1)"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(187, 187, 187, 0.05))"
+                  }}
                 >
                   <Flex justifyContent="space-between" alignItems="center">
                     <Flex alignItems="center" gap="1.5rem">
@@ -324,13 +334,17 @@ async function checkout() {
                             width: "120px",
                             height: "120px",
                             objectFit: "cover",
-                            borderRadius: "10px",
+                            borderRadius: "20px",
+                            background: "linear-gradient(145deg, rgba(45,20,20,0.95), rgba(15,15,15,0.95))",
+                            padding: "2px",
+                            boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+                            border: "1px solid rgba(255,255,255,0.08)",
                           }}
                         />
                       )}
 
                     <View textAlign={"left"}>
-                        <Text style={luxuryBodyStyle}>
+                        <Text style={{...luxuryBodyStyle, color: "black"}}>
                         {cartItem.item?.name}{" "}
                         {cartItem.item?.variation 
                           ? `(${cartItem.item.variation})` 
@@ -338,21 +352,28 @@ async function checkout() {
                           ? `(${cartItem.item.size_ml}ml)` 
                           : ""}
                       </Text>
-                      <Text style={luxuryBodyStyle}>
+                      <Text style={{...luxuryBodyStyle, color: "black"}}>
                         Quantity: {cartItem.quantity}
                       </Text>
-                      <Text style={luxuryBodyStyle}>
+                      <Text style={{...luxuryBodyStyle, color: "black"}}>
                      ${cartItem.item?.price}
                      </Text>
                     </View>
                     </Flex>
-
-                    <Flex gap="1rem">
+                    <Flex gap="3rem">
                       <View
                         style={buttonViewStyle}
                         onClick={() => decreaseQuantity(cartItem.id)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform="translateY(-5px)";
+                          e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform="translateY(0px)";
+                          e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
+                        }} 
                       >
-                        <Text style={luxuryBodyStyle}>-</Text>
+                        <Text style={{...luxuryBodyStyle, fontWeight: 200, fontSize: "1.5rem", fontFamily: "Arial, sans-serif",}}>−</Text>
                       </View>
 
                       <View
@@ -366,9 +387,18 @@ async function checkout() {
                             increaseQuantity(cartItem.id);
                           }
                         }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform="translateY(-5px)";
+                          e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform="translateY(0px)";
+                          e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
+                        }} 
                       >
-                        <Text style={luxuryBodyStyle}>+</Text>
+                        <Text style={{...luxuryBodyStyle, fontWeight: 200, fontSize: "1.5rem", fontFamily: "Arial, sans-serif",}}>+</Text>
                       </View>
+
                     </Flex>
                   </Flex>
                 </Card>
@@ -376,18 +406,31 @@ async function checkout() {
             </View>
 
             {/* RIGHT 33% */}
-            <View width="33%">
+            <View 
+              width="33%" 
+              backgroundColor="rgba(255,255,255,0.18)"
+              border="1px solid rgba(60, 20, 20, 0.15)"
+              borderRadius="24px"
+              padding="2rem"
+              boxShadow="0 10px 30px rgba(0,0,0,0.10)"
+              backdropFilter="blur(2px)">
               <Text style={luxuryHeadingStyle} marginBottom="2rem">
                 Order Summary
               </Text>
 
+              {/* Each item mapped above the total -------------------------------------- */}
               {cart.map((cartItem) => (
                 <Flex
                   key={cartItem.id}
+                  background="linear-gradient(135deg, rgba(40,40,40,0.78), rgba(85,85,85,0.68))"
+                  borderRadius="24px"
+                  padding="1.75rem"
+                  border="1px solid rgba(255,255,255,0.10)"
+                  boxShadow="0 12px 28px rgba(0,0,0,0.20)"
                   justifyContent="space-between"
                   marginBottom="1rem"
                 >
-                  <Text style={luxuryBodyStyleBlack}>
+                  <Text style={{...luxuryBodyStyleBlack, textAlign: "left",}}>
                     {cartItem.item?.name}{" "}
                     {cartItem.item?.variation 
                       ? `(${cartItem.item.variation})` 
@@ -395,13 +438,28 @@ async function checkout() {
                       ? `(${cartItem.item.size_ml}ml)` 
                       : ""} × {cartItem.quantity}
                   </Text>
-                  <Text style={luxuryBodyStyleBlack}>
+                  <Text style={{...luxuryBodyStyleBlack, fontWeight:"800", fontSize:"1.5rem"}}>
                     ${((cartItem.item?.price || 0) * cartItem.quantity).toFixed(2)}
                   </Text>
                 </Flex>
               ))}
-
-              <Flex justifyContent="space-between" marginTop="2rem">
+              {/* Line above the total */}
+              <View
+                marginTop="3rem"
+                marginBottom="-2rem"
+                style={{
+                  width: "100%",
+                  height: "2px",
+                  background: "linear-gradient(to right, rgba(60,20,20,0.05), rgba(60,20,20,0.22), rgba(60,20,20,0.05))",
+                  borderRadius: "999px"
+                }}
+              />
+              <Flex 
+                justifyContent="space-between"
+                alignItems="center"
+                marginTop="2rem"
+                paddingTop="1.5rem"
+                borderTop="2px solid rgba(60, 20, 20, 0.18)">
                 <Text style={luxuryHeadingStyle}>Total</Text>
                 <Text style={luxuryHeadingStyle}>
                   ${total.toFixed(2)}
@@ -409,7 +467,17 @@ async function checkout() {
               </Flex>
 
               <Flex justifyContent="center" marginTop="2rem">
-                <View style={buttonViewStyle} onClick={checkout}>
+                <View 
+                    style={buttonViewStyle}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform="translateY(-5px)";
+                      e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform="translateY(0px)";
+                      e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
+                    }} 
+                    onClick={checkout}>
                   <Text style={luxuryBodyStyle}>Checkout</Text>
                 </View>
               </Flex>
@@ -477,7 +545,6 @@ async function checkout() {
             </Flex>
         </View>
       </View>
-        
     </>
   );
 }

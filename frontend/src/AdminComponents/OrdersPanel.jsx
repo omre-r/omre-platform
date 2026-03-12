@@ -297,7 +297,7 @@ async function cancelOrder(orderId) {
 
             {!loadingOrder && selectedOrder && (
               <Flex direction="column" gap=".4rem">
-                <Text>Order ID: {selectedOrder.id}</Text>
+                <Text>Order ID: {selectedOrder.id.slice(0,8)}</Text>
                 <Text>Email: {selectedOrder.email}</Text>
                 <Text>Status: {selectedOrder.status}</Text>
                 <Text>Total: ${Number(selectedOrder.total).toFixed(2)}</Text>

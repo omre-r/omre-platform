@@ -516,7 +516,7 @@ async function loadUserOrders() {
                                                 }}
                                             >
                                                 <TableCell style={tableBodyStyle}>
-                                                    {order.id.slice(0, 8)}
+                                                    #{order.id.slice(0, 8)}
                                                 </TableCell>
                                                 <TableCell style={{...tableBodyStyle, textAlign: "left"}}>
                                                     <View

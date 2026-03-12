@@ -130,4 +130,3 @@ export default Navbar;
 
 // Notes on future improvements:
 // TODO: Use amplify instead of regular css
-// TODO: Uncomment Admin line and fix that up after I become admin
