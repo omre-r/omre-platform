@@ -11,6 +11,12 @@ const luxuryHeadingStyle = {
     fontSize: "2.5rem",
     letterSpacing: "0.5px",
 };
+const luxuryHeadingStyle2 = {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontWeight: 1000,
+    fontSize: "2.0rem",
+    letterSpacing: "0.5px",
+};
 const luxurySubheadingStyle = {
     fontFamily: "'Cormorant Garamond', serif",
     fontWeight: 600,
@@ -45,18 +51,34 @@ const tableBodyStyle = {
     boxShadow: "none",
     outline: "none",
 }
+const cardStyle = {
+    backgroundColor: "rgba(255, 248, 244, 0.35)",
+    borderRadius: "18px",
+    padding: "1.5rem",
+    minHeight: "220px",
+    boxShadow: "0 4px 14px rgba(0, 0, 0, 0.08)",
+    backdropFilter: "blur(3px)",
+    border: "1px solid rgba(255, 255, 255, 0.25)",
+};
 
 export default function Profile() {
     const [message, setMessage] = useState("");
-    const [firstName, setfirstName] = useState("");
     const [activeTab, setActiveTab] = useState("overview");    
     const [selectedNotes, setSelectedNotes] = useState([]); 
     const [loadedBlends, setLoadedBlends] = useState([]);
     const [products, setProducts] = useState([]);
     const [blendLoading, setBlendLoading] = useState(false);
 
+    // Order states ----------------------------
     const [userOrders, setUserOrders] = useState([]);
     const [ordersLoading, setOrdersLoading] = useState(false);
+
+    // User information states -----------------------------
+    const [firstName, setfirstName] = useState("");
+    const [lastName, setlastName] = useState("");
+    const [email, setemailName] = useState("");
+    const [createdAt, setCreatedAt] = useState("");
+
 
     // Load products from backend ---------------------------------------
     async function loadProducts() {
@@ -201,7 +223,7 @@ export default function Profile() {
     // Function to load users saved favorite notes -------------------------
     // Will have them displayed on overview and favorite notes ta
     // Favorite notes tab will have buttons pressed because the array will be loaded
-    async function loadSavedFavoriteNotes() {
+    async function loadUserInformation() {
         let userid;
         for (let key of Object.keys(localStorage)) {
             if (key.includes("idToken")) {
@@ -214,14 +236,25 @@ export default function Profile() {
         }
         try {
             const data = await getUserReq(userid);
+
             if (!data.success) {
                 throw new Error(data.message);
             }
-            const notesString = data.data.user.favorite_notes || "";
+
+            const user = data.data.user;
+
+            setfirstName(user.first_name || "Null");
+            setlastName(user.last_name || "");
+            setemailName(user.email || "Null");
+            setCreatedAt(user.created_at || "Null");
+    
+            const notesString = user.favorite_notes || "";
             const notesArray = notesString ? notesString.split(",").map((note) => note.trim()).filter(Boolean) : [];
+
             setSelectedNotes(notesArray);
-        } catch (error) {
-            console.error("Failed to load saved favorite notes:", error);
+        } 
+        catch (error) {
+            console.error("Failed to load user profile:", error);
         }
     }
 
@@ -271,7 +304,6 @@ async function loadUserOrders() {
     }
 }
 
-
     // Get product ID from product object, accounting for different possible key names ---------------------------
     function getProductId(product) {
         return product.productid || product.product_id || product.id;
@@ -311,21 +343,8 @@ async function loadUserOrders() {
     // Load products, favorite notes, and user orders on component mount ---------------------------------------
     useEffect(() => {
         loadProducts();
-        loadSavedFavoriteNotes();
+        loadUserInformation();
         loadUserOrders();
-
-        for (let key of Object.keys(localStorage)) {
-            if (key.includes("idToken")) {
-                const idToken = localStorage.getItem(key);
-                const base64 = idToken.split(".")[1];
-                const decoded = JSON.parse(atob(base64));
-                // cognito stores first name as given_name in user pool
-                if (decoded.given_name) {
-                    setfirstName(decoded.given_name);
-                }
-                break;
-            }
-    }
 
     }, []);
 
@@ -363,6 +382,7 @@ async function loadUserOrders() {
                     {[
                     { key: "overview", label: "Overview" },
                     { key: "orders", label: "Orders" },
+                    { key: "sfl", label: "Saved For Later" },
                     { key: "mixes", label: "Saved Mixes" },
                     { key: "preferences", label: "Favorite Notes" },].map((tab) => (
                     <Text
@@ -391,13 +411,76 @@ async function loadUserOrders() {
                     >
                     {activeTab === "overview" && (
                         <View>
-                            <Text style={luxurySubheadingStyle}>
-                                Overview
-                            </Text>
+                            <Text style={luxuryHeadingStyle2} marginBottom="1rem">
+                                Your Profile Overview
+                            </Text> 
+                            <Grid
+                                templateColumns="repeat(2, 1fr)"
+                                gap="1.5rem"
+                            >
+                                <View style={cardStyle}>
+                                    <Text style={luxuryHeadingStyle2}>
+                                        Account Information
+                                    </Text>
+                                    
+                                    <Text style={luxurySubheadingStyle} textAlign={"left"}>
+                                        Full Name: {firstName} {lastName} <br></br>
+                                        Email: {email} <br></br>
+                                        Member Since: {new Date(createdAt).toLocaleString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })} 
+                                        <br></br>
+                                        <Flex direction="row" gap="0.5rem" marginTop="1rem">
+                                            <Button
+                                                style={luxuryBodyStyle}>
+                                                Edit Profile
+                                            </Button>
+                                        </Flex>
+                                        
+                                    </Text>
+                                </View>
+                                <View style={cardStyle}> 
+                                    <Text style={luxuryHeadingStyle2}>
+                                        Order Statistics
+                                    </Text>
+                                    <Text style={luxurySubheadingStyle} textAlign={"left"}>
+                                        Total Orders: <br></br>
+                                        Last Order Date: <br></br>
+                                        Total Spent: 
+                                    </Text>
+                                </View>
+                                <View style={cardStyle}>
+                                    <Text style={luxuryHeadingStyle2}>
+                                        Mixology Statistics
+                                    </Text>
+                                    <Text style={luxurySubheadingStyle} textAlign={"left"}>
+                                        Saved Mixes: <br></br>
+                                        Two Note Blends: <br></br>
+                                        Three Note Blends: <br></br>
+                                    </Text>
+                                </View>
+                                <View style={cardStyle}>
+                                    <Text style={luxuryHeadingStyle2}>
+                                        Favorite Notes:
+                                    </Text>
+                                    
+                                    <Text style={luxurySubheadingStyle}>
+                                        {selectedNotes.length > 0 ? selectedNotes.sort().join(", ") : "None saved yet"}<br></br>
+                                    </Text>
+                                </View>
+                            </Grid>
 
-                            <Text style={luxurySubheadingStyle}>
-                                    Favorite Notes: {selectedNotes.length > 0 ? selectedNotes.join(", ") : "None saved yet"}
-                            </Text>
+
+                            
+
+                            {/*  
+                            <Text style={luxuryHeadingStyle2}>
+                                Recommended for you
+                                {/* Let this text links to recommended fragrances */}
+                            {/* </Text> */}
+                            
                         </View>
                     )}
 
@@ -504,6 +587,13 @@ async function loadUserOrders() {
                         </View>
                     )}
 
+                    {activeTab === "sfl" && (
+                        <View>
+                            <Text style={luxurySubheadingStyle}>
+                                Fragrances Saved For Later
+                            </Text>
+                        </View>
+                    )}
                     
                     {activeTab === "mixes" && (
                         <View marginTop="1rem"  >
