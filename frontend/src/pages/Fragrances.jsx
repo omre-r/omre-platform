@@ -181,12 +181,36 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <Flex  
-      padding={"5px"}    
-      alignItems={"center"}
-      justifyContent={"center"}
-      gap={"3px"}
+      <View
+        width="100%"
+        minHeight="100vh"
+        paddingTop="3rem"
+        paddingLeft="3rem"
+        paddingRight="3rem"
+        paddingBottom="3rem"
+        style={{
+          backgroundImage: `url(${LuxuryBackground})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "repeat",
+        }}
       >
+        <Flex  
+        padding="1rem 1.5rem"
+        alignItems="center"
+        justifyContent="center"
+        gap="0.9rem"
+        margin="1rem auto 0 auto"
+        maxWidth="980px"
+        borderRadius="22px"
+        marginBottom="0.5rem"
+        marginTop="-2rem"
+        style={{
+          background: "linear-gradient(145deg, rgba(72,14,14,0.18), rgba(20,20,20,0.10))",
+          boxShadow: "0 10px 24px rgba(0,0,0,0.10)",
+          backdropFilter: "blur(4px)",
+          border: "1px solid rgba(90,40,40,0.12)",
+        }}>
         <View
         height={"40px"}
         margin={"5px"}
@@ -196,45 +220,65 @@ export default function Home() {
           id="type-filter"
           style={{
             ...bodyStyle2,
-            height:"100%",
-            justifySelf: "flex-start",
-            fontWeight: "bold",
-            borderRadius: "10px",
-            textAlign: "center"
+            height: "120%",
+            minWidth: "190px",
+            padding: "0.75rem 1rem",
+            fontWeight: "600",
+            borderRadius: "16px",
+            textAlign: "center",
+            border: "1px solid rgba(255,255,255,0.18)",
+            background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+            color: "#F8F4F0",
+            boxShadow: "0 8px 18px rgba(0,0,0,0.22)",
+            cursor: "pointer",
           }}
           onChange={(e) => setTab(e.target.value)}  
           >
-            <option value="All">All</option>
-            <option value="Men's Cologne">Men's Cologne</option>
-            <option value="Women's Perfume">Women's Perfume</option>
+            <option style={{ color: "black" }} value="All">All</option>
+            <option style={{ color: "black" }} value="Men's Cologne">Men's Cologne</option>
+            <option style={{ color: "black" }} value="Women's Perfume">Women's Perfume</option>
           </select>
         </View>
         <View
-        height={"40px"}
-        margin={"5px"}
+          height={"40px"}
+          margin={"5px"}
         >
           <select 
           name="simple-filter" 
           id="simple-filter"
           style={{
             ...bodyStyle2,
-            height:"100%",
-            justifySelf: "flex-start",
-            fontWeight: "bold",
-            borderRadius: "10px",
-            textAlign: "center"
+            height: "120%",
+            minWidth: "190px",
+            padding: "0.75rem 1rem",
+            fontWeight: "600",
+            borderRadius: "16px",
+            textAlign: "center",
+            border: "1px solid rgba(255,255,255,0.18)",
+            background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+            color: "#F8F4F0",
+            boxShadow: "0 8px 18px rgba(0,0,0,0.22)",
           }}
           value={simpleFilter}
           onChange={e => setSimpleFilter(e.target.value)}  
           >
             
-            <option value="featured">Featured</option>
-            <option value="pricehighlow">Price: High to Low</option>
-            <option value="pricelowhigh">Price: Low to High</option>
+            <option style={{ color: "black" }} value="featured">Featured</option>
+            <option style={{ color: "black" }} value="pricehighlow">Price: High to Low</option>
+            <option style={{ color: "black" }} value="pricelowhigh">Price: Low to High</option>
           </select>
         </View>
         <View
-        position={"relative"}>
+          position="relative"
+          width="360px"
+          padding="0.35rem"
+          borderRadius="18px"
+          style={{
+            background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+            boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
+            border: "1px solid rgba(255,255,255,0.16)",
+          }}
+        >
           <TextField
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -243,7 +287,21 @@ export default function Home() {
             placeholder="Find products..."
             textAlign={"left"}
             width={"300px"}
-            style={{borderRadius:"10px", ...bodyStyle2}}
+            style={{
+              width: "100%",
+              height: "48px",
+              padding: "0 3.2rem 0 1rem",
+              borderRadius: "14px",
+              border: "none",
+              outline: "none",
+              background: "rgba(255,248,244,0.96)",
+              color: "#2B1E1A",
+              fontFamily: "'Cormorant Garamond', serif",
+              fontWeight: 500,
+              fontSize: "1.35rem",
+              letterSpacing: "0.4px",
+              boxSizing: "border-box",
+            }}
             onKeyDown={e => e.key === "Enter" && filterProducts({name: e.target.value})}
           />
           <section 
@@ -257,19 +315,36 @@ export default function Home() {
             top: "50%",
             transform: "translateY(-50%)"}}
             onClick={e => {filterProducts({name: search})}}>
-            <img src={SearchIcon} alt="search" style={{width: "100%"}} />
+            <img src={SearchIcon} alt="search" style={{width: "100%", filter: "brightness(0) invert(1)"}} />
           </section>
         </View>
 
         <View 
-        position={"relative"}
-        padding={"2px"}
-        backgroundColor={"white"}
-        borderRadius={"10px"}
-        style={{width: "40px"}}
+        position="relative"
+        width="58px"
+        height="58px"
+        borderRadius="16px"
+        style={{
+          background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+          boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
+          border: "1px solid rgba(255,255,255,0.16)",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
         onClick={e => {e.currentTarget.blur(); setShowFilters(prev=>!prev);}}
         >
-          <img src={OptionsIcon} alt="options" style={{width:"100%", display:"block"}}/>
+          <img 
+          src={OptionsIcon} 
+          alt="options" 
+          style={{
+            width: "30px",
+            height: "30px",
+            display: "block",
+            filter: "brightness(0) invert(1)",
+          }}/>
           {showFilters && 
           <Card
 
@@ -420,22 +495,7 @@ export default function Home() {
           </Card>
           }
         </View>
-
       </Flex>
-      <View
-        width="100%"
-        minHeight="100vh"
-        paddingTop="3rem"
-        paddingLeft="3rem"
-        paddingRight="3rem"
-        paddingBottom="3rem"
-        style={{
-          backgroundImage: `url(${LuxuryBackground})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "repeat",
-        }}
-      >
         <Text style={headingStyle} marginBottom="2rem">
           All Fragrances
         </Text>
