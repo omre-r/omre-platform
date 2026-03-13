@@ -497,7 +497,14 @@ async function checkout() {
               {message}
           </Text>
         )}
-        <View>
+        <View
+          marginTop="4rem"
+          padding="2.5rem 2rem"
+          borderRadius="28px"
+          backgroundColor="rgba(255,255,255,0.10)"
+          border="1px solid rgba(80, 50, 40, 0.10)"
+          boxShadow="0 10px 28px rgba(0,0,0,0.08)"
+          backdropFilter="blur(2px)">
             <Text style={luxuryHeadingStyle} marginBottom=".5rem">
             You May Also Like
             </Text>
@@ -506,15 +513,17 @@ async function checkout() {
                 justifyContent="center">
                 {recommendations.map((prod) => (
                     <Card
-                    key={prod.id}
-                    variation="elevated"
-                    width="12rem"
-                    margin="1rem"
-                    padding="1.25rem"
-                    backgroundColor="rgba(0, 0, 0, 0.75)"
-                    border="1px solid rgba(151, 33, 0, 0.72)"
-                    borderRadius="8px"
-                    >
+                      key={prod.id}
+                      variation="elevated"
+                      width="13.5rem"
+                      padding="1rem"
+                      backgroundColor="rgba(35, 22, 22, 0.88)"
+                      border="1px solid rgba(190, 160, 150, 0.18)"
+                      borderRadius="20px"
+                      boxShadow="0 14px 28px rgba(0,0,0,0.22)"
+                      style={{
+                        background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                      }}>
                     <Link 
                       to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
                       style={{ textDecoration: "none" }}

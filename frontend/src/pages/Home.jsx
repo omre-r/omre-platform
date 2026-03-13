@@ -82,27 +82,36 @@ export default function Home() {
           backgroundRepeat: "repeat",
         }}
       >
-        <Text style={headingStyle} marginBottom="5rem">
+        <Text style={headingStyle} marginBottom="2rem">
           Featured Fragrances
         </Text>
 
-        <Flex wrap="wrap">
+        <Flex 
+          wrap="wrap"
+          justifyContent="center"
+          alignItems="flex-start"
+          gap="2rem"
+          maxWidth="1400px"
+          margin="0 auto">
           {!loadingProducts && products && products.map(prodList => {
             const filteredList = prodList.filter(prod => prod.isfeatured === true);
             const prod = filteredList?.[0];
             if (!prod){
               return null
             }
-            return (<Card
+            return (
+            <Card
               key={prod.id}
               variation="elevated"
-              height="auto"
-              width="18rem"
-              margin="1rem"
-              padding="2rem"
-              backgroundColor="rgba(0, 0, 0, 0.75)"
-              border="1px solid rgba(151, 33, 0, 0.72)"
-              borderRadius="8px"
+              width="16rem"
+              padding="1.75rem"
+              backgroundColor="rgba(35, 22, 22, 0.88)"
+              border="1px solid rgba(190, 160, 150, 0.18)"
+              borderRadius="15px"
+              boxShadow="0 14px 28px rgba(0,0,0,0.22)"
+              style={{
+                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+              }}
             >
               <Link 
                 to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
@@ -137,11 +146,15 @@ export default function Home() {
           <Link to="/fragrances"
           style={{ textDecoration: "none" }}>
             <View
-              padding="0.75rem 1.75rem"
-              border="1px solid rgba(255,255,255,0.5)"
-              borderRadius="25px"
-              backgroundColor="rgba(0,0,0,0.5)"
-            >
+              style={{
+                padding: "0.9rem 2.2rem",
+                border: "1px solid rgba(255,255,255,0.35)",
+                borderRadius: "28px",
+                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                cursor: "pointer",
+                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                transition: "all 0.2s ease",
+              }}>
               <Text style={bodyStyle}>Shop All</Text>
             </View>
           </Link>
