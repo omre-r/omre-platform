@@ -37,6 +37,7 @@ export default function OrdersPanel() {
   const [msg, setMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [cancelReason, setCancelReason] = useState("");
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const [emailSearch, setEmailSearch] = useState("");
   const [orderIdSearch, setOrderIdSearch] = useState("");
@@ -342,32 +343,76 @@ async function cancelOrder(orderId) {
                   })}
                   {selectedOrder.status !== "canceled" && (
                     <>
-                      <SelectField
-                        label="Update Status"
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="mixing">Mixing</option>
-                        <option value="ready">Ready</option>
-                        <option value="fulfilled">Fulfilled</option>
-                      </SelectField>
+                      <Flex direction="column" alignItems="center" width="100%" marginTop="0.5rem">
 
-                      <Button style={luxuryBodyStyle} onClick={updateStatus}>
-                        Update Status
-                      </Button>
+                        <Text style={luxuryBodyStyle} textAlign="center">
+                          Update Status
+                        </Text>
+
+                        <Flex
+                          direction="row"
+                          width="100%"
+                          gap="0.5rem"
+                          alignItems="flex-end"
+                        >
+                          <SelectField
+                            labelHidden
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            flex="1"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="mixing">Mixing</option>
+                            <option value="ready">Ready</option>
+                            <option value="fulfilled">Fulfilled</option>
+                          </SelectField>
+
+                          <Button
+                            style={luxuryBodyStyle}
+                            onClick={updateStatus}
+                            height="42px"
+                            whiteSpace="nowrap"
+                          >
+                            Update
+                          </Button>
+                        </Flex>
+
+                      </Flex>
                       <TextField
                       label="Cancel Reason"
                       placeholder="e.g., Oil spill"
                       value={cancelReason}
                       onChange={(e) => setCancelReason(e.target.value)}
                     />
-                      <Button
-                      style={luxuryBodyStyle}
-                      onClick={() => cancelOrder(selectedOrder.id)}
+                    <Button
+                    style={luxuryBodyStyle}
+                    onClick={() => setConfirmCancel(true)}
                     >
-                      Cancel Order
+                    Cancel Order
                     </Button>
+                    {confirmCancel && (
+                    <Card backgroundColor="#dddddd" padding="1rem">
+                      <Text style={luxuryBodyStyle}>
+                        Are you sure you want to cancel this order?
+                      </Text>
+
+                      <Flex gap="0.5rem" marginTop="0.5rem">
+                        <Button
+                          style={luxuryBodyStyle}
+                          onClick={() => cancelOrder(selectedOrder.id)}
+                        >
+                          Yes, Cancel Order
+                        </Button>
+
+                        <Button
+                          style={luxuryBodyStyle}
+                          onClick={() => setConfirmCancel(false)}
+                        >
+                          No
+                        </Button>
+                      </Flex>
+                    </Card>
+                  )}
                     </>
                   )}
 
