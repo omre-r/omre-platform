@@ -1,46 +1,79 @@
-
-import { View, Flex, Text } from "@aws-amplify/ui-react";
+import { useState } from "react";
+import { View, Text } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import Navbar from "../components/Navbar";
-
 import LuxuryBackground from "../assets/Luxury Background2.png";
 
-// fonts //
 const headingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 800,
-  fontSize: "2.5rem",
-  letterSpacing: "0.5px",
-  color: "#000000",
+  fontSize: "2.8rem",
+  letterSpacing: "1px",
+  color: "#1a1a1a",
 };
 
 const bodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 600,
-  fontSize: "1.4rem",
-  letterSpacing: "0.5px",
-  color: "#000000",
+  fontSize: "1.15rem",
+  letterSpacing: "0.3px",
+  color: "#1a1a1a",
 };
 
-const luxurySubheadingStyle = {
-    fontFamily: "'Cormorant Garamond', serif",
-    fontWeight: 600,
-    fontSize: "1.6rem",   
-    letterSpacing: "0.3px",
+const labelStyle = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontWeight: 600,
+  fontSize: "0.95rem",
+  color: "#555",
+  display: "block",
+  marginBottom: "0.4rem",
+  letterSpacing: "0.5px",
+  textTransform: "uppercase",
 };
-// functions //
+
+const inputStyle = {
+  width: "100%",
+  padding: "0.75rem 1rem",
+  fontFamily: "'Cormorant Garamond', serif",
+  fontSize: "1.05rem",
+  border: "1px solid rgba(151, 33, 0, 0.35)",
+  borderRadius: "4px",
+  backgroundColor: "rgba(255,255,255,0.8)",
+  outline: "none",
+  boxSizing: "border-box",
+  color: "#1a1a1a",
+};
+
+const dividerStyle = {
+  border: "none",
+  borderTop: "1px solid rgba(151, 33, 0, 0.35)",
+  margin: "1.5rem 0",
+};
+
 export default function ContactUs() {
+  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [submitted, setSubmitted] = useState(false);
+
+  function handleChange(e) {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  }
+
+  function handleSubmit() {
+    if (!form.name || !form.email || !form.message) return;
+    // TODO: wire to backend IF needed
+    setSubmitted(true);
+  }
+
   return (
     <>
       <Navbar />
-
       <View
         width="100%"
         minHeight="100vh"
         paddingTop="3rem"
         paddingLeft="3rem"
         paddingRight="3rem"
-        paddingBottom="3rem"
+        paddingBottom="4rem"
         style={{
           backgroundImage: `url(${LuxuryBackground})`,
           backgroundSize: "cover",
@@ -48,13 +81,109 @@ export default function ContactUs() {
           backgroundRepeat: "repeat",
         }}
       >
-        <Text style={bodyStyle} fontSize="1.5rem" fontWeight="600" marginBottom="1rem" marginTop="3rem">
-            Gmail: info@omrefragrances.com
-        </Text>
+        <div style={{ maxWidth: "780px", margin: "0 auto", paddingTop: "2rem" }}>
 
-        <Text style={bodyStyle} fontSize="1.5rem" fontWeight="600" marginBottom="1rem">
-            Instagram: Omrefragrances
-        </Text>
+          <Text style={headingStyle} marginBottom="0.5rem">
+            Contact Us
+          </Text>
+          <hr style={dividerStyle} />
+
+          {/* Contact Info */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.6rem" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7a1f00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/>
+            </svg>
+            <Text style={bodyStyle}>info@omrefragrances.com</Text>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "2rem" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7a1f00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8" fill="#7a1f00"/>
+            </svg>
+            <Text style={bodyStyle}>@Omrefragrances</Text>
+          </div>
+
+          <hr style={dividerStyle} />
+
+          {submitted ? (
+            <Text style={{ ...bodyStyle, fontStyle: "italic", marginTop: "2rem" }}>
+              Thank you for reaching out. We'll get back to you soon.
+            </Text>
+          ) : (
+            <div style={{ marginTop: "1.5rem" }}>
+
+              {/* Name + Email row */}
+              <div style={{ display: "flex", gap: "1.25rem", marginBottom: "1.25rem" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Name</label>
+                  <input
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="Your name"
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Email *</label>
+                  <input
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    placeholder="your@email.com"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              {/* Phone number */}
+              <div style={{ marginBottom: "1.25rem" }}>
+                <label style={labelStyle}>Phone Number</label>
+                <input
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  placeholder="(optional)"
+                  style={inputStyle}
+                />
+              </div>
+
+              {/* Message */}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label style={labelStyle}>Message</label>
+                <textarea
+                  name="message"
+                  value={form.message}
+                  onChange={handleChange}
+                  placeholder="Write your message..."
+                  rows={5}
+                  style={{ ...inputStyle, resize: "vertical" }}
+                />
+              </div>
+
+              <button
+                onClick={handleSubmit}
+                style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: "1.05rem",
+                  fontWeight: 700,
+                  padding: "0.75rem 2.5rem",
+                  backgroundColor: "rgba(151, 33, 0, 0.88)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  letterSpacing: "1px",
+                  textTransform: "uppercase",
+                }}
+              >
+                Send
+              </button>
+            </div>
+          )}
+
+        </div>
       </View>
     </>
   );
