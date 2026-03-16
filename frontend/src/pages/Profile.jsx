@@ -91,6 +91,20 @@ export default function Profile() {
     const threeNoteBlends = loadedBlends.filter((blend) => blend.frag3_productid).length;
     const totalNotes = selectedNotes.length;
 
+    const fragranceNotes = [
+        "Almond", "Amber", "Benzoin",
+        "Bergamot", "Cedarwood", "Chocolate",
+        "Cinnamon", "Clove", "Coconut",
+        "Coffee", "Eucalyptus", "Fig",
+        "Gardenia", "Ginger", "Honey",
+        "Jasmine", "Leather", "Lemon",
+        "Mandarin", "Mint", "Musk",
+        "Oak", "Oud", "Patchouli",
+        "Peony", "Pine", "Rose",
+        "Saffron", "Sandalwood", "Suede",
+        "Tobacco", "Vanilla", "Yuzu"
+    ];
+
     // Load products from backend ---------------------------------------
     async function loadProducts() {
         setMessage("");
@@ -230,6 +244,32 @@ export default function Profile() {
         }
     }
 
+    // Function to clear notes from user profile --------------------------------------------------------------------
+    async function clearAllNotes() {
+        let userid;
+        for (let key of Object.keys(localStorage)) {
+            if (key.includes("idToken")) {
+                const idToken = localStorage.getItem(key);
+                const base64 = idToken.split(".")[1];
+                const decoded = JSON.parse(atob(base64));
+                userid = decoded.sub;
+                break;
+            }
+        }
+        setMessage("");
+        try {
+            // Clear the users selected notes with empty array
+            const data = await updatePreferredNotesReq(userid, []);
+            if (!data.success) {
+                throw new Error(data.message);
+            }
+            setSelectedNotes([]);
+            setMessage("Preferred fragrances cleared from profile!");
+        } catch (error) {
+            setMessage(error.message || "Failed to clear fragrance preferences.");
+        }
+    }
+
 
     // Function to load users saved favorite notes -------------------------
     // Will have them displayed on overview and favorite notes ta
@@ -329,6 +369,21 @@ async function loadUserOrders() {
         // Find the product in the products list that matches the id, accounting for different possible key names for the id in the product object
         const match = products.find((p) => String(getProductId(p)) === String(productId));
         return match?.name || "Unknown";
+    }
+
+    // Function to get style for each button based on if a note is selected or not -----------------------------------------
+    function getNoteButtonStyle(note) {
+        const isSelected = selectedNotes.includes(note);
+        return {
+            ...luxuryBodyStyle,
+            fontSize: "1.15rem",
+            padding: "0.9rem 1rem",
+            minHeight: "58px",
+            borderRadius: "14px",
+            border: isSelected ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(0,0,0,0.12)",
+            background: isSelected ? "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.92))" : "rgba(255,255,255,0.78)",
+            boxShadow: isSelected ? "0 8px 18px rgba(0,0,0,0.25)" : "0 2px 6px rgba(0,0,0,0.06)",
+        };
     }
 
     // Toggle Note -----------------------------------------------------------
@@ -687,7 +742,8 @@ async function loadUserOrders() {
                                 Select the fragrance notes that best match your taste. <br></br> 
                                 These preferences help personalize your Omré experience. 
                             </Text>
-                            <Text>
+                            <Text
+                                style={luxuryBodyStyle}>
                                 Selected Notes: {totalNotes}
                             </Text>
 
@@ -695,39 +751,29 @@ async function loadUserOrders() {
                                 templateColumns="repeat(3, 1fr)"
                                 gap="0.3rem"
                                 marginBottom=".5rem">
-                                <ToggleButton isPressed={selectedNotes.includes("Almond")} onClick={() => toggleNote("Almond")}>Almond</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Amber")} onClick={() => toggleNote("Amber")}>Amber</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Benzoin")} onClick={() => toggleNote("Benzoin")}>Benzoin</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Bergamot")} onClick={() => toggleNote("Bergamot")}>Bergamot</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Cedarwood")} onClick={() => toggleNote("Cedarwood")}>Cedarwood</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Chocolate")} onClick={() => toggleNote("Chocolate")}>Chocolate</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Cinnamon")} onClick={() => toggleNote("Cinnamon")}>Cinnamon</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Clove")} onClick={() => toggleNote("Clove")}>Clove</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Coconut")} onClick={() => toggleNote("Coconut")}>Coconut</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Coffee")} onClick={() => toggleNote("Coffee")}>Coffee</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Eucalyptus")} onClick={() => toggleNote("Eucalyptus")}>Eucalyptus</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Fig")} onClick={() => toggleNote("Fig")}>Fig</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Gardenia")} onClick={() => toggleNote("Gardenia")}>Gardenia</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Ginger")} onClick={() => toggleNote("Ginger")}>Ginger</ToggleButton>   
-                                <ToggleButton isPressed={selectedNotes.includes("Honey")} onClick={() => toggleNote("Honey")}>Honey</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Jasmine")} onClick={() => toggleNote("Jasmine")}>Jasmine</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Leather")} onClick={() => toggleNote("Leather")}>Leather</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Lemon")} onClick={() => toggleNote("Lemon")}>Lemon</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Mandarin")} onClick={() => toggleNote("Mandarin")}>Mandarin</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Mint")} onClick={() => toggleNote("Mint")}>Mint</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Musk")} onClick={() => toggleNote("Musk")}>Musk</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Oak")} onClick={() => toggleNote("Oak")}>Oak</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Oud")} onClick={() => toggleNote("Oud")}>Oud</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Patchouli")} onClick={() => toggleNote("Patchouli")}>Patchouli</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Peony")} onClick={() => toggleNote("Peony")}>Peony</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Pine")} onClick={() => toggleNote("Pine")}>Pine</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Rose")} onClick={() => toggleNote("Rose")}>Rose</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Saffron")} onClick={() => toggleNote("Saffron")}>Saffron</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Sandalwood")} onClick={() => toggleNote("Sandalwood")}>Sandalwood</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Suede")} onClick={() => toggleNote("Suede")}>Suede</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Tobacco")} onClick={() => toggleNote("Tobacco")}>Tobacco</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Vanilla")} onClick={() => toggleNote("Vanilla")}>Vanilla</ToggleButton>
-                                <ToggleButton isPressed={selectedNotes.includes("Yuzu")} onClick={() => toggleNote("Yuzu")}>Yuzu</ToggleButton>  
+                                {/* List the notes from the state and show them all as toggable buttons */}
+                                {fragranceNotes.map((note) => {
+                                    const isSelected = selectedNotes.includes(note);
+                                    return (
+                                        <ToggleButton
+                                            key={note}
+                                            isPressed={isSelected}
+                                            onClick={() => toggleNote(note)}
+                                            style={getNoteButtonStyle(note)}
+                                        >
+                                            <Text
+                                                style={{
+                                                    ...luxuryBodyStyle,
+                                                    // Font color change based on isSelected
+                                                    color: isSelected ? "#F8F4F0" : "#1F1A17",
+                                                    fontSize: "1.15rem",
+                                                }}
+                                            >
+                                                {note}
+                                            </Text>
+                                        </ToggleButton>
+                                    );
+                                })}
                             </Grid>
                             <Flex 
                                 direction="row"
@@ -757,8 +803,7 @@ async function loadUserOrders() {
                                         boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
                                         transition: "all 0.2s ease",
                                     }}
-                                    // onClick={saveFragranceToProfile}
-                                    >
+                                    onClick={clearAllNotes}>
                                     <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Clear All</Text>
                                 </Button>
                             </Flex>
@@ -766,7 +811,7 @@ async function loadUserOrders() {
                             <Text
                                 style={{
                                     ...luxuryBodyStyle,
-                                    color: message === "Preferred fragrances saved to profile!" ? "#2d6a2d" : "#8B0000",
+                                    color: message === "Preferred fragrances saved to profile!" || message === "Preferred fragrances cleared from profile!" ? "#2d6a2d" : "#8B0000",
                                     textAlign: "center",
                                     marginTop: "1rem",
                                     marginBottom: "1rem",
