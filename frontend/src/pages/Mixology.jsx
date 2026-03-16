@@ -459,9 +459,20 @@ async function handleAddSavedBlendToCart(savedBlend) {
                     Create your own custom fragrance blend by selecting up to three of your favorite fragrances!
                 </Text>
                 <Button
-                    style={{ ...luxuryBodyStyle, fontSize: "1rem" }}
+                    style={{ 
+                        ...luxuryBodyStyle, 
+                        fontSize: "1rem",
+                        padding: "0.9rem 2.2rem",
+                        border: "1px solid rgba(255,255,255,0.35)",
+                        borderRadius: "28px",
+                        background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                        color: "#FFFFFF",
+                        cursor: "pointer",
+                        boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                        transition: "all 0.2s ease",
+                     }}
                     onClick={() => setShowInstructions(prev => !prev)}>
-                    {showInstructions ? "Hide Instructions" : "How to Use Mixology"}
+                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>{showInstructions ? "Hide Instructions" : "How to Use Mixology"}</Text>
                 </Button>
             </Flex>
                 {showInstructions && (
@@ -670,33 +681,77 @@ async function handleAddSavedBlendToCart(savedBlend) {
                     </Grid>
                     <Flex gap="1rem" marginTop="1rem" justifyContent="center">
                         <Button
-                            style={luxuryBodyStyle}
+                            style={{
+                                ...luxuryBodyStyle, 
+                                fontSize: "1rem",
+                                padding: "0.9rem 2.2rem",
+                                border: "1px solid rgba(255,255,255,0.35)",
+                                borderRadius: "28px",
+                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                color: "#FFFFFF",
+                                cursor: "pointer",
+                                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                                transition: "all 0.2s ease",
+                            }}
                             onClick={toggleThird}>
-                            {thirdCologneSelectedMode ? "Remove 3rd Fragrance" : "Add 3rd Fragrance"}
+                            
+                            <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>{thirdCologneSelectedMode ? "Remove 3rd Fragrance" : "Add 3rd Fragrance"}</Text> 
                         </Button>
                         <Button
-                            style={luxuryBodyStyle}
+                            style={{
+                                ...luxuryBodyStyle, 
+                                fontSize: "1rem",
+                                padding: "0.9rem 2.2rem",
+                                border: "1px solid rgba(255,255,255,0.35)",
+                                borderRadius: "28px",
+                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                color: "#FFFFFF",
+                                cursor: "pointer",
+                                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                                transition: "all 0.2s ease",
+                            }}
                             isLoading={blendLoading}
                             onClick={handleAddToCart}>
-                            Add to Cart
+                            <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Add to Cart</Text> 
                         </Button>
                         <Button
-                            style={luxuryBodyStyle}
+                            style={{
+                                ...luxuryBodyStyle, 
+                                fontSize: "1rem",
+                                padding: "0.9rem 2.2rem",
+                                border: "1px solid rgba(255,255,255,0.35)",
+                                borderRadius: "28px",
+                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                color: "#FFFFFF",
+                                cursor: "pointer",
+                                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                                transition: "all 0.2s ease",
+                            }}
                             isLoading={blendLoading}
                             onClick={handleSaveBlend}>
-                            Save Fragrance
+                            <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Save Fragrance</Text> 
                         </Button>
-                        
                         <Button 
                             // Can load and hide blends depending on click -----------------------
-                            style={luxuryBodyStyle}
+                            style={{
+                                ...luxuryBodyStyle, 
+                                fontSize: "1rem",
+                                padding: "0.9rem 2.2rem",
+                                border: "1px solid rgba(255,255,255,0.35)",
+                                borderRadius: "28px",
+                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                color: "#FFFFFF",
+                                cursor: "pointer",
+                                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                                transition: "all 0.2s ease",
+                            }}
                             onClick={async () => {
                                 if (!loadTable) {
                                     await loadBlends();
                                 }
                                 setLoadTable((prev) => !prev);
                             }}>
-                            {loadTable ? "Hide blends" : "Load blends"}
+                            <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>{loadTable ? "Hide blends" : "Load blends"}</Text> 
                         </Button>
                     </Flex>
                     {message && (

@@ -78,7 +78,18 @@ export default function Profile() {
     const [lastName, setlastName] = useState("");
     const [email, setemailName] = useState("");
     const [createdAt, setCreatedAt] = useState("");
-
+    const totalOrders = userOrders.length;
+    const totalSpent = userOrders.reduce((sum, order) => { return sum + Number(order.total || 0); }, 0);
+    const lastOrderDate = userOrders.length > 0 ? 
+        new Date(userOrders[0].created).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+          }) : "No orders yet";
+    const totalMixes = loadedBlends.length;
+    const twoNoteBlends = loadedBlends.filter((blend) => !blend.frag3_productid).length;
+    const threeNoteBlends = loadedBlends.filter((blend) => blend.frag3_productid).length;
+    const totalNotes = selectedNotes.length;
 
     // Load products from backend ---------------------------------------
     async function loadProducts() {
@@ -332,20 +343,12 @@ async function loadUserOrders() {
         });
     };
 
-    // If activeTab mixes will load blends --------------------------------------
-    // Making sure to check length of products to begin the load
-    useEffect(() => {
-        if (activeTab === "mixes" && products.length > 0) {
-            loadBlends();
-        }
-    }, [activeTab, products]);
-
     // Load products, favorite notes, and user orders on component mount ---------------------------------------
     useEffect(() => {
         loadProducts();
         loadUserInformation();
         loadUserOrders();
-
+        loadBlends();
     }, []);
 
     return (
@@ -408,7 +411,7 @@ async function loadUserOrders() {
                         borderRadius: "16px",
                         minHeight: "500px",
                     }}
-                    >
+                    >   
                     {activeTab === "overview" && (
                         <View>
                             <Text style={luxuryHeadingStyle2} marginBottom="1rem">
@@ -416,7 +419,7 @@ async function loadUserOrders() {
                             </Text> 
                             <Grid
                                 templateColumns="repeat(2, 1fr)"
-                                gap="1.5rem"
+                                gap="1.5rem"             
                             >
                                 <View style={cardStyle}>
                                     <Text style={luxuryHeadingStyle2}>
@@ -432,13 +435,20 @@ async function loadUserOrders() {
                                             day: 'numeric'
                                         })} 
                                         <br></br>
-                                        <Flex direction="row" gap="0.5rem" marginTop="1rem">
-                                            <Button
-                                                style={luxuryBodyStyle}>
-                                                Edit Profile
-                                            </Button>
-                                        </Flex>
-                                        
+                                        <Flex justifyContent="flex-end">
+                                        <View
+                                        style={{
+                                            padding: "0.9rem 2.2rem",
+                                            border: "1px solid rgba(255,255,255,0.35)",
+                                            borderRadius: "28px",
+                                            background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                            cursor: "pointer",
+                                            boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                                            transition: "all 0.2s ease",
+                                        }}>
+                                        <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Edit Profile</Text>
+                                        </View>
+                                    </Flex>
                                     </Text>
                                 </View>
                                 <View style={cardStyle}> 
@@ -446,9 +456,9 @@ async function loadUserOrders() {
                                         Order Statistics
                                     </Text>
                                     <Text style={luxurySubheadingStyle} textAlign={"left"}>
-                                        Total Orders: <br></br>
-                                        Last Order Date: <br></br>
-                                        Total Spent: 
+                                        Total Orders: {totalOrders} <br></br>
+                                        Last Order Date: {lastOrderDate}  <br></br>
+                                        Total Spent: ${totalSpent}
                                     </Text>
                                 </View>
                                 <View style={cardStyle}>
@@ -456,9 +466,9 @@ async function loadUserOrders() {
                                         Mixology Statistics
                                     </Text>
                                     <Text style={luxurySubheadingStyle} textAlign={"left"}>
-                                        Saved Mixes: <br></br>
-                                        Two Note Blends: <br></br>
-                                        Three Note Blends: <br></br>
+                                        Saved Mixes: {totalMixes}<br></br>
+                                        Two Note Blends: {twoNoteBlends} <br></br>
+                                        Three Note Blends: {threeNoteBlends} <br></br>
                                     </Text>
                                 </View>
                                 <View style={cardStyle}>
@@ -486,7 +496,7 @@ async function loadUserOrders() {
 
                     {activeTab === "orders" && (
                         <View>
-                            <Text style={luxurySubheadingStyle}>
+                            <Text style={luxuryHeadingStyle2}>
                                 Your Orders
                             </Text>
                             {ordersLoading ? (
@@ -589,7 +599,7 @@ async function loadUserOrders() {
 
                     {activeTab === "sfl" && (
                         <View>
-                            <Text style={luxurySubheadingStyle}>
+                            <Text style={luxuryHeadingStyle2}>
                                 Fragrances Saved For Later
                             </Text>
                         </View>
@@ -598,7 +608,7 @@ async function loadUserOrders() {
                     {activeTab === "mixes" && (
                         <View marginTop="1rem"  >
                             <Text 
-                                style={luxurySubheadingStyle}>
+                                style={luxuryHeadingStyle2}>
                                 Your Saved Blends
                             </Text>
                             {message && (
@@ -617,12 +627,7 @@ async function loadUserOrders() {
                                     No saved blends yet. Create one above and press “Save Fragrance”.
                                 </Text>
                             ) : ( 
-                                <View
-                                    style={{
-                                        backgroundColor: "#300a0a38",
-                                        borderRadius: "14px",
-                                    }}
-                                >
+
                                 <Table
                                     style={{             
                                     }}>
@@ -664,16 +669,26 @@ async function loadUserOrders() {
                                     </TableRow>
                                 ))}
                                 </Table>
-                            </View>
                             )}
                         </View>
                     )}
 
                     {activeTab === "preferences" && (
                         <View>
-                            <Text marginBottom="1.5rem"
-                                style={luxurySubheadingStyle}>
+                            <Text 
+                                marginBottom=".3rem"
+                                style={luxuryHeadingStyle2}>
                                 Which notes are you drawn to?
+                            </Text>
+                            <Text 
+                                style={luxurySubheadingStyle}
+                                marginBottom="1rem"
+                            >
+                                Select the fragrance notes that best match your taste. <br></br> 
+                                These preferences help personalize your Omré experience. 
+                            </Text>
+                            <Text>
+                                Selected Notes: {totalNotes}
                             </Text>
 
                             <Grid
@@ -714,6 +729,39 @@ async function loadUserOrders() {
                                 <ToggleButton isPressed={selectedNotes.includes("Vanilla")} onClick={() => toggleNote("Vanilla")}>Vanilla</ToggleButton>
                                 <ToggleButton isPressed={selectedNotes.includes("Yuzu")} onClick={() => toggleNote("Yuzu")}>Yuzu</ToggleButton>  
                             </Grid>
+                            <Flex 
+                                direction="row"
+                                justifyContent="center"
+                                gap="1.5rem"
+                                marginTop="2rem">
+                                <Button
+                                    style={{
+                                        padding: "0.9rem 2.2rem",
+                                        border: "1px solid rgba(255,255,255,0.35)",
+                                        borderRadius: "28px",
+                                        background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                        cursor: "pointer",
+                                        boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                    onClick={saveFragranceToProfile}>
+                                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Save To Profile</Text>
+                                </Button>
+                                <Button
+                                    style={{
+                                        padding: "0.9rem 2.2rem",
+                                        border: "1px solid rgba(255,255,255,0.35)",
+                                        borderRadius: "28px",
+                                        background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                        cursor: "pointer",
+                                        boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                    // onClick={saveFragranceToProfile}
+                                    >
+                                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Clear All</Text>
+                                </Button>
+                            </Flex>
                             {message && (
                             <Text
                                 style={{
@@ -727,13 +775,6 @@ async function loadUserOrders() {
                                 {message}
                             </Text>
                             )}
-                            <Button
-                                style={luxuryBodyStyle}
-                                onClick={saveFragranceToProfile}
-                                >
-                                 {/* onClick={() => saveFragrancesToProfile()}> */}
-                                Save To Profile
-                            </Button>
                         </View>
                     )}
                 </View>
