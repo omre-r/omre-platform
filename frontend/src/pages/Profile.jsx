@@ -570,10 +570,14 @@ async function loadUserOrders() {
                                                 <TableCell style={tableHeaderStyle}>Status</TableCell>
                                                 <TableCell style={tableHeaderStyle}>Total</TableCell>
                                                 <TableCell style={tableHeaderStyle}>Created</TableCell>
+                                                <TableCell style={tableHeaderStyle}>Actions</TableCell>
                                             </TableRow>
                                         </TableHead>
 
-                                        {userOrders.map((order) => (
+                                        {userOrders.map((order) => {
+                                            const isCanceled = order.status.toLowerCase() === "canceled";
+
+                                            return (
                                             <TableRow
                                                 key={order.id}
                                                 style={{
@@ -644,8 +648,29 @@ async function loadUserOrders() {
                                                 <TableCell style={tableBodyStyle}>
                                                     {new Date(order.created).toLocaleString()}
                                                 </TableCell>
+                                                <TableCell style={tableBodyStyle}>
+                                                    <Button
+                                                        isDisabled={isCanceled}
+                                                        style={{
+                                                            ...luxuryBodyStyle,
+                                                            fontSize: "1.15rem",
+                                                            padding: "0.9rem 1rem",
+                                                            minHeight: "58px",
+                                                            borderRadius: "14px",
+                                                            border: "1px solid rgba(255,255,255,0.18)",
+                                                            background: isCanceled ? "linear-gradient(145deg, #9f9f9f, rgba(130, 129, 129, 0.92))" : "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.92))",
+                                                            boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
+                                                            
+                                                        }}
+                                                        onClick={() => { 
+                                                            // handleCancelOrder();
+                                                        }}>
+                                                        <Text style={{...luxuryBodyStyle, color: isCanceled ? "Black" : "#FFFFFF"}}>{isCanceled ? "Canceled" : "Cancel Order"}</Text>
+                                                    </Button>
+                                                </TableCell>
                                             </TableRow>
-                                        ))}
+                                            );
+                                        })}
                                     </Table>
                                 </View>
                             )}
