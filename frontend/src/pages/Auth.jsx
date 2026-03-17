@@ -111,18 +111,6 @@ export default function Auth() {
     const { refreshAuth } = useAuth();
 
 
-    // Toggle Note -----------------------------------------------------------
-    // Once note is toggled you take that note and add/remove it from selectedNotes array
-    // Can toggle multiple notes
-    // Toggles a note in selectedNotes
-
-    const toggleNote = (note) => {
-        setSelectedNotes((prev) => {
-            if (prev.includes(note)) 
-                return prev.filter((n) => n !== note);
-            return [...prev, note];
-        });
-    };
 
     // Handle Sign Up ---------------------------------------------------------------
     // Initially clear previous messages if testing before
@@ -298,45 +286,45 @@ export default function Auth() {
                 width="30rem"
                 margin="1rem auto" 
                 padding="2rem" 
-                marginTop={ isVerify ? "-38rem" : 
-                    isLogin ? "-23rem" : "-5rem" 
-                }
-                backgroundColor="#f6f1ecbc" 
+                marginTop={ isVerify ? "-38rem" : isLogin ? "-23rem" : "-5rem" }
+                backgroundColor="#f6f1ec2a" 
                 border="none"
-                box-shadow="0 14px 36px rgba(75, 15, 15, 0.15)"
-            >
-                <Flex 
-                direction="column"
-                >
+                boxShadow="0 14px 36px rgba(75, 15, 15, 0.15)"
+                style={{
+                    background: "rgba(255, 248, 244, 0.05)",
+                    backdropFilter: "blur(8px)",
+                    borderRadius: "34px",
+                }}>
+                <Flex direction="column">
                     {/* Verify UI ------------------------------------------------------------- */}
                     {/* Will display success or error messages as well handle submitting the verification code */}
                     {authUI === "verify" ? (
                         <>
                             <Heading
-                            level={3} 
-                            color="#2B1E1A" 
-                            style={luxuryHeadingStyle}
-                            marginTop="0rem"
-                            >
-                            Verify Your Email
+                                level={3} 
+                                color="#2B1E1A" 
+                                style={luxuryHeadingStyle}
+                                marginTop="0rem"
+                                >
+                                Verify Your Email
                             </Heading>
                             <Text
-                            color="#2B1E1A" 
-                            style={luxuryBodyStyle}
-                            marginTop="-1.2rem"
-                            >
-                            Please enter verification code!
+                                color="#2B1E1A" 
+                                style={luxuryBodyStyle}
+                                marginTop="-1.2rem"
+                                >
+                                Please enter verification code!
                             </Text>
                             {authError && (
-                            <Text color="red">
-                                {authError}
-                            </Text>
+                                <Text color="red">
+                                    {authError}
+                                </Text>
                             )}
                             {authSuccess && (
-                            <Text 
-                            color="green">
-                                {authSuccess}
-                            </Text>
+                                <Text 
+                                color="green">
+                                    {authSuccess}
+                                </Text>
                             )}
 
                             <TextField
@@ -411,7 +399,12 @@ export default function Auth() {
                         <Grid templateColumns="1fr 1fr" gap="0.75rem" marginTop="-.2rem">
                             <TextField
                                 color="#2B1E1A"
-                                style={luxuryBodyStyle}
+                                style={{
+                                    ...luxuryBodyStyle,
+                                    borderRadius: "12px",
+                                    color: "#2B1E1A",
+                                    padding: ".75rem .75rem",
+                                }}
                                 label={
                                     <span>Enter First Name{" "}
                                         <span style={{ color: firstnameMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
@@ -427,7 +420,12 @@ export default function Auth() {
                             />
                             <TextField
                                 color="#2B1E1A"
-                                style={luxuryBodyStyle}
+                                style={{
+                                    ...luxuryBodyStyle,
+                                    borderRadius: "12px",
+                                    color: "#2B1E1A",
+                                    padding: ".75rem .75rem",
+                                }}
                                 label={
                                     <span>Enter Last Name{" "}
                                         <span style={{ color: lastnameMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
@@ -445,8 +443,12 @@ export default function Auth() {
                     )}
 
                     <TextField 
-                        color="#2B1E1A" 
-                        style={luxuryBodyStyle}
+                        style={{
+                            ...luxuryBodyStyle,
+                            borderRadius: "12px",
+                            color: "#2B1E1A",
+                            padding: ".75rem .75rem",
+                        }}
                         label={
                             <span>Email{" "}
                                 <span style={{ color: emailMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
@@ -467,7 +469,12 @@ export default function Auth() {
                     <Flex direction="row" alignItems="flex-end" gap="0.5rem" marginTop="-.2rem">
                         <TextField
                             color="#2B1E1A"
-                            style={luxuryBodyStyle}
+                            style={{
+                                ...luxuryBodyStyle,
+                                borderRadius: "12px",
+                                color: "#2B1E1A",
+                                padding: ".75rem .75rem",
+                            }}
                             label={
                             <span>Password{" "}
                                 <span style={{ color: passwordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
@@ -513,7 +520,12 @@ export default function Auth() {
                     <Flex direction="row" alignItems="flex-end" gap="0.5rem" marginTop="-.2rem">
                     <TextField
                         color="#2B1E1A"
-                        style={luxuryBodyStyle}
+                        style={{
+                            ...luxuryBodyStyle,
+                            borderRadius: "12px",
+                            color: "#2B1E1A",
+                            padding: ".75rem .75rem",
+                        }}
                         label={
                             <span>Confirm Password{" "}
                                 <span style={{ color: confirmPasswordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
@@ -567,65 +579,70 @@ export default function Auth() {
                         </Text>
                     </View>
                     )}
-
-                        {/* 
-                        <Heading level={3} 
-                            color="#2B1E1A" 
-                            style={luxuryBodyStyle}
-                            >
-                            {"Which notes are you drawn to?"}
-                        </Heading>
-
-                        <Grid
-                            templateColumns="repeat(2, 1fr)"
-                            gap="0.5rem"
-                            marginBottom="1rem"
-                        >
-                            <ToggleButton isPressed={selectedNotes.includes("Vanilla")} onClick={() => toggleNote("Vanilla")}>Vanilla</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Rose")} onClick={() => toggleNote("Rose")}>Rose</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Oud")} onClick={() => toggleNote("Oud")}>Oud</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Bergamot")} onClick={() => toggleNote("Bergamot")}>Bergamot</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Sandalwood")} onClick={() => toggleNote("Sandalwood")}>Sandalwood</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Jasmine")} onClick={() => toggleNote("Jasmine")}>Jasmine</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Cedarwood")} onClick={() => toggleNote("Cedarwood")}>Cedarwood</ToggleButton>
-                            <ToggleButton isPressed={selectedNotes.includes("Amber")} onClick={() => toggleNote("Amber")}>Amber</ToggleButton>
-                        </Grid>
-                        */}
                         </>
                     )}
 
                     {isLogin && (
                     <Button 
-                        color="#2B1E1A" 
-                        style={luxuryBodyStyle}
+                        style={{
+                            ...luxuryBodyStyle, 
+                            fontSize: "1rem",
+                            padding: "0.9rem 2.2rem",
+                            border: "1px solid rgba(255,255,255,0.35)",
+                            borderRadius: "28px",
+                            background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                            color: "#FFFFFF",
+                            cursor: "pointer",
+                            boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                            transition: "all 0.2s ease",
+                        }}
                         variation="primary"
                         marginTop=".9rem"
                         border="1px solid rgba(245, 245, 245, 0.85)"
                         loadingText=""
                         onClick={() => handleSignIn()}
                     >
-                    Login
+                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Login</Text>
                     </Button>
                     )}
 
                     {!isLogin && (
                     <Button 
-                        color="#2B1E1A" 
-                        style={luxuryBodyStyle}
+                        style={{
+                            ...luxuryBodyStyle, 
+                            fontSize: "1rem",
+                            padding: "0.9rem 2.2rem",
+                            border: "1px solid rgba(255,255,255,0.35)",
+                            borderRadius: "28px",
+                            background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                            color: "#FFFFFF",
+                            cursor: "pointer",
+                            boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                            transition: "all 0.2s ease",
+                        }}
                         variation="primary"
                         marginTop="-.1rem"
                         border="1px solid rgba(245, 245, 245, 0.85)"
                         loadingText=""
                         onClick={() => handleSignUpSubmit()}
                     >
-                    Sign Up
+                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Sign Up</Text>
                     </Button>
                     )}
 
                     {/* Toggle button to switch between login and signup modes */}
                     <ToggleButton 
                         color="#2B1E1A" 
-                        style={luxuryBodyStyle}
+                        style={{
+                            ...luxuryBodyStyle,
+                            fontSize: "1.15rem",
+                            padding: "0.9rem 1rem",
+                            minHeight: "58px",
+                            borderRadius: "14px",
+                            border: "1px solid rgba(255,255,255,0.18)",
+                            background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.92))",
+                            boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
+                        }}
                         isPressed={!isLogin}
                         onClick={() => {
                             setMode(isLogin ? "signup" : "login");
@@ -637,7 +654,8 @@ export default function Auth() {
                         marginTop=".8rem"
                         marginBottom=".5rem"
                         >
-                        {isLogin ? "Join OMRÉ" : "Login to OMRÉ"}
+                        <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>{isLogin ? "Join OMRÉ" : "Login to OMRÉ"}</Text>
+                       
                     </ToggleButton>
 
                     {isLogin && (

@@ -165,20 +165,18 @@ export default function ContactUs() {
               <button
                 onClick={handleSubmit}
                 style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "1.05rem",
-                  fontWeight: 700,
-                  padding: "0.75rem 2.5rem",
-                  backgroundColor: "rgba(151, 33, 0, 0.88)",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  letterSpacing: "1px",
-                  textTransform: "uppercase",
-                }}
-              >
-                Send
+                    ...bodyStyle, 
+                    fontSize: "1rem",
+                    padding: "0.9rem 2.2rem",
+                    border: "1px solid rgba(255,255,255,0.35)",
+                    borderRadius: "28px",
+                    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                    color: "#FFFFFF",
+                    cursor: "pointer",
+                    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                    transition: "all 0.2s ease",
+                }}>
+                <Text style={{...bodyStyle, color: "#FFFFFF"}}>Send</Text>
               </button>
             </div>
           )}

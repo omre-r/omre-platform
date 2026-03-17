@@ -151,16 +151,20 @@ const ForgotPassword = () => {
                     alignItems="center"
                 >   
                     <Card
-                        variation="elevated"
-                        height="auto" 
+                        variation="elevated" 
+                        height="auto"
                         width="30rem"
-                        margin="1rem auto"
-                        padding="2rem"
+                        margin="1rem auto" 
+                        padding="2rem" 
                         marginTop= { isVerify ? "-15rem" : "-30rem" }
-                        backgroundColor="#f6f1ecbc"
+                        backgroundColor="#f6f1ec2a" 
                         border="none"
-                        box-shadow="0 14px 36px rgba(75, 15, 15, 0.15)"
-                        >   
+                        boxShadow="0 14px 36px rgba(75, 15, 15, 0.15)"
+                        style={{
+                            background: "rgba(255, 248, 244, 0.05)",
+                            backdropFilter: "blur(8px)",
+                            borderRadius: "34px",
+                        }}>
                         <Flex direction="column">
 
                             {/* UI for new password and verification ----------------------------------------------- */}
@@ -189,8 +193,12 @@ const ForgotPassword = () => {
                             )}
 
                             <TextField
-                                color="#2B1E1A"
-                                style={luxuryBodyStyle}
+                                style={{
+                                    ...luxuryBodyStyle,
+                                    borderRadius: "12px",
+                                    color: "#2B1E1A",
+                                    padding: ".75rem .75rem",
+                                }}
                                 label={
                                     <span>Enter Verification Code{" "}
                                         <span style={{ color: verificationMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
@@ -205,7 +213,12 @@ const ForgotPassword = () => {
                             />
                                 <TextField
                                     color="#2B1E1A"
-                                    style={luxuryBodyStyle}
+                                    style={{
+                                        ...luxuryBodyStyle,
+                                        borderRadius: "12px",
+                                        color: "#2B1E1A",
+                                        padding: ".75rem .75rem",
+                                    }}
                                     label={
                                     <span>Enter Password{" "}
                                         <span style={{ color: passwordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
@@ -243,7 +256,12 @@ const ForgotPassword = () => {
                                 />
                                 <TextField
                                     color="#2B1E1A"
-                                    style={luxuryBodyStyle}
+                                    style={{
+                                        ...luxuryBodyStyle,
+                                        borderRadius: "12px",
+                                        color: "#2B1E1A",
+                                        padding: ".75rem .75rem",
+                                    }}
                                     label={
                                     <span>Confirm Password{" "}
                                         <span style={{ color: confirmPasswordMissing ? "#ff002f" : "rgba(43, 30, 26, 0)" }}>*</span>
@@ -339,8 +357,12 @@ const ForgotPassword = () => {
                             )}
 
                             <TextField 
-                                color="#2B1E1A" 
-                                style={luxuryBodyStyle}
+                                style={{
+                                    ...luxuryBodyStyle,
+                                    borderRadius: "12px",
+                                    color: "#2B1E1A",
+                                    padding: ".75rem .75rem",
+                                }}
                                 label="Email"
                                 type="email"
                                 placeholder="e.g., john.smith@email.com"
@@ -351,13 +373,24 @@ const ForgotPassword = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                             <Button 
-                                style={luxuryBodyStyle}
+                                style={{
+                                    ...luxuryBodyStyle, 
+                                    fontSize: "1rem",
+                                    padding: "0.9rem 2.2rem",
+                                    border: "1px solid rgba(255,255,255,0.35)",
+                                    borderRadius: "28px",
+                                    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                    color: "#FFFFFF",
+                                    cursor: "pointer",
+                                    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                                    transition: "all 0.2s ease",
+                                }}
                                 color="#2B1E1A"
                                 borderRadius="8px"
                                 marginTop="2rem"
                                 onClick={() => handleSendResetCode()}
                             >
-                                Send Reset Code
+                                <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Send Reset Code</Text>
                             </Button>
                             <Link 
                                 href="/Auth" 
