@@ -152,7 +152,7 @@ export default function UsersPanel() {
     if (loadingUsers) {
         return (
         <Text 
-            style={luxuryBodyStyle}>
+            style={{...luxuryBodyStyle, color: "white"}}>
             Loading users...
         </Text>);
     }
@@ -165,177 +165,6 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
         direction={"column"}
         height={"100%"}
         >
-            <Flex  
-            padding={"5px"}    
-            alignItems={"center"}
-            justifyContent={"center"}
-            gap={"3px"}
-            style={{zIndex: "2000", background: "linear-gradient(to right, white, whitesmoke, white)"}}
-            >
-
-                <View
-                position={"relative"}>
-                <TextField
-                    labelHidden
-                    type="text"
-                    placeholder="Search by email..."
-                    textAlign={"left"}
-                    width={"300px"}
-                    style={{borderRadius:"10px", ...bodyStyle2}}
-                    border=".5px solid #111"
-                    borderRadius="10px"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    onKeyDown={async (e) =>  {
-                        if (e.key !== "Enter") return;
-                        const res = await getFilteredUsersReq({email: search});
-                        setUsers(res.data.users)
-                    }}
-                />
-                <section 
-                style={{
-                    display: "flex",
-                    width:"30px", 
-                    paddingRight: "5px",
-                    overflow:"hidden",
-                    position:"absolute",
-                    right:"0",
-                    top: "50%",
-                    transform: "translateY(-50%)"}}
-                    onClick={async e => {
-                        const res = await getFilteredUsersReq({email: search});
-                        setUsers(res.data.users)
-                    }}>
-                    <img src={SearchIcon} alt="search" style={{width: "100%"}} />
-                </section>
-                </View>
-                <View 
-                position={"relative"}
-                padding={"2px"}
-                backgroundColor={"white"}
-                borderRadius={"10px"}
-                style={{width: "40px"}}
-                onClick={e => {e.currentTarget.blur(); setShowFilters(prev=>!prev);}}
-                >
-                <img src={OptionsIcon} alt="options" style={{width:"100%", display:"block"}}/>
-                {showFilters && 
-                <Card
-
-                position={"absolute"}
-                top={"110%"}
-                left={"50%"}
-                transform={"translateX(-50%)"}
-                border={"1px solid"}
-                borderRadius={"10px"}
-                minWidth={"420px"}
-                onClick={e => e.stopPropagation()}
-                >
-                    <Flex 
-                    direction={"column"}
-                    gap={0}>
-                    <Flex>
-                        {/* first name container */}
-                        <Flex
-                        alignItems={"center"}>
-                            <Text
-                            marginRight={"auto"}>First name: </Text>
-                            <TextField 
-                            value={firstname}
-                            onChange={e => setFirstname(e.target.value)}
-                            />
-                        </Flex>
-                        {/* last name container */}
-                        <Flex
-                        alignItems={"center"}>
-                            <Text
-                            marginRight={"auto"}>Last name: </Text>
-                            <TextField 
-                            value={lastname}
-                            onChange={e => setLastname(e.target.value)}
-                            />
-                        </Flex>
-                    </Flex>
-                    <hr style={{width: "100%", marginBlock: "10px"}}/>
-                    <Flex>
-                        {/* get logged in container */}
-                        <Flex
-                        alignItems={"center"}>
-                            <Text
-                            marginRight={"auto"}>Show logged in:</Text>
-                            <SwitchField 
-                            isChecked={getLoggedIn}
-                            onChange={e => setGetLoggedIn(e.target.checked)}>
-                            </SwitchField>
-                        </Flex>
-
-                        {/* get not logged in container */}
-                        <Flex
-                        alignItems={"center"}>
-                            <Text
-                            marginRight={"auto"}>Show never logged in:</Text>
-                            <SwitchField 
-                            isChecked={getNeverLoggedIn}
-                            onChange={e => setGetNeverLoggedIn(e.target.checked)}>
-                            </SwitchField>
-                        </Flex>
-                    </Flex>
-                    <hr style={{width: "100%", marginBlock: "10px"}}/>
-                    <Flex>
-                        {/* get is admin container */}
-                        <Flex
-                        alignItems={"center"}>
-                            <Text
-                            marginRight={"auto"}>Show admins:</Text>
-                            <SwitchField 
-                            isChecked={getAdmins}
-                            onChange={e => setGetAdmins(e.target.checked)}>
-                            </SwitchField>
-                        </Flex>
-
-                        {/* get nonadmins container */}
-                        <Flex
-                        alignItems={"center"}>
-                            <Text
-                            marginRight={"auto"}>Show normal users:</Text>
-                            <SwitchField 
-                            isChecked={getNonadmins}
-                            onChange={e => setGetNonadmins(e.target.checked)}>
-                            </SwitchField>
-                        </Flex>
-                    </Flex>
-
-                    <hr style={{width: "100%", marginBlock: "10px"}}/>
-
-
-                    {/* "include search" container */}
-                    <Flex
-                    direction={"column"}
-                    gap={"3px"}
-                    alignItems={"center"}>
-                        <Flex
-                        width={"100%"}>
-                        <Text
-                        marginRight={"auto"}>
-                            Include Email Search:
-                        </Text>
-                        <SwitchField 
-                        isChecked={includeSearch}
-                        onChange={e => setIncludeSearch(e.target.checked)}>
-                        </SwitchField>
-                        </Flex>
-                        {includeSearch && <Text style={{fontSize: ".8rem"}}>"{search}"</Text>}
-                    </Flex>
-                    <hr style={{width: "100%", marginBlock: "10px"}}/>
-
-                    <Button 
-                    onClick={handleFilterSubmit}>
-                        Filter
-                    </Button>
-                    </Flex>
-                </Card>
-                }
-                </View>
-            </Flex>
             <Flex
             direction="row" 
             gap="1rem" 
@@ -358,6 +187,194 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             style={luxuryHeadingStyle}>
                             Users
                         </Text>
+                        <Flex  
+                        padding={"5px"}    
+                        alignItems={"center"}
+                        justifyContent={"center"}
+                        gap={"3px"}
+                        style={{zIndex: "2000", background: "#ffffff00"}}
+                        >
+
+                            <View
+                            position={"relative"}>
+                            <TextField
+                                labelHidden
+                                type="text"
+                                placeholder="Search by email..."
+                                textAlign={"left"}
+                                width={"300px"}
+                                style={{borderRadius:"10px", ...bodyStyle2}}
+                                border=".5px solid #111"
+                                borderRadius="10px"
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                onKeyDown={async (e) =>  {
+                                    if (e.key !== "Enter") return;
+                                    const res = await getFilteredUsersReq({email: search});
+                                    setUsers(res.data.users)
+                                }}
+                            />
+                            <section 
+                            style={{
+                                display: "flex",
+                                width:"30px", 
+                                paddingRight: "5px",
+                                overflow:"hidden",
+                                position:"absolute",
+                                right:"0",
+                                top: "50%",
+                                transform: "translateY(-50%)"}}
+                                onClick={async e => {
+                                    const res = await getFilteredUsersReq({email: search});
+                                    setUsers(res.data.users)
+                                }}>
+                                <img src={SearchIcon} alt="search" style={{width: "100%"}} />
+                            </section>
+                            </View>
+                            <View 
+                            position={"relative"}
+                            padding={"2px"}
+                            backgroundColor={"white"}
+                            borderRadius={"10px"}
+                            style={{
+                                background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+                                boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
+                                border: "1px solid rgba(255,255,255,0.16)",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                            }}
+                            onClick={e => {e.currentTarget.blur(); setShowFilters(prev=>!prev);}}
+                            >
+                            <img 
+                                src={OptionsIcon} 
+                                alt="options" 
+                                style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    display: "block",
+                                    filter: "brightness(0) invert(1)",
+                                }}/>
+                            {showFilters && 
+                            <Card
+
+                            position={"absolute"}
+                            top={"110%"}
+                            left={"50%"}
+                            transform={"translateX(-50%)"}
+                            border={"1px solid"}
+                            borderRadius={"10px"}
+                            minWidth={"420px"}
+                            onClick={e => e.stopPropagation()}
+                            >
+                                <Flex 
+                                direction={"column"}
+                                gap={0}>
+                                <Flex>
+                                    {/* first name container */}
+                                    <Flex
+                                    alignItems={"center"}>
+                                        <Text
+                                        marginRight={"auto"}>First name: </Text>
+                                        <TextField 
+                                        value={firstname}
+                                        onChange={e => setFirstname(e.target.value)}
+                                        />
+                                    </Flex>
+                                    {/* last name container */}
+                                    <Flex
+                                    alignItems={"center"}>
+                                        <Text
+                                        marginRight={"auto"}>Last name: </Text>
+                                        <TextField 
+                                        value={lastname}
+                                        onChange={e => setLastname(e.target.value)}
+                                        />
+                                    </Flex>
+                                </Flex>
+                                <hr style={{width: "100%", marginBlock: "10px"}}/>
+                                <Flex>
+                                    {/* get logged in container */}
+                                    <Flex
+                                    alignItems={"center"}>
+                                        <Text
+                                        marginRight={"auto"}>Show logged in:</Text>
+                                        <SwitchField 
+                                        isChecked={getLoggedIn}
+                                        onChange={e => setGetLoggedIn(e.target.checked)}>
+                                        </SwitchField>
+                                    </Flex>
+
+                                    {/* get not logged in container */}
+                                    <Flex
+                                    alignItems={"center"}>
+                                        <Text
+                                        marginRight={"auto"}>Show never logged in:</Text>
+                                        <SwitchField 
+                                        isChecked={getNeverLoggedIn}
+                                        onChange={e => setGetNeverLoggedIn(e.target.checked)}>
+                                        </SwitchField>
+                                    </Flex>
+                                </Flex>
+                                <hr style={{width: "100%", marginBlock: "10px"}}/>
+                                <Flex>
+                                    {/* get is admin container */}
+                                    <Flex
+                                    alignItems={"center"}>
+                                        <Text
+                                        marginRight={"auto"}>Show admins:</Text>
+                                        <SwitchField 
+                                        isChecked={getAdmins}
+                                        onChange={e => setGetAdmins(e.target.checked)}>
+                                        </SwitchField>
+                                    </Flex>
+
+                                    {/* get nonadmins container */}
+                                    <Flex
+                                    alignItems={"center"}>
+                                        <Text
+                                        marginRight={"auto"}>Show normal users:</Text>
+                                        <SwitchField 
+                                        isChecked={getNonadmins}
+                                        onChange={e => setGetNonadmins(e.target.checked)}>
+                                        </SwitchField>
+                                    </Flex>
+                                </Flex>
+
+                                <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+
+                                {/* "include search" container */}
+                                <Flex
+                                direction={"column"}
+                                gap={"3px"}
+                                alignItems={"center"}>
+                                    <Flex
+                                    width={"100%"}>
+                                    <Text
+                                    marginRight={"auto"}>
+                                        Include Email Search:
+                                    </Text>
+                                    <SwitchField 
+                                    isChecked={includeSearch}
+                                    onChange={e => setIncludeSearch(e.target.checked)}>
+                                    </SwitchField>
+                                    </Flex>
+                                    {includeSearch && <Text style={{fontSize: ".8rem"}}>"{search}"</Text>}
+                                </Flex>
+                                <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+                                <Button 
+                                onClick={handleFilterSubmit}>
+                                    Filter
+                                </Button>
+                                </Flex>
+                            </Card>
+                            }
+                            </View>
+                        </Flex>
                         <Button 
                             style={luxuryBodyStyle}
                             onClick={loadUsers}>

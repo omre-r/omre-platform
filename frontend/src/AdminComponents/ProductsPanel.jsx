@@ -644,7 +644,7 @@ export default function ProductsPanel() {
     if (loadingProducts) {
         return (
         <Text 
-            style={luxuryBodyStyle}>
+            style={{...luxuryBodyStyle, color:"#ffffff"}}>
             Loading Products...
         </Text>);
     }
@@ -658,240 +658,257 @@ export default function ProductsPanel() {
         direction={"column"}
         height="100%"
         >
-            <Flex  
-            padding={"5px"}    
-            alignItems={"center"}
-            justifyContent={"center"}
-            gap={"3px"}
-            style={{zIndex: "1000", background: "linear-gradient(to right, white, whitesmoke, white)"}}
-            >
-
-                <View
-                position={"relative"}>
-                <TextField
-                    labelHidden
-                    type="text"
-                    placeholder="Find products..."
-                    textAlign={"left"}
-                    width={"300px"}
-                    style={{borderRadius:"10px", ...bodyStyle2}}
-                    border=".5px solid #111"
-                    borderRadius="10px"
-                    onKeyDown={e => {
-                        if (e.key !== "Enter") return;
-                        resetToIdle();
-                        filterProducts({name: e.target.value});
-                    }}
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                />
-                <section 
-                style={{
-                    display: "flex",
-                    width:"30px", 
-                    paddingRight: "5px",
-                    overflow:"hidden",
-                    position:"absolute",
-                    right:"0",
-                    top: "50%",
-                    transform: "translateY(-50%)"}}
-                    onClick={e => {
-                        resetToIdle();
-                        filterProducts({name: search});
-                    }}>
-                    <img src={SearchIcon} alt="search" style={{width: "100%"}} />
-                </section>
-                </View>
-                <View 
-                position={"relative"}
-                padding={"2px"}
-                backgroundColor={"white"}
-                borderRadius={"10px"}
-                style={{width: "40px"}}
-                onClick={e => {e.currentTarget.blur(); setShowFilters(prev=>!prev);}}
+        <Flex
+        direction="row" 
+        gap="1rem" 
+        flex={1}
+        >                
+            {/* Left card holding products ---------------------------------------------*/}
+            {/* Will be shown as a list where each product is clickable  */}
+            <Card
+                flex="1.2" 
+                height="100%" 
+                padding="1rem" 
+                backgroundColor="whitesmoke"
                 >
-                <img src={OptionsIcon} alt="options" style={{width:"100%", display:"block"}}/>
-                {showFilters && 
-                <Card
-
-                position={"absolute"}
-                top={"110%"}
-                left={"50%"}
-                transform={"translateX(-50%)"}
-                border={"1px solid"}
-                borderRadius={"10px"}
-                onClick={e => e.stopPropagation()}
-                >
+                <Flex 
+                    direction="column" 
+                    height="100%">
                     <Flex 
-                    direction={"column"}
-                    gap={0}>
-                    {priceErrorMsg && 
-                    <Text
-                    color={"red"}
-                    lineHeight={"17px"}
-                    marginBottom={"5px"}>{priceErrorMsg}</Text>}
-                    {/* price container */}
-                    <Flex
-                    alignItems={"center"}>
-                        <Text
-                        marginRight={"auto"}>Price: </Text>
-                        <Input 
-                        min={0} 
-                        max={200} 
-                        type={"number"} 
-                        placeholder="Minimum"
-                        padding={0}
-                        width={"100px"}
-                        value={minimum}
-                        style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
-                        onChange={e => setMinimum(e.target.value)}></Input>
-                        <Input
-                        min={0} 
-                        max={200} 
-                        type={"number"} 
-                        placeholder="Maximum"
-                        padding={0}
-                        width={"100px"}
-                        value={maximum}
-                        style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
-                        onChange={e => setMaximum(e.target.value)}>
-                        </Input>
-                    </Flex>
-                    <hr style={{width: "100%", marginBlock: "10px"}}/>
-
-                    {/* size container */}
-                    <Flex
-                    alignItems={"center"}>
-                        <Text
-                        marginRight={"auto"}>Size:</Text>
-                        <ToggleButtonGroup
-                        value={selectedSizes}
-                        onChange={v => setSelectedSizes(v)}
-                        isExclusive={false}
-                        gap={"5px"}
-                        >
-                        <ToggleButton 
-                        padding={"6px"} value="30ml">30 ml</ToggleButton>
-                        <ToggleButton 
-                        padding={"6px"} value="50ml">50 ml</ToggleButton>
-                        </ToggleButtonGroup>
-                    </Flex>
-                    <hr style={{width: "100%", marginBlock: "10px"}}/>
-
-                    {/* featured container */}
-                    <Flex
-                    alignItems={"center"}>
-                        <Text
-                        marginRight={"auto"}>Only Featured:</Text>
-                        <SwitchField 
-                        isChecked={onlyFeatured}
-                        onChange={e => setOnlyFeatured(e.target.checked)}>
-                        </SwitchField>
-                    </Flex>
-                    <hr style={{width: "100%", marginBlock: "10px"}}/>
-
-                    {/* "include search" container */}
-                    <Flex
-                    direction={"column"}
-                    gap={"3px"}
-                    alignItems={"center"}>
-                        <Flex
-                        width={"100%"}>
-                        <Text
-                        marginRight={"auto"}>
-                            Include Search:
+                        justifyContent="space-between" 
+                        alignItems="center"
+                        wrap="wrap">
+                        <Text 
+                            style={luxuryHeadingStyle}>
+                            Products
                         </Text>
-                        <SwitchField 
-                        isChecked={includeSearch}
-                        onChange={e => setIncludeSearch(e.target.checked)}>
-                        </SwitchField>
-                        </Flex>
-                        {includeSearch && <Text style={{fontSize: ".8rem"}}>"{search}"</Text>}
-                    </Flex>
-                    <hr style={{width: "100%", marginBlock: "10px"}}/>
+                        <Flex  
+        padding={"5px"}    
+        alignItems={"center"}
+        justifyContent={"center"}
+        gap={"3px"}
+        style={{zIndex: "1000", background: "#ffffff00"}}
+        >
 
-                    {/* notes container */}
-                    <Flex
-                    direction={'column'}>
-                    <Flex
-                        alignItems={"center"}>
-                        <Text
-                        marginRight={"auto"}>Notes:</Text>
-                        <select 
-                        name="notes" 
-                        id="notes"
-                        style={{
-                            padding: "4px",
-                            height:"100%",
-                            justifySelf: "flex-start",
-                            fontWeight: "bold",
-                            borderRadius: "10px",
-                            textAlign: "center"}} 
-                        onChange={e => setSelectedNotes(prev => !prev.includes(e.target.value) && e.target.value ? [...prev, e.target.value] : prev)}
-                        >
-                            <option value="">Notes</option>
-                            {fragranceOptions.map(f => <option key={f} disabled={selectedNotes.includes(f)} value={f}>{f}</option>)}
+            <View
+            position={"relative"}>
+            <TextField
+                labelHidden
+                type="text"
+                placeholder="Find products..."
+                textAlign={"left"}
+                width={"300px"}
+                style={{borderRadius:"10px", ...bodyStyle2}}
+                border=".5px solid #111"
+                borderRadius="10px"
+                onKeyDown={e => {
+                    if (e.key !== "Enter") return;
+                    resetToIdle();
+                    filterProducts({name: e.target.value});
+                }}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+            />
+            <section 
+            style={{
+                display: "flex",
+                width:"30px", 
+                paddingRight: "5px",
+                overflow:"hidden",
+                position:"absolute",
+                right:"0",
+                top: "50%",
+                transform: "translateY(-50%)"}}
+                onClick={e => {
+                    resetToIdle();
+                    filterProducts({name: search});
+                }}>
+                <img src={SearchIcon} alt="search" style={{width: "100%"}} />
+            </section>
+            </View>
+            <View 
+            position={"relative"}
+            padding={"2px"}
+            backgroundColor={"white"}
+            borderRadius={"10px"}
+            style={{
+                background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+                boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
+                border: "1px solid rgba(255,255,255,0.16)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+            }}
+            onClick={e => {e.currentTarget.blur(); setShowFilters(prev=>!prev);}}
+            >
+            <img src={OptionsIcon} 
+            alt="options" 
+            style={{
+                width: "40px",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        height: "40px",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        display: "block",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        filter: "brightness(0) invert(1)",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    }}/>
+            {showFilters && 
+            <Card
 
+            position={"absolute"}
+            top={"110%"}
+            left={"50%"}
+            transform={"translateX(-50%)"}
+            border={"1px solid"}
+            borderRadius={"10px"}
+            onClick={e => e.stopPropagation()}
+            >
+                <Flex 
+                direction={"column"}
+                gap={0}>
+                {priceErrorMsg && 
+                <Text
+                color={"red"}
+                lineHeight={"17px"}
+                marginBottom={"5px"}>{priceErrorMsg}</Text>}
+                {/* price container */}
+                <Flex
+                alignItems={"center"}>
+                    <Text
+                    marginRight={"auto"}>Price: </Text>
+                    <Input 
+                    min={0} 
+                    max={200} 
+                    type={"number"} 
+                    placeholder="Minimum"
+                    padding={0}
+                    width={"100px"}
+                    value={minimum}
+                    style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
+                    onChange={e => setMinimum(e.target.value)}></Input>
+                    <Input
+                    min={0} 
+                    max={200} 
+                    type={"number"} 
+                    placeholder="Maximum"
+                    padding={0}
+                    width={"100px"}
+                    value={maximum}
+                    style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
+                    onChange={e => setMaximum(e.target.value)}>
+                    </Input>
+                </Flex>
+                <hr style={{width: "100%", marginBlock: "10px"}}/>
 
-
-                        </select>
-                        </Flex>  
-                        <Flex 
-                        wrap={"wrap"}
-                        gap={0}>
-                        {selectedNotes.map(note => {
-                            return (
-                            <Button
-                            key={note}
-                            padding={"3px"}
-                            fontSize={".7rem"}
-                            onClick={e => setSelectedNotes(prev => prev.filter(n => note !== n))}
-                            >
-                            {note}
-                            </Button>)
-                        })}
-                        </Flex>    
-                    </Flex>
-                    <hr style={{width: "100%", marginBlock: "10px"}}/>
-                    <Button 
-                    onClick={handleFilterSubmit}>
-                        Filter
-                    </Button>
-                    </Flex>
-                </Card>
-                }
-                </View>
-
-            </Flex>
-            <Flex
-            direction="row" 
-            gap="1rem" 
-            flex={1}
-            >                
-                {/* Left card holding products ---------------------------------------------*/}
-                {/* Will be shown as a list where each product is clickable  */}
-                <Card
-                    flex="1.2" 
-                    height="100%" 
-                    padding="1rem" 
-                    backgroundColor="whitesmoke"
+                {/* size container */}
+                <Flex
+                alignItems={"center"}>
+                    <Text
+                    marginRight={"auto"}>Size:</Text>
+                    <ToggleButtonGroup
+                    value={selectedSizes}
+                    onChange={v => setSelectedSizes(v)}
+                    isExclusive={false}
+                    gap={"5px"}
                     >
+                    <ToggleButton 
+                    padding={"6px"} value="30ml">30 ml</ToggleButton>
+                    <ToggleButton 
+                    padding={"6px"} value="50ml">50 ml</ToggleButton>
+                    </ToggleButtonGroup>
+                </Flex>
+                <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+                {/* featured container */}
+                <Flex
+                alignItems={"center"}>
+                    <Text
+                    marginRight={"auto"}>Only Featured:</Text>
+                    <SwitchField 
+                    isChecked={onlyFeatured}
+                    onChange={e => setOnlyFeatured(e.target.checked)}>
+                    </SwitchField>
+                </Flex>
+                <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+                {/* "include search" container */}
+                <Flex
+                direction={"column"}
+                gap={"3px"}
+                alignItems={"center"}>
+                    <Flex
+                    width={"100%"}>
+                    <Text
+                    marginRight={"auto"}>
+                        Include Search:
+                    </Text>
+                    <SwitchField 
+                    isChecked={includeSearch}
+                    onChange={e => setIncludeSearch(e.target.checked)}>
+                    </SwitchField>
+                    </Flex>
+                    {includeSearch && <Text style={{fontSize: ".8rem"}}>"{search}"</Text>}
+                </Flex>
+                <hr style={{width: "100%", marginBlock: "10px"}}/>
+
+                {/* notes container */}
+                <Flex
+                direction={'column'}>
+                <Flex
+                    alignItems={"center"}>
+                    <Text
+                    marginRight={"auto"}>Notes:</Text>
+                    <select 
+                    name="notes" 
+                    id="notes"
+                    style={{
+                        padding: "4px",
+                        height:"100%",
+                        justifySelf: "flex-start",
+                        fontWeight: "bold",
+                        borderRadius: "10px",
+                        textAlign: "center"}} 
+                    onChange={e => setSelectedNotes(prev => !prev.includes(e.target.value) && e.target.value ? [...prev, e.target.value] : prev)}
+                    >
+                        <option value="">Notes</option>
+                        {fragranceOptions.map(f => <option key={f} disabled={selectedNotes.includes(f)} value={f}>{f}</option>)}
+
+
+
+                    </select>
+                    </Flex>  
                     <Flex 
-                        direction="column" 
-                        height="100%">
-                        <Flex 
-                            justifyContent="space-between" 
-                            alignItems="center"
-                            wrap="wrap">
-                            <Text 
-                                style={luxuryHeadingStyle}>
-                                Products
-                            </Text>
+                    wrap={"wrap"}
+                    gap={0}>
+                    {selectedNotes.map(note => {
+                        return (
+                        <Button
+                        key={note}
+                        padding={"3px"}
+                        fontSize={".7rem"}
+                        onClick={e => setSelectedNotes(prev => prev.filter(n => note !== n))}
+                        >
+                        {note}
+                        </Button>)
+                    })}
+                    </Flex>    
+                </Flex>
+                <hr style={{width: "100%", marginBlock: "10px"}}/>
+                <Button 
+                onClick={handleFilterSubmit}>
+                    Filter
+                </Button>
+                </Flex>
+            </Card>
+            }
+            </View>
+
+        </Flex>
                             <Flex 
                                 direction="row"
                                 gap="0.75rem" 
                                 wrap="wrap" 
-                                justifyContent="flex-end">
+                                justifyContent="flex-end"
+                                >
                                 {/* Button : add mode -------------------------------------------------- */}
                                 <Button 
                                     style={luxuryBodyStyle}

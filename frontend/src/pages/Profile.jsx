@@ -1,5 +1,5 @@
 import Navbar from "../components/Navbar";
-import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, Heading, ToggleButton } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, ToggleButton } from "@aws-amplify/ui-react";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useEffect, useState } from "react";
 import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq, createCartItemReq, updatePreferredNotesReq, getUserReq, getUserOrdersReq } from "../requests.js";
@@ -33,32 +33,52 @@ const luxuryBodyStyle = {
 // Styles to change font and outline of table headers and body ------------------------------
 const tableHeaderStyle = {
     ...luxuryBodyStyle,
-    fontSize: "1.45rem",  
-    fontWeight: 550,
+    fontSize: "2rem",  
+    fontWeight: 600,
     letterSpacing: "0.3px",
     backgroundColor: "transparent",
     border: "none",
     boxShadow: "none",
     outline: "none",
-}
+    color: "black",
+};
+
 const tableBodyStyle = {
     ...luxuryBodyStyle,
-    fontSize: "1.2rem",  
-    fontWeight: 400,
+    fontSize: "1.5rem",  
+    fontWeight: 500,
     letterSpacing: "0.2px",
     backgroundColor: "transparent",
     border: "none",
     boxShadow: "none",
     outline: "none",
-}
+    color: "#ffffff",
+};
+
 const cardStyle = {
-    backgroundColor: "rgba(255, 248, 244, 0.35)",
-    borderRadius: "18px",
+    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    borderRadius: "14px",
     padding: "1.5rem",
-    minHeight: "220px",
+    minHeight: "250px",
     boxShadow: "0 4px 14px rgba(0, 0, 0, 0.08)",
     backdropFilter: "blur(3px)",
     border: "1px solid rgba(255, 255, 255, 0.25)",
+};
+
+const tableViewStyle = {
+    padding: "1.2rem 1.5rem",
+    border: "1px solid rgba(255,255,255,0.35)",
+    borderRadius: "14px",
+    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",     
+    justifyContent: "center", 
+    minHeight: "120px",
+    height: "100%",          
+    width: "100%",
+    boxSizing: "border-box"
 };
 
 export default function Profile() {
@@ -360,15 +380,22 @@ async function loadUserOrders() {
         return product.productid || product.product_id || product.id;
     }
 
+    // Clean product name some products use - and – so we need to split by them to remove the inspired by stuff -------------------
+    function cleanProductName(name) {
+        if (!name) return "Unknown";
+        return name.replace(/\s*[-–]\s*Inspired by.*$/i, "").trim();
+    }
+
     // Grab the product name by using the ID ------------------------------------------
+    // Remove the inspired by text splitting the string
     function getProductNameById(productId) {
-        // If no product id return empty string, this will happen if a blend does not have a third fragrance
-        if (!productId) { 
+        if (!productId) {
             return "";
         }
-        // Find the product in the products list that matches the id, accounting for different possible key names for the id in the product object
+                // Find the product in the products list that matches the id, accounting for different possible key names for the id in the product object
         const match = products.find((p) => String(getProductId(p)) === String(productId));
-        return match?.name || "Unknown";
+        // clean product name removing the inspired by stuff
+        return cleanProductName(match?.name);
     }
 
     // Function to get style for each button based on if a note is selected or not -----------------------------------------
@@ -381,7 +408,7 @@ async function loadUserOrders() {
             minHeight: "58px",
             borderRadius: "14px",
             border: isSelected ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(0,0,0,0.12)",
-            background: isSelected ? "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.92))" : "rgba(255,255,255,0.78)",
+            background: isSelected ? "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.92))" : "linear-gradient(145deg,  #FDDDBE, #f9dad2)",
             boxShadow: isSelected ? "0 8px 18px rgba(0,0,0,0.25)" : "0 2px 6px rgba(0,0,0,0.06)",
         };
     }
@@ -458,12 +485,12 @@ async function loadUserOrders() {
                 <View
                     marginTop="3rem"
                     padding="2rem"
-                    maxWidth="1200px"
+                    maxWidth="1400px"
                     marginLeft="auto"
                     marginRight="auto"
                     style={{
-                        backgroundColor: "#300a0a38",
-                        borderRadius: "16px",
+                        background: "linear-gradient(145deg,  #480e0e76, rgba(20, 20, 20, 0.05))",
+                        borderRadius: "14px",
                         minHeight: "500px",
                     }}
                     >   
@@ -477,11 +504,11 @@ async function loadUserOrders() {
                                 gap="1.5rem"             
                             >
                                 <View style={cardStyle}>
-                                    <Text style={luxuryHeadingStyle2}>
+                                    <Text style={{...luxuryHeadingStyle2, color:"#FFFFFF"}}>
                                         Account Information
                                     </Text>
                                     
-                                    <Text style={luxurySubheadingStyle} textAlign={"left"}>
+                                    <Text style={{...luxurySubheadingStyle, color:"#FFFFFF"}} textAlign={"left"}>
                                         Full Name: {firstName} {lastName} <br></br>
                                         Email: {email} <br></br>
                                         Member Since: {new Date(createdAt).toLocaleString('en-US', {
@@ -494,44 +521,44 @@ async function loadUserOrders() {
                                         <View
                                         style={{
                                             padding: "0.9rem 2.2rem",
-                                            border: "1px solid rgba(255,255,255,0.35)",
+                                            border: "1px solid #35312D",
                                             borderRadius: "28px",
-                                            background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                            background: "linear-gradient(145deg,  #FDDDBE, #ffd5cc)",
                                             cursor: "pointer",
                                             boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
                                             transition: "all 0.2s ease",
                                         }}>
-                                        <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Edit Profile</Text>
+                                        <Text style={{...luxuryBodyStyle, color: "#000000"}}>Edit Profile</Text>
                                         </View>
                                     </Flex>
                                     </Text>
                                 </View>
                                 <View style={cardStyle}> 
-                                    <Text style={luxuryHeadingStyle2}>
+                                    <Text style={{...luxuryHeadingStyle2, color:"#FFFFFF"}}>
                                         Order Statistics
                                     </Text>
-                                    <Text style={luxurySubheadingStyle} textAlign={"left"}>
+                                    <Text style={{...luxurySubheadingStyle, color:"#FFFFFF"}} textAlign={"left"}>
                                         Total Orders: {totalOrders} <br></br>
                                         Last Order Date: {lastOrderDate}  <br></br>
                                         Total Spent: ${totalSpent}
                                     </Text>
                                 </View>
                                 <View style={cardStyle}>
-                                    <Text style={luxuryHeadingStyle2}>
+                                    <Text style={{...luxuryHeadingStyle2, color:"#FFFFFF"}}>
                                         Mixology Statistics
                                     </Text>
-                                    <Text style={luxurySubheadingStyle} textAlign={"left"}>
+                                    <Text style={{...luxurySubheadingStyle, color:"#FFFFFF"}} textAlign={"left"}>
                                         Saved Mixes: {totalMixes}<br></br>
                                         Two Note Blends: {twoNoteBlends} <br></br>
                                         Three Note Blends: {threeNoteBlends} <br></br>
                                     </Text>
                                 </View>
                                 <View style={cardStyle}>
-                                    <Text style={luxuryHeadingStyle2}>
+                                    <Text style={{...luxuryHeadingStyle2, color:"#FFFFFF"}}>
                                         Favorite Notes:
                                     </Text>
                                     
-                                    <Text style={luxurySubheadingStyle}>
+                                    <Text style={{...luxurySubheadingStyle, color:"#FFFFFF"}}>
                                         {selectedNotes.length > 0 ? selectedNotes.sort().join(", ") : "None saved yet"}<br></br>
                                     </Text>
                                 </View>
@@ -582,20 +609,26 @@ async function loadUserOrders() {
                                                 key={order.id}
                                                 style={{
                                                     borderTop: "1px solid rgba(0, 0, 0, 0.15)"
-                                                }}
-                                            >
+                                                }}>
                                                 <TableCell style={tableBodyStyle}>
-                                                    #{order.id.slice(0, 8)}
+                                                    <View style={tableViewStyle}>
+                                                        #{order.id.slice(0, 8)}
+                                                    </View>
                                                 </TableCell>
                                                 <TableCell style={{...tableBodyStyle, textAlign: "left"}}>
                                                     <View
-                                                        style={{marginLeft: "7rem"}}>
+                                                        style={{...tableViewStyle,
+                                                            marginLeft: "0rem",
+                                                            alignItems: "flex-start",
+                                                            justifyContent: "flex-start",
+                                                            textAlign: "left",
+                                                        }}>
                                                         {Array.isArray(order.items) && order.items.length > 0 ? (
                                                             order.items.map((orderItem, index) => {
                                                                 if (orderItem.type === "product") {
                                                                     return (
-                                                                        <Text key={index} style={luxuryBodyStyle}>
-                                                                            {orderItem.item.name || "Product"} x{orderItem.quantity}
+                                                                        <Text key={index} style={{...luxuryBodyStyle, color:"#FFFFFF", textAlign: "left",}}>
+                                                                            {cleanProductName(orderItem.item.name)} - {orderItem.item.variation} x{orderItem.quantity}
                                                                         </Text>
                                                                     );
                                                                 }
@@ -603,33 +636,32 @@ async function loadUserOrders() {
                                                                     const blend = orderItem.item;
                                                                     return (
                                                                         <View key={index} marginBottom="0.5rem">
-                                                                            <Text style={luxuryBodyStyle}>
+                                                                            <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
                                                                                 Custom Blend - {blend?.size_ml}ml x{orderItem.quantity}
                                                                             </Text>
 
                                                                             {blend.frag1_productid && (
-                                                                                <Text style={luxuryBodyStyle}>
+                                                                                <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
                                                                                     • {blend.frag1_pct}% {getProductNameById(blend.frag1_productid) || "Unknown Fragrance"}
                                                                                 </Text>
                                                                             )}
 
                                                                             {blend.frag2_productid && (
-                                                                                <Text style={luxuryBodyStyle}>
+                                                                                <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
                                                                                     • {blend.frag2_pct}% {getProductNameById(blend.frag2_productid) || "Unknown Fragrance"}
                                                                                 </Text>
                                                                             )}
 
                                                                             {blend.frag3_productid && (
-                                                                                <Text style={luxuryBodyStyle}>
+                                                                                <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
                                                                                     • {blend.frag3_pct}% {getProductNameById(blend.frag3_productid) || "Unknown Fragrance"}
                                                                                 </Text>
                                                                             )}
                                                                         </View>
                                                                     );
                                                                 }
-
                                                                 return (
-                                                                    <Text key={index} style={luxuryBodyStyle}>
+                                                                    <Text key={index} style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
                                                                         Unknown item
                                                                     </Text>
                                                                 );
@@ -640,33 +672,33 @@ async function loadUserOrders() {
                                                     </View>
                                                 </TableCell>
                                                 <TableCell style={tableBodyStyle}>
-                                                    {order.status}
+                                                    <View style={tableViewStyle}>
+                                                        {order.status}
+                                                    </View>
                                                 </TableCell>
                                                 <TableCell style={tableBodyStyle}>
-                                                    ${order.total}
+                                                    <View style={tableViewStyle}>
+                                                        ${order.total}
+                                                    </View>
                                                 </TableCell>
                                                 <TableCell style={tableBodyStyle}>
-                                                    {new Date(order.created).toLocaleString()}
+                                                    <View style={tableViewStyle}>
+                                                        {new Date(order.created).toLocaleString()}
+                                                    </View>
                                                 </TableCell>
                                                 <TableCell style={tableBodyStyle}>
-                                                    <Button
+                                                    <View 
                                                         isDisabled={isCanceled}
                                                         style={{
-                                                            ...luxuryBodyStyle,
-                                                            fontSize: "1.15rem",
-                                                            padding: "0.9rem 1rem",
-                                                            minHeight: "58px",
-                                                            borderRadius: "14px",
-                                                            border: "1px solid rgba(255,255,255,0.18)",
+                                                            ...tableViewStyle, 
+                                                            cursor: "pointer", 
                                                             background: isCanceled ? "linear-gradient(145deg, #9f9f9f, rgba(130, 129, 129, 0.92))" : "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.92))",
-                                                            boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
-                                                            
                                                         }}
                                                         onClick={() => { 
                                                             // handleCancelOrder();
                                                         }}>
                                                         <Text style={{...luxuryBodyStyle, color: isCanceled ? "Black" : "#FFFFFF"}}>{isCanceled ? "Canceled" : "Cancel Order"}</Text>
-                                                    </Button>
+                                                    </View>
                                                 </TableCell>
                                             </TableRow>
                                             );
@@ -708,47 +740,58 @@ async function loadUserOrders() {
                                 </Text>
                             ) : ( 
 
-                                <Table
-                                    style={{             
-                                    }}>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell style={tableHeaderStyle}>Fragrance 1</TableCell>
-                                        <TableCell style={tableHeaderStyle}>Fragrance 2</TableCell>
-                                        <TableCell style={tableHeaderStyle}>Fragrance 3</TableCell>
-                                        <TableCell style={tableHeaderStyle}>Size</TableCell>
-                                        <TableCell style={tableHeaderStyle}>Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                {loadedBlends.map((blend) => (
-                                    <TableRow 
-                                        key={blend.id}
-                                        style={{
-                                        borderTop: "1px solid rgba(0,0,0,0.15)"
-                                    }}>
-                                        <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)</TableCell>
-                                        <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)</TableCell>
-                                        <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag3_productid)} ({blend.frag3_pct ? `${blend.frag3_pct}%` : "~"})</TableCell>
-                                        <TableCell style={{...tableBodyStyle, whiteSpace: "nowrap" }}>{blend.size_ml} ML</TableCell>
-                                        <TableCell style={tableBodyStyle}>
-                                            <Flex direction="row" gap="0.2rem">
-                                            <Button
-                                                style={luxuryBodyStyle}
-                                                onClick={() => handleAddSavedBlendToCart(blend)}>
-                                                Add to Cart
-                                            </Button>
-                                            <Button
-                                                style={luxuryBodyStyle}
-                                                onClick={() => { 
-                                                    handleDeleteBlend(blend.id);
-                                                }}>
-                                                Delete Blend
-                                            </Button>
-                                            </Flex>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                </Table>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell style={tableHeaderStyle}>Fragrance 1</TableCell>
+                                            <TableCell style={tableHeaderStyle}>Fragrance 2</TableCell>
+                                            <TableCell style={tableHeaderStyle}>Fragrance 3</TableCell>
+                                            <TableCell style={tableHeaderStyle}>Size</TableCell>
+                                            <TableCell style={tableHeaderStyle}>Actions</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    {loadedBlends.map((blend) => (
+                                        <TableRow 
+                                            key={blend.id}
+                                            style={{
+                                            borderTop: "1px solid rgba(0,0,0,0.15)"
+                                        }}>
+                                            <TableCell style={tableBodyStyle}>
+                                                <View style={tableViewStyle}>
+                                                    {getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)
+                                                </View>
+                                            </TableCell>
+                                            <TableCell style={tableBodyStyle}>
+                                                <View style={tableViewStyle}>
+                                                    {getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)
+                                                </View>
+                                            </TableCell>
+                                            <TableCell style={tableBodyStyle}>
+                                                <View style={tableViewStyle}>
+                                                    {/* If product ID exists, show name and pct; otherwise, show nothing */}
+                                                    {blend.frag3_productid ? (`${getProductNameById(blend.frag3_productid)} (${blend.frag3_pct}%)`) : null}
+                                                </View>
+                                            </TableCell>
+                                            <TableCell style={{...tableBodyStyle, whiteSpace: "nowrap" }}>
+                                                <View style={tableViewStyle}>
+                                                    {blend.size_ml} ML
+                                                </View>
+                                            </TableCell>
+                                            <TableCell style={tableBodyStyle}>
+                                                <Flex direction="row" gap="1rem">
+                                                    <View style={{...tableViewStyle, cursor: "pointer"}}
+                                                        onClick={() => handleAddSavedBlendToCart(blend)}>
+                                                        <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Add to Cart</Text> 
+                                                    </View>
+                                                    <View style={{...tableViewStyle, cursor: "pointer"}}
+                                                        onClick={() => { handleDeleteBlend(blend.id); }}>
+                                                        <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Delete Blend</Text>
+                                                    </View>
+                                                </Flex>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    </Table>
                             )}
                         </View>
                     )}
@@ -766,10 +809,6 @@ async function loadUserOrders() {
                             >
                                 Select the fragrance notes that best match your taste. <br></br> 
                                 These preferences help personalize your Omré experience. 
-                            </Text>
-                            <Text
-                                style={luxuryBodyStyle}>
-                                Selected Notes: {totalNotes}
                             </Text>
 
                             <Grid

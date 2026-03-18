@@ -24,6 +24,19 @@ const luxuryBodyStyle = {
   letterSpacing: "0.3px",
 };
 
+const buttonStyling = {
+    ...luxuryBodyStyle, 
+    fontSize: "1rem",
+    padding: "0.9rem 2.2rem",
+    border: "1px solid rgba(255,255,255,0.35)",
+    borderRadius: "28px",
+    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    color: "#FFFFFF",
+    cursor: "pointer",
+    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+    transition: "all 0.2s ease",
+}
+
 export default function AdminDashboard() {
     // UI Change for dashboard functions -----------------------
     const [activeTab, setActiveTab] = useState("users");
@@ -67,9 +80,10 @@ export default function AdminDashboard() {
                         maxWidth="1500px"
                         margin="1rem auto"
                         padding="1.5rem"
-                        marginTop="rem"
-                        backgroundColor="rgba(0, 0, 0, 0.75)"
                         borderRadius="8px"
+                        style={{
+                            background: "linear-gradient(145deg, #480e0e76, rgba(20, 20, 20, 0.05))"
+                        }}
                         >   
                         {/* Flex holding the sidebar and the main content ---------------------------- */}
                         <Flex direction="row" gap="1.5rem" alignItems="stretch">
@@ -77,34 +91,33 @@ export default function AdminDashboard() {
                             {/* Sidebar flex showing tabs to choose from ---------------------------------- */}
                             <Flex direction="column" gap=".8rem" alignItems="stretch">
                                 <Button 
-                                    color="#2B1E1A"
                                     justifyContent="center"
-                                    style={luxuryBodyStyle}
+                                    style={buttonStyling}
                                     variation="primary"
                                     marginTop=".9rem"
                                     onClick={() => setActiveTab("users")}
                                     >
-                                    Users
+                                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Users</Text> 
                                 </Button>
                                 <Button 
                                     justifyContent="center"
                                     color="#2B1E1A"
-                                    style={luxuryBodyStyle}
+                                    style={buttonStyling}
                                     variation="primary"
                                     marginTop=".9rem"
                                     onClick={() => setActiveTab("products")}
                                     >
-                                    Products
+                                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Products</Text> 
                                 </Button>
                                 <Button 
                                     justifyContent="center"
                                     color="#2B1E1A"
-                                    style={luxuryBodyStyle}
+                                    style={buttonStyling}
                                     variation="primary"
                                     marginTop=".9rem"
                                     onClick={() => setActiveTab("orders")}
                                     >
-                                    Orders
+                                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Orders</Text> 
                                 </Button>
                             </Flex>
 
@@ -115,9 +128,10 @@ export default function AdminDashboard() {
                                 width="80rem"
                                 margin="1rem auto"
                                 padding="2rem"
-                                backgroundColor="rgb(255, 255, 255)"
-                                border="1px solid rgba(0, 0, 0, 0.72)"
                                 borderRadius="8px"
+                                style={{
+                                    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.35))",
+                                }}
                             >   
                             {usersMode && <UsersPanel />}
 

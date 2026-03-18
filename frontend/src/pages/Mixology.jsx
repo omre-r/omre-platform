@@ -21,8 +21,8 @@ const luxuryHeadingStyle = {
 };
 const luxurySubheadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
-  fontWeight: 600,
-  fontSize: "1.6rem",   
+  fontWeight: 700,
+  fontSize: "1.8rem",   
   letterSpacing: "0.3px",
 };
 const luxuryBodyStyle = {
@@ -35,23 +35,54 @@ const luxuryBodyStyle = {
 // Styles to change font and outline of table headers and body ------------------------------
 const tableHeaderStyle = {
     ...luxuryBodyStyle,
-    fontSize: "1.45rem",  
-    fontWeight: 550,
+    fontSize: "2rem",  
+    fontWeight: 600,
     letterSpacing: "0.3px",
     backgroundColor: "transparent",
     border: "none",
     boxShadow: "none",
     outline: "none",
+    color: "black",
 }
 const tableBodyStyle = {
     ...luxuryBodyStyle,
-    fontSize: "1.2rem",  
-    fontWeight: 400,
+    fontSize: "1.5rem",  
+    fontWeight: 500,
     letterSpacing: "0.2px",
     backgroundColor: "transparent",
     border: "none",
     boxShadow: "none",
     outline: "none",
+    color: "#ffffff",
+}
+
+const tableViewStyle = {
+    padding: "1.2rem 1.5rem",
+    border: "1px solid rgba(255,255,255,0.35)",
+    borderRadius: "14px",
+    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",     
+    justifyContent: "center", 
+    minHeight: "100px",
+    height: "100%",          
+    width: "100%",
+    boxSizing: "border-box"
+}
+
+const mixologyButtonStyling = {
+    ...luxuryBodyStyle, 
+    fontSize: "1rem",
+    padding: "0.9rem 2.2rem",
+    border: "1px solid rgba(255,255,255,0.35)",
+    borderRadius: "28px",
+    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    color: "#FFFFFF",
+    cursor: "pointer",
+    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+    transition: "all 0.2s ease",
 }
 
 export default function Mixology() {
@@ -186,15 +217,22 @@ export default function Mixology() {
         return product.productid || product.product_id || product.id;
     }
 
+    // Clean product name some products use - and – so we need to split by them to remove the inspired by stuff -------------------
+    function cleanProductName(name) {
+        if (!name) return "Unknown";
+        return name.replace(/\s*[-–]\s*Inspired by.*$/i, "").trim();
+    }
+
     // Grab the product name by using the ID ------------------------------------------
+    // Remove the inspired by text splitting the string
     function getProductNameById(productId) {
-        // If no product id return empty string, this will happen if a blend does not have a third fragrance
-        if (!productId) { 
+        if (!productId) {
             return "";
         }
-        // Find the product in the products list that matches the id, accounting for different possible key names for the id in the product object
+                // Find the product in the products list that matches the id, accounting for different possible key names for the id in the product object
         const match = products.find((p) => String(getProductId(p)) === String(productId));
-        return match?.name || "Unknown";
+        // clean product name removing the inspired by stuff
+        return cleanProductName(match?.name);
     }
 
     // Load products from backend ---------------------------------------
@@ -265,30 +303,6 @@ export default function Mixology() {
             frag2_pct: fragrancepct2,
             frag3_pct: thirdCologneSelectedMode ? fragrancepct3 : null,
             size_ml: Number(sizeMl)
-        };
-    }
-
-    // Build payload from a previously saved blend ----------------------------------
-    function buildBlendPayloadFromSavedBlend(blend) {
-        let userid;
-        for (let key of Object.keys(localStorage)){
-            if (key.includes("idToken")){
-                const idToken = localStorage.getItem(key)        
-                const base64 = idToken.split(".")[1]
-                const decoded = JSON.parse(atob(base64))
-                userid = decoded.sub
-                break
-            };
-        }
-        return {
-            userid,
-            frag1_productid: blend.frag1_productid,
-            frag2_productid: blend.frag2_productid,
-            frag3_productid: blend.frag3_productid || null,
-            frag1_pct: blend.frag1_pct,
-            frag2_pct: blend.frag2_pct,
-            frag3_pct: blend.frag3_pct || null,
-            size_ml: Number(blend.size_ml),
         };
     }
 
@@ -459,18 +473,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
                     Create your own custom fragrance blend by selecting up to three of your favorite fragrances!
                 </Text>
                 <Button
-                    style={{ 
-                        ...luxuryBodyStyle, 
-                        fontSize: "1rem",
-                        padding: "0.9rem 2.2rem",
-                        border: "1px solid rgba(255,255,255,0.35)",
-                        borderRadius: "28px",
-                        background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
-                        color: "#FFFFFF",
-                        cursor: "pointer",
-                        boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                        transition: "all 0.2s ease",
-                     }}
+                    style={mixologyButtonStyling}
                     onClick={() => setShowInstructions(prev => !prev)}>
                     <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>{showInstructions ? "Hide Instructions" : "How to Use Mixology"}</Text>
                 </Button>
@@ -560,7 +563,6 @@ async function handleAddSavedBlendToCart(savedBlend) {
                         maxWidth="1100px"
                         alignItems="start"
                         >
-
                         <View>
                             <SelectField
                                 style={luxuryBodyStyle}
@@ -595,7 +597,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                         value={getProductId(product)}
                                         // Disable option if already selected in another cologne slot to prevent duplicate selections
                                         disabled={isAlreadyPicked(getProductId(product), 1)}>
-                                        {product.name}
+                                        {cleanProductName(product.name)}
                                     </option>
                                 ))}
                             </SelectField>
@@ -627,7 +629,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                         key={getProductId(product)} 
                                         value={getProductId(product)}
                                         disabled={isAlreadyPicked(getProductId(product), 2)}>
-                                        {product.name}
+                                       {cleanProductName(product.name)}
                                     </option>
                                 ))}
                             </SelectField>
@@ -664,7 +666,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                         key={getProductId(product)} 
                                         value={getProductId(product)}
                                         disabled={isAlreadyPicked(getProductId(product), 3)}>
-                                        {product.name}
+                                        {cleanProductName(product.name)}
                                     </option>
                                 ))}
                             </SelectField>
@@ -681,70 +683,25 @@ async function handleAddSavedBlendToCart(savedBlend) {
                     </Grid>
                     <Flex gap="1rem" marginTop="1rem" justifyContent="center">
                         <Button
-                            style={{
-                                ...luxuryBodyStyle, 
-                                fontSize: "1rem",
-                                padding: "0.9rem 2.2rem",
-                                border: "1px solid rgba(255,255,255,0.35)",
-                                borderRadius: "28px",
-                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
-                                color: "#FFFFFF",
-                                cursor: "pointer",
-                                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                                transition: "all 0.2s ease",
-                            }}
+                            style={mixologyButtonStyling}
                             onClick={toggleThird}>
-                            
                             <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>{thirdCologneSelectedMode ? "Remove 3rd Fragrance" : "Add 3rd Fragrance"}</Text> 
                         </Button>
                         <Button
-                            style={{
-                                ...luxuryBodyStyle, 
-                                fontSize: "1rem",
-                                padding: "0.9rem 2.2rem",
-                                border: "1px solid rgba(255,255,255,0.35)",
-                                borderRadius: "28px",
-                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
-                                color: "#FFFFFF",
-                                cursor: "pointer",
-                                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                                transition: "all 0.2s ease",
-                            }}
+                            style={mixologyButtonStyling}
                             isLoading={blendLoading}
                             onClick={handleAddToCart}>
                             <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Add to Cart</Text> 
                         </Button>
                         <Button
-                            style={{
-                                ...luxuryBodyStyle, 
-                                fontSize: "1rem",
-                                padding: "0.9rem 2.2rem",
-                                border: "1px solid rgba(255,255,255,0.35)",
-                                borderRadius: "28px",
-                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
-                                color: "#FFFFFF",
-                                cursor: "pointer",
-                                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                                transition: "all 0.2s ease",
-                            }}
+                            style={mixologyButtonStyling}
                             isLoading={blendLoading}
                             onClick={handleSaveBlend}>
                             <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Save Fragrance</Text> 
                         </Button>
                         <Button 
                             // Can load and hide blends depending on click -----------------------
-                            style={{
-                                ...luxuryBodyStyle, 
-                                fontSize: "1rem",
-                                padding: "0.9rem 2.2rem",
-                                border: "1px solid rgba(255,255,255,0.35)",
-                                borderRadius: "28px",
-                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
-                                color: "#FFFFFF",
-                                cursor: "pointer",
-                                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                                transition: "all 0.2s ease",
-                            }}
+                            style={mixologyButtonStyling}
                             onClick={async () => {
                                 if (!loadTable) {
                                     await loadBlends();
@@ -784,14 +741,11 @@ async function handleAddSavedBlendToCart(savedBlend) {
                             </Text>
                         ) : ( 
                             <View
-                                style={{
-                                    backgroundColor: "#300a0a38",
+                                style={{ 
+                                    background: "linear-gradient(145deg,  #480e0e76, rgba(20, 20, 20, 0.05))",
                                     borderRadius: "14px",
-                                }}
-                            >
-                            <Table
-                                style={{             
                                 }}>
+                            <Table>
                             <TableHead>
                                 <TableRow>
                                     <TableCell style={tableHeaderStyle}>Fragrance 1</TableCell>
@@ -807,24 +761,37 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                     style={{
                                     borderTop: "1px solid rgba(0,0,0,0.15)"
                                 }}>
-                                    <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)</TableCell>
-                                    <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)</TableCell>
-                                    <TableCell style={tableBodyStyle}>{getProductNameById(blend.frag3_productid)} ({blend.frag3_pct ? `${blend.frag3_pct}%` : "~"})</TableCell>
-                                    <TableCell style={{...tableBodyStyle, whiteSpace: "nowrap" }}>{blend.size_ml} ML</TableCell>
                                     <TableCell style={tableBodyStyle}>
-                                        <Flex direction="row" gap="0.2rem">
-                                        <Button
-                                            style={luxuryBodyStyle}
-                                            onClick={() => handleAddSavedBlendToCart(blend)}>
-                                            Add to Cart
-                                        </Button>
-                                        <Button
-                                            style={luxuryBodyStyle}
-                                            onClick={() => { 
-                                                handleDeleteBlend(blend.id);
-                                            }}>
-                                            Delete Blend
-                                        </Button>
+                                        <View style={tableViewStyle}>
+                                            {getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)
+                                        </View>
+                                    </TableCell>
+                                    <TableCell style={tableBodyStyle}>
+                                        <View style={tableViewStyle}>
+                                            {getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)
+                                        </View>
+                                    </TableCell>
+                                    <TableCell style={tableBodyStyle}>
+                                        <View style={tableViewStyle}>
+                                            {/* If product ID exists, show name and pct; otherwise, show nothing */}
+                                            {blend.frag3_productid ? (`${getProductNameById(blend.frag3_productid)} (${blend.frag3_pct}%)`) : null}
+                                        </View>
+                                    </TableCell>
+                                    <TableCell style={{...tableBodyStyle, whiteSpace: "nowrap" }}>
+                                        <View style={tableViewStyle}>
+                                            {blend.size_ml} ML
+                                        </View>
+                                    </TableCell>
+                                    <TableCell style={tableBodyStyle}>
+                                        <Flex direction="row" gap="1rem">
+                                            <View style={{...tableViewStyle, cursor: "pointer"}}
+                                                onClick={() => handleAddSavedBlendToCart(blend)}>
+                                                <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Add to Cart</Text> 
+                                            </View>
+                                            <View style={{...tableViewStyle, cursor: "pointer"}}
+                                                onClick={() => { handleDeleteBlend(blend.id); }}>
+                                                <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Delete Blend</Text>
+                                            </View>
                                         </Flex>
                                     </TableCell>
                                 </TableRow>

@@ -206,14 +206,12 @@ export default function Home() {
         marginBottom="0.5rem"
         marginTop="-2rem"
         style={{
-          background: "linear-gradient(145deg, rgba(72,14,14,0.18), rgba(20,20,20,0.10))",
-          boxShadow: "0 10px 24px rgba(0,0,0,0.10)",
-          backdropFilter: "blur(4px)",
-          border: "1px solid rgba(90,40,40,0.12)",
+          background: "linear-gradient(145deg,  #480e0e76, rgba(20, 20, 20, 0.05))",
         }}>
         <View
         height={"40px"}
         margin={"5px"}
+        
         >
           <select 
           name="type-filter" 
