@@ -536,7 +536,7 @@ export default function Product(){
                     borderRadius="20px"
                     boxShadow="0 14px 28px rgba(0,0,0,0.22)"
                     style={{
-                    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
                     }}>
                     <Link 
                         to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}

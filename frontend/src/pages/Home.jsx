@@ -7,6 +7,14 @@ import "@aws-amplify/ui-react/styles.css";
 import { getActiveProductsReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 
+// Current images from instagram -------------------------
+import Insta1 from "../assets/insta1.jpg";
+import Insta2 from "../assets/insta2.jpg";
+import Insta3 from "../assets/insta3.jpg";
+import Insta4 from "../assets/insta4.jpg";
+import Insta5 from "../assets/insta5.jpg";
+import Insta6 from "../assets/insta6.jpg";
+
 import LuxuryBackground from "../assets/Luxury Background2.png";
 
 // fonts //
@@ -39,6 +47,8 @@ export default function Home() {
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 4)
   : [];
+
+  const instagramImages = [ Insta1, Insta2, Insta3, Insta4, Insta6 ];
 
 // make sure it loads //
   useEffect(() => {
@@ -164,6 +174,23 @@ export default function Home() {
             </Card>)
           })}
     </Flex>
+    <Flex justifyContent="flex-end">
+      <Link to="/fragrances"
+      style={{ textDecoration: "none" }}>
+        <View
+          style={{
+            padding: "0.9rem 2.2rem",
+            border: "1px solid rgba(255,255,255,0.35)",
+            borderRadius: "28px",
+            background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+            cursor: "pointer",
+            boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+            transition: "all 0.2s ease",
+          }}>
+          <Text style={bodyStyle}>Shop All</Text>
+        </View>
+      </Link>
+    </Flex>
     <Flex 
       alignItems="center" 
       gap="1rem"
@@ -231,39 +258,58 @@ export default function Home() {
       ))}
     </Flex>
     <Flex alignItems="center" gap="1rem" width="100%" marginBottom="2rem" marginTop="3rem">
-          <View
-              flex="1"
-              height="1px"
-              backgroundColor="#2b1e1a"
-          />
-
-          <Text style={headingStyle}>
-              Follow The OMRÉ Journey
-          </Text>
-
-          <View
-              flex="1"
-              height="1px"
-              backgroundColor="#2b1e1a"
-          />
+      <View
+          flex="1"
+          height="1px"
+          backgroundColor="#2b1e1a"
+      />
+      <Text style={headingStyle}>
+          Follow The OMRÉ Journey
+      </Text>
+      <View
+          flex="1"
+          height="1px"
+          backgroundColor="#2b1e1a"
+      />
     </Flex>
-        <Flex justifyContent="flex-end">
-          <Link to="/fragrances"
-          style={{ textDecoration: "none" }}>
-            <View
-              style={{
-                padding: "0.9rem 2.2rem",
-                border: "1px solid rgba(255,255,255,0.35)",
-                borderRadius: "28px",
-                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
-                cursor: "pointer",
-                boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                transition: "all 0.2s ease",
-              }}>
-              <Text style={bodyStyle}>Shop All</Text>
-            </View>
-          </Link>
-        </Flex>
+      <Flex
+        direction="row"
+        gap="1rem"
+        overflow="auto"
+        width="100%"
+        paddingBottom="1rem"
+        style={{
+          scrollbarWidth: "none",
+        }}
+      >
+        {instagramImages.map((image, index) => (
+          <View
+            key={index}
+            style={{
+              minWidth: "280px",
+              height: "380px",
+              borderRadius: "14px",
+              overflow: "hidden",
+            }}
+          >
+            <a
+              href="https://www.instagram.com/omryfragrances"
+              target="_blank" // opens link in new tab
+              rel="noopener noreferrer"
+              style={{ textDecoration: "none" }}> 
+              <img
+                src={image}
+                alt={`OMRY lifestyle ${index + 1}`}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}/>
+            </a>
+          </View>
+        ))}
+      </Flex>
       </View>
     </>
   );
