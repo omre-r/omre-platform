@@ -99,7 +99,8 @@ async function createTables() {
             notes JSONB,
             description TEXT,
             isfeatured BOOLEAN,
-            ishidden BOOLEAN
+            ishidden BOOLEAN,
+            created_at TIMESTAMP DEFAULT NOW()
         )
     `);
     /*

@@ -55,8 +55,16 @@ const Navbar = () => {
         </Link>
 
 
-        {!isAdmin && ( 
+        {/* {!isAdmin && (  */}
           <>
+            <Link
+              to="/fragrancebar"
+              className="nav-item"
+              style={luxuryBodyStyle}
+              >
+              Fragrance Bar
+            </Link>
+
             <Link
               to="/AboutUs"
               className="nav-item"
@@ -73,7 +81,7 @@ const Navbar = () => {
               Contact Us
             </Link>
         </> 
-        )}
+        {/* )} */}
       </div>
 
       {/* Navbar Links ---------------------------------------------------------------------------------------- */}

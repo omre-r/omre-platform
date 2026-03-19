@@ -31,6 +31,15 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [message, setMessage] = useState("");
+
+  // Grabbing the newest products that have been added to the website -------------------------------
+  const newestProducts = !loadingProducts ? products
+      .map((prodList) => prodList[0])
+      .filter(Boolean)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 4)
+  : [];
+
 // make sure it loads //
   useEffect(() => {
     async function loadProducts() {
@@ -82,9 +91,23 @@ export default function Home() {
           backgroundRepeat: "repeat",
         }}
       >
-        <Text style={headingStyle} marginBottom="2rem">
-          Featured Fragrances
-        </Text>
+        <Flex alignItems="center" gap="1rem" width="100%" marginBottom="2rem">
+          <View
+              flex="1"
+              height="1px"
+              backgroundColor="#2b1e1a"
+          />
+
+          <Text style={headingStyle}>
+              Featured Fragrances
+          </Text>
+
+          <View
+              flex="1"
+              height="1px"
+              backgroundColor="#2b1e1a"
+          />
+      </Flex>
 
         <Flex 
           wrap="wrap"
@@ -105,12 +128,12 @@ export default function Home() {
               variation="elevated"
               width="16rem"
               padding="1.75rem"
-              backgroundColor="rgba(35, 22, 22, 0.88)"
+              minHeight="20rem"
               border="1px solid rgba(190, 160, 150, 0.18)"
               borderRadius="15px"
               boxShadow="0 14px 28px rgba(0,0,0,0.22)"
               style={{
-                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
               }}
             >
               <Link 
@@ -141,7 +164,89 @@ export default function Home() {
             </Card>)
           })}
     </Flex>
+    <Flex 
+      alignItems="center" 
+      gap="1rem"
+      width="100%" 
+      marginBottom="2rem" 
+      marginTop="3rem">
+        <View
+            flex="1"
+            height="1px"
+            backgroundColor="#2b1e1a"
+        />
+        <Text style={headingStyle}>
+            New Arrivals
+        </Text>
+        <View
+            flex="1"
+            height="1px"
+            backgroundColor="#2b1e1a"
+        />
+    </Flex>
+    <Flex
+      wrap="wrap"
+      justifyContent="center"
+      alignItems="flex-start"
+      gap="2rem"
+      maxWidth="1400px"
+      margin="0 auto">
+      {!loadingProducts && newestProducts.map((prod) => (
+        <Card
+          key={prod.id}
+          variation="elevated"
+          minHeight="24rem"
+          width="16rem"
+          padding="1.75rem"
+          border="1px solid rgba(190, 160, 150, 0.18)"
+          borderRadius="15px"
+          boxShadow="0 14px 28px rgba(0,0,0,0.22)"
+          style={{
+            background: "linear-gradient(145deg,  #3a094fe2, rgba(20, 20, 20, 0.65))",
+          }}
+        >
+          <Link
+            to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
+            style={{ textDecoration: "none" }}
+          >
+            <img
+              src={prod.images?.[0]}
+              alt={prod.name}
+              style={{
+                width: "100%",
+                height: "200px",
+                objectFit: "cover",
+                borderRadius: "10px",
+                display: "block",
+              }}
+            />
+            <Text style={bodyStyle} textAlign="center">
+              {prod.name}
+            </Text>
+            <Text style={{ ...bodyStyle, fontWeight: 600 }} textAlign="center">
+              ${prod.price}
+            </Text>
+          </Link>
+        </Card>
+      ))}
+    </Flex>
+    <Flex alignItems="center" gap="1rem" width="100%" marginBottom="2rem" marginTop="3rem">
+          <View
+              flex="1"
+              height="1px"
+              backgroundColor="#2b1e1a"
+          />
 
+          <Text style={headingStyle}>
+              Follow The OMRÉ Journey
+          </Text>
+
+          <View
+              flex="1"
+              height="1px"
+              backgroundColor="#2b1e1a"
+          />
+    </Flex>
         <Flex justifyContent="flex-end">
           <Link to="/fragrances"
           style={{ textDecoration: "none" }}>
