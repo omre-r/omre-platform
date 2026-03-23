@@ -517,7 +517,6 @@ async function checkout() {
                       variation="elevated"
                       width="13.5rem"
                       padding="1rem"
-                      backgroundColor="rgba(35, 22, 22, 0.88)"
                       border="1px solid rgba(190, 160, 150, 0.18)"
                       borderRadius="20px"
                       boxShadow="0 14px 28px rgba(0,0,0,0.22)"

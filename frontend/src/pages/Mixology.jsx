@@ -603,7 +603,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
                             </SelectField>
                             <SliderField 
                                 style={luxuryBodyStyle}
-                                label={"Fragrance 1 Percentage"}
+                                label={"Fragrance 1"}
                                 min={0}
                                 max={100}
                                 value={fragrancepct1}
@@ -635,7 +635,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
                             </SelectField>
                             <SliderField 
                                 style={luxuryBodyStyle}
-                                label={"Fragrance 2 Percentage"}
+                                label={"Fragrance 2"}
                                 min={0}
                                 max={100}
                                 value={fragrancepct2}
@@ -672,7 +672,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
                             </SelectField>
                             <SliderField 
                                 style={luxuryBodyStyle}
-                                label={"Fragrance 3 Percentage"}
+                                label={"Fragrance 3"}
                                 min={0}
                                 max={100}
                                 value={fragrancepct3}

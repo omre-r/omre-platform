@@ -175,8 +175,7 @@ export default function Product(){
     style={{
         scrollbarWidth: "none",
         overflowX:"auto",
-    }}
-    >
+    }}>
         <Flex
         padding={"10px"}
         maxWidth={"1000px"}
@@ -219,7 +218,7 @@ export default function Product(){
             </Flex>
             {/* separator */}
             <View
-            border={"solid rgba(0,0,0,.3)"}
+            border={"solid rgba(54, 6, 6, 0.2)"}
             >
             </View>
             {/* product info */}
@@ -227,42 +226,33 @@ export default function Product(){
             flex={1}
             direction={"column"}
             shrink={0}     
-            alignItems={"center"}        
-            backgroundColor={"rgba(87, 86, 86, 0.22)"}   
+            alignItems={"center"}    
+            style={{
+                background: "rgba(247, 231, 222, 0)",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+                border: "1px solid rgba(90, 55, 45, 0.10)",
+            }}
             padding={"18px"}
             gap={"0.35rem"}
-            borderRadius={"20px"}
+            borderRadius={"24px"}
             >
                 <h1
                 style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "1.8rem",
-                    backgroundColor: "rgb(255, 255, 255)",
+                    backdropFilter: "blur(6px)",
+                    background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                    color:"white",
+                    fontWeight:"bold",
                     margin: 0,
                     padding: "10px",
                     borderRadius: "10px 10px"
                 }}
                 >
-                    <small style={{fontSize: ".7em", marginBottom: "25px", display: "block"}}>{selectedProduct.type}</small>
-                    {selectedProduct.name}
+                    <small style={{fontSize: ".7em", marginBottom: "5px", display: "block"}}>{selectedProduct.type}</small>
+                    {selectedProduct.name} <br></br>
+                    ${selectedProduct.price}
                 </h1>
-
-                <Text
-                width={"100%"}
-                textAlign={"left"}
-                >
-                     <h2
-                     style={{
-                        fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: "1.8rem",
-                        margin: 0,
-                        backgroundColor: "rgba(255,255,255,.6)",
-                        borderRadius: "8px",
-                        textAlign: "center",
-                     }}>
-                        ${selectedProduct.price}
-                    </h2>
-                </Text>
                 <View
                 width={"100%"}
                 >
@@ -296,9 +286,12 @@ export default function Product(){
                                 style={{
                                     fontFamily: "'Cormorant Garamond', serif",
                                     padding: "8px 12px",
+                                    background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
                                     borderRadius: "8px",
-                                    backgroundColor: "rgba(255, 255, 255, 0.6)",
-                                    fontSize: "1.35rem",
+                                    fontSize: "1.55rem",
+                                    fontStyle:"italic",
+                                    color:"white",
+                                    fontWeight:"bold",
                                     ...(isSelected && {
                                         border: "4px solid rgba(0,0,0,0.65)",
                                     }),
@@ -324,15 +317,19 @@ export default function Product(){
                     <Text
                     className="scrollbar"
                     textAlign={"left"}
-                    backgroundColor="rgba(255,255,255,.6)"
                     borderRadius ="8px"
+                    backgroundColor="transparent"
                     padding={"8px"}
                     style={{
                         fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: "1.35rem",
+                        fontSize: "1.4rem",
+                        fontWeight: "bold",
                         whiteSpace: "pre-line",
                         maxHeight: "300px",
                         overflowY: "auto",
+                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                        color: "white",
+                        
                     }}
                     >
                         {selectedProduct.description}
@@ -355,9 +352,10 @@ export default function Product(){
                     </h2>
                     <Text
                     textAlign={"left"}
-                    backgroundColor="rgba(255,255,255,.3)"
                     borderRadius ="8px"
                     padding={"6px"}
+                    marginBottom={"1rem"}
+                    marginTop={"-2rem"}
                     >
                         <h3
                             style={{
@@ -379,7 +377,9 @@ export default function Product(){
                                     fontFamily={"'Cormorant Garamond', serif"}
                                     padding={"3px 8px"}
                                     borderRadius={"5px 10px"}
-                                    backgroundColor={"rgba(54, 54, 54, 1)"}
+                                    style={{
+                                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                                    }}
                                     fontStyle={"italic"}
                                     color={"white"}
                                     fontWeight={"bold"}>
@@ -406,7 +406,9 @@ export default function Product(){
                                     fontFamily={"'Cormorant Garamond', serif"}
                                     padding={"3px 8px"}
                                     borderRadius={"5px 10px"}
-                                    backgroundColor={"rgba(54, 54, 54, 1)"}
+                                    style={{
+                                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                                    }}
                                     fontStyle={"italic"}
                                     color={"white"}
                                     fontWeight={"bold"}>
@@ -440,7 +442,9 @@ export default function Product(){
                                     fontFamily={"'Cormorant Garamond', serif"}
                                     padding={"3px 8px"}
                                     borderRadius={"5px 10px"}
-                                    backgroundColor={"rgba(54, 54, 54, 1)"}
+                                    style={{
+                                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                                    }}
                                     fontStyle={"italic"}
                                     color={"white"}
                                     fontWeight={"bold"}>
@@ -472,25 +476,24 @@ export default function Product(){
                         width: "75%",
                         padding: "12px",
                         borderRadius: "14px",
-                        backgroundColor: "rgba(43, 30, 26, 0.95)", 
+                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
                         color: "white",
+                        backgroundSize: "200% 200%",
+                        backgroundPosition: "0% 25%",
                         fontFamily: "'Cormorant Garamond', serif",
                         fontSize: "1.35rem",
                         fontWeight: 700,
                         letterSpacing: "0.5px",
                         border: "1px solid rgba(0,0,0,0.4)",
                         cursor: "pointer",
-                        transition: "all 0.15s ease-in-out",
+                        transition: "background-position 1s ease, transform 0.3s ease, box-shadow 0.3s ease",
                     }}
                     // Implementation where if mouse touches button will raise and change color -------------
-                    // AFter leaving button will go back to normal
                     onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(107, 46, 34, 0.95)";
                         e.currentTarget.style.transform = "translateY(-2px)";
                         e.currentTarget.style.boxShadow = "0 8px 18px rgba(0,0,0,0.25)";
                     }}
                     onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(43, 30, 26, 0.95)";
                         e.currentTarget.style.transform = "translateY(0px)";
                         e.currentTarget.style.boxShadow = "none";
                     }}
@@ -531,7 +534,6 @@ export default function Product(){
                     variation="elevated"
                     width="13.5rem"
                     padding="1rem"
-                    backgroundColor="rgba(35, 22, 22, 0.88)"
                     border="1px solid rgba(190, 160, 150, 0.18)"
                     borderRadius="20px"
                     boxShadow="0 14px 28px rgba(0,0,0,0.22)"
