@@ -243,15 +243,15 @@ export default function Product(){
                     backdropFilter: "blur(6px)",
                     background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
                     color:"white",
-                    fontWeight:"bold",
                     margin: 0,
                     padding: "10px",
                     borderRadius: "10px 10px"
                 }}
                 >
-                    <small style={{fontSize: ".7em", marginBottom: "5px", display: "block"}}>{selectedProduct.type}</small>
+                    <small style={{fontSize: ".9em", marginBottom: "5px", display: "block", fontWeight:"400"}}>{selectedProduct.type}</small>
                     {selectedProduct.name} <br></br>
-                    ${selectedProduct.price}
+                    <small style={{fontSize: ".9em", marginBottom: "5px", display: "block", fontWeight:"400"}}> ${selectedProduct.price} </small>
+
                 </h1>
                 <View
                 width={"100%"}
@@ -262,8 +262,8 @@ export default function Product(){
                     style={{
                         fontFamily: "'Cormorant Garamond', serif",
                         fontSize: "1.5rem",
-                        fontStyle: "italic",
-                        marginBottom: 0
+                        marginTop: "-.5rem",
+                        marginBottom: "-.5rem",
                     }}
                     >
                         Sizes
@@ -289,9 +289,8 @@ export default function Product(){
                                     background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
                                     borderRadius: "8px",
                                     fontSize: "1.55rem",
-                                    fontStyle:"italic",
+                                    fontWeight: "400",
                                     color:"white",
-                                    fontWeight:"bold",
                                     ...(isSelected && {
                                         border: "4px solid rgba(0,0,0,0.65)",
                                     }),
@@ -306,10 +305,10 @@ export default function Product(){
 
                     <h2
                     style={{
-                        fontSize: "1.2rem",
-                        fontStyle: "italic",
                         fontFamily: "'Cormorant Garamond', serif",
                         fontSize: "1.5rem",
+                        marginTop: "-.5rem",
+                        marginBottom: ".3rem",
                     }}
                     >
                         Description
@@ -320,11 +319,10 @@ export default function Product(){
                     borderRadius ="8px"
                     backgroundColor="transparent"
                     padding={"8px"}
+                    marginBottom={"1rem"}
                     style={{
                         fontFamily: "'Cormorant Garamond', serif",
                         fontSize: "1.4rem",
-                        fontWeight: "bold",
-                        whiteSpace: "pre-line",
                         maxHeight: "300px",
                         overflowY: "auto",
                         background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
@@ -343,9 +341,9 @@ export default function Product(){
                     <h2
                     style={{
                         fontSize: "1.2rem",
-                        fontStyle: "italic",
                         fontFamily: "'Cormorant Garamond', serif",
                         fontSize: "1.5rem",
+                         marginTop: "-.5rem",
                     }}
                     >
                         Notes
@@ -360,7 +358,6 @@ export default function Product(){
                         <h3
                             style={{
                                 margin: "4px 0",
-                                fontStyle: "italic",
                                 fontFamily: "'Cormorant Garamond', serif",
                                 fontSize: "1.35rem",
                                 lineHeight: "1.05",
@@ -391,7 +388,6 @@ export default function Product(){
                         <h3
                             style={{
                                 margin: "4px 0",
-                                fontStyle: "italic",
                                 fontFamily: "'Cormorant Garamond', serif",
                                 fontSize: "1.35rem",
                                 lineHeight: "1.05",
@@ -427,7 +423,6 @@ export default function Product(){
                         <h3
                             style={{
                                 margin: "4px 0",
-                                fontStyle: "italic",
                                 fontFamily: "'Cormorant Garamond', serif",
                                 fontSize: "1.35rem",
                                 lineHeight: "1.05",

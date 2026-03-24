@@ -28,7 +28,7 @@ const headingStyle = {
 
 const bodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
-  fontWeight: 400,
+  fontWeight: 600,
   fontSize: "1.3rem",
   letterSpacing: "0.5px",
   color: "#FFFFFF",
@@ -210,6 +210,12 @@ export default function Home() {
                 to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
                 style={{ textDecoration: "none" }}
               >
+                <Flex
+                direction="column"
+                justifyContent="space-between"
+                height="100%"
+              >
+                <View>
                 <img
                     src={prod.images?.[0]}
                     alt={prod.name}
@@ -219,17 +225,21 @@ export default function Home() {
                         objectFit: "cover",
                         borderRadius: "10px",
                         display: "block",
+                        marginBottom: "1rem",
                     }}
                 />
-                <Text style={bodyStyle} textAlign="center">
-                  {prod.name}
-                </Text>
+                <View minHeight="7.5rem">
+                  <Text style={bodyStyle} textAlign="center">
+                    {prod.name}
+                  </Text>
+                </View>
+                </View>
                 <Text
-                  style={{ ...bodyStyle, fontWeight: 600 }}
-                  textAlign="center"
-                >
-                  ${prod.price}
-                </Text>
+                style={{ ...bodyStyle, fontWeight: 600 }}
+                textAlign="center">
+                ${prod.price}
+              </Text>
+              </Flex>
               </Link>
             </Card>)
           })}
@@ -296,6 +306,12 @@ export default function Home() {
             to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
             style={{ textDecoration: "none" }}
           >
+            <Flex
+              direction="column"
+              justifyContent="space-between"
+              height="100%"
+            >
+            <View>
             <img
               src={prod.images?.[0]}
               alt={prod.name}
@@ -305,17 +321,23 @@ export default function Home() {
                 objectFit: "cover",
                 borderRadius: "10px",
                 display: "block",
+                marginBottom: "1rem",
               }}
             />
-            <Text style={bodyStyle} textAlign="center">
-              {prod.name}
-            </Text>
-            <Text style={{ ...bodyStyle, fontWeight: 600 }} textAlign="center">
-              ${prod.price}
-            </Text>
-            <Text style={{ ...bodyStyle, fontSize: "1rem" }} textAlign="center">
+            <View minHeight="7.5rem">
+              <Text style={bodyStyle} textAlign="center">
+                {prod.name}
+              </Text>
+            </View>
+            </View>
+            <Text
+              style={{ ...bodyStyle, fontWeight: 600 }}
+              textAlign="center"
+            >
+              ${prod.price} <br></br>
               {soldItemsCount[prod.id] || 0} sold
             </Text>
+            </Flex>
           </Link>
         </Card>
       ))}
@@ -365,6 +387,12 @@ export default function Home() {
             to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
             style={{ textDecoration: "none" }}
           >
+            <Flex
+                direction="column"
+                justifyContent="space-between"
+                height="100%"
+              >
+              <View>
             <img
               src={prod.images?.[0]}
               alt={prod.name}
@@ -374,14 +402,22 @@ export default function Home() {
                 objectFit: "cover",
                 borderRadius: "10px",
                 display: "block",
+                marginBottom: "1rem",
               }}
             />
-            <Text style={bodyStyle} textAlign="center">
-              {prod.name}
-            </Text>
-            <Text style={{ ...bodyStyle, fontWeight: 600 }} textAlign="center">
+            <View minHeight="7.5rem">
+              <Text style={bodyStyle} textAlign="center">
+                {prod.name}
+              </Text>
+            </View>
+          </View>
+            <Text
+              style={{ ...bodyStyle, fontWeight: 600 }}
+              textAlign="center"
+            >
               ${prod.price}
             </Text>
+            </Flex>
           </Link>
         </Card>
       ))}
