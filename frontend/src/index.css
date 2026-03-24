@@ -129,3 +129,12 @@ button.amplify-togglebutton {
 .mixology-disabled .amplify-select {
   color: #9a8f8782 !important;
 }
+
+.users-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.users-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

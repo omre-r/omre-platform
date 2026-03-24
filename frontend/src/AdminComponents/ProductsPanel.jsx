@@ -42,6 +42,19 @@ const MODES = {
     REMOVE: "remove",
 };
 
+const buttonStyling = {
+    ...luxuryBodyStyle, 
+    fontSize: "1.2rem",
+    padding: "0.5rem 1.2rem",
+    border: "1px solid rgba(255,255,255,0.35)",
+    borderRadius: "28px",
+    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    color: "#FFFFFF",
+    cursor: "pointer",
+    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+    transition: "all 0.2s ease",
+}
+
 // Default Product Draft   ---------------------------------------
 // When adding we set our draft to start with this where it holds no information
 // When cancelling an add or finishing an add will set the draft to default after to remove any data being saved
@@ -669,7 +682,11 @@ export default function ProductsPanel() {
                 flex="1.2" 
                 height="100%" 
                 padding="1rem" 
-                backgroundColor="whitesmoke"
+                style={{
+                    background: "linear-gradient(145deg,  #ffd3a67c, #f9e3de47)",
+                    border: "1px solid rgba(120, 80, 70, 0.18)",
+                    borderRadius: "22px",
+                }}
                 >
                 <Flex 
                     direction="column" 
@@ -679,230 +696,237 @@ export default function ProductsPanel() {
                         alignItems="center"
                         wrap="wrap">
                         <Text 
-                            style={luxuryHeadingStyle}>
-                            Products
+                            style={{
+                                padding: "1.2rem 1.2rem",
+                                border: "1px solid rgba(255,255,255,0.35)",
+                                borderRadius: "30px",
+                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                alignItems: "center",     
+                                justifyContent: "center", 
+                            }}>
+                            <Text style={{...luxuryBodyStyle, fontSize:"2rem", color: "#FFFFFF"}}>Products</Text> 
                         </Text>
                         <Flex  
-        padding={"5px"}    
-        alignItems={"center"}
-        justifyContent={"center"}
-        gap={"3px"}
-        style={{zIndex: "1000", background: "#ffffff00"}}
-        >
+                            padding={"5px"}    
+                            alignItems={"center"}
+                            justifyContent={"center"}
+                            gap={"3px"}
+                            style={{zIndex: "1000", background: "#ffffff00"}}
+                            >
 
-            <View
-            position={"relative"}>
-            <TextField
-                labelHidden
-                type="text"
-                placeholder="Find products..."
-                textAlign={"left"}
-                width={"300px"}
-                style={{borderRadius:"10px", ...bodyStyle2}}
-                border=".5px solid #111"
-                borderRadius="10px"
-                onKeyDown={e => {
-                    if (e.key !== "Enter") return;
-                    resetToIdle();
-                    filterProducts({name: e.target.value});
-                }}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-            />
-            <section 
-            style={{
-                display: "flex",
-                width:"30px", 
-                paddingRight: "5px",
-                overflow:"hidden",
-                position:"absolute",
-                right:"0",
-                top: "50%",
-                transform: "translateY(-50%)"}}
-                onClick={e => {
-                    resetToIdle();
-                    filterProducts({name: search});
-                }}>
-                <img src={SearchIcon} alt="search" style={{width: "100%"}} />
-            </section>
-            </View>
-            <View 
-            position={"relative"}
-            padding={"2px"}
-            backgroundColor={"white"}
-            borderRadius={"10px"}
-            style={{
-                background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
-                boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
-                border: "1px solid rgba(255,255,255,0.16)",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-            }}
-            onClick={e => {e.currentTarget.blur(); setShowFilters(prev=>!prev);}}
-            >
-            <img src={OptionsIcon} 
-            alt="options" 
-            style={{
-                width: "40px",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        height: "40px",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        display: "block",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        filter: "brightness(0) invert(1)",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    }}/>
-            {showFilters && 
-            <Card
+                                <View
+                                position={"relative"}>
+                                <TextField
+                                    labelHidden
+                                    type="text"
+                                    placeholder="Find products..."
+                                    textAlign={"left"}
+                                    width={"300px"}
+                                    style={{borderRadius:"10px", ...bodyStyle2}}
+                                    border=".5px solid #111"
+                                    borderRadius="10px"
+                                    onKeyDown={e => {
+                                        if (e.key !== "Enter") return;
+                                        resetToIdle();
+                                        filterProducts({name: e.target.value});
+                                    }}
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                />
+                                <section 
+                                style={{
+                                    display: "flex",
+                                    width:"30px", 
+                                    paddingRight: "5px",
+                                    overflow:"hidden",
+                                    position:"absolute",
+                                    right:"0",
+                                    top: "50%",
+                                    transform: "translateY(-50%)"}}
+                                    onClick={e => {
+                                        resetToIdle();
+                                        filterProducts({name: search});
+                                    }}>
+                                    <img src={SearchIcon} alt="search" style={{width: "100%"}} />
+                                </section>
+                                </View>
+                                <View 
+                                position={"relative"}
+                                padding={"2px"}
+                                backgroundColor={"white"}
+                                borderRadius={"10px"}
+                                style={{
+                                    background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+                                    boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
+                                    border: "1px solid rgba(255,255,255,0.16)",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
+                                }}
+                                onClick={e => {e.currentTarget.blur(); setShowFilters(prev=>!prev);}}
+                                >
+                                <img src={OptionsIcon} 
+                                alt="options" 
+                                style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    display: "block",
+                                    filter: "brightness(0) invert(1)",
+                                }}/>
+                                {showFilters && 
+                                <Card
 
-            position={"absolute"}
-            top={"110%"}
-            left={"50%"}
-            transform={"translateX(-50%)"}
-            border={"1px solid"}
-            borderRadius={"10px"}
-            onClick={e => e.stopPropagation()}
-            >
-                <Flex 
-                direction={"column"}
-                gap={0}>
-                {priceErrorMsg && 
-                <Text
-                color={"red"}
-                lineHeight={"17px"}
-                marginBottom={"5px"}>{priceErrorMsg}</Text>}
-                {/* price container */}
-                <Flex
-                alignItems={"center"}>
-                    <Text
-                    marginRight={"auto"}>Price: </Text>
-                    <Input 
-                    min={0} 
-                    max={200} 
-                    type={"number"} 
-                    placeholder="Minimum"
-                    padding={0}
-                    width={"100px"}
-                    value={minimum}
-                    style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
-                    onChange={e => setMinimum(e.target.value)}></Input>
-                    <Input
-                    min={0} 
-                    max={200} 
-                    type={"number"} 
-                    placeholder="Maximum"
-                    padding={0}
-                    width={"100px"}
-                    value={maximum}
-                    style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
-                    onChange={e => setMaximum(e.target.value)}>
-                    </Input>
-                </Flex>
-                <hr style={{width: "100%", marginBlock: "10px"}}/>
+                                position={"absolute"}
+                                top={"110%"}
+                                left={"50%"}
+                                transform={"translateX(-50%)"}
+                                border={"1px solid"}
+                                borderRadius={"10px"}
+                                onClick={e => e.stopPropagation()}
+                                >
+                                    <Flex 
+                                    direction={"column"}
+                                    gap={0}>
+                                    {priceErrorMsg && 
+                                    <Text
+                                    color={"red"}
+                                    lineHeight={"17px"}
+                                    marginBottom={"5px"}>{priceErrorMsg}</Text>}
+                                    {/* price container */}
+                                    <Flex
+                                    alignItems={"center"}>
+                                        <Text
+                                        marginRight={"auto"}>Price: </Text>
+                                        <Input 
+                                        min={0} 
+                                        max={200} 
+                                        type={"number"} 
+                                        placeholder="Minimum"
+                                        padding={0}
+                                        width={"100px"}
+                                        value={minimum}
+                                        style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
+                                        onChange={e => setMinimum(e.target.value)}></Input>
+                                        <Input
+                                        min={0} 
+                                        max={200} 
+                                        type={"number"} 
+                                        placeholder="Maximum"
+                                        padding={0}
+                                        width={"100px"}
+                                        value={maximum}
+                                        style={{outline: maximum !== "" && Number(minimum) > Number(maximum) ? "2px solid red" : "none"}}
+                                        onChange={e => setMaximum(e.target.value)}>
+                                        </Input>
+                                    </Flex>
+                                    <hr style={{width: "100%", marginBlock: "10px"}}/>
 
-                {/* size container */}
-                <Flex
-                alignItems={"center"}>
-                    <Text
-                    marginRight={"auto"}>Size:</Text>
-                    <ToggleButtonGroup
-                    value={selectedSizes}
-                    onChange={v => setSelectedSizes(v)}
-                    isExclusive={false}
-                    gap={"5px"}
-                    >
-                    <ToggleButton 
-                    padding={"6px"} value="30ml">30 ml</ToggleButton>
-                    <ToggleButton 
-                    padding={"6px"} value="50ml">50 ml</ToggleButton>
-                    </ToggleButtonGroup>
-                </Flex>
-                <hr style={{width: "100%", marginBlock: "10px"}}/>
+                                    {/* size container */}
+                                    <Flex
+                                    alignItems={"center"}>
+                                        <Text
+                                        marginRight={"auto"}>Size:</Text>
+                                        <ToggleButtonGroup
+                                        value={selectedSizes}
+                                        onChange={v => setSelectedSizes(v)}
+                                        isExclusive={false}
+                                        gap={"5px"}
+                                        >
+                                        <ToggleButton 
+                                        padding={"6px"} value="30ml">30 ml</ToggleButton>
+                                        <ToggleButton 
+                                        padding={"6px"} value="50ml">50 ml</ToggleButton>
+                                        </ToggleButtonGroup>
+                                    </Flex>
+                                    <hr style={{width: "100%", marginBlock: "10px"}}/>
 
-                {/* featured container */}
-                <Flex
-                alignItems={"center"}>
-                    <Text
-                    marginRight={"auto"}>Only Featured:</Text>
-                    <SwitchField 
-                    isChecked={onlyFeatured}
-                    onChange={e => setOnlyFeatured(e.target.checked)}>
-                    </SwitchField>
-                </Flex>
-                <hr style={{width: "100%", marginBlock: "10px"}}/>
+                                    {/* featured container */}
+                                    <Flex
+                                    alignItems={"center"}>
+                                        <Text
+                                        marginRight={"auto"}>Only Featured:</Text>
+                                        <SwitchField 
+                                        isChecked={onlyFeatured}
+                                        onChange={e => setOnlyFeatured(e.target.checked)}>
+                                        </SwitchField>
+                                    </Flex>
+                                    <hr style={{width: "100%", marginBlock: "10px"}}/>
 
-                {/* "include search" container */}
-                <Flex
-                direction={"column"}
-                gap={"3px"}
-                alignItems={"center"}>
-                    <Flex
-                    width={"100%"}>
-                    <Text
-                    marginRight={"auto"}>
-                        Include Search:
-                    </Text>
-                    <SwitchField 
-                    isChecked={includeSearch}
-                    onChange={e => setIncludeSearch(e.target.checked)}>
-                    </SwitchField>
-                    </Flex>
-                    {includeSearch && <Text style={{fontSize: ".8rem"}}>"{search}"</Text>}
-                </Flex>
-                <hr style={{width: "100%", marginBlock: "10px"}}/>
+                                    {/* "include search" container */}
+                                    <Flex
+                                    direction={"column"}
+                                    gap={"3px"}
+                                    alignItems={"center"}>
+                                        <Flex
+                                        width={"100%"}>
+                                        <Text
+                                        marginRight={"auto"}>
+                                            Include Search:
+                                        </Text>
+                                        <SwitchField 
+                                        isChecked={includeSearch}
+                                        onChange={e => setIncludeSearch(e.target.checked)}>
+                                        </SwitchField>
+                                        </Flex>
+                                        {includeSearch && <Text style={{fontSize: ".8rem"}}>"{search}"</Text>}
+                                    </Flex>
+                                    <hr style={{width: "100%", marginBlock: "10px"}}/>
 
-                {/* notes container */}
-                <Flex
-                direction={'column'}>
-                <Flex
-                    alignItems={"center"}>
-                    <Text
-                    marginRight={"auto"}>Notes:</Text>
-                    <select 
-                    name="notes" 
-                    id="notes"
-                    style={{
-                        padding: "4px",
-                        height:"100%",
-                        justifySelf: "flex-start",
-                        fontWeight: "bold",
-                        borderRadius: "10px",
-                        textAlign: "center"}} 
-                    onChange={e => setSelectedNotes(prev => !prev.includes(e.target.value) && e.target.value ? [...prev, e.target.value] : prev)}
-                    >
-                        <option value="">Notes</option>
-                        {fragranceOptions.map(f => <option key={f} disabled={selectedNotes.includes(f)} value={f}>{f}</option>)}
+                                    {/* notes container */}
+                                    <Flex
+                                    direction={'column'}>
+                                    <Flex
+                                        alignItems={"center"}>
+                                        <Text
+                                        marginRight={"auto"}>Notes:</Text>
+                                        <select 
+                                        name="notes" 
+                                        id="notes"
+                                        style={{
+                                            padding: "4px",
+                                            height:"100%",
+                                            justifySelf: "flex-start",
+                                            fontWeight: "bold",
+                                            borderRadius: "10px",
+                                            textAlign: "center"}} 
+                                        onChange={e => setSelectedNotes(prev => !prev.includes(e.target.value) && e.target.value ? [...prev, e.target.value] : prev)}
+                                        >
+                                            <option value="">Notes</option>
+                                            {fragranceOptions.map(f => <option key={f} disabled={selectedNotes.includes(f)} value={f}>{f}</option>)}
 
 
 
-                    </select>
-                    </Flex>  
-                    <Flex 
-                    wrap={"wrap"}
-                    gap={0}>
-                    {selectedNotes.map(note => {
-                        return (
-                        <Button
-                        key={note}
-                        padding={"3px"}
-                        fontSize={".7rem"}
-                        onClick={e => setSelectedNotes(prev => prev.filter(n => note !== n))}
-                        >
-                        {note}
-                        </Button>)
-                    })}
-                    </Flex>    
-                </Flex>
-                <hr style={{width: "100%", marginBlock: "10px"}}/>
-                <Button 
-                onClick={handleFilterSubmit}>
-                    Filter
-                </Button>
-                </Flex>
-            </Card>
-            }
-            </View>
+                                        </select>
+                                        </Flex>  
+                                        <Flex 
+                                        wrap={"wrap"}
+                                        gap={0}>
+                                        {selectedNotes.map(note => {
+                                            return (
+                                            <Button
+                                            key={note}
+                                            padding={"3px"}
+                                            fontSize={".7rem"}
+                                            onClick={e => setSelectedNotes(prev => prev.filter(n => note !== n))}
+                                            >
+                                            {note}
+                                            </Button>)
+                                        })}
+                                        </Flex>    
+                                    </Flex>
+                                    <hr style={{width: "100%", marginBlock: "10px"}}/>
+                                    <Button 
+                                    onClick={handleFilterSubmit}>
+                                        Filter
+                                    </Button>
+                                    </Flex>
+                                </Card>
+                                }
+                                </View>
 
-        </Flex>
+                            </Flex>
                             <Flex 
                                 direction="row"
                                 gap="0.75rem" 
@@ -911,30 +935,30 @@ export default function ProductsPanel() {
                                 >
                                 {/* Button : add mode -------------------------------------------------- */}
                                 <Button 
-                                    style={luxuryBodyStyle}
+                                    style={buttonStyling}
                                     onClick={resetToAdd}
                                     >
-                                    Add
+                                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Add</Text> 
                                 </Button>
                                 {/* Button : remove mode ---------------------------------------------------- */}
                                 <Button 
-                                    style={luxuryBodyStyle}
+                                    style={buttonStyling}
                                     disabled={!selectedProduct}
                                     onClick={() => {
                                         if (!selectedProduct) return;
                                         setActiveMode(MODES.REMOVE);
                                     }}
                                     >
-                                    Remove
+                                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Remove</Text> 
                                 </Button>
                                 <Button 
-                                    style={luxuryBodyStyle}
+                                    style={buttonStyling}
                                     onClick={() => {
                                         resetToIdle();
                                         loadProducts();
                                     }}
                                     >
-                                    Refresh
+                                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Refresh</Text> 
                                 </Button>
                             </Flex>
                         </Flex>
@@ -1068,7 +1092,12 @@ export default function ProductsPanel() {
                     flex="1.0"  
                     height="100%" 
                     padding="1rem" 
-                    backgroundColor="whitesmoke"
+                    style={{
+                        background: "linear-gradient(145deg,  #ffd3a67c, #f9e3de47)",
+                        //background: "linear-gradient(145deg,  #FDDDBE, #f9dad2)",
+                        border: "1px solid rgba(120, 80, 70, 0.18)",
+                        borderRadius: "22px",
+                    }}
                     overflow="auto">
                         
                     <Flex 

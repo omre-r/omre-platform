@@ -517,6 +517,7 @@ async function loadUserOrders() {
                                             day: 'numeric'
                                         })} 
                                         <br></br>
+                                        {/*  
                                         <Flex justifyContent="flex-end">
                                         <View
                                         style={{
@@ -530,7 +531,8 @@ async function loadUserOrders() {
                                         }}>
                                         <Text style={{...luxuryBodyStyle, color: "#000000"}}>Edit Profile</Text>
                                         </View>
-                                    </Flex>
+                                        </Flex>
+                                        */}
                                     </Text>
                                 </View>
                                 <View style={cardStyle}> 

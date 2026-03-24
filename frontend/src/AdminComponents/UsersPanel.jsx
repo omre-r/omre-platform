@@ -31,6 +31,19 @@ const luxuryBodyStyle = {
   letterSpacing: "0.3px",
 };
 
+const buttonStyling = {
+    ...luxuryBodyStyle, 
+    fontSize: "1.2rem",
+    padding: "0.5rem 1.2rem",
+    border: "1px solid rgba(255,255,255,0.35)",
+    borderRadius: "28px",
+    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    color: "#FFFFFF",
+    cursor: "pointer",
+    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+    transition: "all 0.2s ease",
+}
+
 // API URL to reach user information -----------------------------------------------
 const API_URL = 'https://6180u0u9xf.execute-api.us-east-1.amazonaws.com/prod';
 
@@ -175,7 +188,11 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                 flex="1.2" 
                 height="100%" 
                 padding="1rem" 
-                backgroundColor="whitesmoke"
+                style={{
+                    background: "linear-gradient(145deg,  #ffd3a616, #f9e3de16)",
+                    border: "1px solid rgba(120, 80, 70, 0.18)",
+                    borderRadius: "22px",
+                }}
                 >
                 <Flex 
                     direction="column" 
@@ -184,8 +201,15 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                         justifyContent="space-between" 
                         alignItems="center">   
                         <Text 
-                            style={luxuryHeadingStyle}>
-                            Users
+                            style={{
+                                padding: "1.2rem 1.2rem",
+                                border: "1px solid rgba(255,255,255,0.35)",
+                                borderRadius: "30px",
+                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                alignItems: "center",     
+                                justifyContent: "center", 
+                            }}>
+                            <Text style={{...luxuryBodyStyle, fontSize:"2rem", color: "#FFFFFF"}}>Users</Text> 
                         </Text>
                         <Flex  
                         padding={"5px"}    
@@ -194,26 +218,50 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                         gap={"3px"}
                         style={{zIndex: "2000", background: "#ffffff00"}}
                         >
-
-                            <View
+                        <View
                             position={"relative"}>
-                            <TextField
-                                labelHidden
+                            <input
                                 type="text"
                                 placeholder="Search by email..."
-                                textAlign={"left"}
-                                width={"300px"}
-                                style={{borderRadius:"10px", ...bodyStyle2}}
-                                border=".5px solid #111"
-                                borderRadius="10px"
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
-                                onKeyDown={async (e) =>  {
+                                onKeyDown={async (e) => {
                                     if (e.key !== "Enter") return;
-                                    const res = await getFilteredUsersReq({email: search});
-                                    setUsers(res.data.users)
+                                    const res = await getFilteredUsersReq({ email: search });
+                                    setUsers(res.data.users);
+                                }}
+                                style={{
+                                    width: "300px",
+                                    height: "50px",
+                                    paddingLeft: "18px",
+                                    paddingRight: "42px",
+                                    borderRadius: "8px",
+                                    border: "1px solid rgba(0, 0, 0, 0.22)",
+                                    background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+                                    color: "#FFFFFF",
+                                    caretColor: "#FFFFFF",
+                                    fontFamily: "'Cormorant Garamond', serif",
+                                    fontSize: "1.3rem",
+                                    outline: "none",
+                                    boxSizing: "border-box",
                                 }}
                             />
+                            {!search && (
+                                <Text
+                                style={{
+                                    position: "absolute",
+                                    left: "18px",
+                                    top: "50%",
+                                    transform: "translateY(-50%)",
+                                    color: "rgba(255,255,255,0.72)",
+                                    pointerEvents: "none",
+                                    fontFamily: "'Cormorant Garamond', serif",
+                                    fontSize: "1.3rem",
+                                }}
+                                >
+                                Search by email...
+                                </Text>
+                            )}
                             <section 
                             style={{
                                 display: "flex",
@@ -228,18 +276,21 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                                     const res = await getFilteredUsersReq({email: search});
                                     setUsers(res.data.users)
                                 }}>
-                                <img src={SearchIcon} alt="search" style={{width: "100%"}} />
+                                <img src={SearchIcon} alt="search" 
+                                style={{
+                                    width: "20px",
+                                    height: "20px",
+                                    filter: "brightness(0) invert(1)", 
+                                    }} 
+                                />
                             </section>
-                            </View>
-                            <View 
+                        </View>
+                        <View 
                             position={"relative"}
-                            padding={"2px"}
-                            backgroundColor={"white"}
+                            padding="8px"
                             borderRadius={"10px"}
                             style={{
-                                background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
-                                boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
-                                border: "1px solid rgba(255,255,255,0.16)",
+                                ...buttonStyling,
                                 cursor: "pointer",
                                 display: "flex",
                                 alignItems: "center",
@@ -252,8 +303,8 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                                 src={OptionsIcon} 
                                 alt="options" 
                                 style={{
-                                    width: "40px",
-                                    height: "40px",
+                                    width: "32px",
+                                    height: "32px",
                                     display: "block",
                                     filter: "brightness(0) invert(1)",
                                 }}/>
@@ -376,9 +427,9 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             </View>
                         </Flex>
                         <Button 
-                            style={luxuryBodyStyle}
+                            style={buttonStyling}
                             onClick={loadUsers}>
-                            Refresh
+                            <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Refresh</Text> 
                         </Button>
                     </Flex>
 
@@ -392,6 +443,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     )}
 
                     <View 
+                        className="users-scroll"
                         style={{overflowY: "auto"}}
                         height={"25rem"}
                         marginTop="1rem">
@@ -400,7 +452,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                         {sortedUsers.map((currentUser) => (
                             <Button
                                 key={currentUser.user_id}
-                                style={luxuryBodyStyle}
+                                style={buttonStyling}
                                 variation="link"
                                 marginBottom=".5rem"
                                 border=".5px solid #111"
@@ -409,7 +461,16 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                                 justifyContent="flex-start"
                                 width="100%"
                                 >
-                                {currentUser.email}
+                                
+                                <Text 
+                                    style={{
+                                        ...luxuryBodyStyle,
+                                        fontWeight: "600",
+                                        color: currentUser.is_admin ? "#cda400" : "#FFFFFF",
+                                        textShadow: currentUser.is_admin ? "0 0 5px rgba(255, 255, 255, 0.53)" : "none",
+                                    }}>
+                                    {currentUser.email}
+                                </Text>
                             </Button>
                         ))}
                     </View>
@@ -422,35 +483,64 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     flex="1.0" 
                     height="100%" 
                     padding="1rem" 
-                    backgroundColor="whitesmoke"
-
                     position={"relative"}
+                    style={{
+                        background: "linear-gradient(145deg,  #ffd3a616, #f9e3de16)",
+                        border: "1px solid rgba(120, 80, 70, 0.18)",
+                        borderRadius: "22px",
+                    }}
                 >
-                    <Flex>
-                        <Text 
-                            width="100%"
-                            textAlign="center"
-                            style={luxuryHeadingStyle}>
-                            User Information
-                        </Text>              
+                    <Flex
+                        alignItems="center"
+                        justifyContent="center"
+                        style={{
+                            padding: ".5rem .5rem",
+                            border: "1px solid rgba(255,255,255,0.35)",
+                            borderRadius: "10px",
+                            background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                            width: "fit-content",
+                            margin: "0 auto",
+                        }}>
+                        <Text style={{...luxuryHeadingStyle, fontSize:"2.2rem", color: "#FFFFFF"}}>User Information</Text> 
                     </Flex>
                     {/* No user selected, select user ------------------------------ */}
                     {!loadingUser && !selectedUser && (
-                        <Text 
-                            style={luxuryBodyStyle}>
-                            Please select a user
-                        </Text>
+                        <View
+                            marginTop="1rem"
+                            style={{
+                                borderRadius: "24px",
+                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                padding: ".5rem .5rem",
+                                border: "1px solid rgba(255,255,255,0.35)",
+                                width: "fit-content",
+                                margin: "0 auto",
+                            }}>
+                            <Text 
+                                style={{...luxuryBodyStyle, color:"White"}}>
+                                Please select a user
+                            </Text>
+                        </View>
                     )}   
                     {/* If user selected, will display loading -------------------------- */}
                     {loadingUser && (
-                        <Text 
-                            style={luxuryBodyStyle}>
-                            Loading user information
-                        </Text>
+                        <View
+                            marginTop="1rem"
+                            style={{
+                                borderRadius: "24px",
+                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                padding: ".5rem .5rem",
+                                border: "1px solid rgba(255,255,255,0.35)",
+                                width: "fit-content",
+                                margin: "0 auto",
+                            }}>
+                            <Text 
+                                style={{...luxuryBodyStyle, color:"White"}}>
+                                Loading user information
+                            </Text>
+                        </View>
                     )}   
                     {/* Loading is false and user has been selected ----------------- */}
                     {/* Show that users information in detail */}
-                    {/* TODO: Check back on last login with Ayman */}
                     {!loadingUser && selectedUser && (
                         <Flex
                         direction="column"
@@ -469,21 +559,30 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                                 </View>
                             }
 
-                            <Text>Email: {selectedUser.email}</Text>
-                            <Text>Name: {selectedUser.first_name} {selectedUser.last_name}</Text>
-                            <Text>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
-                            <Text>Created: {new Date(selectedUser.created_at).toLocaleString()}</Text>
-                            <Text>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString() : "Never"}</Text>
-
+                            <View
+                            marginTop="1.5rem"
+                            marginBottom="1.5rem"
+                            style={{
+                                border: "1px solid rgba(255,255,255,0.35)",
+                                borderRadius: "24px",
+                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                            }}
+                            >
+                                <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Email: {selectedUser.email}</Text>
+                                <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Name: {selectedUser.first_name} {selectedUser.last_name}</Text>
+                                <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
+                                <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Created: {new Date(selectedUser.created_at).toLocaleString()}</Text>
+                                <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString() : "Never"}</Text>
+                            </View>
                             {/* TODO: Have last login implemented */}
                             {/* <Text>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString(): "--"}</Text> */}
 
                             <Button 
-                                style={luxuryBodyStyle}
+                                style={buttonStyling}
                                 onClick={() => setSelectedUser(null)}
                                 height="auto"
                                 width="auto">
-                                Close Info
+                                <Text style={{...luxuryBodyStyle, fontWeight:"550", color: "#FFFFFF"}}>Close Info</Text> 
                             </Button>
                     </Flex>
                 )} 
@@ -492,8 +591,3 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
         </Flex>
     );
 }
-
-// To do list
-// TODO: if no users make a condition, IE users = 0 
-// TODO: Talk to Ayman about last login
-// TODO: Check that user information isnt missing like response.ok check with the data

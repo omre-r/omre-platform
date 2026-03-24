@@ -128,7 +128,7 @@ export default function AdminDashboard() {
                                 width="80rem"
                                 margin="1rem auto"
                                 padding="2rem"
-                                borderRadius="8px"
+                                borderRadius="20px"
                                 style={{
                                     background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.35))",
                                 }}
