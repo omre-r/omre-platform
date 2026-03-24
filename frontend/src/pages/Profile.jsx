@@ -540,7 +540,7 @@ async function loadUserOrders() {
                                     <Text style={{...luxurySubheadingStyle, color:"#FFFFFF"}} textAlign={"left"}>
                                         Total Orders: {totalOrders} <br></br>
                                         Last Order Date: {lastOrderDate}  <br></br>
-                                        Total Spent: ${totalSpent}
+                                        Total Spent: ${totalSpent.toFixed(2)}
                                     </Text>
                                 </View>
                                 <View style={cardStyle}>
@@ -562,17 +562,7 @@ async function loadUserOrders() {
                                         {selectedNotes.length > 0 ? selectedNotes.sort().join(", ") : "None saved yet"}<br></br>
                                     </Text>
                                 </View>
-                            </Grid>
-
-
-                            
-
-                            {/*  
-                            <Text style={luxuryHeadingStyle2}>
-                                Recommended for you
-                                {/* Let this text links to recommended fragrances */}
-                            {/* </Text> */}
-                            
+                            </Grid>                    
                         </View>
                     )}
 

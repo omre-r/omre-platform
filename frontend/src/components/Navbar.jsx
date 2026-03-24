@@ -57,6 +57,9 @@ const Navbar = () => {
 
         {/* {!isAdmin && (  */}
           <>
+          
+          {/* Maybe add later, this page seems unneccessary for prototype3*/}
+          {/*  
             <Link
               to="/fragrancebar"
               className="nav-item"
@@ -64,13 +67,14 @@ const Navbar = () => {
               >
               Fragrance Bar
             </Link>
+          */}
 
             <Link
               to="/AboutUs"
               className="nav-item"
               style={luxuryBodyStyle}
               >
-              About Us
+              About
             </Link>
 
             <Link
@@ -78,7 +82,7 @@ const Navbar = () => {
               className="nav-item"
               style={luxuryBodyStyle}
               >
-              Contact Us
+              Contact
             </Link>
         </> 
         {/* )} */}

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { View, Card, Flex, Text } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { getActiveProductsReq } from "../requests.js";
+import { getActiveProductsReq, getOrdersReq } from "../requests.js";
 import Navbar from "../components/Navbar";
 
 // Current images from instagram -------------------------
@@ -40,6 +40,9 @@ export default function Home() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [message, setMessage] = useState("");
 
+  // Count how many of a product was sold from orders to get most popular
+  const [soldItemsCount, setSoldItemsCount] = useState({});
+
   // Grabbing the newest products that have been added to the website -------------------------------
   const newestProducts = !loadingProducts ? products
       .map((prodList) => prodList[0])
@@ -49,6 +52,43 @@ export default function Home() {
   : [];
 
   const instagramImages = [ Insta1, Insta2, Insta3, Insta4, Insta6 ];
+
+  // Calculate the number of sold items by product id -----------------------------------------------
+  function calculateSoldItemsCount(orderList) {
+    const counts = {};
+    for (const order of orderList) {
+      // Skip all cancelled orders
+      if (order.status === "canceled") {
+        continue;
+      }
+
+      const items = order.items;
+      for (const entry of items) {
+
+        // Only products no blends!
+        if (entry.type !== "product") {
+          continue;
+        }
+        const productId = entry.itemid;
+        const quantity = Number(entry.quantity) || 0;
+
+        if (!productId) {
+          continue;
+        }
+
+        // Increment that product id's count 
+        counts[productId] = (counts[productId] || 0) + quantity;
+      }
+    }
+    return counts;
+  }
+
+  const mostPopularProducts = !loadingProducts ? products
+      .map((prodList) => prodList[0])
+      .filter(Boolean)
+      .sort((a, b) => (soldItemsCount[b.id] || 0) - (soldItemsCount[a.id] || 0))
+      .slice(0, 4)
+  : [];
 
 // make sure it loads //
   useEffect(() => {
@@ -68,6 +108,26 @@ export default function Home() {
     }
 
     loadProducts();
+  }, []);
+
+  // Load user orders to count most popular products on the platform -------------------------------------------
+  useEffect(() => {
+    async function loadOrders() {
+      try {
+        const data = await getOrdersReq();
+        if (!data.success){
+          throw new Error(data.message)
+        }
+        const orders = data.data.orders;
+        const counts = calculateSoldItemsCount(orders);
+        setSoldItemsCount(counts);
+      } 
+      catch (err) {
+        console.error(err);
+        setMessage("Failed to load orders.");
+      } 
+    }
+    loadOrders();
   }, []);
 
   function groupRelevantElements(productList){
@@ -138,7 +198,7 @@ export default function Home() {
               variation="elevated"
               width="16rem"
               padding="1.75rem"
-              minHeight="20rem"
+              minHeight="26rem"
               border="1px solid rgba(190, 160, 150, 0.18)"
               borderRadius="15px"
               boxShadow="0 14px 28px rgba(0,0,0,0.22)"
@@ -203,6 +263,75 @@ export default function Home() {
             backgroundColor="#2b1e1a"
         />
         <Text style={headingStyle}>
+            Most Popular
+        </Text>
+        <View
+            flex="1"
+            height="1px"
+            backgroundColor="#2b1e1a"
+        />
+    </Flex>
+    <Flex
+      wrap="wrap"
+      justifyContent="center"
+      alignItems="flex-start"
+      gap="2rem"
+      maxWidth="1400px"
+      margin="0 auto">
+      {!loadingProducts &&  mostPopularProducts.map((prod) => (
+        <Card
+          key={prod.id}
+          variation="elevated"
+          minHeight="26rem"
+          width="16rem"
+          padding="1.75rem"
+          border="1px solid rgba(190, 160, 150, 0.18)"
+          borderRadius="15px"
+          boxShadow="0 14px 28px rgba(0,0,0,0.22)"
+          style={{
+            background: "linear-gradient(145deg,  #428cfa, rgba(20, 20, 20, 0.65))",
+          }}
+        >
+          <Link
+            to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
+            style={{ textDecoration: "none" }}
+          >
+            <img
+              src={prod.images?.[0]}
+              alt={prod.name}
+              style={{
+                width: "100%",
+                height: "200px",
+                objectFit: "cover",
+                borderRadius: "10px",
+                display: "block",
+              }}
+            />
+            <Text style={bodyStyle} textAlign="center">
+              {prod.name}
+            </Text>
+            <Text style={{ ...bodyStyle, fontWeight: 600 }} textAlign="center">
+              ${prod.price}
+            </Text>
+            <Text style={{ ...bodyStyle, fontSize: "1rem" }} textAlign="center">
+              {soldItemsCount[prod.id] || 0} sold
+            </Text>
+          </Link>
+        </Card>
+      ))}
+    </Flex>
+    <Flex 
+      alignItems="center" 
+      gap="1rem"
+      width="100%" 
+      marginBottom="2rem" 
+      marginTop="3rem">
+        <View
+            flex="1"
+            height="1px"
+            backgroundColor="#2b1e1a"
+        />
+        <Text style={headingStyle}>
             New Arrivals
         </Text>
         <View
@@ -222,7 +351,7 @@ export default function Home() {
         <Card
           key={prod.id}
           variation="elevated"
-          minHeight="24rem"
+          minHeight="26rem"
           width="16rem"
           padding="1.75rem"
           border="1px solid rgba(190, 160, 150, 0.18)"
