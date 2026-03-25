@@ -92,7 +92,10 @@ export default function AdminDashboard() {
                             <Flex direction="column" gap=".8rem" alignItems="stretch">
                                 <Button 
                                     justifyContent="center"
-                                    style={buttonStyling}
+                                    style={{
+                                        ...buttonStyling,
+                                        boxShadow: activeTab === "users" ? "0 0 10px rgb(255, 208, 0)" : buttonStyling.boxShadow,
+                                    }}
                                     variation="primary"
                                     marginTop=".9rem"
                                     onClick={() => setActiveTab("users")}
@@ -102,7 +105,10 @@ export default function AdminDashboard() {
                                 <Button 
                                     justifyContent="center"
                                     color="#2B1E1A"
-                                    style={buttonStyling}
+                                    style={{
+                                        ...buttonStyling,
+                                        boxShadow: activeTab === "products" ? "0 0 10px rgb(255, 208, 0)" : buttonStyling.boxShadow,
+                                    }}
                                     variation="primary"
                                     marginTop=".9rem"
                                     onClick={() => setActiveTab("products")}
@@ -112,7 +118,10 @@ export default function AdminDashboard() {
                                 <Button 
                                     justifyContent="center"
                                     color="#2B1E1A"
-                                    style={buttonStyling}
+                                    style={{
+                                        ...buttonStyling,
+                                        boxShadow: activeTab === "orders" ? "0 0 10px rgb(255, 208, 0)" : buttonStyling.boxShadow,
+                                    }}
                                     variation="primary"
                                     marginTop=".9rem"
                                     onClick={() => setActiveTab("orders")}

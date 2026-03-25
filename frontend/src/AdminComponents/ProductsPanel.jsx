@@ -46,12 +46,12 @@ const buttonStyling = {
     ...luxuryBodyStyle, 
     fontSize: "1.2rem",
     padding: "0.5rem 1.2rem",
-    border: "1px solid rgba(255,255,255,0.35)",
+    border: "2px solid rgba(0, 0, 0)",
     borderRadius: "28px",
-    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
     color: "#FFFFFF",
     cursor: "pointer",
-    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+    boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
     transition: "all 0.2s ease",
 }
 
@@ -683,9 +683,12 @@ export default function ProductsPanel() {
                 height="100%" 
                 padding="1rem" 
                 style={{
-                    background: "linear-gradient(145deg,  #ffd3a67c, #f9e3de47)",
+                    background: "linear-gradient(145deg, rgba(255, 240, 235, 0.35), rgba(245, 225, 218, 0.28))",
+                    backdropFilter: "blur(6px)",
                     border: "1px solid rgba(120, 80, 70, 0.18)",
                     borderRadius: "22px",
+                    overflow: "visible",
+                    zIndex: 20,
                 }}
                 >
                 <Flex 
@@ -697,9 +700,9 @@ export default function ProductsPanel() {
                         wrap="wrap">
                         <Text 
                             style={{
-                                padding: "1.2rem 1.2rem",
-                                border: "1px solid rgba(255,255,255,0.35)",
-                                borderRadius: "30px",
+                                padding: ".5rem .5rem",
+                                border: "2px solid rgba(0, 0, 0)",
+                                borderRadius: "10px",
                                 background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
                                 alignItems: "center",     
                                 justifyContent: "center", 
@@ -707,58 +710,92 @@ export default function ProductsPanel() {
                             <Text style={{...luxuryBodyStyle, fontSize:"2rem", color: "#FFFFFF"}}>Products</Text> 
                         </Text>
                         <Flex  
-                            padding={"5px"}    
+                            padding={"10px"}    
                             alignItems={"center"}
                             justifyContent={"center"}
-                            gap={"3px"}
+                            gap={"6px"}
                             style={{zIndex: "1000", background: "#ffffff00"}}
                             >
 
-                                <View
-                                position={"relative"}>
-                                <TextField
-                                    labelHidden
-                                    type="text"
-                                    placeholder="Find products..."
-                                    textAlign={"left"}
-                                    width={"300px"}
-                                    style={{borderRadius:"10px", ...bodyStyle2}}
-                                    border=".5px solid #111"
-                                    borderRadius="10px"
-                                    onKeyDown={e => {
-                                        if (e.key !== "Enter") return;
-                                        resetToIdle();
-                                        filterProducts({name: e.target.value});
-                                    }}
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                />
-                                <section 
-                                style={{
-                                    display: "flex",
-                                    width:"30px", 
-                                    paddingRight: "5px",
-                                    overflow:"hidden",
-                                    position:"absolute",
-                                    right:"0",
-                                    top: "50%",
-                                    transform: "translateY(-50%)"}}
-                                    onClick={e => {
-                                        resetToIdle();
-                                        filterProducts({name: search});
-                                    }}>
-                                    <img src={SearchIcon} alt="search" style={{width: "100%"}} />
-                                </section>
+                                <View position={"relative"}>
+                                    <input
+                                        type="text"
+                                        value={search}
+                                        onChange={e => setSearch(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key !== "Enter") return;
+                                            resetToIdle();
+                                            filterProducts({ name: search });
+                                        }}
+                                        style={{
+                                            width: "300px",
+                                            height: "50px",
+                                            paddingLeft: "18px",
+                                            paddingRight: "42px",
+                                            borderRadius: "8px",
+                                            border: "2px solid rgba(0, 0, 0)",
+                                            background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                                            color: "#FFFFFF",
+                                            caretColor: "#FFFFFF",
+                                            fontFamily: "'Cormorant Garamond', serif",
+                                            fontSize: "1.3rem",
+                                            outline: "none",
+                                            boxSizing: "border-box",
+                                        }}
+                                    />
+
+                                    {!search && (
+                                        <Text
+                                            style={{
+                                                position: "absolute",
+                                                left: "18px",
+                                                top: "50%",
+                                                transform: "translateY(-50%)",
+                                                color: "white",
+                                                pointerEvents: "none",
+                                                fontFamily: "'Cormorant Garamond', serif",
+                                                fontSize: "1.3rem",
+                                            }}
+                                        >
+                                            Find products...
+                                        </Text>
+                                    )}
+                                    <section
+                                        style={{
+                                            display: "flex",
+                                            width: "30px",
+                                            paddingRight: "5px",
+                                            overflow: "hidden",
+                                            position: "absolute",
+                                            right: "0",
+                                            top: "50%",
+                                            transform: "translateY(-50%)",
+                                            cursor: "pointer",
+                                        }}
+                                        onClick={() => {
+                                            resetToIdle();
+                                            filterProducts({ name: search });
+                                        }}
+                                    >
+                                        <img
+                                            src={SearchIcon}
+                                            alt="search"
+                                            style={{
+                                                width: "20px",
+                                                height: "20px",
+                                                filter: "brightness(0) invert(1)",
+                                            }}
+                                        />
+                                    </section>
                                 </View>
                                 <View 
                                 position={"relative"}
-                                padding={"2px"}
+                                padding={"8px"}
                                 backgroundColor={"white"}
                                 borderRadius={"10px"}
                                 style={{
-                                    background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
-                                    boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
-                                    border: "1px solid rgba(255,255,255,0.16)",
+                                    ...buttonStyling,
+                                    border: "2px solid rgba(0, 0, 0)",
                                     cursor: "pointer",
                                     display: "flex",
                                     alignItems: "center",
@@ -770,8 +807,8 @@ export default function ProductsPanel() {
                                 <img src={OptionsIcon} 
                                 alt="options" 
                                 style={{
-                                    width: "40px",
-                                    height: "40px",
+                                    width: "32px",
+                                    height: "32px",
                                     display: "block",
                                     filter: "brightness(0) invert(1)",
                                 }}/>
@@ -925,41 +962,74 @@ export default function ProductsPanel() {
                                 </Card>
                                 }
                                 </View>
-
+                                <View
+                                    position={"relative"}
+                                    padding="9.5px"
+                                    borderRadius={"10px"}
+                                    onClick={() => {
+                                        resetToIdle();
+                                        loadProducts();
+                                    }}
+                                    style={{
+                                        ...buttonStyling,
+                                        border: "2px solid rgba(0, 0, 0)",
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        flexShrink: 0,
+                                    }}>
+                                        Refresh
+                                </View>
                             </Flex>
                             <Flex 
                                 direction="row"
-                                gap="0.75rem" 
+                                gap=".95rem" 
                                 wrap="wrap" 
                                 justifyContent="flex-end"
                                 >
                                 {/* Button : add mode -------------------------------------------------- */}
-                                <Button 
-                                    style={buttonStyling}
+                                <View
+                                    position={"relative"}
+                                    padding="9.5px"
+                                    borderRadius={"10px"}
+                                    disabled={!selectedProduct}
                                     onClick={resetToAdd}
-                                    >
-                                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Add</Text> 
-                                </Button>
+                                    style={{
+                                        ...buttonStyling,
+                                        color: "#00ff91",
+                                        border: "2px solid rgba(0, 0, 0)",
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        flexShrink: 0,
+                                    }}>
+                                        Add
+                                </View>
                                 {/* Button : remove mode ---------------------------------------------------- */}
-                                <Button 
-                                    style={buttonStyling}
+                                <View
+                                    position={"relative"}
+                                    padding="9.5px"
+                                    borderRadius={"10px"}
                                     disabled={!selectedProduct}
                                     onClick={() => {
                                         if (!selectedProduct) return;
                                         setActiveMode(MODES.REMOVE);
                                     }}
-                                    >
-                                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Remove</Text> 
-                                </Button>
-                                <Button 
-                                    style={buttonStyling}
-                                    onClick={() => {
-                                        resetToIdle();
-                                        loadProducts();
-                                    }}
-                                    >
-                                    <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Refresh</Text> 
-                                </Button>
+                                    style={{
+                                        ...buttonStyling,
+                                        color: selectedProduct ? "#ff2600" : "black",
+                                        border: "2px solid rgba(0, 0, 0)",
+                                        background: selectedProduct ? "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))" : "linear-gradient(145deg, #888, #555)",
+                                        cursor: selectedProduct ? "pointer" : "not-allowed",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        flexShrink: 0,
+                                    }}>
+                                        Remove
+                                </View>
                             </Flex>
                         </Flex>
 
@@ -982,23 +1052,21 @@ export default function ProductsPanel() {
                                         ? 
                                         <Button
                                             key={prodList[0].parentid}
-                                            style={luxuryBodyStyle}
+                                            style={{...buttonStyling}}
                                             variation="link"
                                             justifyContent="flex-start"
                                             width="100%"
                                             border=".5px solid #111"
                                             borderRadius="6px"
                                             >
-                                            <Text textAlign={"left"}>
-                                                <strong>{selectedProduct.name}</strong>
-                                                <br />
-                                                <Text>— {selectedProduct.stock_ml}ml {selectedProduct.stock_ml < 1000 && "(LOW!)"}</Text>
+                                            <Text color="rgb(255, 208, 0)" textAlign={"left"}>
+                                                <strong>{prodList[0].name} — <br></br> {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"} </strong>
                                             </Text>
                                         </Button>
                                         :
                                         <Button
                                             key={prodList[0].parentid}
-                                            style={luxuryBodyStyle}
+                                            style={{...buttonStyling}}
                                             variation="link"
                                             justifyContent="flex-start"
                                             width="100%"
@@ -1014,10 +1082,8 @@ export default function ProductsPanel() {
                                                 resetToEdit(prodList[0]);
                                             }}
                                             >
-                                            <Text textAlign={"left"}>
-                                                <strong>{prodList[0].name} </strong>
-                                                <br />
-                                                <Text>— {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"}</Text>
+                                            <Text color="White" textAlign={"left"}>
+                                                <strong>{prodList[0].name} — <br></br> {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"} </strong>
                                             </Text>
                                         </Button>
                                     }
@@ -1029,16 +1095,18 @@ export default function ProductsPanel() {
                                         gap={"5px"}>
                                             <Text>Stock</Text>
                                             <input 
-                                                style={{width: "100px", padding: "5px 10px", borderRadius: "5px"}}
+                                                style={{...buttonStyling, width: "100px", padding: "5px 10px", borderRadius: "5px"}}
+                                                color="White"
                                                 placeholder="Stock (ml)"
                                                 type="number"
                                                 value={draft.stock_ml} 
                                                 onChange={(e) => setDraftField("stock_ml", e.target.value)} 
                                             />
                                             {Math.floor(draft.stock_ml) !== Math.floor(selectedProduct.stock_ml) &&
-                                                <button
+                                                <Button
                                                 onClick={updateProductStock}
                                                 style={{
+                                                    
                                                     overflow: "hidden", 
                                                     width: "40px", 
                                                     height: "40px", 
@@ -1050,7 +1118,7 @@ export default function ProductsPanel() {
                                                 }}
                                                     >
                                                     <img src={EditIcon} width={"100%"} alt="Edit" />
-                                                </button>
+                                                </Button>
                                             }
                                         </Flex>
                                         <Flex 
@@ -1060,21 +1128,35 @@ export default function ProductsPanel() {
                                         marginBlock={"10px"}>
                                             {prodList.map(prod => (
                                                 <Button
-                                                style={selectedProduct.id === prod.id ? {opacity: ".7", boxShadow: "0 0 5px inset"} : {}}
+                                                style={{
+                                                    ...buttonStyling,
+                                                    boxShadow: selectedProduct?.id === prod.id ? "0 0 10px rgb(255, 208, 0)" : buttonStyling.boxShadow,
+                                                    cursor: "pointer",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    flexShrink: 0,}}
                                                 padding={"5px 10px"}
                                                 onClick={() => {
                                                     resetToEdit(prod)
                                                 }}>
-                                                    {prod.variation}
+                                                    <Text color="White" fontSize="1.5rem" fontWeight="800">{prod.variation}</Text>
                                                 </Button>
                                             ))}
                                                 <Button
                                                 padding={"5px 10px"}
-                                                style={activeMode === MODES.APPEND ? {opacity: ".7", boxShadow: "0 0 5px inset"} : {}}
+                                                style={activeMode === MODES.APPEND ? {...buttonStyling, opacity: ".7", boxShadow: "0 0 5px inset"} : {
+                                                    ...buttonStyling,
+                                                    border: "2px solid rgba(0, 0, 0)",
+                                                    cursor: "pointer",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    flexShrink: 0,}}
                                                 onClick={() => {
                                                     resetToAppend(selectedProduct);
                                                 }}>
-                                                    +
+                                                    <Text color="White" fontSize="1.5rem" fontWeight="800">+</Text>
                                                 </Button>
                                         </Flex>
                                     </Flex>
@@ -1093,8 +1175,8 @@ export default function ProductsPanel() {
                     height="100%" 
                     padding="1rem" 
                     style={{
-                        background: "linear-gradient(145deg,  #ffd3a67c, #f9e3de47)",
-                        //background: "linear-gradient(145deg,  #FDDDBE, #f9dad2)",
+                        background: "linear-gradient(145deg, rgba(255, 240, 235, 0.35), rgba(245, 225, 218, 0.28))",
+                        backdropFilter: "blur(6px)",
                         border: "1px solid rgba(120, 80, 70, 0.18)",
                         borderRadius: "22px",
                     }}
@@ -1260,15 +1342,16 @@ export default function ProductsPanel() {
                                 <View
                                     columnSpan={2}>
                                     <Text 
+                                    marginBottom="2rem"
                                     fontSize={".9em"}>
                                         Images: {draft.images.length}
                                     </Text>
 
+                                    <Flex gap="1rem" justifyContent="center" >
                                     <Button
-                                    style={compactStyle}
-                                    border="1px solid #111"
-                                    borderRadius="6px"
-                                    padding="0.35rem 0.75rem"
+                                    style={{...buttonStyling, border: "2px solid rgba(0, 0, 0)"}}
+                                    borderRadius="10px"
+                                    padding="0.5rem 0.5rem"
                                     as="label"
                                     >
 
@@ -1279,309 +1362,22 @@ export default function ProductsPanel() {
                                             style={{display: "none"}} 
                                             onChange={onImagesSelected}
                                             />
-                                        Upload Images
+                                        <Text color="White">Upload Images</Text>
                                     </Button>
                                     <Button
-                                        style={compactStyle}
-                                        border="1px solid #111"
-                                        borderRadius="6px"
-                                        padding="0.35rem 0.75rem"
+                                        style={{...buttonStyling, border: "2px solid rgba(0, 0, 0)"}}
+                                        borderRadius="10px"
+                                        padding="0.5rem 0.5rem"
                                         onClick={e => setShowImages(prev => !prev)}
                                     >
-                                        {showImages ? "Hide Images" : "Show Images"}
+                                        
+                                        <Text color="White">{showImages ? "Hide Images" : "Show Images"}</Text>
                                     </Button>
-                                    {showImages && 
-                                    <View
-                                    position={"fixed"}
-                                    top={0}
-                                    left={0}
-                                    display={"flex"}
-                                    width={"100vw"}
-                                    height={"100vh"}
-                                    style={{backdropFilter: "blur(4px)", zIndex: "9999"}}
-                                    justifyContent={"center"}
-                                    alignItems={"center"}
-                                    >
-
-                                        <Card
-                                        display={"flex"}
-                                        width={"800px"}
-                                        minHeight={"200px"}
-                                        padding={0}
-                                        border={"solid black"}
-                                        borderWidth={"10px"}
-                                        borderRadius={"20px"}
-                                        backgroundColor={"#27231e"}
-                                        color={"white"}
-                                        position={"relative"}
-                                        >
-                                            <View
-                                            position={"absolute"}
-                                            top={0}
-                                            right={0}
-                                            transform={"translate(50%,-50%)"}
-                                            color={"black"}
-                                            backgroundColor={"white"}
-                                            width={"40px"}
-                                            height={"40px"}
-                                            borderRadius={"40%"}
-                                            border={"solid black"}
-                                            display={"flex"}
-                                            justifyContent={"center"}
-                                            alignItems={"center"}
-                                            fontSize={"1.3em"}
-                                            onClick={e => setShowImages(prev => !prev)}
-                                            >
-                                                <strong>X</strong>
-                                            </View>
-                                            <Flex
-                                            direction={"column"}
-                                            flex={1}
-                                            width={"100%"}
-                                            
-                                            >
-                                                <h2>View / Rearrange Images</h2>
-                                                <Flex
-                                                border={"solid black"}
-                                                borderRadius={"20px"}
-                                                padding={"10px"}
-                                                width={"100%"}
-                                                height={"200px"}
-                                                wrap={"nowrap"}
-                                                gap={"12px"}
-                                                alignItems={"center"}
-                                                backgroundColor={"rgb(253, 248, 245)"}
-                                                style={{overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none"}}
-                                                >
-                                                    {draft.images.map((url, i) => {
-                                                        return (
-                                                        <View 
-                                                        key={url}
-                                                        width={"200px"}
-                                                        shrink={0}
-                                                        border={"solid gray"}
-                                                        borderWidth={"5px"}
-                                                        borderRadius={"10px"}
-                                                        height={"100%"}     
-                                                        display={"flex"}
-                                                        alignItems={"center"}  
-                                                        position={"relative"}   
-                                                        onMouseDown={(e) => handleImageDrag(e, i)}
-                                                        className="product-image-draggable"
-                                                        data-index={i}
-                                                        >
-                                                            <img src={url} alt="img" 
-                                                            style={{
-                                                                width: "100%",
-                                                                height: "100%",
-                                                                objectFit:"cover"
-                                                                }} />
-
-                                                            <View
-                                                            position={"absolute"}
-                                                            top={0}
-                                                            right={0}
-                                                            transform={"translate(50%,-50%)"}
-                                                            color={"white"}
-                                                            backgroundColor={"maroon"}
-                                                            width={"30px"}
-                                                            height={"30px"}
-                                                            borderRadius={"40%"}
-                                                            border={"solid black"}
-                                                            display={"flex"}
-                                                            justifyContent={"center"}
-                                                            alignItems={"center"}
-                                                            fontSize={"1.3em"}
-                                                            onClick={e => {
-                                                                if (draft.images.length <= 1) return
-                                                                setDraft(prev => {
-                                                                    return {
-                                                                        ...prev,
-                                                                        images: prev.images.filter(u => u !== url)
-                                                                    }
-                                                                })
-                                                            }}
-                                                            >
-                                                                <strong>X</strong>
-                                                            </View>
-                                                            {i === 0 &&
-                                                            <Text
-                                                            position={"absolute"}
-                                                            bottom={0}
-                                                            left={"50%"}
-                                                            transform={"translateX(-50%)"}
-                                                            backgroundColor={"white"}
-                                                            width={"100%"}
-                                                            opacity={.8}
-                                                            color={"black"}
-                                                            fontSize={"1.2em"}
-                                                            >
-                                                                Cover Photo
-                                                            </Text>
-                                                            }
-                                                            
-                                                        </View>)
-                                                    })}
-                                                </Flex>
-                                            </Flex>
-                                            
-                                        </Card>
-                                    </View>
-                                    }
-                                    {files.length !== 0 &&
-                                    <View
-                                    position={"fixed"}
-                                    top={0}
-                                    left={0}
-                                    display={"flex"}
-                                    width={"100vw"}
-                                    height={"100vh"}
-                                    style={{backdropFilter: "blur(4px)", zIndex: "9999"}}
-                                    justifyContent={"center"}
-                                    alignItems={"center"}
-                                    >
-
-                                        <Card
-                                        display={"flex"}
-                                        width={"800px"}
-                                        minHeight={"200px"}
-                                        padding={0}
-                                        border={"solid black"}
-                                        borderWidth={"10px"}
-                                        borderRadius={"20px"}
-                                        backgroundColor={"#27231e"}
-                                        color={"white"}
-                                        position={"relative"}
-                                        >
-                                            <View
-                                            position={"absolute"}
-                                            top={0}
-                                            right={0}
-                                            transform={"translate(50%,-50%)"}
-                                            color={"black"}
-                                            backgroundColor={"white"}
-                                            width={"40px"}
-                                            height={"40px"}
-                                            borderRadius={"40%"}
-                                            border={"solid black"}
-                                            display={"flex"}
-                                            justifyContent={"center"}
-                                            alignItems={"center"}
-                                            fontSize={"1.3em"}
-                                            onClick={e => {
-                                                for (const f of files){
-                                                    URL.revokeObjectURL(f.url)
-                                                }
-                                                setFiles([])
-                                            }}
-                                            >
-                                                <strong>X</strong>
-                                            </View>
-                                            {isUploading
-                                            ? 
-                                            <Flex
-                                            direction={"column"}
-                                            justifyContent={"center"}
-                                            alignItems={"center"}
-                                            flex={1}
-                                            width={"100%"}
-                                            >
-                                                <h2>Uploading...</h2>
-                                            </Flex>
-                                            :
-                                            <Flex
-                                            direction={"column"}
-                                            justifyContent={"center"}
-                                            alignItems={"center"}
-                                            flex={1}
-                                            width={"100%"}
-                                            >
-                                                <h2>Upload Images</h2>
-                                                <Flex
-                                                border={"solid black"}
-                                                borderRadius={"20px"}
-                                                padding={"10px"}
-                                                width={"100%"}
-                                                height={"200px"}
-                                                wrap={"nowrap"}
-                                                gap={"12px"}
-                                                alignItems={"center"}
-                                                backgroundColor={"rgb(253, 248, 245)"}
-                                                style={{overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none"}}
-                                                >
-                                                    {files.map((f, i) => {
-                                                        return (
-                                                        <View 
-                                                        key={f.url}
-                                                        width={"200px"}
-                                                        shrink={0}
-                                                        border={"solid gray"}
-                                                        borderWidth={"5px"}
-                                                        borderRadius={"10px"}
-                                                        height={"100%"}     
-                                                        display={"flex"}
-                                                        alignItems={"center"}  
-                                                        position={"relative"}   
-                                                        >
-                                                            <img src={f.url} alt="img" 
-                                                            style={{
-                                                                width: "100%",
-                                                                height: "100%",
-                                                                objectFit:"cover"
-                                                                }} />
-
-                                                            <View
-                                                            position={"absolute"}
-                                                            top={0}
-                                                            right={0}
-                                                            transform={"translate(50%,-50%)"}
-                                                            color={"white"}
-                                                            backgroundColor={"maroon"}
-                                                            width={"30px"}
-                                                            height={"30px"}
-                                                            borderRadius={"40%"}
-                                                            border={"solid black"}
-                                                            display={"flex"}
-                                                            justifyContent={"center"}
-                                                            alignItems={"center"}
-                                                            fontSize={"1.3em"}
-                                                            onClick={e => {
-                                                                URL.revokeObjectURL(f.url)
-                                                                setFiles(prev => prev.filter(file => file !== f))
-                                                            }}
-                                                            >
-                                                                <strong>X</strong>
-                                                            </View>                     
-                                                        </View>)
-                                                    })}
-                                                </Flex>
-                                                <Button
-                                                style={compactStyle}
-                                                border="1px solid #111"
-                                                borderRadius="6px"
-                                                padding="0.35rem 0.75rem"
-                                                fontSize={"1.5em"}
-                                                fontWeight={"bold"}
-                                                margin={"auto"}
-                                                onClick={uploadImages}
-                                                >
-                                                    Upload
-                                                </Button>
-                                            </Flex>
-                                            }
-                                        </Card>
-                                    </View>
-                                    }
-                                </View>
-                                <View 
-                                    columnSpan={2}>
-                                    <Flex 
-                                        direction="row" 
-                                        gap="0.08rem" 
-                                        justifyContent="center">
-                                        {/* Save button --------------------------------------------------- */}
+                                    {/* Save button --------------------------------------------------- */}
                                         <Button
-                                            style={compactStyle}
+                                            style={{...buttonStyling, border: "2px solid rgba(0, 0, 0)"}}
+                                            borderRadius="10px"
+                                            padding="0.5rem 1.3rem"
                                             onClick={() => {
                                                 if (!canSave) {
                                                     setMessage("Please fill out type and name information.");
@@ -1593,37 +1389,41 @@ export default function ProductsPanel() {
                                                 
                                             }}
                                         >
-                                            Save
+                                            <Text color="White">Save</Text>
                                         </Button>
                                         {/* Cancel button ------------------------------------------------------------------- */}
                                         <Button
-                                            style={compactStyle}
+                                            style={{...buttonStyling, border: "2px solid rgba(0, 0, 0)"}}
+                                            borderRadius="10px"
+                                            padding="0.5rem .7rem"
                                             onClick={() => {
                                                 setMessage("");
                                                 resetToIdle();
                                             }}
                                         >
-                                            Cancel
+                                            <Text color="White">Cancel</Text>
                                         </Button>
                                     </Flex>
                                 </View>
                             </Grid>
                             
                         )}    
-                        {/* Removal mode -------------------------------------------------- */}
+                        {/* Removal mode -------------------------------------------------- !!!*/}
                         {activeMode === MODES.REMOVE && selectedProduct && 
                         (
-                            <Flex direction="column" gap="0.05rem" wrap="wrap">
-                                <Flex direction="row" gap="0.05rem" wrap="wrap">
+                            <Flex direction="row" gap="0.5rem" wrap="wrap">
                                     <Button
+                                        style={buttonStyling}
                                         onClick={() => hideProduct()}>
-                                        {selectedProduct.ishidden ? "Unhide" : "Hide"}
+                                        <Text color="White">{selectedProduct.ishidden ? "Unhide" : "Hide"}</Text>
                                     </Button>
                                     <Button
-                                    onClick={() => removeProduct()}>
-                                        Delete
+                                        style={buttonStyling}
+                                        onClick={() => removeProduct()}>
+                                        <Text color="White">Delete</Text>
                                     </Button>
                                     <Button
+                                        style={buttonStyling}
                                         onClick={() => {
                                             setMessage("");
                                             if (selectedProduct) {
@@ -1634,9 +1434,8 @@ export default function ProductsPanel() {
                                             setActiveMode(MODES.IDLE)
                                         }}
                                     >
-                                        Cancel
+                                        <Text color="White">Cancel</Text>
                                     </Button>
-                                </Flex>
                             </Flex>
                         )}   
                         {/* Base mode when no product is selected ----------------------------------------------- */}
@@ -1646,14 +1445,34 @@ export default function ProductsPanel() {
                             direction="column" 
                             gap="0.05rem" 
                             wrap="wrap">
-                                <Text 
-                                    style={luxuryHeadingStyle}>
-                                    Product Information
-                                </Text>
-                                <Text 
-                                    style={luxuryBodyStyle}>
-                                    Please select a product
-                                </Text>
+                                <Flex
+                                    alignItems="center"
+                                    justifyContent="center"
+                                    style={{
+                                        padding: ".5rem .5rem",
+                                        border: "2px solid rgba(0, 0, 0)",
+                                        borderRadius: "10px",
+                                        background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                                        width: "fit-content",
+                                        margin: "0 auto",
+                                    }}>
+                                    <Text style={{...luxuryHeadingStyle, fontSize:"2.2rem", color: "#FFFFFF"}}>User Information</Text> 
+                                </Flex>
+                                <View
+                                    marginTop="1rem"
+                                    style={{
+                                        borderRadius: "24px",
+                                        background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                                        padding: ".5rem .5rem",
+                                        border: "2px solid rgba(0, 0, 0)",
+                                        width: "fit-content",
+                                        margin: "0 auto",
+                                    }}>
+                                    <Text 
+                                        style={{...luxuryBodyStyle, color:"White"}}>
+                                        Please select a product
+                                    </Text>
+                                </View>
                             </Flex>
                         </>
                         )}
@@ -1679,11 +1498,289 @@ export default function ProductsPanel() {
                         )} 
                     </Flex>
                 </Card>
+                {showImages && 
+                <View
+                position={"fixed"}
+                top={0}
+                left={0}
+                display={"flex"}
+                width={"100vw"}
+                height={"100vh"}
+                style={{backdropFilter: "blur(4px)", zIndex: 9999}}
+                justifyContent={"center"}
+                alignItems={"center"}
+                >
+
+                    <Card
+                    display={"flex"}
+                    width={"800px"}
+                    minHeight={"200px"}
+                    padding={0}
+                    border={"solid black"}
+                    borderWidth={"10px"}
+                    borderRadius={"20px"}
+                    backgroundColor={"#27231e"}
+                    color={"white"}
+                    position={"relative"}
+                    >
+                        <View
+                        position={"absolute"}
+                        top={0}
+                        right={0}
+                        transform={"translate(50%,-50%)"}
+                        color={"black"}
+                        backgroundColor={"white"}
+                        width={"40px"}
+                        height={"40px"}
+                        borderRadius={"40%"}
+                        border={"solid black"}
+                        display={"flex"}
+                        justifyContent={"center"}
+                        alignItems={"center"}
+                        fontSize={"1.3em"}
+                        onClick={e => setShowImages(prev => !prev)}
+                        >
+                            <strong>X</strong>
+                        </View>
+                        <Flex
+                        direction={"column"}
+                        flex={1}
+                        width={"100%"}
+                        
+                        >
+                            <h2>View / Rearrange Images</h2>
+                            <Flex
+                            border={"solid black"}
+                            borderRadius={"20px"}
+                            padding={"10px"}
+                            width={"100%"}
+                            height={"200px"}
+                            wrap={"nowrap"}
+                            gap={"12px"}
+                            alignItems={"center"}
+                            backgroundColor={"rgb(253, 248, 245)"}
+                            style={{overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none"}}
+                            >
+                                {draft.images.map((url, i) => {
+                                    return (
+                                    <View 
+                                    key={url}
+                                    width={"200px"}
+                                    shrink={0}
+                                    border={"solid gray"}
+                                    borderWidth={"5px"}
+                                    borderRadius={"10px"}
+                                    height={"100%"}     
+                                    display={"flex"}
+                                    alignItems={"center"}  
+                                    position={"relative"}   
+                                    onMouseDown={(e) => handleImageDrag(e, i)}
+                                    className="product-image-draggable"
+                                    data-index={i}
+                                    >
+                                        <img src={url} alt="img" 
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit:"cover"
+                                            }} />
+
+                                        <View
+                                        position={"absolute"}
+                                        top={0}
+                                        right={0}
+                                        transform={"translate(50%,-50%)"}
+                                        color={"white"}
+                                        backgroundColor={"maroon"}
+                                        width={"30px"}
+                                        height={"30px"}
+                                        borderRadius={"40%"}
+                                        border={"solid black"}
+                                        display={"flex"}
+                                        justifyContent={"center"}
+                                        alignItems={"center"}
+                                        fontSize={"1.3em"}
+                                        onClick={e => {
+                                            if (draft.images.length <= 1) return
+                                            setDraft(prev => {
+                                                return {
+                                                    ...prev,
+                                                    images: prev.images.filter(u => u !== url)
+                                                }
+                                            })
+                                        }}
+                                        >
+                                            <strong>X</strong>
+                                        </View>
+                                        {i === 0 &&
+                                        <Text
+                                        position={"absolute"}
+                                        bottom={0}
+                                        left={"50%"}
+                                        transform={"translateX(-50%)"}
+                                        backgroundColor={"white"}
+                                        width={"100%"}
+                                        opacity={.8}
+                                        color={"black"}
+                                        fontSize={"1.2em"}
+                                        >
+                                            Cover Photo
+                                        </Text>
+                                        }
+                                        
+                                    </View>)
+                                })}
+                            </Flex>
+                        </Flex>
+                        
+                    </Card>
+                </View>
+                }
+                {files.length !== 0 &&
+                <View
+                position={"fixed"}
+                top={0}
+                left={0}
+                display={"flex"}
+                width={"100vw"}
+                height={"100vh"}
+                style={{backdropFilter: "blur(4px)", zIndex: 9999}}
+                justifyContent={"center"}
+                alignItems={"center"}
+                >
+
+                    <Card
+                    display={"flex"}
+                    width={"800px"}
+                    minHeight={"200px"}
+                    padding={0}
+                    border={"solid black"}
+                    borderWidth={"10px"}
+                    borderRadius={"20px"}
+                    backgroundColor={"#27231e"}
+                    color={"white"}
+                    position={"relative"}
+                    >
+                        <View
+                        position={"absolute"}
+                        top={0}
+                        right={0}
+                        transform={"translate(50%,-50%)"}
+                        color={"black"}
+                        backgroundColor={"white"}
+                        width={"40px"}
+                        height={"40px"}
+                        borderRadius={"40%"}
+                        border={"solid black"}
+                        display={"flex"}
+                        justifyContent={"center"}
+                        alignItems={"center"}
+                        fontSize={"1.3em"}
+                        onClick={e => {
+                            for (const f of files){
+                                URL.revokeObjectURL(f.url)
+                            }
+                            setFiles([])
+                        }}
+                        >
+                            <strong>X</strong>
+                        </View>
+                        {isUploading
+                        ? 
+                        <Flex
+                        direction={"column"}
+                        justifyContent={"center"}
+                        alignItems={"center"}
+                        flex={1}
+                        width={"100%"}
+                        >
+                            <h2>Uploading...</h2>
+                        </Flex>
+                        :
+                        <Flex
+                        direction={"column"}
+                        justifyContent={"center"}
+                        alignItems={"center"}
+                        flex={1}
+                        width={"100%"}
+                        >
+                            <h2>Upload Images</h2>
+                            <Flex
+                            border={"solid black"}
+                            borderRadius={"20px"}
+                            padding={"10px"}
+                            width={"100%"}
+                            height={"200px"}
+                            wrap={"nowrap"}
+                            gap={"12px"}
+                            alignItems={"center"}
+                            backgroundColor={"rgb(253, 248, 245)"}
+                            style={{overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none"}}
+                            >
+                                {files.map((f, i) => {
+                                    return (
+                                    <View 
+                                    key={f.url}
+                                    width={"200px"}
+                                    shrink={0}
+                                    border={"solid gray"}
+                                    borderWidth={"5px"}
+                                    borderRadius={"10px"}
+                                    height={"100%"}     
+                                    display={"flex"}
+                                    alignItems={"center"}  
+                                    position={"relative"}   
+                                    >
+                                        <img src={f.url} alt="img" 
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit:"cover"
+                                            }} />
+
+                                        <View
+                                        position={"absolute"}
+                                        top={0}
+                                        right={0}
+                                        transform={"translate(50%,-50%)"}
+                                        color={"white"}
+                                        backgroundColor={"maroon"}
+                                        width={"30px"}
+                                        height={"30px"}
+                                        borderRadius={"40%"}
+                                        border={"solid black"}
+                                        display={"flex"}
+                                        justifyContent={"center"}
+                                        alignItems={"center"}
+                                        fontSize={"1.3em"}
+                                        onClick={e => {
+                                            URL.revokeObjectURL(f.url)
+                                            setFiles(prev => prev.filter(file => file !== f))
+                                        }}
+                                        >
+                                            <strong>X</strong>
+                                        </View>                     
+                                    </View>)
+                                })}
+                            </Flex>
+                            <Button
+                            style={compactStyle}
+                            border="1px solid #111"
+                            borderRadius="6px"
+                            padding="0.35rem 0.75rem"
+                            fontSize={"1.5em"}
+                            fontWeight={"bold"}
+                            margin={"auto"}
+                            onClick={uploadImages}
+                            >
+                                Upload
+                            </Button>
+                        </Flex>
+                        }
+                    </Card>
+                </View>
+                }
             </Flex>
         </Flex>
     );
 }
-
-
-
-// TODO: front end option to select main image to display on website and then other images

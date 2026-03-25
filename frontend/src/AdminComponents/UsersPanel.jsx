@@ -35,12 +35,12 @@ const buttonStyling = {
     ...luxuryBodyStyle, 
     fontSize: "1.2rem",
     padding: "0.5rem 1.2rem",
-    border: "1px solid rgba(255,255,255,0.35)",
+    border: "2px solid rgba(0, 0, 0)",
     borderRadius: "28px",
-    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
     color: "#FFFFFF",
     cursor: "pointer",
-    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+    boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
     transition: "all 0.2s ease",
 }
 
@@ -189,9 +189,12 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                 height="100%" 
                 padding="1rem" 
                 style={{
-                    background: "linear-gradient(145deg,  #ffd3a616, #f9e3de16)",
+                    background: "linear-gradient(145deg, rgba(255, 240, 235, 0.35), rgba(245, 225, 218, 0.28))",
+                    backdropFilter: "blur(6px)",
                     border: "1px solid rgba(120, 80, 70, 0.18)",
                     borderRadius: "22px",
+                    overflow: "visible",
+                    zIndex: 20,
                 }}
                 >
                 <Flex 
@@ -202,9 +205,9 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                         alignItems="center">   
                         <Text 
                             style={{
-                                padding: "1.2rem 1.2rem",
-                                border: "1px solid rgba(255,255,255,0.35)",
-                                borderRadius: "30px",
+                                padding: ".5rem .5rem",
+                                border: "2px solid rgba(0, 0, 0)",
+                                borderRadius: "10px",
                                 background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
                                 alignItems: "center",     
                                 justifyContent: "center", 
@@ -212,17 +215,16 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             <Text style={{...luxuryBodyStyle, fontSize:"2rem", color: "#FFFFFF"}}>Users</Text> 
                         </Text>
                         <Flex  
-                        padding={"5px"}    
+                        padding={"10px"}    
                         alignItems={"center"}
                         justifyContent={"center"}
-                        gap={"3px"}
+                        gap={"15px"}
                         style={{zIndex: "2000", background: "#ffffff00"}}
                         >
                         <View
                             position={"relative"}>
                             <input
                                 type="text"
-                                placeholder="Search by email..."
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 onKeyDown={async (e) => {
@@ -236,8 +238,8 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                                     paddingLeft: "18px",
                                     paddingRight: "42px",
                                     borderRadius: "8px",
-                                    border: "1px solid rgba(0, 0, 0, 0.22)",
-                                    background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+                                    border: "2px solid rgba(0, 0, 0)",
+                                    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
                                     color: "#FFFFFF",
                                     caretColor: "#FFFFFF",
                                     fontFamily: "'Cormorant Garamond', serif",
@@ -253,7 +255,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                                     left: "18px",
                                     top: "50%",
                                     transform: "translateY(-50%)",
-                                    color: "rgba(255,255,255,0.72)",
+                                    color: "white",
                                     pointerEvents: "none",
                                     fontFamily: "'Cormorant Garamond', serif",
                                     fontSize: "1.3rem",
@@ -291,6 +293,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             borderRadius={"10px"}
                             style={{
                                 ...buttonStyling,
+                                border: "2px solid rgba(0, 0, 0)",
                                 cursor: "pointer",
                                 display: "flex",
                                 alignItems: "center",
@@ -425,12 +428,23 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             </Card>
                             }
                             </View>
+                            <View
+                                position={"relative"}
+                                padding="9.5px"
+                                borderRadius={"10px"}
+                                onClick={loadUsers}
+                                style={{
+                                    ...buttonStyling,
+                                    border: "2px solid rgba(0, 0, 0)",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
+                                }}>
+                                    Refresh
+                            </View>
                         </Flex>
-                        <Button 
-                            style={buttonStyling}
-                            onClick={loadUsers}>
-                            <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Refresh</Text> 
-                        </Button>
                     </Flex>
 
                     {msg && (
@@ -452,22 +466,19 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                         {sortedUsers.map((currentUser) => (
                             <Button
                                 key={currentUser.user_id}
-                                style={buttonStyling}
+                                style={{...buttonStyling, }}
+                                border="2px solid rgba(0, 0, 0)"
                                 variation="link"
-                                marginBottom=".5rem"
-                                border=".5px solid #111"
-                                borderRadius="6px"
+                                marginBottom=".8rem"
                                 onClick={() => viewUser(currentUser.user_id)}
                                 justifyContent="flex-start"
                                 width="100%"
                                 >
-                                
                                 <Text 
                                     style={{
                                         ...luxuryBodyStyle,
                                         fontWeight: "600",
-                                        color: currentUser.is_admin ? "#cda400" : "#FFFFFF",
-                                        textShadow: currentUser.is_admin ? "0 0 5px rgba(255, 255, 255, 0.53)" : "none",
+                                        color: currentUser.is_admin ? "#00ff91" : "#FFFFFF",
                                     }}>
                                     {currentUser.email}
                                 </Text>
@@ -485,7 +496,8 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     padding="1rem" 
                     position={"relative"}
                     style={{
-                        background: "linear-gradient(145deg,  #ffd3a616, #f9e3de16)",
+                        background: "linear-gradient(145deg, rgba(255, 240, 235, 0.35), rgba(245, 225, 218, 0.28))",
+                        backdropFilter: "blur(6px)",
                         border: "1px solid rgba(120, 80, 70, 0.18)",
                         borderRadius: "22px",
                     }}
@@ -495,9 +507,9 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                         justifyContent="center"
                         style={{
                             padding: ".5rem .5rem",
-                            border: "1px solid rgba(255,255,255,0.35)",
+                            border: "2px solid rgba(0, 0, 0)",
                             borderRadius: "10px",
-                            background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                            background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
                             width: "fit-content",
                             margin: "0 auto",
                         }}>
@@ -509,9 +521,9 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             marginTop="1rem"
                             style={{
                                 borderRadius: "24px",
-                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
                                 padding: ".5rem .5rem",
-                                border: "1px solid rgba(255,255,255,0.35)",
+                                border: "2px solid rgba(0, 0, 0)",
                                 width: "fit-content",
                                 margin: "0 auto",
                             }}>
@@ -527,9 +539,9 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             marginTop="1rem"
                             style={{
                                 borderRadius: "24px",
-                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
                                 padding: ".5rem .5rem",
-                                border: "1px solid rgba(255,255,255,0.35)",
+                                border: "2px solid rgba(0, 0, 0)",
                                 width: "fit-content",
                                 margin: "0 auto",
                             }}>
@@ -563,9 +575,9 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             marginTop="1.5rem"
                             marginBottom="1.5rem"
                             style={{
-                                border: "1px solid rgba(255,255,255,0.35)",
+                                border: "2px solid rgba(0, 0, 0)",
                                 borderRadius: "24px",
-                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
                             }}
                             >
                                 <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Email: {selectedUser.email}</Text>
@@ -580,9 +592,9 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             <Button 
                                 style={buttonStyling}
                                 onClick={() => setSelectedUser(null)}
-                                height="auto"
-                                width="auto">
-                                <Text style={{...luxuryBodyStyle, fontWeight:"550", color: "#FFFFFF"}}>Close Info</Text> 
+                                width="fit-content"
+                                alignSelf="center">
+                                <Text style={{...luxuryBodyStyle, fontWeight:"500", color: "White"}}>Close Info</Text> 
                             </Button>
                     </Flex>
                 )} 
