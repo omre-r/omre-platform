@@ -709,6 +709,7 @@ export default function ProductsPanel() {
                             }}>
                             <Text style={{...luxuryBodyStyle, fontSize:"2rem", color: "#FFFFFF"}}>Products</Text> 
                         </Text>
+                        {/* Search bar for products ---------------------------------------- */}
                         <Flex  
                             padding={"10px"}    
                             alignItems={"center"}
@@ -812,6 +813,8 @@ export default function ProductsPanel() {
                                     display: "block",
                                     filter: "brightness(0) invert(1)",
                                 }}/>
+
+                                {/* Filter section ----------------------------------------------------------- */}
                                 {showFilters && 
                                 <Card
 

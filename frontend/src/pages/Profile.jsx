@@ -1,8 +1,9 @@
 import Navbar from "../components/Navbar";
-import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, ToggleButton } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, ToggleButton, TextField, SelectField } from "@aws-amplify/ui-react";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useEffect, useState } from "react";
-import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq, createCartItemReq, updatePreferredNotesReq, getUserReq, getUserOrdersReq, cancelOrderReq } from "../requests.js";
+import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq, createCartItemReq, updatePreferredNotesReq, getUserReq, getUserOrdersReq, cancelOrderReq, getFilteredOrdersReq } from "../requests.js";
+import SearchIcon from "../assets/search_icon.png";
 
 // Fonts ----------------------------------------------
 const luxuryHeadingStyle = {
@@ -135,6 +136,10 @@ export default function Profile() {
     const threeNoteBlends = loadedBlends.filter((blend) => blend.frag3_productid).length;
 
     const [confirmCancelOrder, setConfirmCancelOrder] = useState(null);
+
+    // Filter and search ------------------------------------------------------------------
+    const [orderIdSearch, setOrderIdSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
 
     const fragranceNotes = [
         "Almond", "Amber", "Benzoin",
@@ -617,6 +622,111 @@ async function cancelOrder(orderId) {
                             <Text style={luxuryHeadingStyle2}>
                                 Your Orders
                             </Text>
+                            <Flex
+                                marginTop="1.25rem"
+                                justifyContent="center"
+                                alignItems="center"
+                                gap="1rem">
+                                <View position={"relative"}>
+                                    <input
+                                        type="text"
+                                        value={orderIdSearch}
+                                        onChange={(e) => setOrderIdSearch(e.target.value)}
+                                        onKeyDown={async (e) => {
+                                            if (e.key !== "Enter") return;
+                                            const res = await getFilteredOrdersReq({ id: orderIdSearch });
+                                            const sortedOrders = [...(res.data.orders || [])].sort((a, b) => new Date(b.created) - new Date(a.created));
+                                            setUserOrders(sortedOrders);
+                                        }}
+                                        style={{
+                                            width: "300px",
+                                            height: "50px",
+                                            paddingLeft: "18px",
+                                            paddingRight: "42px",
+                                            borderRadius: "8px",
+                                            border: "2px solid rgba(0, 0, 0)",
+                                            background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                                            color: "#FFFFFF",
+                                            caretColor: "#FFFFFF",
+                                            fontFamily: "'Cormorant Garamond', serif",
+                                            fontSize: "1.3rem",
+                                            outline: "none",
+                                            boxSizing: "border-box",
+                                        }}
+                                    />
+
+                                    {!orderIdSearch && (
+                                        <Text
+                                            style={{
+                                                position: "absolute",
+                                                left: "18px",
+                                                top: "50%",
+                                                transform: "translateY(-50%)",
+                                                color: "white",
+                                                pointerEvents: "none",
+                                                fontFamily: "'Cormorant Garamond', serif",
+                                                fontSize: "1.3rem",
+                                            }}
+                                        >
+                                            Search by order id...
+                                        </Text>
+                                    )}
+                                    <section
+                                        style={{
+                                            display: "flex",
+                                            width: "30px",
+                                            paddingRight: "5px",
+                                            overflow: "hidden",
+                                            position: "absolute",
+                                            right: "0",
+                                            top: "50%",
+                                            transform: "translateY(-50%)",
+                                            cursor: "pointer",
+                                        }}
+                                        onClick={async () => {
+                                            const res = await getFilteredOrdersReq({ id: orderIdSearch });
+                                            const sortedOrders = [...(res.data.orders || [])].sort((a, b) => new Date(b.created) - new Date(a.created));
+                                            setUserOrders(sortedOrders);
+                                        }}
+                                    >
+                                        <img
+                                            src={SearchIcon}
+                                            alt="search"
+                                            style={{
+                                                width: "20px",
+                                                height: "20px",
+                                                filter: "brightness(0) invert(1)",
+                                            }}
+                                        />
+                                    </section>
+                                </View>
+                                <View position="relative">
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    style={{
+                                        ...luxuryBodyStyle, 
+                                        fontSize: "1.2rem",
+                                        padding: "0.7rem 1.2rem",
+                                        border: "2px solid rgba(0, 0, 0)",
+                                        borderRadius: "10px",
+                                        background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                                        color: "#FFFFFF",
+                                        cursor: "pointer",
+                                        boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+                                        transition: "all 0.2s ease",
+                                        outline: "none",
+                                    }}
+                                >
+                                    <option value="all" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>All Statuses</option>
+                                    <option value="pending" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>Pending</option>
+                                    <option value="mixing" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>Mixing</option>
+                                    <option value="ready" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>Ready</option>
+                                    <option value="fulfilled" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>Fulfilled</option>
+                                    <option value="canceled" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>Canceled</option>
+                                </select>
+                            </View>
+                            </Flex>
                             {ordersLoading ? (
                                 <Text style={luxuryBodyStyle}>Loading orders...</Text>
                             ) 
@@ -637,7 +747,7 @@ async function cancelOrder(orderId) {
                                             </TableRow>
                                         </TableHead>
 
-                                        {userOrders.map((order) => {
+                                        {userOrders.filter((order) => statusFilter === "all" ? true : order.status?.toLowerCase() === statusFilter).map((order) => {
                                             const status = order.status.toLowerCase();
                                             const canCancel = ["pending", "mixing"].includes(status);
 
