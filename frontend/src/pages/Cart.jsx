@@ -344,20 +344,17 @@ async function checkout() {
                       )}
 
                     <View textAlign={"left"}>
-                        <Text style={{...luxuryBodyStyle, color: "black"}}>
+                        <Text style={{...luxuryBodyStyle, color: "black", fontSize:"1.35rem"}}>
                         {cartItem.item?.name}{" "}
                         {cartItem.item?.variation 
                           ? `(${cartItem.item.variation})` 
                           : cartItem.item?.size_ml 
                           ? `(${cartItem.item.size_ml}ml)` 
                           : ""}
+                          <br></br>
+                          Quantity: {cartItem.quantity} <br></br>
+                        ${cartItem.item?.price}
                       </Text>
-                      <Text style={{...luxuryBodyStyle, color: "black"}}>
-                        Quantity: {cartItem.quantity}
-                      </Text>
-                      <Text style={{...luxuryBodyStyle, color: "black"}}>
-                     ${cartItem.item?.price}
-                     </Text>
                     </View>
                     </Flex>
                     <Flex gap="3rem">

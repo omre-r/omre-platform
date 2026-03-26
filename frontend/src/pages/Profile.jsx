@@ -2,7 +2,7 @@ import Navbar from "../components/Navbar";
 import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, ToggleButton } from "@aws-amplify/ui-react";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { useEffect, useState } from "react";
-import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq, createCartItemReq, updatePreferredNotesReq, getUserReq, getUserOrdersReq } from "../requests.js";
+import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq, createCartItemReq, updatePreferredNotesReq, getUserReq, getUserOrdersReq, cancelOrderReq } from "../requests.js";
 
 // Fonts ----------------------------------------------
 const luxuryHeadingStyle = {
@@ -81,6 +81,19 @@ const tableViewStyle = {
     boxSizing: "border-box"
 };
 
+const buttonStyling = {
+    ...luxuryBodyStyle, 
+    fontSize: "1rem",
+    padding: "0.9rem 2.2rem",
+    border: "1px solid rgba(255,255,255,0.35)",
+    borderRadius: "28px",
+    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    color: "#FFFFFF",
+    cursor: "pointer",
+    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+    transition: "all 0.2s ease",
+}
+
 export default function Profile() {
     const [message, setMessage] = useState("");
     const [activeTab, setActiveTab] = useState("overview");    
@@ -109,7 +122,8 @@ export default function Profile() {
     const totalMixes = loadedBlends.length;
     const twoNoteBlends = loadedBlends.filter((blend) => !blend.frag3_productid).length;
     const threeNoteBlends = loadedBlends.filter((blend) => blend.frag3_productid).length;
-    const totalNotes = selectedNotes.length;
+
+    const [confirmCancelOrder, setConfirmCancelOrder] = useState(null);
 
     const fragranceNotes = [
         "Almond", "Amber", "Benzoin",
@@ -375,6 +389,24 @@ async function loadUserOrders() {
     }
 }
 
+// Cancel Order 
+async function cancelOrder(orderId) {
+    try {
+        const data = await cancelOrderReq(orderId, "User cancelled order");
+
+        if (!data.success) {
+            setMessage(data.message || "Error cancelling order.");
+            return;
+        }
+
+        await loadUserOrders();
+        setMessage("Order cancelled successfully.");
+    } 
+    catch (error) {
+        setMessage(error.message || "Error cancelling order.");
+    }
+}
+
     // Get product ID from product object, accounting for different possible key names ---------------------------
     function getProductId(product) {
         return product.productid || product.product_id || product.id;
@@ -594,7 +626,8 @@ async function loadUserOrders() {
                                         </TableHead>
 
                                         {userOrders.map((order) => {
-                                            const isCanceled = order.status.toLowerCase() === "canceled";
+                                            const status = order.status.toLowerCase();
+                                            const canCancel = ["pending", "mixing"].includes(status);
 
                                             return (
                                             <TableRow
@@ -680,16 +713,18 @@ async function loadUserOrders() {
                                                 </TableCell>
                                                 <TableCell style={tableBodyStyle}>
                                                     <View 
-                                                        isDisabled={isCanceled}
+                                                        isDisabled={canCancel}
                                                         style={{
                                                             ...tableViewStyle, 
                                                             cursor: "pointer", 
-                                                            background: isCanceled ? "linear-gradient(145deg, #9f9f9f, rgba(130, 129, 129, 0.92))" : "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.92))",
+                                                            background: !canCancel ? "linear-gradient(145deg, #9f9f9f, rgba(130, 129, 129, 0.92))" : "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.92))",
                                                         }}
                                                         onClick={() => { 
-                                                            // handleCancelOrder();
+                                                            if (canCancel) {
+                                                                setConfirmCancelOrder(order.id);
+                                                            }
                                                         }}>
-                                                        <Text style={{...luxuryBodyStyle, color: isCanceled ? "Black" : "#FFFFFF"}}>{isCanceled ? "Canceled" : "Cancel Order"}</Text>
+                                                        <Text style={{...luxuryBodyStyle, color: !canCancel ? "Black" : "#FFFFFF"}}>{!canCancel ? "Unavailable" : "Cancel Order"}</Text>
                                                     </View>
                                                 </TableCell>
                                             </TableRow>
@@ -787,7 +822,6 @@ async function loadUserOrders() {
                             )}
                         </View>
                     )}
-
                     {activeTab === "preferences" && (
                         <View>
                             <Text 
@@ -876,6 +910,56 @@ async function loadUserOrders() {
                                 {message}
                             </Text>
                             )}
+                        </View>
+                    )}
+                    {confirmCancelOrder && (
+                        <View
+                            style={{
+                                position: "fixed",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                // making the background translucent and darker when the box pops up
+                                backgroundColor: "rgba(0,0,0,0.6)",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                zIndex: 1000,
+                            }}
+                        >
+                            <View
+                                style={{
+                                    background: "linear-gradient(145deg,  #480e0e, rgb(20, 20, 20))",
+                                    padding: "50px",
+                                    borderRadius: "24px",
+                                    width: "400px",
+                                    textAlign: "center",
+                                }}
+                            >
+                                <Text style={{ ...luxuryHeadingStyle2, color: "White" }}>
+                                    Cancel Order?
+                                </Text>
+                                <Text style={{ ...luxuryBodyStyle, marginTop: "10px", color: "White" }}>
+                                    Are you sure you want to cancel this order?
+                                </Text>
+                                <Flex justifyContent="space-between" marginTop="20px">
+                                    <Button
+                                        onClick={() => setConfirmCancelOrder(null)}
+                                        style={buttonStyling}>
+                                        <Text color="White" fontSize="1.2rem">No</Text>
+                                    </Button>
+                                    <Button
+                                        onClick={async () => {
+                                            // Earlier we set the confirmCancelOrder to be the order id, so this just sends the order id
+                                            await cancelOrder(confirmCancelOrder);
+                                            setConfirmCancelOrder(null);
+                                        }}
+                                        style={buttonStyling}>
+                                        <Text color="White" fontSize="1.2rem">Yes</Text>
+                                    </Button>
+                                </Flex>
+                            </View>
                         </View>
                     )}
                 </View>
