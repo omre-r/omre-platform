@@ -1059,7 +1059,7 @@ export default function ProductsPanel() {
                                             border=".5px solid #111"
                                             borderRadius="6px"
                                             >
-                                            <Text color="rgb(255, 208, 0)" textAlign={"left"}>
+                                            <Text color="rgb(255, 196, 86)" textAlign={"left"}>
                                                 <strong>{prodList[0].name} — <br></br> {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"} </strong>
                                             </Text>
                                         </Button>
@@ -1130,7 +1130,7 @@ export default function ProductsPanel() {
                                                 <Button
                                                 style={{
                                                     ...buttonStyling,
-                                                    boxShadow: selectedProduct?.id === prod.id ? "0 0 10px rgb(255, 208, 0)" : buttonStyling.boxShadow,
+                                                    boxShadow: selectedProduct?.id === prod.id ? "0 0 10px rgb(255, 217, 103)" : buttonStyling.boxShadow,
                                                     cursor: "pointer",
                                                     display: "flex",
                                                     alignItems: "center",

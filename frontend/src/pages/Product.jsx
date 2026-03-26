@@ -340,10 +340,9 @@ export default function Product(){
                 >
                     <h2
                     style={{
-                        fontSize: "1.2rem",
                         fontFamily: "'Cormorant Garamond', serif",
                         fontSize: "1.5rem",
-                         marginTop: "-.5rem",
+                        marginTop: "-.5rem",
                     }}
                     >
                         Notes
@@ -544,20 +543,22 @@ export default function Product(){
                             alt={prod.name}
                             style={{
                                 width: "100%",
+                                height: "200px",
                                 objectFit: "cover",
                                 borderRadius: "10px",
                                 display: "block",
-                                alignContent: "center",
+                                marginBottom: "1rem",
                             }}
                         />
-                        <Text style={{...bodyStyle, fontSize: ".95rem"}} textAlign="center">
-                        {prod.name}
-                        </Text>
+                        <View minHeight="7.5rem">
+                            <Text style={{...bodyStyle, fontSize: "1.2rem"}} textAlign="center">
+                                {prod.name}
+                            </Text>
+                        </View>
                         <Text
-                        style={{ ...bodyStyle, fontSize: ".95rem", fontWeight: 600 }}
-                        textAlign="center"
-                        >
-                        ${prod.price}
+                            style={{ ...bodyStyle, fontWeight: 600 }}
+                            textAlign="center">
+                            ${prod.price}
                         </Text>
                     </Link>
                     </Card>

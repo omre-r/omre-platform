@@ -111,14 +111,25 @@ export default function Profile() {
     const [lastName, setlastName] = useState("");
     const [email, setemailName] = useState("");
     const [createdAt, setCreatedAt] = useState("");
+
+    // Grabbing user order statistics --------------------------------------------
     const totalOrders = userOrders.length;
-    const totalSpent = userOrders.reduce((sum, order) => { return sum + Number(order.total || 0); }, 0);
+    const totalCanceledOrders = userOrders.filter((order) => order.status.toLowerCase() === "canceled").length;
+
+    // If order was canceled we do not include it in the total spent 
+    const totalSpent = userOrders.reduce((sum, order) => { 
+        if (order.status.toLowerCase() === "canceled") return sum;
+        return sum + Number(order.total || 0); 
+    }, 0);
+
     const lastOrderDate = userOrders.length > 0 ? 
         new Date(userOrders[0].created).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
               day: "numeric",
           }) : "No orders yet";
+
+    // Grabbing user mix statistics ------------------------------------------------------
     const totalMixes = loadedBlends.length;
     const twoNoteBlends = loadedBlends.filter((blend) => !blend.frag3_productid).length;
     const threeNoteBlends = loadedBlends.filter((blend) => blend.frag3_productid).length;
@@ -573,6 +584,7 @@ async function cancelOrder(orderId) {
                                     </Text>
                                     <Text style={{...luxurySubheadingStyle, color:"#FFFFFF"}} textAlign={"left"}>
                                         Total Orders: {totalOrders} <br></br>
+                                        Total Canceled Orders: {totalCanceledOrders} <br></br>
                                         Last Order Date: {lastOrderDate}  <br></br>
                                         Total Spent: ${totalSpent.toFixed(2)}
                                     </Text>

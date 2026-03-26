@@ -525,25 +525,27 @@ async function checkout() {
                       style={{ textDecoration: "none" }}
                     >
                         <img
-                            src={prod.images?.[0]}
-                            alt={prod.name}
-                            style={{
-                                width: "100%",
-                                objectFit: "cover",
-                                borderRadius: "10px",
-                                display: "block",
-                                alignContent: "center",
-                            }}
-                        />
-                        <Text style={{...luxuryBodyStyle, fontSize: ".95rem"}} textAlign="center">
-                        {prod.name}
-                        </Text>
-                        <Text
-                        style={{ ...luxuryBodyStyle, fontSize: ".95rem", fontWeight: 600 }}
-                        textAlign="center"
-                        >
-                        ${prod.price}
-                        </Text>
+                          src={prod.images?.[0]}
+                          alt={prod.name}
+                          style={{
+                              width: "100%",
+                              height: "200px",
+                              objectFit: "cover",
+                              borderRadius: "10px",
+                              display: "block",
+                              marginBottom: "1rem",
+                          }}
+                      />
+                      <View minHeight="7.5rem">
+                          <Text style={{...luxuryBodyStyle, fontSize: "1.2rem"}} textAlign="center">
+                              {prod.name}
+                          </Text>
+                      </View>
+                      <Text
+                          style={{ ...luxuryBodyStyle, fontWeight: 600 }}
+                          textAlign="center">
+                          ${prod.price}
+                      </Text>
                     </Link>
                     </Card>
                 ))}

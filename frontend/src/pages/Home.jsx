@@ -235,10 +235,10 @@ export default function Home() {
                 </View>
                 </View>
                 <Text
-                style={{ ...bodyStyle, fontWeight: 600 }}
-                textAlign="center">
-                ${prod.price}
-              </Text>
+                  style={{ ...bodyStyle, fontWeight: 600 }}
+                  textAlign="center">
+                  ${prod.price}
+                </Text>
               </Flex>
               </Link>
             </Card>)
