@@ -49,3 +49,11 @@
   background: #f8f7f7;
 }
 
+.orders-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.orders-scroll {
+  -ms-overflow-style: none; 
+  scrollbar-width: none;  
+}

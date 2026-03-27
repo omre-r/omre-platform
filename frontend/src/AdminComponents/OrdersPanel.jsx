@@ -18,6 +18,7 @@ const luxuryBodyStyle = {
   fontWeight: 400,
   fontSize: "1.3rem",
   letterSpacing: "0.3px",
+  color: "#FFFFFF"
 };
 
 const buttonStyling = {
@@ -33,11 +34,12 @@ const buttonStyling = {
     transition: "all 0.2s ease",
 }
 
-const getStatusColor = (status) => {
-  if (status === "fulfilled") return "#00ff91";
-  if (status === "pending") return "#ffd000";
-  if (status === "canceled") return "#ff4d4d";
-  return "#ffffff";
+const statusStyles = {
+  pending: "#ff6117",
+  mixing: "#d3006d",
+  ready: "#028fb2",
+  fulfilled: "#009e59",
+  canceled: "#e22424",
 };
 
 // ---------------- COMPONENT ----------------
@@ -138,6 +140,8 @@ export default function OrdersPanel() {
             backdropFilter: "blur(6px)",
             border: "1px solid rgba(120, 80, 70, 0.18)",
             borderRadius: "22px",
+            overflow: "visible", 
+            zIndex: 20,  
           }}
         >
           <Flex direction="column">
@@ -243,27 +247,56 @@ export default function OrdersPanel() {
 
                 </Flex>
 
-                <SelectField value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                  <option value="all">All</option>
-                  <option value="pending">Pending</option>
-                  <option value="mixing">Mixing</option>
-                  <option value="ready">Ready</option>
-                  <option value="fulfilled">Fulfilled</option>
-                  <option value="canceled">Canceled</option>
-                </SelectField>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  style={{
+                    ...luxuryBodyStyle,
+                    fontSize: "1.2rem",
+                    padding: "0.7rem 1.2rem",
+                    border: "2px solid rgba(0, 0, 0)",
+                    borderRadius: "10px",
+                    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                    color: "#FFFFFF",
+                    cursor: "pointer",
+                    boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+                    outline: "none",
+                  }}
+                >
+                  {["all","pending","mixing","ready","fulfilled","canceled"].map(val => (
+                    <option
+                      key={val}
+                      value={val}
+                      style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}
+                    >
+                      {val.charAt(0).toUpperCase() + val.slice(1)}
+                    </option>
+                  ))}
+              </select>
 
-                <Button style={buttonStyling} onClick={loadOrders} >
-                  <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
+                <View
+                  onClick={loadOrders}
+                  style={{
+                    ...buttonStyling,
+                    border: "2px solid black",
+                    borderRadius: "10px", 
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
                     Refresh
                   </Text>
-                </Button>
+                </View>
               </Flex>
             </Flex>
 
             {msg && <Text>{msg}</Text>}
 
             {/* LIST */}
-            <View style={{ overflowY: "auto", marginTop: "1rem", height: "25rem" }}>
+            <View className="orders-scroll" style={{overflowY: "auto", marginTop: "1rem", height: "25rem"}}>
               {orders
                 .filter(o => statusFilter === "all" || o.status === statusFilter)
                 .map(order => (
@@ -277,7 +310,8 @@ export default function OrdersPanel() {
                   >
                     <Text style={{
                       ...luxuryBodyStyle,
-                      color: getStatusColor(order.status),
+                      color: statusStyles[order.status?.toLowerCase()] || "#ffffff",
+                      WebkitTextFillColor: statusStyles[order.status?.toLowerCase()] || "#ffffff",
                       fontWeight: "600"
                     }}>
                       Order #{order.id.slice(0, 8)} — {order.status}
@@ -320,34 +354,34 @@ export default function OrdersPanel() {
             </Flex>
 
             {!selectedOrder && !loadingOrder && (
-  <View
-    style={{
-      borderRadius: "24px",
-      background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
-      padding: "0.5rem 0.5rem",
-      border: "2px solid rgba(0,0,0,0.5)",
-      width: "fit-content",
-      margin: "1rem auto",
-    }}
-  >
-    <Text style={{ ...luxuryBodyStyle, color: "white" }}>Please select an order</Text>
-  </View>
-)}
+              <View
+                style={{
+                  borderRadius: "24px",
+                  background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                  padding: "0.5rem 0.5rem",
+                  border: "2px solid rgba(0,0,0,0.5)",
+                  width: "fit-content",
+                  margin: "1rem auto",
+                }}
+              >
+                <Text style={{ ...luxuryBodyStyle, color: "white" }}>Please select an order</Text>
+              </View>
+            )}
 
-{loadingOrder && (
-  <View
-    style={{
-      borderRadius: "24px",
-      background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
-      padding: "0.5rem 0.5rem",
-      border: "2px solid rgba(0,0,0,0.5)",
-      width: "fit-content",
-      margin: "1rem auto",
-    }}
-  >
-    <Text style={{ ...luxuryBodyStyle, color: "white" }}>Loading order information...</Text>
-  </View>
-)}
+            {loadingOrder && (
+              <View
+                style={{
+                  borderRadius: "24px",
+                  background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                  padding: "0.5rem 0.5rem",
+                  border: "2px solid rgba(0,0,0,0.5)",
+                  width: "fit-content",
+                  margin: "1rem auto",
+                }}
+              >
+                <Text style={{ ...luxuryBodyStyle, color: "white" }}>Loading order information...</Text>
+              </View>
+            )}
 
             {selectedOrder && (
               <Flex direction="column" gap="0.5rem" marginTop="1rem">
@@ -359,7 +393,15 @@ export default function OrdersPanel() {
                   border: "2px solid black"
                 }}>
                   <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>Email: {selectedOrder.email}</Text>
-                  <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>Status: {selectedOrder.status}</Text>
+                  <Text style={luxuryBodyStyle}>
+                    Status:{" "}
+                    <span style={{
+                      color: statusStyles[selectedOrder.status?.toLowerCase()] || "#FFFFFF",
+                      fontWeight: "600"
+                    }}>
+                      {selectedOrder.status}
+                    </span>
+                  </Text>
                   <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>Total: ${selectedOrder.total}</Text>
                 </View>
 
@@ -395,16 +437,20 @@ export default function OrdersPanel() {
                   style={{
                     ...buttonStyling,
                     color: selectedOrder && selectedOrder.status !== "canceled" ? "#ff2600" : "#999",
-                    WebkitTextFillColor: selectedOrder && selectedOrder.status !== "canceled" ? "#ff2600" : "#999",
-                    border: "2px solid rgba(0, 0, 0)",
-                    background:
-                      selectedOrder && selectedOrder.status !== "canceled"
-                        ? "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))"
-                        : "linear-gradient(145deg, #888, #555)",
-                    cursor:
-                      selectedOrder && selectedOrder.status !== "canceled"
-                        ? "pointer"
-                        : "not-allowed",
+                    WebkitTextFillColor: selectedOrder && selectedOrder.status !== "canceled" ? "#ffffff" : "#999",
+
+                    border: selectedOrder && selectedOrder.status !== "canceled"
+                      ? "2px solid #8f0000"
+                      : "2px solid #808080",
+
+                    background: selectedOrder && selectedOrder.status !== "canceled"
+                      ? "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))"
+                      : "linear-gradient(145deg, #9f9f9f, rgba(20,20,20,0.92))",
+
+                    cursor: selectedOrder && selectedOrder.status !== "canceled"
+                      ? "pointer"
+                      : "not-allowed",
+
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -415,10 +461,27 @@ export default function OrdersPanel() {
                 </View>
 
                 {confirmCancel && (
-                  <Card>
-                    <Text>Are you sure?</Text>
-                    <Button onClick={() => cancelOrder(selectedOrder.id)}>Yes</Button>
-                    <Button onClick={() => setConfirmCancel(false)}>No</Button>
+                  <Card
+                    style={{
+                      marginTop: "1rem",
+                      background: "linear-gradient(145deg, rgba(90,20,20,0.92), rgba(40,35,35,0.82))",
+                      border: "2px solid black",
+                      borderRadius: "20px"
+                    }}
+                  >
+                    <Text style={{ ...luxuryBodyStyle, color: "#fff" }}>
+                      Are you sure you want to cancel this order?
+                    </Text>
+
+                    <Flex gap="0.75rem" marginTop="0.75rem" justifyContent="center">
+                      <Button style={buttonStyling} onClick={() => cancelOrder(selectedOrder.id)}>
+                        <Text style={{ color: "#fff" }}>Yes</Text>
+                      </Button>
+
+                      <Button style={buttonStyling} onClick={() => setConfirmCancel(false)}>
+                        <Text style={{ color: "#fff" }}>No</Text>
+                      </Button>
+                    </Flex>
                   </Card>
                 )}
 
