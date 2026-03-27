@@ -470,28 +470,21 @@ class Products{
             if (err instanceof DBError) throw err;
             throw new DBError('Failed to create product', 500)
         }
-
-        //remove tags
-        const tagRemovalResults = await Promise.all(
-            images.map(async (url) => {
-                try {
-                    const s3Key = url.replace(`${CLOUDFRONT_DOMAIN}/`, '');
-                    await s3Client.send(new DeleteObjectTaggingCommand({
-                        Bucket: BUCKET_NAME,
-                        Key: s3Key
-                    }));
-                    console.log('Tag removed from:', s3Key);
-                    return { url, success: true };
-                } catch (error) {
-                    console.error('Failed to remove tag from:', url, error);
-                    // Don't fail the request - just log
-                    return { url, success: false, error: error.message };
-                }
-            })
-        );
-        const failedTagRemovals = tagRemovalResults.filter(r => !r.success);
-        if (failedTagRemovals.length > 0) {
-            console.warn('Some tags failed to remove:', failedTagRemovals);
+        
+        // remove tags
+        // this prevents images from being deleted after a period of time
+        for (const url of images){
+            const s3Key = url.replace(`${CLOUDFRONT_DOMAIN}/`, '');
+            try {
+                await s3Client.send(new DeleteObjectTaggingCommand({
+                    Bucket: BUCKET_NAME,
+                    Key: s3Key
+                }));
+                console.log('Tag removed from:', s3Key);
+            } catch (error) {
+                console.log('Failed to remove tag:', url, error);
+                throw new DBError("Failed to remove tag from: ", s3Key)
+            }
         }
 
         return {success: true, data: {product: result.rows?.[0]}}
@@ -693,53 +686,62 @@ class Products{
         if (!client){
             return prepareRollback((c) => this.updateProduct(id, options, c));
         }
-        const fields = Object.keys(options);
 
         try{
+            // form the update query
+            const fields = Object.keys(options);
             const query = this.formatUpdateQuery(fields);
+
             if (!query){
                 throw new DBError("Failed to form update product query");
             }
 
-            let oldImages;
+            // (if updating images) collect old images before update
+            let oldImages = [];
             if (options.images){
                 oldImages = (await client.query("SELECT images FROM products WHERE id = $1", [id]))?.rows?.[0]?.images
                 if (!oldImages){
                     throw new DBError("Failed to get old images, or product doesn't exist");
                 }
+
             }
+
+            // make the actual product update
             const updateResult = await client.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id]);
             if (!updateResult?.rows?.[0]){
                 throw new DBError("Failed to update product");
             }
-            if (options.images){
-                for (let image of oldImages){
-                    if (options.images.includes(image)){
-                        const s3Key = image.replace(`${CLOUDFRONT_DOMAIN}/`, '');
-                        try {
-                            await s3Client.send(new DeleteObjectTaggingCommand({
-                                Bucket: BUCKET_NAME,
-                                Key: s3Key
-                            }));
-                            console.log('Tag removed from:', s3Key);
-                        } catch (error) {
-                            console.error('Failed to remove tag from:', s3Key, error);
-                            throw new DBError("Failed to remove temporary tag from uploaded image");
-                        }
-                        continue;
-                    }
 
-                    const key = image.replace(`${CLOUDFRONT_DOMAIN}/`, "");
+            // (if updating images): removes tags from added images + deletes images no longer stored
+            if (options.images){
+                const newImages = options.images.filter(url => !oldImages.includes(url));
+                const unusedImages = oldImages.filter(url => !options.images.includes(url));
+                for (const image of newImages){
+                    const s3Key = image.replace(`${CLOUDFRONT_DOMAIN}/`, '');
+                    try {
+                        await s3Client.send(new DeleteObjectTaggingCommand({
+                            Bucket: BUCKET_NAME,
+                            Key: s3Key
+                        }));
+                        console.log('Tag removed from:', s3Key);
+                    } catch (error) {
+                        console.error('Failed to remove tag from:', s3Key, error);
+                        throw new DBError("Failed to remove temporary tag from uploaded image");
+                    }
+                }
+                for (const image of unusedImages){
+                    const s3Key = image.replace(`${CLOUDFRONT_DOMAIN}/`, '');
                     try{
                         await s3Client.send(new DeleteObjectCommand({
                             Bucket: BUCKET_NAME,
-                            Key: key
+                            Key: s3Key
                         }));
                     }catch(err){
                         console.log(err)
                     }
-                } 
+                }
             }
+
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
