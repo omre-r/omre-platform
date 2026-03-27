@@ -70,7 +70,7 @@ const tableViewStyle = {
     padding: "1.2rem 1.5rem",
     border: "1px solid rgba(255,255,255,0.35)",
     borderRadius: "14px",
-    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
     boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
     display: "flex",
     flexDirection: "column",
@@ -84,14 +84,14 @@ const tableViewStyle = {
 
 const buttonStyling = {
     ...luxuryBodyStyle, 
-    fontSize: "1rem",
-    padding: "0.9rem 2.2rem",
-    border: "1px solid rgba(255,255,255,0.35)",
-    borderRadius: "28px",
-    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    fontSize: "1.2rem",
+    padding: ".9rem .2rem",
+    border: "2px solid rgba(0, 0, 0)",
+    borderRadius: "10px",
+    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
     color: "#FFFFFF",
     cursor: "pointer",
-    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+    boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
     transition: "all 0.2s ease",
 }
 
@@ -473,6 +473,14 @@ async function cancelOrder(orderId) {
         });
     };
 
+    const statusStyles = {
+        pending: "#ff6117",
+        mixing: "#d3006d",
+        ready: "#028fb2",
+        fulfilled: "#009e59",
+        canceled: "#e22424",
+    };
+
     // Load products, favorite notes, and user orders on component mount ---------------------------------------
     useEffect(() => {
         loadProducts();
@@ -738,12 +746,7 @@ async function cancelOrder(orderId) {
                                     <Table>
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell style={tableHeaderStyle}>Order ID</TableCell>
-                                                <TableCell style={tableHeaderStyle}>Order Items</TableCell>
-                                                <TableCell style={tableHeaderStyle}>Status</TableCell>
-                                                <TableCell style={tableHeaderStyle}>Total</TableCell>
-                                                <TableCell style={tableHeaderStyle}>Created</TableCell>
-                                                <TableCell style={tableHeaderStyle}>Actions</TableCell>
+                                                <TableCell style={tableHeaderStyle}>Order Information</TableCell>
                                             </TableRow>
                                         </TableHead>
 
@@ -757,25 +760,29 @@ async function cancelOrder(orderId) {
                                                 style={{
                                                     borderTop: "1px solid rgba(0, 0, 0, 0.15)"
                                                 }}>
-                                                <TableCell style={tableBodyStyle}>
-                                                    <View style={tableViewStyle}>
-                                                        #{order.id.slice(0, 8)}
-                                                    </View>
-                                                </TableCell>
                                                 <TableCell style={{...tableBodyStyle, textAlign: "left"}}>
                                                     <View
-                                                        style={{...tableViewStyle,
+                                                        style={{
+                                                            ...tableViewStyle,
                                                             marginLeft: "0rem",
                                                             alignItems: "flex-start",
                                                             justifyContent: "flex-start",
                                                             textAlign: "left",
+                                                            width: "60%",
+                                                            margin: "0 auto"
                                                         }}>
+                                                        <View>
+                                                            Order ID: #{order.id.slice(0, 8)} <br></br>
+                                                            Order Total: ${order.total}<br></br>
+                                                            Order Date: {new Date(order.created).toLocaleString()} <br></br>
+                                                            Order Items: 
+                                                        </View>
                                                         {Array.isArray(order.items) && order.items.length > 0 ? (
                                                             order.items.map((orderItem, index) => {
                                                                 if (orderItem.type === "product") {
                                                                     return (
-                                                                        <Text key={index} style={{...luxuryBodyStyle, color:"#FFFFFF", textAlign: "left",}}>
-                                                                            {cleanProductName(orderItem.item.name)} - {orderItem.item.variation} x{orderItem.quantity}
+                                                                        <Text key={index} style={{ color:"#FFFFFF", textAlign: "left",}}>
+                                                                            ✦ {cleanProductName(orderItem.item.name)} - {orderItem.item.variation} x{orderItem.quantity}
                                                                         </Text>
                                                                     );
                                                                 }
@@ -783,27 +790,32 @@ async function cancelOrder(orderId) {
                                                                     const blend = orderItem.item;
                                                                     return (
                                                                         <View key={index} marginBottom="0.5rem">
-                                                                            <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
-                                                                                Custom Blend - {blend?.size_ml}ml x{orderItem.quantity}
+                                                                            <Text style={{ color:"#FFFFFF"}}>
+                                                                                ✦ Custom Blend - {blend?.size_ml}ml x{orderItem.quantity} <br></br>
                                                                             </Text>
 
-                                                                            {blend.frag1_productid && (
-                                                                                <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
-                                                                                    • {blend.frag1_pct}% {getProductNameById(blend.frag1_productid) || "Unknown Fragrance"}
-                                                                                </Text>
-                                                                            )}
+                                                                            <View style={{ paddingLeft: "1rem" }}>
+                                                                                {blend.frag1_productid && (
+                                                                                    <Text style={{color:"#FFFFFF"}}>
+                                                                                        ▸{blend.frag1_pct}% {getProductNameById(blend.frag1_productid) || "Unknown Fragrance"}
+                                                                                    </Text>
+                                                                                )}
+                                                                            </View>
+                                                                            <View style={{ paddingLeft: "1rem" }}>
+                                                                                {blend.frag2_productid && (
+                                                                                    <Text style={{ color:"#FFFFFF"}}>
+                                                                                        ▸{blend.frag2_pct}% {getProductNameById(blend.frag2_productid) || "Unknown Fragrance"}
+                                                                                    </Text>
+                                                                                )}
+                                                                            </View>
 
-                                                                            {blend.frag2_productid && (
-                                                                                <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
-                                                                                    • {blend.frag2_pct}% {getProductNameById(blend.frag2_productid) || "Unknown Fragrance"}
-                                                                                </Text>
-                                                                            )}
-
-                                                                            {blend.frag3_productid && (
-                                                                                <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
-                                                                                    • {blend.frag3_pct}% {getProductNameById(blend.frag3_productid) || "Unknown Fragrance"}
-                                                                                </Text>
-                                                                            )}
+                                                                            <View style={{ paddingLeft: "1rem" }}>
+                                                                                {blend.frag3_productid && (
+                                                                                    <Text style={{ color:"#FFFFFF"}}>
+                                                                                        ▸{blend.frag3_pct}% {getProductNameById(blend.frag3_productid) || "Unknown Fragrance"}
+                                                                                    </Text>
+                                                                                )}
+                                                                            </View>
                                                                         </View>
                                                                     );
                                                                 }
@@ -816,39 +828,53 @@ async function cancelOrder(orderId) {
                                                         ) : (
                                                             <Text style={luxuryBodyStyle}>No items found</Text>
                                                         )}
+                                                        <Text style={{ color: "#FFFFFF" }}>Current Status: </Text>
+                                                        <Flex
+                                                            justifyContent="space-between"
+                                                            alignItems="center"
+                                                            marginTop="1rem"
+                                                            width="100%"
+                                                        >
+                                                            <View style={{
+                                                                ...buttonStyling,
+                                                                cursor: "default",
+                                                                background: "linear-gradient(145deg, #341111c6, rgba(20, 20, 20, 0.71))",
+                                                                border: `2px solid ${statusStyles[order.status.toLowerCase()] || "black"}`,
+                                                                fontWeight: 600,
+                                                                fontSize: "1.5rem",   
+                                                                textShadow: "0px 0px 3px #000000",
+                                                                padding: ".9rem 3rem",
+                                                                color: statusStyles[order.status.toLowerCase()] || "black",
+                                                                }}>
+                                                                {order.status}
+                                                            </View>
+                                                            <View 
+                                                                isDisabled={canCancel}
+                                                                style={{
+                                                                    ...buttonStyling, 
+                                                                    border: !canCancel ? "2px solid #808080" : "2px solid #8f0000",
+                                                                    cursor: "pointer", 
+                                                                    
+                                                                    padding: "1rem 1rem",
+                                                                    background: !canCancel ? "linear-gradient(145deg, #9f9f9f, rgba(20,20,20,0.92))" : "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))",
+                                                                }}
+                                                                onClick={() => { 
+                                                                    if (canCancel) {
+                                                                        setConfirmCancelOrder(order.id);
+                                                                    }
+                                                                }}>
+                                                                <Text style={{
+                                                                    ...luxuryBodyStyle, 
+                                                                    color: "#ffffff", 
+                                                                    fontSize: "1.5rem",  
+                                                                    fontWeight: 500,
+                                                                }}>
+                                                                    {!canCancel ? "Unavailable" : "Cancel Order"}
+                                                                </Text>
+                                                            </View>
+                                                        </Flex>
                                                     </View>
-                                                </TableCell>
-                                                <TableCell style={tableBodyStyle}>
-                                                    <View style={tableViewStyle}>
-                                                        {order.status}
-                                                    </View>
-                                                </TableCell>
-                                                <TableCell style={tableBodyStyle}>
-                                                    <View style={tableViewStyle}>
-                                                        ${order.total}
-                                                    </View>
-                                                </TableCell>
-                                                <TableCell style={tableBodyStyle}>
-                                                    <View style={tableViewStyle}>
-                                                        {new Date(order.created).toLocaleString()}
-                                                    </View>
-                                                </TableCell>
-                                                <TableCell style={tableBodyStyle}>
-                                                    <View 
-                                                        isDisabled={canCancel}
-                                                        style={{
-                                                            ...tableViewStyle, 
-                                                            cursor: "pointer", 
-                                                            background: !canCancel ? "linear-gradient(145deg, #9f9f9f, rgba(130, 129, 129, 0.92))" : "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.92))",
-                                                        }}
-                                                        onClick={() => { 
-                                                            if (canCancel) {
-                                                                setConfirmCancelOrder(order.id);
-                                                            }
-                                                        }}>
-                                                        <Text style={{...luxuryBodyStyle, color: !canCancel ? "Black" : "#FFFFFF"}}>{!canCancel ? "Unavailable" : "Cancel Order"}</Text>
-                                                    </View>
-                                                </TableCell>
+                                                </TableCell>                    
                                             </TableRow>
                                             );
                                         })}
@@ -997,8 +1023,7 @@ async function cancelOrder(orderId) {
                                         padding: "0.9rem 2.2rem",
                                         border: "1px solid rgba(255,255,255,0.35)",
                                         borderRadius: "28px",
-                                        background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
-                                        cursor: "pointer",
+                                        background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
                                         boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
                                         transition: "all 0.2s ease",
                                     }}
@@ -1052,7 +1077,7 @@ async function cancelOrder(orderId) {
                         >
                             <View
                                 style={{
-                                    background: "linear-gradient(145deg,  #480e0e, rgb(20, 20, 20))",
+                                    background: "linear-gradient(145deg,  #480e0ee0, rgb(20, 20, 20))",
                                     padding: "50px",
                                     borderRadius: "24px",
                                     width: "400px",
@@ -1068,7 +1093,7 @@ async function cancelOrder(orderId) {
                                 <Flex justifyContent="space-between" marginTop="20px">
                                     <Button
                                         onClick={() => setConfirmCancelOrder(null)}
-                                        style={buttonStyling}>
+                                        style={{...buttonStyling,  padding: "1.5rem 1.5rem",}}>
                                         <Text color="White" fontSize="1.2rem">No</Text>
                                     </Button>
                                     <Button
@@ -1077,7 +1102,10 @@ async function cancelOrder(orderId) {
                                             await cancelOrder(confirmCancelOrder);
                                             setConfirmCancelOrder(null);
                                         }}
-                                        style={buttonStyling}>
+                                            style={{...buttonStyling,  
+                                            padding: "1.5rem 1.5rem",
+                                            background: "linear-gradient(145deg, #ff2525d7, rgba(20,20,20,0.92))"
+                                        }}>
                                         <Text color="White" fontSize="1.2rem">Yes</Text>
                                     </Button>
                                 </Flex>

@@ -1000,7 +1000,8 @@ export default function ProductsPanel() {
                                     onClick={resetToAdd}
                                     style={{
                                         ...buttonStyling,
-                                        color: "#00ff91",
+                                        color: "White",
+                                        background: "linear-gradient(145deg, #00ff91, rgba(40, 35, 35, 0.82))",
                                         border: "2px solid rgba(0, 0, 0)",
                                         cursor: "pointer",
                                         display: "flex",
@@ -1022,9 +1023,9 @@ export default function ProductsPanel() {
                                     }}
                                     style={{
                                         ...buttonStyling,
-                                        color: selectedProduct ? "#ff2600" : "black",
+                                        color: selectedProduct ? "White" : "black",
                                         border: "2px solid rgba(0, 0, 0)",
-                                        background: selectedProduct ? "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))" : "linear-gradient(145deg, #888, #555)",
+                                        background: selectedProduct ? "linear-gradient(145deg, #e22424, rgba(40, 35, 35, 0.82))" : "linear-gradient(145deg, #888, #555)",
                                         cursor: selectedProduct ? "pointer" : "not-allowed",
                                         display: "flex",
                                         alignItems: "center",
