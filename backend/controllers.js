@@ -214,7 +214,6 @@ async function getFilteredProducts(req, res) {
 async function createProduct(req, res) {
   const result = await products.createProduct(req.body);
 
-  // this function includes logic from Ayman's lambda function that he made following his own pattern.
   if (!result.success){
     return res.status(result.status).json(result);
   }

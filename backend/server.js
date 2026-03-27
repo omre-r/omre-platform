@@ -76,6 +76,7 @@ app.get("/", controllers.getServerHTML);
 // users
 
 // path: PUT /users/last-login
+app.put("/users/:id/preferrednotes", [verifyToken], controllers.updatePreferredNotes);
 app.put("/users/:id/last-login", [verifyToken], controllers.updateLastLogin);
 
 app.get("/users/filter", [verifyToken, checkAdminPerm],controllers.getFilteredUsers);
@@ -85,7 +86,6 @@ app.delete("/users/:id", [verifyToken, checkAdminPerm], controllers.deleteUser);
 app.get("/users", [verifyToken, checkAdminPerm], controllers.getUsers);
 app.post("/users", [verifyToken], controllers.createUser);
 
-app.put("/users/:id/preferrednotes", [verifyToken], controllers.updatePreferredNotes);
 
 
 

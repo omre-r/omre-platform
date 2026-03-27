@@ -480,7 +480,7 @@ class Products{
                         Bucket: BUCKET_NAME,
                         Key: s3Key
                     }));
-                    //console.log('Tag removed from:', s3Key);
+                    console.log('Tag removed from:', s3Key);
                     return { url, success: true };
                 } catch (error) {
                     console.error('Failed to remove tag from:', url, error);
@@ -507,7 +507,7 @@ class Products{
             const result = await client.query(query, [id]);
             const images = result?.rows?.[0]?.images;
             for (let image of images){
-                const key = image.split("/").at(-1);
+                const key = image.replace(`${CLOUDFRONT_DOMAIN}/`, "");
                 try{
                     await s3Client.send(new DeleteObjectCommand({
                         Bucket: BUCKET_NAME,
@@ -714,9 +714,24 @@ class Products{
             }
             if (options.images){
                 for (let image of oldImages){
-                    if (options.images.includes(image)) continue;
+                    if (options.images.includes(image)){
+                        try {
+                            const s3Key = image.replace(`${CLOUDFRONT_DOMAIN}/`, '');
+                            await s3Client.send(new DeleteObjectTaggingCommand({
+                                Bucket: BUCKET_NAME,
+                                Key: s3Key
+                            }));
+                            console.log('Tag removed from:', s3Key);
+                            return { url, success: true };
+                        } catch (error) {
+                            console.error('Failed to remove tag from:', url, error);
+                            // Don't fail the request - just log
+                            return { url, success: false, error: error.message };
+                        }
+                        continue;
+                    }
 
-                    const key = image.split("/").at(-1);
+                    const key = image.replace(`${CLOUDFRONT_DOMAIN}/`, "");
                     try{
                         await s3Client.send(new DeleteObjectCommand({
                             Bucket: BUCKET_NAME,
