@@ -918,11 +918,7 @@ async function cancelOrder(orderId) {
                                 <Table>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell style={tableHeaderStyle}>Fragrance 1</TableCell>
-                                            <TableCell style={tableHeaderStyle}>Fragrance 2</TableCell>
-                                            <TableCell style={tableHeaderStyle}>Fragrance 3</TableCell>
-                                            <TableCell style={tableHeaderStyle}>Size</TableCell>
-                                            <TableCell style={tableHeaderStyle}>Actions</TableCell>
+                                            <TableCell style={tableHeaderStyle}>Blend Information</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     {loadedBlends.map((blend) => (
@@ -932,37 +928,69 @@ async function cancelOrder(orderId) {
                                             borderTop: "1px solid rgba(0,0,0,0.15)"
                                         }}>
                                             <TableCell style={tableBodyStyle}>
-                                                <View style={tableViewStyle}>
-                                                    {getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%)
-                                                </View>
-                                            </TableCell>
-                                            <TableCell style={tableBodyStyle}>
-                                                <View style={tableViewStyle}>
-                                                    {getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%)
-                                                </View>
-                                            </TableCell>
-                                            <TableCell style={tableBodyStyle}>
-                                                <View style={tableViewStyle}>
-                                                    {/* If product ID exists, show name and pct; otherwise, show nothing */}
-                                                    {blend.frag3_productid ? (`${getProductNameById(blend.frag3_productid)} (${blend.frag3_pct}%)`) : null}
-                                                </View>
-                                            </TableCell>
-                                            <TableCell style={{...tableBodyStyle, whiteSpace: "nowrap" }}>
-                                                <View style={tableViewStyle}>
-                                                    {blend.size_ml} ML
-                                                </View>
-                                            </TableCell>
-                                            <TableCell style={tableBodyStyle}>
-                                                <Flex direction="row" gap="1rem">
-                                                    <View style={{...tableViewStyle, cursor: "pointer"}}
-                                                        onClick={() => handleAddSavedBlendToCart(blend)}>
-                                                        <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Add to Cart</Text> 
+                                                <View  
+                                                    style={{
+                                                        ...tableViewStyle,
+                                                        marginLeft: "0rem",
+                                                        textAlign: "left",
+                                                        width: "35%",
+                                                        margin: "0 auto"
+                                                    }}>
+                                                    <View>
+                                                        <View marginBottom="2rem">
+                                                            Blend: <br></br>
+                                                            ▸ {getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%) <br></br>
+                                                            ▸ {getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%) <br></br>
+                                                            {blend.frag3_productid && (<>▸ {getProductNameById(blend.frag3_productid)} ({blend.frag3_pct}%) <br></br></>)}
+                                                            Sizing: {blend.size_ml} ML
+                                                        </View>
+                                                        <Flex 
+                                                            direction="row" 
+                                                            gap="2rem"
+                                                            justifyContent="center"
+                                                            alignItems="center"
+                                                            width="100%">
+                                                            <View 
+                                                                style={{
+                                                                        ...buttonStyling, 
+                                                                        border: "2px solid #000000",
+                                                                        cursor: "pointer", 
+                                                                        background: "linear-gradient(145deg, #00ff91, rgba(40, 35, 35, 0.82))",
+                                                                        padding: ".5rem 1rem",
+                                                                    }}
+                                                                onClick={() => handleAddSavedBlendToCart(blend)}>
+                                                                <Text 
+                                                                    style={{
+                                                                        ...luxuryBodyStyle, 
+                                                                        color: "#ffffff", 
+                                                                        fontSize: "1.5rem",  
+                                                                        fontWeight: 500,
+                                                                    }}>
+                                                                    Add to Cart
+                                                                </Text>
+                                                            </View>
+                                                            <View 
+                                                                style={{
+                                                                    ...buttonStyling, 
+                                                                    border: "2px solid #8f0000",
+                                                                    cursor: "pointer", 
+                                                                    padding: ".5rem 1rem",
+                                                                    background: "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))",
+                                                                }}
+                                                                onClick={() => { handleDeleteBlend(blend.id); }}>
+                                                                <Text 
+                                                                    style={{
+                                                                        ...luxuryBodyStyle, 
+                                                                        color: "#ffffff", 
+                                                                        fontSize: "1.5rem",  
+                                                                        fontWeight: 500,
+                                                                    }}>
+                                                                    Delete Blend
+                                                                </Text>
+                                                            </View>
+                                                        </Flex>
                                                     </View>
-                                                    <View style={{...tableViewStyle, cursor: "pointer"}}
-                                                        onClick={() => { handleDeleteBlend(blend.id); }}>
-                                                        <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Delete Blend</Text>
-                                                    </View>
-                                                </Flex>
+                                                </View>
                                             </TableCell>
                                         </TableRow>
                                     ))}
