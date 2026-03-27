@@ -452,11 +452,12 @@ async function cancelOrder(orderId) {
         return {
             ...luxuryBodyStyle,
             fontSize: "1.15rem",
-            padding: "0.9rem 1rem",
-            minHeight: "58px",
-            borderRadius: "14px",
+            padding: "0.5rem .1rem",
+            minHeight: "auto",
+            width: "100%",
+            borderRadius: "10px",
             border: isSelected ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(0,0,0,0.12)",
-            background: isSelected ? "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.92))" : "linear-gradient(145deg,  #FDDDBE, #f9dad2)",
+            background: isSelected ? "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))" : "linear-gradient(145deg,  #FDDDBE, #f9dad2)",
             boxShadow: isSelected ? "0 8px 18px rgba(0,0,0,0.25)" : "0 2px 6px rgba(0,0,0,0.06)",
         };
     }
@@ -1015,8 +1016,10 @@ async function cancelOrder(orderId) {
 
                             <Grid
                                 templateColumns="repeat(3, 1fr)"
-                                gap="0.3rem"
-                                marginBottom=".5rem">
+                                gap="0.4rem"
+                                marginBottom=".5rem"
+                                maxWidth="800px"
+                                margin="0 auto">
                                 {/* List the notes from the state and show them all as toggable buttons */}
                                 {fragranceNotes.map((note) => {
                                     const isSelected = selectedNotes.includes(note);
@@ -1063,7 +1066,7 @@ async function cancelOrder(orderId) {
                                         padding: "0.9rem 2.2rem",
                                         border: "1px solid rgba(255,255,255,0.35)",
                                         borderRadius: "28px",
-                                        background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                                        background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
                                         cursor: "pointer",
                                         boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
                                         transition: "all 0.2s ease",
