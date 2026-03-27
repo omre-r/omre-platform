@@ -715,18 +715,16 @@ class Products{
             if (options.images){
                 for (let image of oldImages){
                     if (options.images.includes(image)){
+                        const s3Key = image.replace(`${CLOUDFRONT_DOMAIN}/`, '');
                         try {
-                            const s3Key = image.replace(`${CLOUDFRONT_DOMAIN}/`, '');
                             await s3Client.send(new DeleteObjectTaggingCommand({
                                 Bucket: BUCKET_NAME,
                                 Key: s3Key
                             }));
                             console.log('Tag removed from:', s3Key);
-                            return { url, success: true };
                         } catch (error) {
-                            console.error('Failed to remove tag from:', url, error);
-                            // Don't fail the request - just log
-                            return { url, success: false, error: error.message };
+                            console.error('Failed to remove tag from:', s3Key, error);
+                            throw new DBError("Failed to remove temporary tag from uploaded image");
                         }
                         continue;
                     }
