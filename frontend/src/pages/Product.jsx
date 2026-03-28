@@ -48,12 +48,19 @@ export default function Product(){
     const [newReviewMessage, setNewReviewMessage] = useState("");
     const [newReviewrating, setNewReviewrating] = useState(5);
     const [attachedImages, setAttachedImages] = useState([]);
+    const [tokenInfo, setTokenInfo] = useState(null);
+    const [replyID, setReplyID] = useState("")
+    const [replyMessage, setReplyMessage] = useState("")
 
 
     useEffect(() => {
         loadProduct();
         loadRecommendations();
         loadReviews();
+        const decodedToken = getIDToken();
+        if (decodedToken){
+            setTokenInfo(decodedToken);
+        }
     },[params.parentid])
 
     useEffect(() => {
@@ -657,6 +664,7 @@ export default function Product(){
             Reviews
             </Text>
             {/* leave a review section */}
+            {tokenInfo !== null &&
             <View
             textAlign={"left"}>
                 <h2 style={{marginBottom: "0"}}> Leave a Review!</h2>
@@ -684,7 +692,7 @@ export default function Product(){
                     >
                         
                         <h2 style={{marginBlock: "3px"}}>
-                            firstname lastname
+                            {tokenInfo.given_name} {tokenInfo.family_name}
                         </h2>
                         <Flex>
                             {attachedImages.map(f => (
@@ -742,7 +750,7 @@ export default function Product(){
                                 padding: "5px",
                                 borderRadius: "6px",
                                 fontWeight: "bold",
-                                fontSize: "2em",
+                                fontSize: "1.5em",
                                 backgroundColor: "rgba(250,250,250,.3)"
                             }}>
                                 Attach Images
@@ -755,7 +763,7 @@ export default function Product(){
                                 padding: "5px",
                                 borderRadius: "6px",
                                 fontWeight: "bold",
-                                fontSize: "2em",
+                                fontSize: "1.5em",
                                 backgroundColor: "rgba(250,250,250,.3)"
                             }}
                             >Submit
@@ -764,6 +772,7 @@ export default function Product(){
                     </Flex>
                 </Flex>
             </View>
+            }
             {/* List of past reviews */}
             <Flex 
                 direction={"column"}
@@ -773,61 +782,161 @@ export default function Product(){
                 {
                     reviews.map(review => (
                         <Flex
-                        fontSize={"1.2rem"}
-                        gap={"25px"}>
-                            {/* left area */}
-                            <View>
-                                <View 
-                                style={{
-                                    width: "70px",
-                                    height: "70px",
-                                    borderRadius: "50%",
-                                    border: "2px solid"}}>
-                                    <img src={ProfileIcon} style={{width:"100%"}} alt="profile" />
+                        direction={"column"}>
+                            <Flex
+                            key={review.id}
+                            position={"relative"}
+                            fontSize={"1.2rem"}
+                            gap={"25px"}>
+                                {/* left area */}
+                                <View>
+                                    <View 
+                                    style={{
+                                        width: "70px",
+                                        height: "70px",
+                                        borderRadius: "50%",
+                                        border: "2px solid"}}>
+                                        <img src={ProfileIcon} style={{width:"100%"}} alt="profile" />
+                                    </View>
+                                    <Flex
+                                    direction={"column"}
+                                    gap={0}
+                                    fontSize={".7em"}
+                                    opacity={".5"}
+                                    display={"flex"}
+                                    alignItems={"center"}
+                                    >
+                                        <span>{new Date(review.created).toLocaleString(undefined, {year: "2-digit", month: "2-digit", day: "numeric"})}</span>
+                                        <span>{new Date(review.created).toLocaleString(undefined, {hour: "2-digit", minute: "2-digit"})}</span>
+                                    </Flex>
                                 </View>
-                                <Flex
+                                {/* right area */}
+                                <Flex 
                                 direction={"column"}
-                                gap={0}
-                                opacity={".7"}
-                                >
-                                    <span>{new Date(review.created).toLocaleString(undefined, {year: "2-digit", month: "2-digit", day: "numeric"})}</span>
-                                    <span>{new Date(review.created).toLocaleString(undefined, {hour: "2-digit", minute: "2-digit"})}</span>
+                                flex={"1"}
+                                >      
+                                    <Flex>
+                                        <h3 style={{marginBlock: "0"}}>
+                                            {review.user.first_name} {review.user.last_name}
+                                        </h3>
+                                        <View
+                                        display={"flex"}
+                                        justifyContent={"center"}
+                                        alignItems={"center"}>
+                                            <strong>Rating: {Number(review.rating)} / 5</strong>
+                                        </View>
+                                    </Flex>
+                                    <Flex
+                                    direction={"column"}
+                                    justifyContent={"left"}>
+                                        <View 
+                                        fontSize={"1.2em"}
+                                        style={{overflowWrap: "break-word", wordBreak: "break-word"}}
+                                        >
+                                            {review.images.map(url => (
+                                                <View
+                                                width={"100px"}
+                                                height={"100px"}
+                                                border={"1px solid"}
+                                                borderRadius={"10px"}
+                                                >
+                                                    <img style={{objectFit: "cover", width: "100%", height: "100%"}} src={url} alt="image" />
+                                                </View>
+                                            ))}                                       
+                                            {review.message}
+                                        </View>
+                                    </Flex>
                                 </Flex>
-                            </View>
-                            {/* right area */}
-                            <Flex 
-                            direction={"column"}
-                            flex={"1"}
-                            >      
-                                <Flex>
-                                    <h3 style={{marginBlock: "0"}}>
-                                        firstname lastname
-                                    </h3>
-                                     <View
-                                     display={"flex"}
-                                     justifyContent={"center"}
-                                     alignItems={"center"}>
-                                        <strong>Rating: {Number(review.rating)} / 5</strong>
-                                    </View>
-                                </Flex>
+                                {/* additional options */}
                                 <Flex
-                                direction={"column"}
-                                justifyContent={"left"}>
-                                    <View fontSize={"1.2em"}>
-                                        {review.images.map(url => (
-                                            <View
-                                            width={"100px"}
-                                            height={"100px"}
-                                            border={"1px solid"}
-                                            borderRadius={"10px"}
-                                            >
-                                                <img style={{objectFit: "cover", width: "100%", height: "100%"}} src={url} alt="image" />
-                                            </View>
-                                        ))}                                       
-                                        {review.message}
-                                    </View>
+                                gap={"3px"}
+                                position={"absolute"}
+                                top={"0"}
+                                right={"0"}
+                                fontSize={".9em"}>
+                                    <button 
+                                    style={{
+                                        backgroundColor: "transparent",
+                                        borderRadius: "5px"
+                                    }}
+                                    onClick={() => setReplyID(review.id)}
+                                    >Reply</button>
+                                    <button
+                                    style={{
+                                        backgroundColor: "transparent",
+                                        borderRadius: "5px"
+                                    }}
+                                    >Delete</button>
                                 </Flex>
                             </Flex>
+                            {review.responses.map((res, i) => {
+                                <Flex
+                                key={`${res.message}${i}`}
+                                marginLeft={"30px"}
+                                borderLeft={"1px solid"}
+                                position={"relative"}
+                                fontSize={"1.2rem"}
+                                gap={"25px"}>
+                                    {/* left area */}
+                                    <View>
+                                        <View 
+                                        style={{
+                                            width: "70px",
+                                            height: "70px",
+                                            borderRadius: "50%",
+                                            border: "2px solid"}}>
+                                            <img src={ProfileIcon} style={{width:"100%"}} alt="profile" />
+                                        </View>
+                                    </View>
+                                    {/* right area */}
+                                    <Flex 
+                                    direction={"column"}
+                                    flex={"1"}
+                                    >      
+                                        {res.isadmin 
+                                        ?
+                                            <h3 style={{marginBlock: "0"}}>
+                                                OMRE Fragrances
+                                            </h3>
+                                        :
+                                            <h3 style={{marginBlock: "0"}}>
+                                                {review.user.first_name} {review.user.last_name}
+                                            </h3>
+                                        }
+                                        <Flex
+                                        direction={"column"}
+                                        justifyContent={"left"}>
+                                            <View 
+                                            fontSize={"1.2em"}
+                                            style={{overflowWrap: "break-word", wordBreak: "break-word"}}
+                                            >                                     
+                                                {res.message}
+                                            </View>
+                                        </Flex>
+                                    </Flex>
+                                    {/* additional options */}
+                                    <Flex
+                                    gap={"3px"}
+                                    position={"absolute"}
+                                    top={"0"}
+                                    right={"0"}
+                                    fontSize={".9em"}>
+                                        <button 
+                                        style={{
+                                            backgroundColor: "transparent",
+                                            borderRadius: "5px"
+                                        }}
+                                        onClick={() => setReplyID(review.id)}
+                                        >Reply</button>
+                                        <button
+                                        style={{
+                                            backgroundColor: "transparent",
+                                            borderRadius: "5px"
+                                        }}
+                                        >Delete</button>
+                                    </Flex>
+                                </Flex>
+                            })}
                         </Flex>
                     ))
                 }

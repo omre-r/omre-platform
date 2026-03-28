@@ -960,7 +960,12 @@ class Reviews{
         if (!client){
             return prepareRollback((c) => this.getProductReviews(parentid, c));
         }
-        const query = `SELECT * FROM reviews WHERE productid = $1 ORDER BY created DESC`;
+        const query = `
+        SELECT reviews.*, row_to_json(users) AS user
+        FROM reviews 
+        JOIN users ON reviews.customerid = users.cognito_sub 
+        WHERE reviews.productid = $1
+        ORDER BY created DESC`
         let reviews;
 
         try{
@@ -979,7 +984,12 @@ class Reviews{
         if (!client){
             return prepareRollback((c) => this.getUserReviews(customerid, c));
         }
-        const query = `SELECT * FROM reviews WHERE customerid = $1 ORDER BY created DESC`;
+        const query = `
+        SELECT reviews.*, row_to_json(users) AS user
+        FROM reviews 
+        JOIN users ON reviews.customerid = users.cognito_sub 
+        WHERE reviews.customerid = $1
+        ORDER BY created DESC`
         let reviews;
         try{
             const res = await client.query(query, [customerid]);
@@ -997,7 +1007,11 @@ class Reviews{
         if (!client){
             return prepareRollback((c) => this.getReviews(c));
         }
-        const query = `SELECT * FROM reviews ORDER BY created DESC`;
+        const query = `
+        SELECT reviews.*, row_to_json(users) AS user
+        FROM reviews 
+        JOIN users ON reviews.customerid = users.cognito_sub 
+        ORDER BY created DESC`
         let reviews;
 
         try{
