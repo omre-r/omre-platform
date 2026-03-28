@@ -58,7 +58,7 @@ async function verifyOptionalToken(req, res, next){
   } catch (err) {
     return next();
   }
-  return next()
+  return next();
 }
 
 
@@ -105,8 +105,10 @@ app.get("/products", controllers.getProducts);
 
 
 // reviews
-app.get("/reviews/product/:productid", controllers.getProductReviews)
+app.get("/reviews/product/:parentid", controllers.getProductReviews)
 app.get("/reviews/user/:customerid", controllers.getUserReviews)
+app.post("/reviews/response/:id", [verifyToken], controllers.respondToReview)
+
 
 app.put("/reviews/:id", [verifyToken], controllers.updateReview)
 app.delete("/reviews/:id", [verifyToken], controllers.deleteReview)

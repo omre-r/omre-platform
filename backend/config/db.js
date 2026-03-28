@@ -120,7 +120,7 @@ async function createTables() {
             message VARCHAR(500), 
             rating DECIMAL(10, 1),
             images JSONB DEFAULT '[]'::JSONB,
-            responses JSONB DEFAULT '[]'::JSONB,
+            responses JSONB DEFAULT '[]'::JSONB
         )
     `);
 
@@ -1011,7 +1011,42 @@ class Reviews{
         return {success: true, data: {reviews}}
     }
 
-    
+    async respondToReview(id, response, client){
+        if (!client){
+            return prepareRollback((c) => this.respondToReview(id, response, c));
+        }
+        const {isadmin, message} = response;
+        if (isadmin === null || message === null){
+            throw new DBError("Invalid response format");
+        }
+        if (message.length > 500){
+            throw new DBError("Response message is too long");
+        }
+
+        try{
+            const newResponse = JSON.stringify([{isadmin, message}])
+            const query = `
+            UPDATE reviews 
+            SET responses = responses || $1::jsonb
+            WHERE id = $2
+            RETURNING *`;
+
+            const result = await client.query(query, [newResponse, id]);
+            if (!result?.rows?.[0]){
+                throw new DBError("Failed to respond to review");
+            }
+            if (result.rows[0].responses.length > 20 && !isadmin){
+                throw new DBError("Conversation has gotten too long to respond")
+            }
+
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to respond to review")
+        }
+        return {success: true}
+    }
+
     async updateReview(id, options, client){
         if (!client){
             return prepareRollback((c) => this.updateReview(id, options, c));

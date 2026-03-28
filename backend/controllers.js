@@ -235,8 +235,8 @@ async function getProducts(req, res) {
 
 // path: GET /reviews/product/:productid
 async function getProductReviews(req, res) {
-  const {productid} = req.params;
-  const result = await reviews.getProductReviews(productid);
+  const {parentid} = req.params;
+  const result = await reviews.getProductReviews(parentid);
   if (!result.success){
     return res.status(result.status).json(result);
   }
@@ -291,6 +291,21 @@ async function deleteReview(req, res) {
   return res.json(result)
 }
 
+// path: POST /reviews/response/:id
+async function respondToReview(req, res) {
+  const {id} = req.params; 
+  const {response} = req.body;
+  
+  if (USE_ACCESS_TOKENS && response.isadmin === true && !req.tokenPayload?.["cognito:groups"]?.includes("admin")){
+    return res.status(401).json({ success: false, message: "Not authenticated" })
+  }
+
+  const result = await reviews.respondToReview(id, response);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
 
 // orders
 
@@ -604,6 +619,8 @@ updateReview = handleError(updateReview);
 getReviews = handleError(getReviews);
 createReview = handleError(createReview);
 deleteReview = handleError(deleteReview);
+respondToReview = handleError(respondToReview);
+
 
 cancelOrder = handleError(cancelOrder)
 getOrder = handleError(getOrder);
@@ -633,7 +650,7 @@ module.exports = {
   getServerHTML,
   getUser, getUsers, createUser, deleteUser, updateLastLogin, getFilteredUsers, updatePreferredNotes,
   getProduct, getRelatedProducts, updateProduct, updateProductStock, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts, 
-  getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
+  getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview, respondToReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders, getFilteredOrders,
   saveBlend, getUserBlends, deleteUserBlend, getBlendById,
   createCartItem, deleteCartItem, getCart, clearCart, updateCart,
