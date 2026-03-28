@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken, createCartItemReq } from "../requests";
+import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken, createCartItemReq, getProductReviewsReq, createReviewReq } from "../requests";
 
 import Navbar from "../components/Navbar";
 
@@ -43,9 +43,17 @@ export default function Product(){
 
     const [addToCartText, setAddToCartText] = useState("Add To Cart");
 
+    const [reviews, setReviews] = useState([]);
+    const [loadingReviews, setLoadingReviews] = useState(false);
+    const [newReviewMessage, setNewReviewMessage] = useState("");
+    const [newReviewrating, setNewReviewrating] = useState(5);
+    const [uploadedImages, setUploadedImages] = useState([]);
+
+
     useEffect(() => {
-        loadProduct()
-        loadRecommendations()
+        loadProduct();
+        loadRecommendations();
+        loadReviews();
     },[params.parentid])
 
     useEffect(() => {
@@ -120,6 +128,33 @@ export default function Product(){
         setLoadingRecommendations(false);
         setRecommendations(data?.data?.recommendations || []);
     }
+    async function loadReviews() {
+        setLoadingReviews(true);
+        const data = await getProductReviewsReq(params.parentid);
+        setLoadingReviews(false);
+        setReviews(data?.data?.reviews || []);
+    }
+
+    async function submitReview(){
+        const idToken = getIDToken();
+        if (!idToken || !idToken?.sub){
+            return;
+        }
+        const reviewForm = {
+            customerid: idToken.sub,
+            productid: params.parentid,
+            message: newReviewMessage,
+            rating: newReviewrating,
+            images: uploadedImages
+        }
+        const result = await createReviewReq(reviewForm);
+        loadReviews()
+    }
+
+    function addImages(e){
+        setUploadedImages([...e.target.files])
+    }
+
     if (loadingProduct) {
         return (
             <>
@@ -201,6 +236,7 @@ export default function Product(){
                 </View>
                 <Flex>
                     {selectedProduct.images.map((url, i) => {
+      
                         return (
                             <View
                             width={"50px"}
@@ -571,6 +607,51 @@ export default function Product(){
         :
             null
       )}
+        <Flex
+            direction={"column"}
+            marginTop="4rem"
+            padding="2.5rem 2rem"
+            borderRadius="28px"
+            backgroundColor="rgba(255,255,255,0.10)"
+            border="1px solid rgba(80, 50, 40, 0.10)"
+            boxShadow="0 10px 28px rgba(0,0,0,0.08)"
+            backdropFilter="blur(2px)"
+            width={"100%"}
+            >
+            <Text style={headingStyle} marginBottom=".5rem">
+            Reviews
+            </Text>
+            <Flex 
+                wrap="wrap"
+                justifyContent="center">
+                <View>
+                    <h2>Leave a review!</h2>
+                    
+                    <textarea 
+                    value={newReviewMessage}
+                    onChange={(e) => setNewReviewMessage(e.target.value)}
+                    style={{
+                        borderTop: "none",
+                        borderRight: 'none',
+                        borderLeft: "none",
+                        backgroundColor: "transparent",
+                        resize: "none"
+                    }}></textarea>
+                    <button onClick={submitReview}>Submit review</button>
+                    {/* {uploadedImages} */}
+                    <label>
+                        Upload
+                        <input type="file" hidden multiple onChange={addImages}></input>
+                    </label>
+                    
+                </View>
+                {
+                    reviews.map(review => (
+                        <View>{JSON.stringify(review)}</View>
+                    ))
+                }
+            </Flex>
+        </Flex>
     </Card>
     </View>
     </>
