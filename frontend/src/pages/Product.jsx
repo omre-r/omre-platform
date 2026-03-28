@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken, createCartItemReq, getProductReviewsReq, createReviewReq } from "../requests";
+import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken, createCartItemReq, getProductReviewsReq, createReviewReq, uploadAndGetURlsReq } from "../requests";
 
 import Navbar from "../components/Navbar";
 
@@ -47,7 +47,7 @@ export default function Product(){
     const [loadingReviews, setLoadingReviews] = useState(false);
     const [newReviewMessage, setNewReviewMessage] = useState("");
     const [newReviewrating, setNewReviewrating] = useState(5);
-    const [uploadedImages, setUploadedImages] = useState([]);
+    const [attachedImages, setAttachedImages] = useState([]);
 
 
     useEffect(() => {
@@ -140,19 +140,54 @@ export default function Product(){
         if (!idToken || !idToken?.sub){
             return;
         }
+        let imageUrls = [];
+        if (attachedImages.length > 0){
+            imageUrls = await uploadAndGetURlsReq(attachedImages);
+            if (!imageUrls){
+                return;
+            }
+        }
         const reviewForm = {
             customerid: idToken.sub,
             productid: params.parentid,
             message: newReviewMessage,
             rating: newReviewrating,
-            images: uploadedImages
+            images: imageUrls
         }
         const result = await createReviewReq(reviewForm);
         loadReviews()
     }
 
     function addImages(e){
-        setUploadedImages([...e.target.files])
+        const MAX_SIZE = 1024 * 1024 * 5
+        const numAllowedFiles = 2 - attachedImages.length
+        const newFiles = Array.from(e.target.files || []).slice(0,numAllowedFiles);
+        e.target.value = ""
+        if (newFiles.length === 0 || numAllowedFiles <= 0) return; 
+        
+        const validFiles = []
+        //check no duplicates
+        for (const file of newFiles){   
+            //no unique ids available, so just comparing name + size + last modified
+            if (attachedImages.some(f => `${f.name}${f.size}${f.lastModified}` === `${file.name}${file.size}${file.lastModified}`)){
+                continue
+            }
+            if (file.size >= MAX_SIZE){
+                setAttachedImages([])
+                //setMessage("You can't upload images over 5MB");
+                //setTimeout(() => setMessage(""), 5000);
+                for (const f of validFiles){
+                    URL.revokeObjectURL(f.url);
+                }
+                return
+            }
+            validFiles.push(file)
+            file.url = URL.createObjectURL(file)
+        }
+        if (validFiles.length === 0){
+            return
+        }
+        setAttachedImages(prev => [...prev, ...validFiles])
     }
 
     if (loadingProduct) {
@@ -624,8 +659,13 @@ export default function Product(){
             {/* leave a review section */}
             <View
             textAlign={"left"}>
-                <h2>Leave a Review!</h2>
-                <Flex>
+                <h2 style={{marginBottom: "0"}}> Leave a Review!</h2>
+                <Flex
+                border={"1px solid rgba(161, 45, 27, 0.29)"}
+                borderRadius={"15px"}
+                padding={"15px"}
+                boxShadow={"0 0 5px inset gray"}
+                backgroundColor={"rgba(194, 245, 172, 0.08)"}>
                     {/* left area */}
                     <View>
                         <View 
@@ -646,9 +686,41 @@ export default function Product(){
                         <h2 style={{marginBlock: "3px"}}>
                             firstname lastname
                         </h2>
+                        <Flex>
+                            {attachedImages.map(f => (
+                                <View
+                                width={"100px"}
+                                height={"100px"}
+                                border={"1px solid"}
+                                borderRadius={"10px"}
+                                position={"relative"}
+                                >
+                                    <View
+                                    position={"absolute"}
+                                    top={"0"}
+                                    right={"0"}
+                                    transform={"translate(50%, -50%)"}
+                                    backgroundColor={"rgba(255, 0, 0, 0.72)"}
+                                    width={"30px"}
+                                    height={"30px"}
+                                    fontWeight={"bold"}
+                                    display={"flex"}
+                                    justifyContent={"center"}
+                                    alignItems={"center"}
+                                    borderRadius={"30%"}
+                                    onClick={() => {URL.revokeObjectURL(f.url); setAttachedImages(prev => prev.filter(val => val !== f));}}
+                                    >
+                                        X
+                                    </View>
+                                    <img style={{objectFit: "cover", width: "100%", height: "100%"}} src={f.url} alt="image" />
+                                </View>
+                            ))}  
+                        </Flex>   
                         <Flex
                         alignItems={"center"}>
                             <textarea 
+                            value={newReviewMessage}
+                            onChange={(e) => setNewReviewMessage(e.target.value)}
                             maxLength={"500"}
                             style={{
                                 flex: "1",
@@ -657,7 +729,8 @@ export default function Product(){
                                 borderRight: "none",
                                 borderBottom: "3px solid",
                                 borderRadius: "5px",
-                                backgroundColor: "transparent"
+                                backgroundColor: "transparent",
+                                fontSize: "2em"
                             }}
                             onFocus={e => {e.target.style.outline = "2px solid rgba(0,0,0,.2)"}}
                             onBlur={e => {e.target.style.outline = "none"}}
@@ -669,17 +742,20 @@ export default function Product(){
                                 padding: "5px",
                                 borderRadius: "6px",
                                 fontWeight: "bold",
+                                fontSize: "2em",
                                 backgroundColor: "rgba(250,250,250,.3)"
                             }}>
                                 Attach Images
-                                <input type="file" multiple hidden/>
+                                <input type="file" hidden multiple onChange={addImages}></input>
                             </label>
                             <button
+                            onClick={submitReview}
                             style={{
                                 border: "1px solid gray",
                                 padding: "5px",
                                 borderRadius: "6px",
                                 fontWeight: "bold",
+                                fontSize: "2em",
                                 backgroundColor: "rgba(250,250,250,.3)"
                             }}
                             >Submit
@@ -688,32 +764,71 @@ export default function Product(){
                     </Flex>
                 </Flex>
             </View>
+            {/* List of past reviews */}
             <Flex 
-                wrap="wrap"
-                justifyContent="center">
-                <View>
-                    
-                    <textarea 
-                    value={newReviewMessage}
-                    onChange={(e) => setNewReviewMessage(e.target.value)}
-                    style={{
-                        borderTop: "none",
-                        borderRight: 'none',
-                        borderLeft: "none",
-                        backgroundColor: "transparent",
-                        resize: "none"
-                    }}></textarea>
-                    <button onClick={submitReview}>Submit review</button>
-                    {/* {uploadedImages} */}
-                    <label>
-                        Upload
-                        <input type="file" hidden multiple onChange={addImages}></input>
-                    </label>
-                    
-                </View>
+                direction={"column"}
+                justifyContent="center"
+                textAlign={"left"}>
+
                 {
                     reviews.map(review => (
-                        <View>{JSON.stringify(review)}</View>
+                        <Flex
+                        fontSize={"1.2rem"}
+                        gap={"25px"}>
+                            {/* left area */}
+                            <View>
+                                <View 
+                                style={{
+                                    width: "70px",
+                                    height: "70px",
+                                    borderRadius: "50%",
+                                    border: "2px solid"}}>
+                                    <img src={ProfileIcon} style={{width:"100%"}} alt="profile" />
+                                </View>
+                                <Flex
+                                direction={"column"}
+                                gap={0}
+                                opacity={".7"}
+                                >
+                                    <span>{new Date(review.created).toLocaleString(undefined, {year: "2-digit", month: "2-digit", day: "numeric"})}</span>
+                                    <span>{new Date(review.created).toLocaleString(undefined, {hour: "2-digit", minute: "2-digit"})}</span>
+                                </Flex>
+                            </View>
+                            {/* right area */}
+                            <Flex 
+                            direction={"column"}
+                            flex={"1"}
+                            >      
+                                <Flex>
+                                    <h3 style={{marginBlock: "0"}}>
+                                        firstname lastname
+                                    </h3>
+                                     <View
+                                     display={"flex"}
+                                     justifyContent={"center"}
+                                     alignItems={"center"}>
+                                        <strong>Rating: {Number(review.rating)} / 5</strong>
+                                    </View>
+                                </Flex>
+                                <Flex
+                                direction={"column"}
+                                justifyContent={"left"}>
+                                    <View fontSize={"1.2em"}>
+                                        {review.images.map(url => (
+                                            <View
+                                            width={"100px"}
+                                            height={"100px"}
+                                            border={"1px solid"}
+                                            borderRadius={"10px"}
+                                            >
+                                                <img style={{objectFit: "cover", width: "100%", height: "100%"}} src={url} alt="image" />
+                                            </View>
+                                        ))}                                       
+                                        {review.message}
+                                    </View>
+                                </Flex>
+                            </Flex>
+                        </Flex>
                     ))
                 }
             </Flex>
