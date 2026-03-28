@@ -117,10 +117,10 @@ async function createTables() {
             customerid VARCHAR(100),
             productid VARCHAR(100),
             created TIMESTAMPTZ DEFAULT NOW(),
-            message VARCHAR(500),
-            rating SMALLINT,
-            images JSONB,
-            responses JSONB DEFAULT '[]'::JSONB
+            message VARCHAR(500), 
+            rating DECIMAL(10, 1),
+            images JSONB DEFAULT '[]'::JSONB,
+            responses JSONB DEFAULT '[]'::JSONB,
         )
     `);
 
@@ -860,8 +860,15 @@ class Products{
 }
 
 class Reviews{
-    static modifiableFields = ["responses"] //we may allow edits at some point, but just this for now
-
+    static modifiableFields = ["rating", "message"] 
+            // id VARCHAR(100) PRIMARY KEY,
+            // customerid VARCHAR(100),
+            // productid VARCHAR(100),
+            // created TIMESTAMPTZ DEFAULT NOW(),
+            // message VARCHAR(500), 
+            // rating DECIMAL(10, 1),
+            // images JSONB DEFAULT '[]'::JSONB,
+            // responses JSONB DEFAULT '[]'::JSONB,
     
     async createReview(options, client){
         if (!client){
@@ -869,6 +876,25 @@ class Reviews{
         }
         const {customerid, productid, message, rating, images} = options;
         const id = uuidv4();
+
+        if (rating < 1 || rating > 5){
+            throw new DBError("Rating must be 1-5")
+        }
+
+        if (message.length > 500){
+            throw new DBError("Message is too long")
+        }
+
+        if (images.length > 2) {
+            throw new DBError('Maximum of 2 images allowed')
+        }
+
+        // TODO: CLOUDFRONT domain is fixed with '/products', fix later.
+        // Ensure all URLs are from CloudFront
+        const invalidUrls = images.filter(url => !url.startsWith(CLOUDFRONT_DOMAIN));
+        if (invalidUrls.length > 0) {
+            throw new DBError('All image URLs must be valid CloudFront URLs')
+        }  
 
         let result;
         const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
@@ -879,6 +905,23 @@ class Reviews{
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to create review")
         }
+
+        // remove tags
+        // this prevents images from being deleted after a period of time
+        for (const url of images){
+            const s3Key = url.replace(`${CLOUDFRONT_DOMAIN}/`, '');
+            try {
+                await s3Client.send(new DeleteObjectTaggingCommand({
+                    Bucket: BUCKET_NAME,
+                    Key: s3Key
+                }));
+                console.log('Tag removed from:', s3Key);
+            } catch (error) {
+                console.log('Failed to remove tag:', url, error);
+                throw new DBError("Failed to remove tag from: ", s3Key)
+            }
+        }
+
         return {success: true, data: {review: result.rows?.[0]}}
     }
 
@@ -887,9 +930,23 @@ class Reviews{
         if (!client){
             return prepareRollback((c) => this.deleteReview(id, c));
         }
-        const query = `DELETE FROM reviews WHERE id = $1`
+        
         try{
-            await client.query(query, [id]);
+            const query = `DELETE FROM reviews WHERE id = $1 RETURNING *`
+            const result = await client.query(query, [id]);
+            const images = result?.rows?.[0]?.images;
+            for (let image of images){
+                const key = image.replace(`${CLOUDFRONT_DOMAIN}/`, "");
+                try{
+                    await s3Client.send(new DeleteObjectCommand({
+                        Bucket: BUCKET_NAME,
+                        Key: key
+                    }));
+                }catch(err){
+                    console.log(err)
+                }
+
+            } 
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
@@ -899,15 +956,15 @@ class Reviews{
     }
 
     
-    async getProductReviews(productid, client){
+    async getProductReviews(parentid, client){
         if (!client){
-            return prepareRollback((c) => this.getProductReviews(productid, c));
+            return prepareRollback((c) => this.getProductReviews(parentid, c));
         }
         const query = `SELECT * FROM reviews WHERE productid = $1 ORDER BY created DESC`;
         let reviews;
 
         try{
-            const res = await client.query(query, [productid]);
+            const res = await client.query(query, [parentid]);
             reviews = res.rows;
         }catch(err){
             console.error(err);
@@ -959,14 +1016,22 @@ class Reviews{
         if (!client){
             return prepareRollback((c) => this.updateReview(id, options, c));
         }
-        const fields = Object.keys(options);
-        const query = this.formatUpdateQuery(fields);
-        if (!query){
-            throw new DBError("Failed to form update review query")
-        }
 
         try{
-            await client.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
+            // form the update query
+            const fields = Object.keys(options);
+            const query = this.formatUpdateQuery(fields);
+
+            if (!query){
+                throw new DBError("Failed to form update review query")
+            }
+
+            // make the actual review update
+            const updateResult = await client.query(query, [...fields.map(f => typeof options[f] === "object" ? JSON.stringify(options[f]) : options[f]), id])
+            if (!updateResult?.rows?.[0]){
+                throw new DBError("Failed to update review");
+            }
+
         }catch(err){
             console.error(err);
             if (err instanceof DBError) throw err;
