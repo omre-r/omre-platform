@@ -1,0 +1,12 @@
+
+.respondable{
+    & .more_options{
+        display: none;
+    }
+    &:hover{
+        background-color: rgba(148, 148, 148, 0.124);
+        & .more_options{
+            display: flex;
+        }
+    }
+}

@@ -1,14 +1,16 @@
 import { Card, Flex, View, Text, Button } from "@aws-amplify/ui-react";
 import { Link } from "react-router-dom";
+import styles from "../styles/Product.module.css"
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken, createCartItemReq, getProductReviewsReq, createReviewReq, uploadAndGetURlsReq } from "../requests";
+import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken, createCartItemReq, getProductReviewsReq, createReviewReq, uploadAndGetURlsReq, getAccessToken, respondToReviewReq, deleteReviewReq } from "../requests";
 
 import Navbar from "../components/Navbar";
 
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import ProfileIcon from "../assets/profileIconClean.png"
+import { useAuth } from "../context/AuthContext";
 
 const bodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -48,28 +50,34 @@ export default function Product(){
     const [newReviewMessage, setNewReviewMessage] = useState("");
     const [newReviewrating, setNewReviewrating] = useState(5);
     const [attachedImages, setAttachedImages] = useState([]);
-    const [tokenInfo, setTokenInfo] = useState(null);
+    const [userInfo, setUserInfo] = useState(null);
     const [replyID, setReplyID] = useState("")
     const [replyMessage, setReplyMessage] = useState("")
 
+    useEffect(() => {
+        const decodedAccessToken = getAccessToken();
+        const decodedIdToken = getIDToken();
+        if (decodedIdToken && decodedAccessToken){
+            setUserInfo({
+                sub: decodedIdToken.sub,
+                firstname: decodedIdToken.given_name,
+                lastname: decodedIdToken.family_name,
+                isAdmin: !!decodedAccessToken?.["cognito:groups"]?.includes("admin")
+            });
+        }
+    }, [])
 
     useEffect(() => {
         loadProduct();
         loadRecommendations();
         loadReviews();
-        const decodedToken = getIDToken();
-        if (decodedToken){
-            setTokenInfo(decodedToken);
-        }
     },[params.parentid])
+
 
     useEffect(() => {
         if (!selectedProduct) return;
         setSearchParams(prev => ({...prev, variation: selectedProduct.variation}))
-    },[selectedProduct])
 
-    useEffect(() => {
-        if (!selectedProduct) return;
         const id = setInterval(() => {
             setDisplayedImage(prev => (prev + 1) % selectedProduct.images.length)
         }, 10000)
@@ -147,6 +155,9 @@ export default function Product(){
         if (!idToken || !idToken?.sub){
             return;
         }
+        if (newReviewMessage === ""){
+            return;
+        }
         let imageUrls = [];
         if (attachedImages.length > 0){
             imageUrls = await uploadAndGetURlsReq(attachedImages);
@@ -162,6 +173,17 @@ export default function Product(){
             images: imageUrls
         }
         const result = await createReviewReq(reviewForm);
+        loadReviews()
+    }
+
+    async function submitReply(){
+        if (replyMessage === "") return;
+        const result = await respondToReviewReq(replyID, {message: replyMessage, isadmin: userInfo.isAdmin && userInfo.sub !== replyID})
+        loadReviews()
+    }
+
+    async function removeReview(id) {
+        const result = await deleteReviewReq(id);
         loadReviews()
     }
 
@@ -664,7 +686,7 @@ export default function Product(){
             Reviews
             </Text>
             {/* leave a review section */}
-            {tokenInfo !== null &&
+            {userInfo !== null &&
             <View
             textAlign={"left"}>
                 <h2 style={{marginBottom: "0"}}> Leave a Review!</h2>
@@ -692,7 +714,7 @@ export default function Product(){
                     >
                         
                         <h2 style={{marginBlock: "3px"}}>
-                            {tokenInfo.given_name} {tokenInfo.family_name}
+                            {userInfo.firstname} {userInfo.lastname}
                         </h2>
                         <Flex>
                             {attachedImages.map(f => (
@@ -784,6 +806,7 @@ export default function Product(){
                         <Flex
                         direction={"column"}>
                             <Flex
+                            className={styles.respondable}
                             key={review.id}
                             position={"relative"}
                             fontSize={"1.2rem"}
@@ -849,6 +872,7 @@ export default function Product(){
                                 </Flex>
                                 {/* additional options */}
                                 <Flex
+                                className={styles.more_options}
                                 gap={"3px"}
                                 position={"absolute"}
                                 top={"0"}
@@ -862,6 +886,7 @@ export default function Product(){
                                     onClick={() => setReplyID(review.id)}
                                     >Reply</button>
                                     <button
+                                    onClick={() => removeReview(review.id)}
                                     style={{
                                         backgroundColor: "transparent",
                                         borderRadius: "5px"
@@ -869,74 +894,150 @@ export default function Product(){
                                     >Delete</button>
                                 </Flex>
                             </Flex>
-                            {review.responses.map((res, i) => {
-                                <Flex
-                                key={`${res.message}${i}`}
-                                marginLeft={"30px"}
-                                borderLeft={"1px solid"}
-                                position={"relative"}
-                                fontSize={"1.2rem"}
-                                gap={"25px"}>
-                                    {/* left area */}
-                                    <View>
-                                        <View 
-                                        style={{
-                                            width: "70px",
-                                            height: "70px",
-                                            borderRadius: "50%",
-                                            border: "2px solid"}}>
-                                            <img src={ProfileIcon} style={{width:"100%"}} alt="profile" />
-                                        </View>
-                                    </View>
-                                    {/* right area */}
-                                    <Flex 
-                                    direction={"column"}
-                                    flex={"1"}
-                                    >      
-                                        {res.isadmin 
-                                        ?
-                                            <h3 style={{marginBlock: "0"}}>
-                                                OMRE Fragrances
-                                            </h3>
-                                        :
-                                            <h3 style={{marginBlock: "0"}}>
-                                                {review.user.first_name} {review.user.last_name}
-                                            </h3>
-                                        }
-                                        <Flex
-                                        direction={"column"}
-                                        justifyContent={"left"}>
+                            <Flex
+                            direction={"column"}
+                            gap={"0"}>
+                                {review.responses.map((res, i) => (
+                                    <Flex
+                                    className={styles.respondable}
+                                    key={`${res.message}${i}`}
+                                    marginLeft={"55px"}
+                                    padding={"5px"}
+                                    position={"relative"}
+                                    fontSize={"1.2rem"}
+                                    gap={"25px"}
+                                    style={{borderLeft: "2px solid"}}
+                                    >
+                                        {/* left area */}
+                                        <View>
                                             <View 
-                                            fontSize={"1.2em"}
-                                            style={{overflowWrap: "break-word", wordBreak: "break-word"}}
-                                            >                                     
-                                                {res.message}
+                                            style={{
+                                                width: "70px",
+                                                height: "70px",
+                                                borderRadius: "50%",
+                                                border: "2px solid"}}>
+                                                <img src={ProfileIcon} style={{width:"100%"}} alt="profile" />
                                             </View>
+                                        </View>
+                                        {/* right area */}
+                                        <Flex 
+                                        direction={"column"}
+                                        flex={"1"}
+                                        >      
+                                            {res.isadmin 
+                                            ?
+                                                <h3 style={{marginBlock: "0"}}>
+                                                    OMRE Fragrances
+                                                </h3>
+                                            :
+                                                <h3 style={{marginBlock: "0"}}>
+                                                    {review.user.first_name} {review.user.last_name}
+                                                </h3>
+                                            }
+                                            <Flex
+                                            direction={"column"}
+                                            justifyContent={"left"}>
+                                                <View 
+                                                fontSize={"1.2em"}
+                                                style={{overflowWrap: "break-word", wordBreak: "break-word"}}
+                                                >                                     
+                                                    {res.message}
+                                                </View>
+                                            </Flex>
                                         </Flex>
                                     </Flex>
-                                    {/* additional options */}
+                                ))}
+                            {replyID === review.id && 
+                            <Flex
+                            marginLeft={"55px"}
+                            padding={"5px"}
+                            borderLeft={"1px solid"}
+                            position={"relative"}
+                            fontSize={"1.2rem"}
+                            gap={"25px"}
+                            style={{borderLeft: "2px solid"}}>
+                                {/* left area */}
+                                <View>
+                                    <View 
+                                    style={{
+                                        width: "70px",
+                                        height: "70px",
+                                        borderRadius: "50%",
+                                        border: "2px solid"}}>
+                                        <img src={ProfileIcon} style={{width:"100%"}} alt="profile" />
+                                    </View>
+                                </View>
+                                {/* right area */}
+                                <Flex 
+                                direction={"column"}
+                                flex={"1"}
+                                >      
+                                    {userInfo.isAdmin && userInfo.sub !== review.customerid
+                                    
+                                    ?
+                                        <h3 style={{marginBlock: "0"}}>
+                                            OMRE Fragrances
+                                        </h3>
+                                    :
+                                        <h3 style={{marginBlock: "0"}}>
+                                            {userInfo.firstname} {userInfo.lastname}
+                                        </h3>
+                                    }
                                     <Flex
-                                    gap={"3px"}
-                                    position={"absolute"}
-                                    top={"0"}
-                                    right={"0"}
-                                    fontSize={".9em"}>
-                                        <button 
+                                    justifyContent={"left"}>
+                                        <View 
+                                        flex={"1"}
+                                        display={"flex"}
+                                        alignItems={"end"}
+                                        style={{overflowWrap: "break-word", wordBreak: "break-word"}}
+                                        >                                     
+                                        <textarea 
+                                        value={replyMessage}
+                                        onChange={(e) => setReplyMessage(e.target.value)}
+                                        maxLength={"500"}
                                         style={{
+                                            flex: "1",
+                                            borderTop: "none",
+                                            borderLeft: "none",
+                                            borderRight: "none",
+                                            borderBottom: "3px solid",
+                                            borderRadius: "5px",
                                             backgroundColor: "transparent",
-                                            borderRadius: "5px"
                                         }}
-                                        onClick={() => setReplyID(review.id)}
-                                        >Reply</button>
+                                        onFocus={e => {e.target.style.outline = "2px solid rgba(0,0,0,.2)"}}
+                                        onBlur={e => {e.target.style.outline = "none"}}
+                                        />
+
                                         <button
                                         style={{
-                                            backgroundColor: "transparent",
-                                            borderRadius: "5px"
+                                            border: "1px solid gray",
+                                            padding: "5px",
+                                            borderRadius: "6px",
+                                            fontWeight: "bold",
+                                            fontSize: ".8em",
+                                            backgroundColor: "rgba(250,250,250,.3)"
                                         }}
-                                        >Delete</button>
+                                        onClick={() => {setReplyID(null);setReplyMessage("")}}
+                                        >Cancel</button>
+                                        <button
+                                            onClick={submitReply}
+                                            style={{
+                                                border: "1px solid gray",
+                                                padding: "5px",
+                                                borderRadius: "6px",
+                                                fontWeight: "bold",
+                                                fontSize: ".8em",
+                                                backgroundColor: "rgba(250,250,250,.3)"
+                                            }}
+                                            >Submit
+                                        </button>
+                                        </View>
                                     </Flex>
                                 </Flex>
-                            })}
+                            </Flex>
+                            }
+                            </Flex>
+
                         </Flex>
                     ))
                 }

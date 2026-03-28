@@ -666,6 +666,18 @@ function getIDToken(){
     }
     return ""
 }
+//gets DECODED access token
+function getAccessToken(){
+    for (let key of Object.keys(localStorage)){
+        if (key.includes("accessToken")) {
+            const idToken = localStorage.getItem(key)
+            const base64 = idToken.split(".")[1]
+            const decoded = JSON.parse(atob(base64))
+            return decoded
+        }
+    }
+    return ""
+}
 
 // Users
 getUserReq = handleError(getUserReq);
@@ -741,5 +753,5 @@ export {
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     getRecommendationsReq,
     validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, sendContactEmailReq,
-    createProductAWSReq, createProductAWSFlowReq, uploadAndGetURlsReq, getIDToken
+    createProductAWSReq, createProductAWSFlowReq, uploadAndGetURlsReq, getIDToken, getAccessToken
 }
