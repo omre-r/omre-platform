@@ -80,6 +80,10 @@ export default function OrdersPanel() {
   async function viewOrder(orderId) {
     setLoadingOrder(true);
     setSelectedOrder(null);
+    setMessage("");
+    setCancelReason("");
+    setConfirmCancel(false);
+
     try {
       const token = await getToken();
       const data = await getOrderReq(orderId, token);
@@ -244,7 +248,6 @@ export default function OrdersPanel() {
                       />
                     </section>
                   </View>
-
                 </Flex>
 
                 <select
@@ -293,7 +296,11 @@ export default function OrdersPanel() {
               </Flex>
             </Flex>
 
-            {msg && <Text>{msg}</Text>}
+            {msg && (
+              <Text style={{ ...luxuryBodyStyle, color: "#ffffff", marginTop: "0.5rem" }}>
+                {msg}
+              </Text>
+            )}
 
             {/* LIST */}
             <View className="orders-scroll" style={{overflowY: "auto", marginTop: "1rem", height: "25rem"}}>
@@ -405,60 +412,117 @@ export default function OrdersPanel() {
                   <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>Total: ${selectedOrder.total}</Text>
                 </View>
 
-                {/* UPDATE */}
-                <SelectField value={status} onChange={(e) => setStatus(e.target.value)}>
-                  <option value="pending">Pending</option>
-                  <option value="mixing">Mixing</option>
-                  <option value="ready">Ready</option>
-                  <option value="fulfilled">Fulfilled</option>
-                </SelectField>
-
-                <Button style={buttonStyling} onClick={updateStatus}>
-                  <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
-                    Update Status
-                  </Text>
-                </Button>
-
-                {/* CANCEL */}
-                <TextField
-                  placeholder="Cancel reason..."
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                />
-
-                <View
-                  position={"relative"}
-                  padding="9.5px"
-                  borderRadius={"10px"}
-                  onClick={() => {
-                    if (!selectedOrder || selectedOrder.status === "canceled") return;
-                    setConfirmCancel(true);
-                  }}
-                  style={{
-                    ...buttonStyling,
-                    color: selectedOrder && selectedOrder.status !== "canceled" ? "#ff2600" : "#999",
-                    WebkitTextFillColor: selectedOrder && selectedOrder.status !== "canceled" ? "#ffffff" : "#999",
-
-                    border: selectedOrder && selectedOrder.status !== "canceled"
-                      ? "2px solid #8f0000"
-                      : "2px solid #808080",
-
-                    background: selectedOrder && selectedOrder.status !== "canceled"
-                      ? "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))"
-                      : "linear-gradient(145deg, #9f9f9f, rgba(20,20,20,0.92))",
-
-                    cursor: selectedOrder && selectedOrder.status !== "canceled"
-                      ? "pointer"
-                      : "not-allowed",
-
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
+                {/*STATUS*/}
+                <Flex
+                  direction="row"
+                  alignItems="center"
+                  gap="0.5rem"
+                  width="100%"
+                  marginTop="0.5rem"
                 >
-                  Cancel Order
-                </View>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    style={{
+                      ...luxuryBodyStyle,
+                      fontSize: "1.2rem",
+                      padding: "0 1.2rem",        
+                      border: "2px solid rgba(0, 0, 0)",
+                      borderRadius: "10px",
+                      background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                      color: "#FFFFFF",
+                      cursor: "pointer",
+                      boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+                      outline: "none",
+                      height: "45px",
+                      lineHeight: "45px",     
+                      flex: "1"
+                    }}
+                  >
+                    {["pending","mixing","ready","fulfilled"].map(val => (
+                      <option
+                        key={val}
+                        value={val}
+                        style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}
+                      >
+                        {val.charAt(0).toUpperCase() + val.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+
+                  <Button
+                    onClick={updateStatus}
+                    style={{
+                      ...buttonStyling,
+                      marginTop: "1px",
+                      height: "45px",
+                      minWidth: "150px",
+                      borderRadius: "10px",
+                      border: "2px solid black",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
+                      Update
+                    </Text>
+                  </Button>
+                </Flex>
+
+
+                {/*CANCEL*/}
+                <Flex
+                  direction="row"
+                  alignItems="center"
+                  gap="0.5rem"
+                  width="100%"
+                  marginTop="0.5rem"
+                  marginBottom="0.5rem"
+                >
+                  <TextField
+                    placeholder="Cancel reason..."
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    flex="1"
+                    style={{ height: "45px" }}
+                  />
+
+                  <View
+                    onClick={() => {
+                      if (!selectedOrder || selectedOrder.status === "canceled") return;
+                      setConfirmCancel(true);
+                    }}
+                    style={{
+                      ...buttonStyling,
+                      marginTop: "8px",
+                      height: "45px",
+                      minWidth: "150px",
+                      borderRadius: "10px",
+
+                      color: selectedOrder && selectedOrder.status !== "canceled" ? "#ffffff" : "#999",
+
+                      border: selectedOrder && selectedOrder.status !== "canceled"
+                        ? "2px solid #8f0000"
+                        : "2px solid #808080",
+
+                      background: selectedOrder && selectedOrder.status !== "canceled"
+                        ? "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))"
+                        : "linear-gradient(145deg, #9f9f9f, rgba(20,20,20,0.92))",
+
+                      cursor: selectedOrder && selectedOrder.status !== "canceled"
+                        ? "pointer"
+                        : "not-allowed",
+
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Cancel
+                  </View>
+                </Flex>
 
                 {confirmCancel && (
                   <Card
@@ -478,14 +542,17 @@ export default function OrdersPanel() {
                         <Text style={{ color: "#fff" }}>Yes</Text>
                       </Button>
 
-                      <Button style={buttonStyling} onClick={() => setConfirmCancel(false)}>
+                      <Button style={buttonStyling} onClick={() => {
+                        setConfirmCancel(false);
+                        setMessage(""); 
+                      }}>
                         <Text style={{ color: "#fff" }}>No</Text>
                       </Button>
                     </Flex>
                   </Card>
                 )}
 
-                <Button style={buttonStyling} onClick={() => setSelectedOrder(null)}>
+                <Button style={buttonStyling} onClick={() => {setSelectedOrder(null); setConfirmCancel(false);}}>
                   <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>
                     Close Info
                   </Text>
