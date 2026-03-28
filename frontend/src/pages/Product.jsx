@@ -8,7 +8,7 @@ import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken
 import Navbar from "../components/Navbar";
 
 import LuxuryBackground from "../assets/Luxury Background2.png";
-
+import ProfileIcon from "../assets/profileIconClean.png"
 
 const bodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -621,11 +621,77 @@ export default function Product(){
             <Text style={headingStyle} marginBottom=".5rem">
             Reviews
             </Text>
+            {/* leave a review section */}
+            <View
+            textAlign={"left"}>
+                <h2>Leave a Review!</h2>
+                <Flex>
+                    {/* left area */}
+                    <View>
+                        <View 
+                        style={{
+                            width: "70px",
+                            height: "70px",
+                            borderRadius: "50%",
+                             border: "2px solid"}}>
+                            <img src={ProfileIcon} style={{width:"100%"}} alt="profile" />
+                        </View>
+                    </View>
+                    {/* right area */}
+                    <Flex 
+                    direction={"column"}
+                    flex={"1"}
+                    >
+                        
+                        <h2 style={{marginBlock: "3px"}}>
+                            firstname lastname
+                        </h2>
+                        <Flex
+                        alignItems={"center"}>
+                            <textarea 
+                            maxLength={"500"}
+                            style={{
+                                flex: "1",
+                                borderTop: "none",
+                                borderLeft: "none",
+                                borderRight: "none",
+                                borderBottom: "3px solid",
+                                borderRadius: "5px",
+                                backgroundColor: "transparent"
+                            }}
+                            onFocus={e => {e.target.style.outline = "2px solid rgba(0,0,0,.2)"}}
+                            onBlur={e => {e.target.style.outline = "none"}}
+                            />
+
+                            <label 
+                            style={{
+                                border: "1px solid gray",
+                                padding: "5px",
+                                borderRadius: "6px",
+                                fontWeight: "bold",
+                                backgroundColor: "rgba(250,250,250,.3)"
+                            }}>
+                                Attach Images
+                                <input type="file" multiple hidden/>
+                            </label>
+                            <button
+                            style={{
+                                border: "1px solid gray",
+                                padding: "5px",
+                                borderRadius: "6px",
+                                fontWeight: "bold",
+                                backgroundColor: "rgba(250,250,250,.3)"
+                            }}
+                            >Submit
+                            </button>
+                        </Flex>
+                    </Flex>
+                </Flex>
+            </View>
             <Flex 
                 wrap="wrap"
                 justifyContent="center">
                 <View>
-                    <h2>Leave a review!</h2>
                     
                     <textarea 
                     value={newReviewMessage}
