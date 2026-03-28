@@ -3,6 +3,8 @@ import { View, Text } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
+import { sendContactEmailReq } from "../requests.js";
+
 
 const headingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -50,20 +52,31 @@ const dividerStyle = {
   margin: "1.5rem 0",
 };
 
-export default function ContactUs() {
+
+export default function ContactUs() {   // ✅ add this line here
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+      setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit() {
-    if (!form.name || !form.email || !form.message) return;
-    // TODO: wire to backend IF needed
-    setSubmitted(true);
+  async function handleSubmit() {
+      if (!form.name || !form.email || !form.message) return;
+      setSending(true);
+      setErrorMsg("");
+      const data = await sendContactEmailReq(form);
+      setSending(false);
+      if (!data.success) {
+          setErrorMsg("Something went wrong. Please try again.");
+          return;
+      }
+      setSubmitted(true);
   }
 
+  
   return (
     <>
       <Navbar />
@@ -164,6 +177,7 @@ export default function ContactUs() {
 
               <button
                 onClick={handleSubmit}
+                disabled={sending}
                 style={{
                     ...bodyStyle, 
                     fontSize: "1rem",
@@ -172,12 +186,14 @@ export default function ContactUs() {
                     borderRadius: "28px",
                     background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
                     color: "#FFFFFF",
-                    cursor: "pointer",
+                    cursor: sending ? "not-allowed" : "pointer",
+                    opacity: sending ? 0.7 : 1,
                     boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
                     transition: "all 0.2s ease",
                 }}>
-                <Text style={{...bodyStyle, color: "#FFFFFF"}}>Send</Text>
-              </button>
+                <Text style={{...bodyStyle, color: "#FFFFFF"}}>{sending ? "Sending..." : "Send"}</Text>
+            </button>
+            {errorMsg && <Text style={{ color: "red", marginTop: "0.75rem" }}>{errorMsg}</Text>}
             </div>
           )}
 

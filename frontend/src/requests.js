@@ -656,7 +656,7 @@ updatePreferredNotesReq = handleError(updatePreferredNotesReq);
 getProductReq = handleError(getProductReq);
 getRelatedProductsReq = handleError(getRelatedProductsReq);
 updateProductReq = handleError(updateProductReq);
-updateProductStockReq - handleError(updateProductStockReq);
+updateProductStockReq = handleError(updateProductStockReq);
 deleteProductReq = handleError(deleteProductReq);
 getActiveProductsReq = handleError(getActiveProductsReq);
 createProductReq = handleError(createProductReq);

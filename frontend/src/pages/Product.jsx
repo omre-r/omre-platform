@@ -277,29 +277,28 @@ export default function Product(){
                         }}
                     >
                         {products.map(p => {
-                            const isSelected = selectedProduct.id === p.id;
-
-                            return (
-                                <button 
-                                key={p.id} 
-                                onClick={() => setSelectedProduct(p)}
-                                style={{
-                                    fontFamily: "'Cormorant Garamond', serif",
-                                    padding: "8px 12px",
-                                    background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
-                                    borderRadius: "8px",
-                                    fontSize: "1.55rem",
-                                    fontWeight: "400",
-                                    color:"white",
-                                    ...(isSelected && {
-                                        border: "4px solid rgba(0,0,0,0.65)",
-                                    }),
-                                }}
-                                >
-                                    {p.variation}
-                                </button>
-                            )
-                        })}
+                                const isSelected = selectedProduct.id === p.id;
+                                return (
+                                    <button 
+                                    key={p.id} 
+                                    onClick={() => setSelectedProduct(p)}
+                                    style={{
+                                        fontFamily: "'Cormorant Garamond', serif",
+                                        padding: "8px 12px",
+                                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                                        borderRadius: "8px",
+                                        fontSize: "1.55rem",
+                                        fontWeight: "400",
+                                        color:"white",
+                                        ...(isSelected && {
+                                            border: "4px solid rgba(0,0,0,0.65)",
+                                        }),
+                                    }}
+                                    >
+                                        {p.variation}
+                                    </button>
+                                )
+                            })}
                     </Text>
                     <hr style={{border: "1px solid rgba(0,0,0,.2)"}} />
 
@@ -466,35 +465,38 @@ export default function Product(){
                 width={"100%"}
                 >
                     <button
-                    style={{
-                        width: "75%",
-                        padding: "12px",
-                        borderRadius: "14px",
-                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
-                        color: "white",
-                        backgroundSize: "200% 200%",
-                        backgroundPosition: "0% 25%",
-                        fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: "1.35rem",
-                        fontWeight: 700,
-                        letterSpacing: "0.5px",
-                        border: "1px solid rgba(0,0,0,0.4)",
-                        cursor: "pointer",
-                        transition: "background-position 1s ease, transform 0.3s ease, box-shadow 0.3s ease",
-                    }}
-                    // Implementation where if mouse touches button will raise and change color -------------
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                        e.currentTarget.style.boxShadow = "0 8px 18px rgba(0,0,0,0.25)";
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0px)";
-                        e.currentTarget.style.boxShadow = "none";
-                    }}
-                    onClick={handleAddToCart}
+                        disabled={Number(selectedProduct.stock_ml) <= 0}
+                        style={{
+                            width: "75%",
+                            padding: "12px",
+                            borderRadius: "14px",
+                            background: Number(selectedProduct.stock_ml) <= 0
+                                ? "linear-gradient(145deg, rgba(80,80,80,0.7), rgba(20,20,20,0.5))"
+                                : "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                            color: Number(selectedProduct.stock_ml) <= 0 ? "rgba(255,255,255,0.4)" : "white",
+                            backgroundSize: "200% 200%",
+                            backgroundPosition: "0% 25%",
+                            fontFamily: "'Cormorant Garamond', serif",
+                            fontSize: "1.35rem",
+                            fontWeight: 700,
+                            letterSpacing: "0.5px",
+                            border: "1px solid rgba(0,0,0,0.4)",
+                            cursor: Number(selectedProduct.stock_ml) <= 0 ? "not-allowed" : "pointer",
+                            transition: "background-position 1s ease, transform 0.3s ease, box-shadow 0.3s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                            if (Number(selectedProduct.stock_ml) <= 0) return;
+                            e.currentTarget.style.transform = "translateY(-2px)";
+                            e.currentTarget.style.boxShadow = "0 8px 18px rgba(0,0,0,0.25)";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = "translateY(0px)";
+                            e.currentTarget.style.boxShadow = "none";
+                        }}
+                        onClick={handleAddToCart}
                     >
-                        {addToCartText}
-                    </button>   
+                        {Number(selectedProduct.stock_ml) <= 0 ? "Out of Stock" : addToCartText}
+                    </button>
                     {errorMessage && 
                     <Text style={{color:"red", fontSize: "1.2rem"}}>{errorMessage}</Text>}
                 </View>
