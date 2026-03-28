@@ -208,8 +208,8 @@ async function getProductsReq() {
 
 
 // reviews
-async function getProductReviewsReq(productid){
-    const response = await fetch(backendURL + `/reviews/product/${productid}`);
+async function getProductReviewsReq(parentid){
+    const response = await fetch(backendURL + `/reviews/product/${parentid}`);
     const data = await response.json()
     if (!data.success){
         console.error(data.message || "req failed")
@@ -226,7 +226,6 @@ async function getUserReviewsReq(customerid){
     return data;
 }
 
-//as of now, can only update "responses"
 async function updateReviewReq(id, updatedFields){
     const response = await fetch(backendURL + `/reviews/${id}`, {
         method: "PUT",
@@ -267,6 +266,19 @@ async function deleteReviewReq(id){
     const response = await fetch(backendURL + `/reviews/${id}`, {
         method: "DELETE",
         headers: {"Authorization": `Bearer ${getToken()}`}
+    });
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+async function respondToReviewReq(id, responseObj){
+    const response = await fetch(backendURL + `/reviews/response/${id}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
+        body: JSON.stringify({"response": responseObj})
     });
     const data = await response.json();
     if (!data.success){
@@ -670,6 +682,7 @@ updateReviewReq = handleError(updateReviewReq);
 createReviewReq = handleError(createReviewReq);
 getReviewsReq = handleError(getReviewsReq);
 deleteReviewReq = handleError(deleteReviewReq);
+respondToReviewReq = handleError(respondToReviewReq);
 
 // Orders
 cancelOrderReq = handleError(cancelOrderReq);
@@ -710,7 +723,7 @@ createProductAWSFlowReq = handleError(createProductAWSFlowReq);
 export {
     getUserReq, getUsersReq, createUserReq, deleteUserReq, updateLastLoginReq, getFilteredUsersReq, updatePreferredNotesReq,
     getProductReq, getRelatedProductsReq, updateProductReq, updateProductStockReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
-    getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq,
+    getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq, respondToReviewReq,
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq, getOrdersReq, getFilteredOrdersReq,
     saveBlendReq, getUserSavedBlendsReq, deleteUserBlendReq, getBlendByIdReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
