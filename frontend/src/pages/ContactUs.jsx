@@ -3,6 +3,7 @@ import { View, Text } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
+import { sendContactEmailReq } from "../requests.js";
 
 const headingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -53,14 +54,28 @@ const dividerStyle = {
 export default function ContactUs() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!form.name || !form.email || !form.message) return;
-    // TODO: wire to backend IF needed
+    if (!emailRegex.test(form.email)) {
+      setErrorMsg("Please enter a valid email address.");
+      return;
+    }
+    setSending(true);
+    setErrorMsg("");
+    const data = await sendContactEmailReq(form);
+    setSending(false);
+    if (!data.success) {
+      setErrorMsg("Something went wrong. Please try again.");
+      return;
+    }
     setSubmitted(true);
   }
 
@@ -88,7 +103,6 @@ export default function ContactUs() {
           </Text>
           <hr style={dividerStyle} />
 
-          {/* Contact Info */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.6rem" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7a1f00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/>
@@ -112,7 +126,6 @@ export default function ContactUs() {
           ) : (
             <div style={{ marginTop: "1.5rem" }}>
 
-              {/* Name + Email row */}
               <div style={{ display: "flex", gap: "1.25rem", marginBottom: "1.25rem" }}>
                 <div style={{ flex: 1 }}>
                   <label style={labelStyle}>Name</label>
@@ -137,7 +150,6 @@ export default function ContactUs() {
                 </div>
               </div>
 
-              {/* Phone number */}
               <div style={{ marginBottom: "1.25rem" }}>
                 <label style={labelStyle}>Phone Number</label>
                 <input
@@ -149,7 +161,6 @@ export default function ContactUs() {
                 />
               </div>
 
-              {/* Message */}
               <div style={{ marginBottom: "1.5rem" }}>
                 <label style={labelStyle}>Message</label>
                 <textarea
@@ -164,20 +175,23 @@ export default function ContactUs() {
 
               <button
                 onClick={handleSubmit}
+                disabled={sending}
                 style={{
-                    ...bodyStyle, 
+                    ...bodyStyle,
                     fontSize: "1rem",
                     padding: "0.9rem 2.2rem",
                     border: "1px solid rgba(255,255,255,0.35)",
                     borderRadius: "28px",
                     background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
                     color: "#FFFFFF",
-                    cursor: "pointer",
+                    cursor: sending ? "not-allowed" : "pointer",
+                    opacity: sending ? 0.7 : 1,
                     boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
                     transition: "all 0.2s ease",
                 }}>
-                <Text style={{...bodyStyle, color: "#FFFFFF"}}>Send</Text>
+                <Text style={{...bodyStyle, color: "#FFFFFF"}}>{sending ? "Sending..." : "Send"}</Text>
               </button>
+              {errorMsg && <Text style={{ color: "red", marginTop: "0.75rem" }}>{errorMsg}</Text>}
             </div>
           )}
 
