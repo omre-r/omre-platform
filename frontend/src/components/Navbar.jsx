@@ -38,7 +38,8 @@ const Navbar = () => {
   }
 
   return (
-    <header className="navbar">
+    <header className="navbar"
+    style={{position: "sticky", top: "0", zIndex: "10000"}}>
       <div className="nav-left">
         {/* Navbar Logo ------------------------------------------------------------------------------------------ */}
         {/* On click will take user back to home page */}
