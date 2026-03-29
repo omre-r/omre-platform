@@ -30,6 +30,19 @@ const blends = new Blends()
 const cartItems = new CartItems()
 const recommendations = new Recommendations()
 
+
+const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
+const SES_FROM_EMAIL = process.env.SES_FROM_EMAIL;
+
+const sesClient = new SESClient({
+    region: 'us-east-1',
+    credentials: {
+        secretAccessKey: S3_SECRET_ACCESS_KEY,
+        accessKeyId: S3_ACCESS_KEY_ID
+    }
+});
+
+
 // General wrapper to prevent server crashing
 function handleError(fn){
   return async (...args) => {
@@ -578,6 +591,30 @@ async function getRecommendations(req, res) {
     return res.json(result);
 }
 
+
+// path: POST /contact
+async function sendContactEmail(req, res) {
+    const { name, email, phone, message } = req.body;
+    if (!name || !email || !message) {
+        return res.status(400).json({ success: false, message: "Name, email, and message are required" });
+    }
+    const command = new SendEmailCommand({
+        Source: SES_FROM_EMAIL,
+        Destination: { ToAddresses: [SES_FROM_EMAIL] },
+        Message: {
+            Subject: { Data: `OMRÉ Contact Form — ${name}` },
+            Body: {
+                Text: {
+                    Data: `Name: ${name}\nEmail: ${email}\nPhone: ${phone || "Not provided"}\n\nMessage:\n${message}`
+                }
+            }
+        },
+        ReplyToAddresses: [email]
+    });
+    await sesClient.send(command);
+    return res.json({ success: true });
+}
+sendContactEmail = handleError(sendContactEmail);
 /* 
 Though probably not needed, we can use wrappers down the line that
 cater to some group flow. For example: 
@@ -653,7 +690,7 @@ module.exports = {
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview, respondToReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders, getFilteredOrders,
   saveBlend, getUserBlends, deleteUserBlend, getBlendById,
-  createCartItem, deleteCartItem, getCart, clearCart, updateCart,
+  createCartItem, deleteCartItem, getCart, clearCart, updateCart, sendContactEmail,
   getUploadURL,
   getRecommendations,
 };

@@ -635,6 +635,18 @@ async function createProductAWSFlowReq({ name, price, description, imageFiles, m
   });
 }
 
+async function sendContactEmailReq({ name, email, phone, message }) {
+    const response = await fetch(backendURL + "/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, phone, message })
+    });
+    const data = await response.json();
+    if (!data.success) console.error(data.message || "req failed");
+    return data;
+}
+sendContactEmailReq = handleError(sendContactEmailReq);
+
 function getToken(){
     for (let key of Object.keys(localStorage)){
         if (key.includes("accessToken")) return localStorage.getItem(key);
@@ -728,6 +740,6 @@ export {
     saveBlendReq, getUserSavedBlendsReq, deleteUserBlendReq, getBlendByIdReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
     getRecommendationsReq,
-    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, 
+    validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, sendContactEmailReq,
     createProductAWSReq, createProductAWSFlowReq, uploadAndGetURlsReq, getIDToken
 }

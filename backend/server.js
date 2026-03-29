@@ -151,6 +151,8 @@ app.post("/cartitems", [verifyToken], controllers.createCartItem);
 app.get("/uploadurl", [verifyToken], controllers.getUploadURL)
 app.get("/recommendations/:userid", [verifyToken], controllers.getRecommendations)
 
+app.post("/contact", controllers.sendContactEmail);
+
 //starting server
 app.listen(PORT || 5001, () => {
   console.log(`Server running on port ${PORT}`);
