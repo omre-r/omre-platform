@@ -95,7 +95,6 @@ export default function Cart() {
     }
       try {
         const response = await getCartReq(customerid);
-        console.log(response)
         const cartRows = response?.data?.cart || [];
         if (!Array.isArray(cartRows) || cartRows.length === 0) {
           setCart([]);
@@ -272,7 +271,7 @@ export default function Cart() {
       itemid: cartitem.itemid,
       type: cartitem.type
     });
-    if (!savedItem.success || savedItem.exists){
+    if (!savedItem.success || savedItem?.data?.exists){
       setMessage(savedItem.message);
       setTimeout(() => setMessage(""), 5000)
       return;
@@ -543,22 +542,12 @@ async function checkout() {
                         <View
                         width={"fit-content"}
                         marginLeft={"auto"}>
+                        {savedItems.some(saved => cartItem.itemid === saved.itemid)
+                        ?
                         <button
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform="translateY(-5px)";
-                          e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
-                          e.currentTarget.style.opacity= "1";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform="translateY(0px)";
-                          e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
-                          e.currentTarget.style.opacity= ".6";
-
-                        }} 
-                        onClick={() => moveToSaved(cartItem)}
                         style={{
                           ...buttonViewStyle,
-                          opacity: ".6",
+                          opacity: ".5",
                           color: "white",
                           borderRadius: "10px",
                           width:"fit-content",
@@ -566,9 +555,38 @@ async function checkout() {
                           fontSize: "1.2em",
                           fontWeight: "bold",
                         }}
+                        disabled
                         >
-                          Save for later
+                          Saved for later
                         </button>
+                        :
+                          <button
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform="translateY(-5px)";
+                            e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
+                            e.currentTarget.style.opacity= "1";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform="translateY(0px)";
+                            e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
+                            e.currentTarget.style.opacity= ".6";
+
+                          }} 
+                          onClick={() => moveToSaved(cartItem)}
+                          style={{
+                            ...buttonViewStyle,
+                            opacity: ".6",
+                            color: "white",
+                            borderRadius: "10px",
+                            width:"fit-content",
+                            padding:"15x",
+                            fontSize: "1.2em",
+                            fontWeight: "bold",
+                          }}
+                          >
+                            Save for later
+                          </button>
+                        }
                         </View>
 
                       </View>
