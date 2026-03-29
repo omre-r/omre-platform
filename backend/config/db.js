@@ -877,8 +877,8 @@ class Reviews{
         const {customerid, productid, message, rating, images} = options;
         const id = uuidv4();
 
-        if (rating < 1 || rating > 5){
-            throw new DBError("Rating must be 1-5")
+        if (rating < 0 || rating > 5){
+            throw new DBError("Rating must be 0-5")
         }
 
         if (message.length > 500){

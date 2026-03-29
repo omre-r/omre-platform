@@ -9,8 +9,20 @@ import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken
 import Navbar from "../components/Navbar";
 
 import LuxuryBackground from "../assets/Luxury Background2.png";
-import ProfileIcon from "../assets/profileIconClean.png"
-import { useAuth } from "../context/AuthContext";
+import ProfileIcon from "../assets/profileIconClean.png";
+
+import rating0 from "../assets/ratings/0.png";
+import rating1 from "../assets/ratings/1.png";
+import rating2 from "../assets/ratings/2.png";
+import rating3 from "../assets/ratings/3.png";
+import rating4 from "../assets/ratings/4.png";
+import rating5 from "../assets/ratings/5.png";
+import rating6 from "../assets/ratings/6.png";
+import rating7 from "../assets/ratings/7.png";
+import rating8 from "../assets/ratings/8.png";
+import rating9 from "../assets/ratings/9.png";
+import rating10 from "../assets/ratings/10.png";
+const ratings = [rating0, rating1, rating2, rating3, rating4, rating5, rating6, rating7, rating8, rating9, rating10];
 
 const bodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -48,11 +60,11 @@ export default function Product(){
     const [reviews, setReviews] = useState([]);
     const [loadingReviews, setLoadingReviews] = useState(false);
     const [newReviewMessage, setNewReviewMessage] = useState("");
-    const [newReviewrating, setNewReviewrating] = useState(5);
     const [attachedImages, setAttachedImages] = useState([]);
     const [userInfo, setUserInfo] = useState(null);
     const [replyID, setReplyID] = useState("")
     const [replyMessage, setReplyMessage] = useState("")
+    const [selectedRating, setSelectedRating] = useState(0);
 
     useEffect(() => {
         const decodedAccessToken = getAccessToken();
@@ -169,11 +181,17 @@ export default function Product(){
             customerid: idToken.sub,
             productid: params.parentid,
             message: newReviewMessage,
-            rating: newReviewrating,
+            rating: selectedRating * .5,
             images: imageUrls
         }
         const result = await createReviewReq(reviewForm);
         loadReviews()
+    }
+    function applyRating(e){
+        const ratingRect = e.target.getBoundingClientRect();
+        const amountSelected = (e.clientX - ratingRect.left) / ratingRect.width;
+        console.log()
+        setSelectedRating(Math.floor(amountSelected * ratings.length))
     }
 
     async function submitReply(){
@@ -712,10 +730,21 @@ export default function Product(){
                     direction={"column"}
                     flex={"1"}
                     >
-                        
-                        <h2 style={{marginBlock: "3px"}}>
-                            {userInfo.firstname} {userInfo.lastname}
-                        </h2>
+                        <Flex
+                        direction={"column"}
+                        gap={"3px"}>
+                            <h2 style={{marginBlock: "3px"}}>
+                                {userInfo.firstname} {userInfo.lastname}
+                            </h2>
+                            <View 
+                            width={"200px"}
+                            onClick={applyRating}
+                            borderRadius={"10px"}
+                            backgroundColor={"rgba(80, 19, 19, 0.13)"}>
+                                <img src={ratings[selectedRating]} width={"100%"} alt="" />
+                            </View>
+                        </Flex>
+
                         <Flex>
                             {attachedImages.map(f => (
                                 <View
@@ -747,7 +776,7 @@ export default function Product(){
                             ))}  
                         </Flex>   
                         <Flex
-                        alignItems={"center"}>
+                        alignItems={"end"}>
                             <textarea 
                             value={newReviewMessage}
                             onChange={(e) => setNewReviewMessage(e.target.value)}
@@ -760,7 +789,7 @@ export default function Product(){
                                 borderBottom: "3px solid",
                                 borderRadius: "5px",
                                 backgroundColor: "transparent",
-                                fontSize: "2em"
+                                fontSize: "2em",
                             }}
                             onFocus={e => {e.target.style.outline = "2px solid rgba(0,0,0,.2)"}}
                             onBlur={e => {e.target.style.outline = "none"}}
@@ -842,12 +871,14 @@ export default function Product(){
                                         <h3 style={{marginBlock: "0"}}>
                                             {review.user.first_name} {review.user.last_name}
                                         </h3>
-                                        <View
-                                        display={"flex"}
-                                        justifyContent={"center"}
-                                        alignItems={"center"}>
-                                            <strong>Rating: {Number(review.rating)} / 5</strong>
+
+                                        <View 
+                                        width={"200px"}
+                                        borderRadius={"10px"}
+                                        backgroundColor={"rgba(80, 19, 19, 0.13)"}>
+                                            <img src={ratings[review.rating / .5]} width={"100%"} alt="" />
                                         </View>
+                                        <strong>{Number(review.rating)} / 5</strong>
                                     </Flex>
                                     <Flex
                                     direction={"column"}
