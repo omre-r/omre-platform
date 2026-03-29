@@ -208,6 +208,8 @@ export default function Product(){
         if (replyMessage === "") return;
         const result = await respondToReviewReq(replyID, {message: replyMessage, isadmin: (userInfo.isAdmin && userInfo.sub !== review.customerid)})
         loadReviews()
+        setReplyMessage("");
+        setReplyID(null);
     }
 
     async function removeReview(id) {
@@ -747,10 +749,15 @@ export default function Product(){
                                 {userInfo.firstname} {userInfo.lastname}
                             </h2>
                             <View 
+                            className={styles.rating}
+                            position={"relative"}
+                            overflow={"hidden"}
                             width={"200px"}
                             onClick={applyRating}
                             borderRadius={"10px"}
                             backgroundColor={"rgba(80, 19, 19, 0.13)"}>
+                                <View className={styles.ratingOverlay}>
+                                </View>
                                 <img src={ratings[selectedRating]} width={"100%"} alt="" />
                             </View>
                         </Flex>
@@ -906,7 +913,10 @@ export default function Product(){
                                                 border={"1px solid"}
                                                 borderRadius={"10px"}
                                                 >
-                                                    <img style={{objectFit: "cover", width: "100%", height: "100%"}} src={url} alt="image" />
+                                                    <a href={url} target="_blank">
+                                                        <img style={{objectFit: "cover", width: "100%", height: "100%"}} src={url} alt="image" />
+                                                    </a>
+                                                    
                                                 </View>
                                             ))}                                       
                                             {review.message}
@@ -914,6 +924,7 @@ export default function Product(){
                                     </Flex>
                                 </Flex>
                                 {/* additional options */}
+                                {userInfo?.sub === review.customerid &&
                                 <Flex
                                 className={styles.more_options}
                                 gap={"3px"}
@@ -936,6 +947,7 @@ export default function Product(){
                                     }}
                                     >Delete</button>
                                 </Flex>
+                                }
                             </Flex>
                             <Flex
                             direction={"column"}
