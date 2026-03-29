@@ -145,7 +145,14 @@ app.delete("/cartitems/:id", [verifyToken], controllers.deleteCartItem);
 
 app.post("/cartitems", [verifyToken], controllers.createCartItem);
 
+// "saved for later" items
+app.delete("/saveditems/clear/:customerid", [verifyToken], controllers.clearSavedItems)
 
+app.get("/saveditems/:customerid", [verifyToken], controllers.getSavedItems);
+app.put("/saveditems/:customerid", [verifyToken], controllers.updateSavedItems)
+app.delete("/saveditems/:id", [verifyToken], controllers.deleteSavedItem);
+
+app.post("/saveditems", [verifyToken], controllers.createSavedItem);
 
 // miscellaneous
 app.get("/uploadurl", [verifyToken], controllers.getUploadURL)

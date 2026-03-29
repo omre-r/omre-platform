@@ -2196,4 +2196,4 @@ class Recommendations {
         }
     }
 }
-module.exports = { Users, Products, Reviews, Orders, Blends, CartItems, Recommendations }
+module.exports = { Users, Products, Reviews, Orders, Blends, CartItems, SavedItems, Recommendations }

@@ -1,7 +1,7 @@
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require("uuid");
-const { Users, Products, Reviews, Orders, Blends, CartItems, Recommendations } = require("./config/db.js")
+const { Users, Products, Reviews, Orders, Blends, CartItems, Recommendations, SavedItems } = require("./config/db.js")
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -28,6 +28,7 @@ const reviews = new Reviews()
 const orders = new Orders()
 const blends = new Blends()
 const cartItems = new CartItems()
+const savedItems = new SavedItems()
 const recommendations = new Recommendations()
 
 
@@ -577,6 +578,58 @@ async function updateCart(req, res) {
   return res.json(result);
 }
 
+// "saved for later" items
+// path: POST /saveditems
+async function createSavedItem(req, res) {
+  const result = await savedItems.createSavedItem(req.body);
+  if (!result.success) {
+    return res.status(result.status || 400).json(result);
+  }
+  return res.json(result);
+}
+
+// path: DELETE /saveditems/:id
+async function deleteSavedItem(req, res) {
+  const {id} = req.params
+  const result = await savedItems.deleteSavedItem(id);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: GET /saveditems/:customerid
+async function getSavedItems(req, res) {
+  const {customerid} = req.params;
+  const result = await savedItems.getSavedItems(customerid);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: DELETE /saveditems/clear/:customerid
+async function clearSavedItems(req, res) {
+  const {customerid} = req.params;
+  const result = await savedItems.clearSavedItems(customerid);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: PUT /saveditems/:customerid
+async function updateSavedItems(req, res) {
+  const {customerid} = req.params;
+  const {items} = req.body
+  const result = await savedItems.updateSavedItems(customerid, items);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+
 // path: GET /recommendations/:userid
 async function getRecommendations(req, res) {
     const {userid} = req.params;
@@ -675,13 +728,19 @@ getOrders = handleError(getOrders);
 saveBlend = handleError(saveBlend);
 getUserBlends = handleError(getUserBlends);
 getRecommendations = handleError(getRecommendations); 
+deleteUserBlend = handleError(deleteUserBlend);
 
 createCartItem = handleError(createCartItem);
 deleteCartItem = handleError(deleteCartItem);
 getCart = handleError(getCart);
 clearCart = handleError(clearCart);
 updateCart = handleError(updateCart);
-deleteUserBlend = handleError(deleteUserBlend);
+
+createSavedItem = handleError(createSavedItem);
+deleteSavedItem = handleError(deleteSavedItem);
+getSavedItems = handleError(getSavedItems);
+clearSavedItems = handleError(clearSavedItems);
+updateSavedItems = handleError(updateSavedItems);
 
 getUploadURL = handleError(getUploadURL);
 
@@ -695,6 +754,7 @@ module.exports = {
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders, getFilteredOrders,
   saveBlend, getUserBlends, deleteUserBlend, getBlendById,
   createCartItem, deleteCartItem, getCart, clearCart, updateCart, sendContactEmail,
+  createSavedItem, deleteSavedItem, getSavedItems, clearSavedItems, updateSavedItems,
   getUploadURL,
   getRecommendations,
 };

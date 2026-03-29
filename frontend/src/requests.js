@@ -506,6 +506,70 @@ async function clearCartReq(customerid) {
 }
 
 
+// "saved for later" items
+async function createSavedItemReq({customerid, itemid, type}) {
+    const response = await fetch(backendURL + `/saveditems`, {
+        method: "POST",
+        headers: {"Authorization": `Bearer ${getToken()}`, "Content-Type": "application/json"},
+        body: JSON.stringify({customerid, itemid, type})
+    });
+    const data = await response.json()
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+async function deleteSavedItemReq(id) {
+    const response = await fetch(backendURL + `/saveditems/${id}`, {
+        method: "DELETE",
+        headers: {"Authorization": `Bearer ${getToken()}`},
+    });
+    const data = await response.json()
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+async function getSavedItemsReq(customerid) {
+    const response = await fetch(backendURL + `/saveditems/${customerid}`, {
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
+    const data = await response.json()
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+async function updateSavedItemsReq(customerid, items) {
+    const response = await fetch(backendURL + `/saveditems/${customerid}`, {
+        method: "PUT",
+        headers: {"Authorization": `Bearer ${getToken()}`, "Content-Type": "application/json"},
+        body: JSON.stringify({items})
+    });
+    const data = await response.json()
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data; //no "item" field per object (compared to getSavedItemsReq)
+}
+
+async function clearSavedItemsReq(customerid) {
+    const response = await fetch(backendURL + `/saveditems/clear/${customerid}`, {
+        method: "DELETE",
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
+    const data = await response.json()
+    if (!data.success){
+        console.error(data.message || "req failed")
+    }
+    return data;
+}
+
+
+
 async function getRecommendationsReq(userid) {
     const response = await fetch(backendURL + `/recommendations/${userid}`, {
         headers: { "Authorization": `Bearer ${getToken()}` }
@@ -733,6 +797,13 @@ getCartReq = handleError(getCartReq);
 clearCartReq = handleError(clearCartReq);
 updateCartReq = handleError(updateCartReq);
 
+// Saved Items
+createSavedItemReq = handleError(createSavedItemReq);
+deleteSavedItemReq = handleError(deleteSavedItemReq);
+getSavedItemsReq = handleError(getSavedItemsReq);
+clearSavedItemsReq = handleError(clearSavedItemsReq);
+updateSavedItemsReq = handleError(updateSavedItemsReq);
+
 // Recommendations
 getRecommendationsReq = handleError(getRecommendationsReq);
 
@@ -753,6 +824,7 @@ export {
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq, getOrdersReq, getFilteredOrdersReq,
     saveBlendReq, getUserSavedBlendsReq, deleteUserBlendReq, getBlendByIdReq,
     createCartItemReq, deleteCartItemReq, getCartReq, clearCartReq, updateCartReq,
+    createSavedItemReq, deleteSavedItemReq, getSavedItemsReq, clearSavedItemsReq, updateSavedItemsReq,
     getRecommendationsReq,
     validateAllImages, uploadImageToS3Req, getPresignedUrlReq_LOCAL, createProductFlowReq_LOCAL, getPresignedUrlReq, sendContactEmailReq,
     createProductAWSReq, createProductAWSFlowReq, uploadAndGetURlsReq, getIDToken, getAccessToken
