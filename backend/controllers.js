@@ -482,7 +482,10 @@ async function getUploadURL(req, res) {
   const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   const PRESIGNED_URL_EXPIRATION = 1800; // 30 minutes
 
-  const { filename, contentType, fileSize } = req.query;
+  const { filename, contentType, fileSize, bucketDirectory } = req.query;
+  if (!["products", "reviews"].includes(bucketDirectory)){
+      return res.status(400).json({success: false, message: "Invalid bucket directory"});
+  }
     
   // Validation
   if (!filename || !contentType) {
@@ -496,12 +499,13 @@ async function getUploadURL(req, res) {
   if (fileSize && fileSize > MAX_FILE_SIZE) {
     return res.status(400).json({success: false, message: `File too large. Max size: ${MAX_FILE_SIZE / 1024 / 1024}MB`});
   }
+
   
   // Generate unique S3 key
   const timestamp = Date.now();
   const randomId = uuidv4().split("-").join("");
   const sanitizedFilename = filename.replace(/[^a-z0-9.]/gi, '-').toLowerCase();
-  const s3Key = `products/${timestamp}-${randomId}-${sanitizedFilename}`;
+  const s3Key = `${bucketDirectory}/${timestamp}-${randomId}-${sanitizedFilename}`;
       
   // Create presigned URL with temporary tagging
   const command = new PutObjectCommand({
@@ -510,7 +514,7 @@ async function getUploadURL(req, res) {
     ContentType: contentType,
     Tagging: 'status=temporary' // Auto-tag as temporary
   });
-  
+
   const uploadUrl = await getSignedUrl(s3Client, command, {
     expiresIn: PRESIGNED_URL_EXPIRATION
   });

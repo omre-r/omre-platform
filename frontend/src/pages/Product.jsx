@@ -172,7 +172,8 @@ export default function Product(){
         }
         let imageUrls = [];
         if (attachedImages.length > 0){
-            imageUrls = await uploadAndGetURlsReq(attachedImages);
+            imageUrls = await uploadAndGetURlsReq(attachedImages, "reviews");
+            console.log(imageUrls)
             if (!imageUrls){
                 return;
             }
@@ -185,6 +186,15 @@ export default function Product(){
             images: imageUrls
         }
         const result = await createReviewReq(reviewForm);
+        if (!result.success){
+            return;
+        }
+        setNewReviewMessage("");
+        setSelectedRating(0);
+        for (const f of attachedImages){
+            URL.revokeObjectURL(f.url);
+        }
+        setAttachedImages([]);
         loadReviews()
     }
     function applyRating(e){
@@ -194,9 +204,9 @@ export default function Product(){
         setSelectedRating(Math.floor(amountSelected * ratings.length))
     }
 
-    async function submitReply(){
+    async function submitReply(review){
         if (replyMessage === "") return;
-        const result = await respondToReviewReq(replyID, {message: replyMessage, isadmin: userInfo.isAdmin && userInfo.sub !== replyID})
+        const result = await respondToReviewReq(replyID, {message: replyMessage, isadmin: (userInfo.isAdmin && userInfo.sub !== review.customerid)})
         loadReviews()
     }
 
@@ -825,6 +835,8 @@ export default function Product(){
             </View>
             }
             {/* List of past reviews */}
+            {reviews.length === 0 && 
+            <h2>No reviews yet...</h2>}
             <Flex 
                 direction={"column"}
                 justifyContent="center"
@@ -955,14 +967,15 @@ export default function Product(){
                                         direction={"column"}
                                         flex={"1"}
                                         >      
-                                            {res.isadmin 
+
+                                            {!res.isadmin 
                                             ?
-                                                <h3 style={{marginBlock: "0"}}>
-                                                    OMRE Fragrances
+                                                <h3 style={{marginBlock: "0"}}> 
+                                                    {review.user.first_name} {review.user.last_name}
                                                 </h3>
                                             :
                                                 <h3 style={{marginBlock: "0"}}>
-                                                    {review.user.first_name} {review.user.last_name}
+                                                   OMRE Fragrances
                                                 </h3>
                                             }
                                             <Flex
@@ -1003,7 +1016,7 @@ export default function Product(){
                                 direction={"column"}
                                 flex={"1"}
                                 >      
-                                    {userInfo.isAdmin && userInfo.sub !== review.customerid
+                                    {userInfo?.isAdmin && userInfo?.sub !== review.customerid
                                     
                                     ?
                                         <h3 style={{marginBlock: "0"}}>
@@ -1011,7 +1024,7 @@ export default function Product(){
                                         </h3>
                                     :
                                         <h3 style={{marginBlock: "0"}}>
-                                            {userInfo.firstname} {userInfo.lastname}
+                                            {userInfo?.firstname} {userInfo?.lastname}
                                         </h3>
                                     }
                                     <Flex
@@ -1051,7 +1064,7 @@ export default function Product(){
                                         onClick={() => {setReplyID(null);setReplyMessage("")}}
                                         >Cancel</button>
                                         <button
-                                            onClick={submitReply}
+                                            onClick={() => submitReply(review)}
                                             style={{
                                                 border: "1px solid gray",
                                                 padding: "5px",

@@ -198,7 +198,7 @@ export default function ProductsPanel() {
         /*files are tagged temporary on S3, 
         so unused images will be deleted in 2 days (may change)*/
         setIsUploading(true);
-        const imageurls = await uploadAndGetURlsReq(newFiles);
+        const imageurls = await uploadAndGetURlsReq(newFiles, "products");
         setIsUploading(false);
         if (!imageurls){
             setFiles([]);

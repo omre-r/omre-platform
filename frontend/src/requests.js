@@ -554,17 +554,19 @@ async function uploadImageToS3Req(uploadUrl, file) {
 //SERVER BASED
 
 //returns a temporary url to upload an image
-async function getPresignedUrlReq_LOCAL(file) {
-  const response = await fetch(backendURL + `/uploadurl?filename=${file.name}&contentType=${file.contentType}&fileSize=${file.fileSize}`,{
+async function getPresignedUrlReq_LOCAL(file, bucketDirectory) {
+  const response = await fetch(backendURL + `/uploadurl?filename=${file.name}&contentType=${file.type}&fileSize=${file.size}&bucketDirectory=${bucketDirectory}`,{
     headers: {"Authorization": `Bearer ${getToken()}`}
   });
+
   if (!response.ok) throw new Error('Failed to get upload URL');
-  return response.json();
+  const result = (await response.json())?.data
+  return result;
 }
 
-async function uploadAndGetURlsReq(imageFiles) {
+async function uploadAndGetURlsReq(imageFiles, bucketDirectory) {
     if (!validateAllImages(imageFiles).valid) throw new Error("invalid images");
-    const uploadUrls = await Promise.all(imageFiles.map(f => getPresignedUrlReq_LOCAL(f)));
+    const uploadUrls = await Promise.all(imageFiles.map(f => getPresignedUrlReq_LOCAL(f, bucketDirectory)));
     const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, imageFiles[i])));
     if (uploadResults.some(res => res === null)) return null
     return uploadUrls.map(data => data.publicUrl)
@@ -572,7 +574,7 @@ async function uploadAndGetURlsReq(imageFiles) {
 
 async function createProductFlowReq_LOCAL({parentid = null, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden}){
     if (!validateAllImages(images).valid) throw new Error("invalid images");
-    const uploadUrls = await Promise.all(images.map(f => getPresignedUrlReq_LOCAL(f)));
+    const uploadUrls = await Promise.all(images.map(f => getPresignedUrlReq_LOCAL(f, "products")));
     if (uploadUrls.some(url => url === null)) throw new Error("Failed to get upload URLs");
     
     const uploadResults = await Promise.all(uploadUrls.map((data, i) => uploadImageToS3Req(data.uploadUrl, images[i])));
@@ -738,7 +740,7 @@ getRecommendationsReq = handleError(getRecommendationsReq);
 // Misc
 uploadAndGetURlsReq = handleError(uploadAndGetURlsReq)
 uploadImageToS3Req = handleError(uploadImageToS3Req);
-getPresignedUrlReq_LOCAL = handleError(getPresignedUrlReq);
+getPresignedUrlReq_LOCAL = handleError(getPresignedUrlReq_LOCAL);
 createProductFlowReq_LOCAL = handleError(createProductFlowReq_LOCAL)
 getPresignedUrlReq = handleError(getPresignedUrlReq);
 createProductAWSReq = handleError(createProductAWSReq);

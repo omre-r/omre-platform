@@ -90,9 +90,9 @@ async function testProductFlow(){
     console.log("files3 array is valid")
 
 
-    const uploadUrls1 = await Promise.all(files1.map(f => getPresignedUrlReq_LOCAL(f)));
-    const uploadUrls2 = await Promise.all(files2.map(f => getPresignedUrlReq_LOCAL(f)));
-    const uploadUrls3 = await Promise.all(files3.map(f => getPresignedUrlReq_LOCAL(f)));
+    const uploadUrls1 = await Promise.all(files1.map(f => getPresignedUrlReq_LOCAL(f, "products")));
+    const uploadUrls2 = await Promise.all(files2.map(f => getPresignedUrlReq_LOCAL(f, "products")));
+    const uploadUrls3 = await Promise.all(files3.map(f => getPresignedUrlReq_LOCAL(f, "products")));
     console.log("retrieved all upload/public urls", uploadUrls1, uploadUrls2, uploadUrls3)
 
     const uploadResults1 = await Promise.all(uploadUrls1.map((data, i) => uploadImageToS3Req(data.uploadUrl, files1[i])));
