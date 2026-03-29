@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken, createCartItemReq, getProductReviewsReq, createReviewReq, uploadAndGetURlsReq, getAccessToken, respondToReviewReq, deleteReviewReq } from "../requests";
 
+import {isProfane} from "no-profanity";
 import Navbar from "../components/Navbar";
 
 import LuxuryBackground from "../assets/Luxury Background2.png";
@@ -170,6 +171,9 @@ export default function Product(){
         if (newReviewMessage === ""){
             return;
         }
+        if (isProfane(newReviewMessage)){
+            return;
+        }
         let imageUrls = [];
         if (attachedImages.length > 0){
             imageUrls = await uploadAndGetURlsReq(attachedImages, "reviews");
@@ -206,6 +210,7 @@ export default function Product(){
 
     async function submitReply(review){
         if (replyMessage === "") return;
+        if (isProfane(newReviewMessage)) return;
         const result = await respondToReviewReq(replyID, {message: replyMessage, isadmin: (userInfo.isAdmin && userInfo.sub !== review.customerid)})
         loadReviews()
         setReplyMessage("");
@@ -279,7 +284,7 @@ export default function Product(){
     const filteredRecommendations = recommendations.filter((prod) => String(prod.parentid) !== String(params.parentid));
 
     return (
-        <>
+    <>
         <Navbar/>
         <View
                 width="100%"
@@ -1100,7 +1105,7 @@ export default function Product(){
             </Flex>
         </Flex>
     </Card>
-    </View>
+        </View>
     </>
     )
 }
