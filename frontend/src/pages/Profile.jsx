@@ -1,8 +1,9 @@
 import Navbar from "../components/Navbar";
-import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, ToggleButton, TextField, SelectField } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, ToggleButton, Card } from "@aws-amplify/ui-react";
 import LuxuryBackground from "../assets/Luxury Background2.png";
+import { fetchAuthSession } from "aws-amplify/auth";
 import { useEffect, useState } from "react";
-import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq, createCartItemReq, updatePreferredNotesReq, getUserReq, getUserOrdersReq, cancelOrderReq, getFilteredOrdersReq } from "../requests.js";
+import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq, createCartItemReq, updatePreferredNotesReq, getUserReq, getUserOrdersReq, cancelOrderReq, getFilteredOrdersReq , getSavedItemsReq, deleteSavedItemReq, getBlendByIdReq, getProductReq} from "../requests.js";
 import SearchIcon from "../assets/search_icon.png";
 
 // Fonts ----------------------------------------------
@@ -94,6 +95,16 @@ const buttonStyling = {
     boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
     transition: "all 0.2s ease",
 }
+const buttonViewStyle = {
+  padding: "0.9rem 2.2rem",
+  border: "1px solid rgba(255,255,255,0.35)",
+  borderRadius: "28px",
+  // navbar color for later reference :  #300a0a
+  background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+  cursor: "pointer",
+  boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+  transition: "all 0.2s ease",
+};
 
 export default function Profile() {
     const [message, setMessage] = useState("");
@@ -116,6 +127,10 @@ export default function Profile() {
     // Grabbing user order statistics --------------------------------------------
     const totalOrders = userOrders.length;
     const totalCanceledOrders = userOrders.filter((order) => order.status.toLowerCase() === "canceled").length;
+
+    // Load user saved items ----------------------------------
+    const [savedItems, setSavedItems] = useState([]);
+    const [loadingSavedItems, setLoadingSavedItems] = useState(true);
 
     // If order was canceled we do not include it in the total spent 
     const totalSpent = userOrders.reduce((sum, order) => { 
@@ -154,6 +169,19 @@ export default function Profile() {
         "Saffron", "Sandalwood", "Suede",
         "Tobacco", "Vanilla", "Yuzu"
     ];
+
+      async function getCustomerId() {
+        try {
+          const session = await fetchAuthSession();
+          const idToken = session.tokens?.idToken?.toString();
+          if (!idToken) return null;
+    
+          const payload = JSON.parse(atob(idToken.split(".")[1]));
+          return payload.sub;
+        } catch {
+          return null;
+        }
+      }
 
     // Load products from backend ---------------------------------------
     async function loadProducts() {
@@ -405,6 +433,116 @@ async function loadUserOrders() {
     }
 }
 
+// load users saved items -------------------------------------------
+async function loadSavedItems() {
+const customerid = await getCustomerId();
+    if (!customerid) {
+    setLoadingSavedItems(false);
+    return;
+    }
+    try {
+    const response = await getSavedItemsReq(customerid);
+    const savedItemRows = response?.data?.savedItems || [];
+    if (!Array.isArray(savedItemRows) || savedItemRows.length === 0) {
+        setSavedItems([]);
+        return;
+    }
+
+    const fullSavedItems = await Promise.all(
+    savedItemRows.map(async (row) => {
+        let item;
+
+        if (row.type === "blend") {
+        const blendRes = await getBlendByIdReq(row.itemid);
+        const blend = blendRes?.data?.data?.blend || blendRes?.data?.blend;
+        if (!blend) {
+            await deleteSavedItemReq(row.id);
+            return null;
+        }
+        let price = 0;
+        if (blend.size_ml === 30) price = 50;
+        if (blend.size_ml === 50) price = 75;
+        const frag1Res = await getProductReq(blend.frag1_productid);
+        const frag2Res = await getProductReq(blend.frag2_productid);
+        const frag1 = frag1Res?.data?.product;
+        const frag2 = frag2Res?.data?.product;
+        let frag3 = null;
+        if (blend.frag3_productid) {
+            const frag3Res = await getProductReq(blend.frag3_productid);
+            frag3 = frag3Res?.data?.product;
+        }
+        if (
+            !frag1 ||
+            !frag2 ||
+            frag1.ishidden ||
+            frag2.ishidden ||
+            (frag3 && frag3.ishidden)
+        ) {
+            await deleteSavedItemReq(row.id);
+            return null;
+        }
+        const imageArray = frag1?.images || [];
+        const name = `${frag1?.name || "Unknown"} ${blend.frag1_pct}% /
+                        ${frag2?.name || "Unknown"} ${blend.frag2_pct}%${
+                        frag3 ? ` / ${frag3.name} ${blend.frag3_pct}%` : ""
+                        } Blend`
+            .replace(/\s+/g, " ")
+            .trim();
+        item = {
+            name,
+            price,
+            images: imageArray,
+            size_ml: blend.size_ml,
+        };
+
+        } else {
+        const productRes = await getProductReq(row.itemid);
+        item = productRes?.data?.product;
+        if (!item || item.ishidden) {
+            await deleteSavedItemReq(row.id);
+            return null;
+        }
+        }
+
+        return { ...row, item };
+    })
+    );
+
+    setSavedItems(fullSavedItems.filter(Boolean));
+} catch (err) {
+    console.error(err);
+    setMessage("Failed to load saved items.");
+} finally {
+    setLoadingSavedItems(false);
+}
+}
+
+// Remove a saved item -------------------------------------------
+async function removeSavedItem(savedItem) {
+    const deletedItem = await deleteSavedItemReq(savedItem.id)
+    if (!deletedItem.success){
+      setMessage(deletedItem.message);
+      setTimeout(() => setMessage(""), 5000);
+      return;
+    }
+    loadSavedItems();
+  }
+
+  // Add saved item to cart ----------------------------------
+async function addToCart(savedItem) {
+      const newCartItem = await createCartItemReq({
+        customerid: savedItem.customerid,
+        itemid: savedItem.itemid,
+        type: savedItem.type
+      });
+      if (!newCartItem.success){
+        setMessage(newCartItem.message);
+        setTimeout(() => setMessage(""), 5000);
+        return;
+      }
+      loadCart();
+    }
+
 // Cancel Order 
 async function cancelOrder(orderId) {
     try {
@@ -488,6 +626,7 @@ async function cancelOrder(orderId) {
         loadUserInformation();
         loadUserOrders();
         loadBlends();
+        loadSavedItems();
     }, []);
 
     return (
@@ -890,6 +1029,129 @@ async function cancelOrder(orderId) {
                             <Text style={luxuryHeadingStyle2}>
                                 Fragrances Saved For Later
                             </Text>
+                             <View
+                                    minWidth={"500px"}
+                                    maxWidth={"67%"}
+                                    margin={"auto"}>
+                                      {savedItems.length === 0 && (
+                                        <Text style={{...luxuryHeadingStyle2, marginTop: "2rem"}}>
+                                            No items saved
+                                        </Text>
+                                      )}
+                                      {savedItems.map((savedItem) => (
+                            
+                                        <Card
+                                          key={savedItem.id}
+                                          marginBottom="1.5rem"
+                                          borderRadius="24px"
+                                          padding="1.6rem"
+                                          border="1px solid rgba(255,255,255,0.18)"
+                                          boxShadow="0 12px 28px rgba(0,0,0,0.18)"
+                                          backgroundColor="rgba(255, 255, 255, 0.1)"
+                                          style={{
+                                            background: "linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(187, 187, 187, 0.05))"
+                                          }}
+                                        >
+                                          <Flex
+                                          direction={"column"}>
+                                            <Flex justifyContent="space-between" alignItems="center">
+                                              <Flex alignItems="center" gap="1.5rem">
+                                                {savedItem.item?.images?.[0] && (
+                                                  <img
+                                                    src={savedItem.item.images[0]}
+                                                    alt={savedItem.item.name}
+                                                    style={{
+                                                      width: "120px",
+                                                      height: "120px",
+                                                      objectFit: "cover",
+                                                      borderRadius: "20px",
+                                                      background: "linear-gradient(145deg, rgba(45,20,20,0.95), rgba(15,15,15,0.95))",
+                                                      padding: "2px",
+                                                      boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+                                                      border: "1px solid rgba(255,255,255,0.08)",
+                                                    }}
+                                                  />
+                                                )}
+                            
+                                              <View textAlign={"left"}>
+                                                  <Text style={{...luxuryBodyStyle, color: "black", fontSize:"1.35rem"}}>
+                                                  {savedItem.item?.name}{" "}
+                                                  {savedItem.item?.variation 
+                                                    ? `(${savedItem.item.variation})` 
+                                                    : savedItem.item?.size_ml 
+                                                    ? `(${savedItem.item.size_ml}ml)` 
+                                                    : ""}
+                                                    <br></br>
+                                                  ${savedItem.item?.price}
+                                                </Text>
+                                              </View>
+                                              </Flex>
+                                            </Flex>
+                                            <View>
+                                              <View
+                                              width={"fit-content"}
+                                              marginLeft={"auto"}>
+                                                <Flex>
+                                                  <button
+                                                  onMouseEnter={(e) => {
+                                                    e.currentTarget.style.transform="translateY(-5px)";
+                                                    e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
+                                                    e.currentTarget.style.opacity= "1";
+                                                  }}
+                                                  onMouseLeave={(e) => {
+                                                    e.currentTarget.style.transform="translateY(0px)";
+                                                    e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
+                                                    e.currentTarget.style.opacity= ".6";
+                            
+                                                  }} 
+                                                  style={{
+                                                    ...buttonViewStyle,
+                                                    opacity: ".6",
+                                                    color: "white",
+                                                    borderRadius: "10px",
+                                                    width:"fit-content",
+                                                    padding:"15x",
+                                                    fontSize: "1.2em",
+                                                    fontWeight: "bold",
+                                                  }}
+                                                  onClick={() => removeSavedItem(savedItem)}
+                                                  >
+                                                    Remove saved item
+                                                  </button>
+                                                  <button
+                                                  onMouseEnter={(e) => {
+                                                    e.currentTarget.style.transform="translateY(-5px)";
+                                                    e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
+                                                    e.currentTarget.style.opacity= "1";
+                                                  }}
+                                                  onMouseLeave={(e) => {
+                                                    e.currentTarget.style.transform="translateY(0px)";
+                                                    e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
+                                                    e.currentTarget.style.opacity= ".6";
+                            
+                                                  }} 
+                                                  style={{
+                                                    ...buttonViewStyle,
+                                                    opacity: ".6",
+                                                    color: "white",
+                                                    borderRadius: "10px",
+                                                    width:"fit-content",
+                                                    padding:"15x",
+                                                    fontSize: "1.2em",
+                                                    fontWeight: "bold",
+                                                  }}
+                                                  onClick={() => addToCart(savedItem)}
+                                                  >
+                                                    Add to cart
+                                                  </button>
+                                                </Flex>
+                                              </View>
+                            
+                                            </View>
+                                          </Flex>
+                                        </Card>
+                                      ))}
+                                    </View>
                         </View>
                     )}
                     
