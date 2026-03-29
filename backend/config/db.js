@@ -195,6 +195,18 @@ async function createTables() {
         )
     `);
 
+    // "saved for later" items should be similar to cart items, but quantity seems meaningless 
+    // No product duplicates allowed per customer
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS saved_items(
+            id VARCHAR(100) PRIMARY KEY,
+            customerid VARCHAR(100),
+            itemid VARCHAR(100), 
+            type VARCHAR(100),
+            added TIMESTAMPTZ DEFAULT NOW()
+        )
+    `);
+
 }
 
 
@@ -1891,6 +1903,141 @@ class CartItems{
             console.error(err)
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to clear cart");
+        }
+        return {success: true}
+    }
+}
+
+class SavedItems{
+            // id VARCHAR(100) PRIMARY KEY,
+            // customerid VARCHAR(100),
+            // itemid VARCHAR(100), 
+            // type VARCHAR(100),
+            // added TIMESTAMPTZ DEFAULT NOW()
+
+    // will return if item exists
+    async createSavedItem(options, client){
+        if (!client){
+            return prepareRollback((c) => this.createSavedItem(options, c));
+        }
+        const {customerid, itemid, type} = options;
+        const id = uuidv4();
+
+        let result;
+        try{
+            const getItemsQuery = `SELECT itemid FROM saved_items WHERE customerid = $1;`;
+            const saved = (await client.query(getItemsQuery, [customerid]))?.rows;
+
+            const itemExists = saved.some(entry => entry.itemid === itemid);
+
+            if (!itemExists){
+                const query = `INSERT INTO saved_items (id, customerid, itemid, type) VALUES ($1, $2, $3, $4) RETURNING *;`;
+                result = await client.query(query, [id, customerid, itemid, type]);
+            }else{
+                return {success: true, data: {exists: true}}
+            }
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to create saved item")
+        }
+        return {success: true, data: {exists: false, savedItem: result.rows[0]}}
+    }
+
+    async deleteSavedItem(id, client){
+        if (!client){
+            return prepareRollback((c) => this.deleteSavedItem(id, c));
+        }
+        try{
+            const query = `DELETE FROM saved_items WHERE id = $1;`;
+            await client.query(query, [id]);
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to delete saved item")
+        }
+        return {success: true}
+    }
+
+    /*
+    returns a list of objects in the form:
+    {
+        id,
+        customerid,
+        itemid,
+        added,
+        item: the actual product or blend info
+    } 
+     */
+    async getSavedItems(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.getSavedItems(customerid, c));
+        }
+        const result = [];
+        try{
+            const getItemsQuery = `SELECT * FROM saved_items WHERE customerid = $1;`;
+            const saved = await client.query(getItemsQuery, [customerid]);
+            //get the actual products/blends
+            for (const item of saved.rows){
+                try{
+                    const query = item.type === "product" ? `SELECT * FROM products WHERE id = $1` : `SELECT * FROM blends WHERE id = $1` 
+                    const itemRes = (await client.query(query, [item.itemid])).rows[0]
+                    result.push({
+                        ...item,
+                        item: itemRes
+                    })
+                }catch(err){
+                    //TODO: when a product doesn't exist anymore, maybe we let client know
+                    continue
+                }
+            }
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get saved items")
+        }
+
+        return {success: true, data: {savedItems: result}}
+    }
+
+    //removes all existing saved items and add these items
+    async updateSavedItems(customerid, items, client){
+        if (!client){
+            return prepareRollback((c) => this.updateSavedItems(customerid, items, c));
+        }
+        const result = [];
+        try{
+            const emptyItemsQuery = `DELETE FROM saved_items WHERE customerid = $1;`;
+            await client.query(emptyItemsQuery, [customerid]);
+
+            for (const item of items){
+                if (!item.itemid || !item.type){
+                    throw new DBError("Invalid saved item. An item id and type is required");
+                }
+                const id = uuidv4()
+                const insertQuery = `INSERT INTO saved_items (id, customerid, itemid, type) VALUES ($1, $2, $3, $4) RETURNING *;`
+                const insertResult = await client.query(insertQuery, [id, customerid, item.itemid, item.type]);
+                result.push(insertResult.rows[0]);
+            }
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to update saved items");
+        }
+        return {success: true, data: {savedItems: result}}
+    }
+
+    async clearSavedItems(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.clearSavedItems(customerid, c));
+        }
+        try{
+            const emptyItemsQuery = `DELETE FROM saved_items WHERE customerid = $1;`;
+            await client.query(emptyItemsQuery, [customerid]);
+        }catch(err){
+            console.error(err)
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to clear saved items");
         }
         return {success: true}
     }
