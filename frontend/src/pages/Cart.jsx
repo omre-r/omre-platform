@@ -56,6 +56,19 @@ const buttonViewStyle = {
   transition: "all 0.2s ease",
 };
 
+const buttonStyling = {
+    ...luxuryBodyStyle, 
+    fontSize: "1.2rem",
+    padding: ".9rem .2rem",
+    border: "2px solid rgba(0, 0, 0)",
+    borderRadius: "10px",
+    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+    color: "#FFFFFF",
+    cursor: "pointer",
+    boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+    transition: "all 0.2s ease",
+}
+
 // components
 export default function Cart() {
   const [cart, setCart] = useState([]);
@@ -544,10 +557,11 @@ async function checkout() {
                         marginLeft={"auto"}>
                         {savedItems.some(saved => cartItem.itemid === saved.itemid)
                         ?
-                        <button
+                        <Button
                         style={{
                           ...buttonViewStyle,
-                          opacity: ".5",
+                          //...buttonStyling,
+                          opacity: ".8",
                           color: "white",
                           borderRadius: "10px",
                           width:"fit-content",
@@ -557,10 +571,10 @@ async function checkout() {
                         }}
                         disabled
                         >
-                          Saved for later
-                        </button>
+                          <Text style={luxuryBodyStyle}>Save for later</Text>
+                        </Button>
                         :
-                          <button
+                          <Button
                           onMouseEnter={(e) => {
                             e.currentTarget.style.transform="translateY(-5px)";
                             e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
@@ -569,7 +583,7 @@ async function checkout() {
                           onMouseLeave={(e) => {
                             e.currentTarget.style.transform="translateY(0px)";
                             e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
-                            e.currentTarget.style.opacity= ".6";
+                            e.currentTarget.style.opacity= ".8";
 
                           }} 
                           onClick={() => moveToSaved(cartItem)}
@@ -584,8 +598,8 @@ async function checkout() {
                             fontWeight: "bold",
                           }}
                           >
-                            Save for later
-                          </button>
+                            <Text style={luxuryBodyStyle}>Save for later</Text>
+                          </Button>
                         }
                         </View>
 
@@ -757,7 +771,7 @@ async function checkout() {
                   width={"fit-content"}
                   marginLeft={"auto"}>
                     <Flex>
-                      <button
+                      <Button
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform="translateY(-5px)";
                         e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
@@ -766,12 +780,12 @@ async function checkout() {
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform="translateY(0px)";
                         e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
-                        e.currentTarget.style.opacity= ".6";
+                        e.currentTarget.style.opacity= ".8";
 
                       }} 
                       style={{
                         ...buttonViewStyle,
-                        opacity: ".6",
+                        opacity: ".8",
                         color: "white",
                         borderRadius: "10px",
                         width:"fit-content",
@@ -781,9 +795,9 @@ async function checkout() {
                       }}
                       onClick={() => removeSavedItem(savedItem)}
                       >
-                        Remove saved item
-                      </button>
-                      <button
+                        <Text style={luxuryBodyStyle}>Remove saved item</Text>
+                      </Button>
+                      <Button
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform="translateY(-5px)";
                         e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
@@ -792,12 +806,12 @@ async function checkout() {
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform="translateY(0px)";
                         e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
-                        e.currentTarget.style.opacity= ".6";
+                        e.currentTarget.style.opacity= ".8";
 
                       }} 
                       style={{
                         ...buttonViewStyle,
-                        opacity: ".6",
+                        opacity: ".8",
                         color: "white",
                         borderRadius: "10px",
                         width:"fit-content",
@@ -807,8 +821,8 @@ async function checkout() {
                       }}
                       onClick={() => addToCart(savedItem)}
                       >
-                        Add to cart
-                      </button>
+                        <Text style={luxuryBodyStyle}>Add to cart</Text>
+                      </Button>
                     </Flex>
                   </View>
 

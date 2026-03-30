@@ -58,7 +58,7 @@ const tableBodyStyle = {
 };
 
 const cardStyle = {
-    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
     borderRadius: "14px",
     padding: "1.5rem",
     minHeight: "250px",
@@ -1026,134 +1026,133 @@ async function cancelOrder(orderId) {
 
                     {activeTab === "sfl" && (
                         <View>
-                            <Text style={luxuryHeadingStyle2}>
+                            <Text style={luxuryHeadingStyle2} marginBottom="1.5rem">
                                 Fragrances Saved For Later
                             </Text>
                              <View
                                     minWidth={"500px"}
-                                    maxWidth={"67%"}
+                                    maxWidth={"120%"}
                                     margin={"auto"}>
                                       {savedItems.length === 0 && (
                                         <Text style={{...luxuryHeadingStyle2, marginTop: "2rem"}}>
                                             No items saved
                                         </Text>
                                       )}
-                                      {savedItems.map((savedItem) => (
-                            
-                                        <Card
-                                          key={savedItem.id}
-                                          marginBottom="1.5rem"
-                                          borderRadius="24px"
-                                          padding="1.6rem"
-                                          border="1px solid rgba(255,255,255,0.18)"
-                                          boxShadow="0 12px 28px rgba(0,0,0,0.18)"
-                                          backgroundColor="rgba(255, 255, 255, 0.1)"
-                                          style={{
-                                            background: "linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(187, 187, 187, 0.05))"
-                                          }}
+                                    {savedItems.map((savedItem) => (
+                                        <View
+                                            key={savedItem.id}
+                                            style={{
+                                            ...tableViewStyle,
+                                            margin: "0 auto 1.5rem auto",
+                                            width: "35%",
+                                            textAlign: "left",
+                                            alignItems: "flex-start",
+                                            justifyContent: "flex-start",
+                                            minHeight: "unset",
+                                            padding: "1.8rem",
+                                            }}
                                         >
-                                          <Flex
-                                          direction={"column"}>
-                                            <Flex justifyContent="space-between" alignItems="center">
-                                              <Flex alignItems="center" gap="1.5rem">
+                                            <View width="100%">
+                                            <Flex
+                                                direction="column"
+                                                alignItems="flex-start"
+                                                gap="1.2rem"
+                                            >
                                                 {savedItem.item?.images?.[0] && (
-                                                  <img
+                                                <View
+                                                    style={{
+                                                    borderRadius: "20px",
+                                                    overflow: "hidden",
+                                                    border: "2px solid rgba(0,0,0,0.55)",
+                                                    boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+                                                    alignSelf: "center",
+                                                    }}
+                                                >
+                                                    <img
                                                     src={savedItem.item.images[0]}
                                                     alt={savedItem.item.name}
                                                     style={{
-                                                      width: "120px",
-                                                      height: "120px",
-                                                      objectFit: "cover",
-                                                      borderRadius: "20px",
-                                                      background: "linear-gradient(145deg, rgba(45,20,20,0.95), rgba(15,15,15,0.95))",
-                                                      padding: "2px",
-                                                      boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
-                                                      border: "1px solid rgba(255,255,255,0.08)",
+                                                        width: "200px",
+                                                        height: "200px",
+                                                        objectFit: "cover",
+                                                        display: "block",
                                                     }}
-                                                  />
+                                                    />
+                                                </View>
                                                 )}
-                            
-                                              <View textAlign={"left"}>
-                                                  <Text style={{...luxuryBodyStyle, color: "black", fontSize:"1.35rem"}}>
-                                                  {savedItem.item?.name}{" "}
-                                                  {savedItem.item?.variation 
-                                                    ? `(${savedItem.item.variation})` 
-                                                    : savedItem.item?.size_ml 
-                                                    ? `(${savedItem.item.size_ml}ml)` 
-                                                    : ""}
-                                                    <br></br>
-                                                  ${savedItem.item?.price}
-                                                </Text>
-                                              </View>
-                                              </Flex>
-                                            </Flex>
-                                            <View>
-                                              <View
-                                              width={"fit-content"}
-                                              marginLeft={"auto"}>
-                                                <Flex>
-                                                  <button
-                                                  onMouseEnter={(e) => {
-                                                    e.currentTarget.style.transform="translateY(-5px)";
-                                                    e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
-                                                    e.currentTarget.style.opacity= "1";
-                                                  }}
-                                                  onMouseLeave={(e) => {
-                                                    e.currentTarget.style.transform="translateY(0px)";
-                                                    e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
-                                                    e.currentTarget.style.opacity= ".6";
-                            
-                                                  }} 
-                                                  style={{
-                                                    ...buttonViewStyle,
-                                                    opacity: ".6",
-                                                    color: "white",
-                                                    borderRadius: "10px",
-                                                    width:"fit-content",
-                                                    padding:"15x",
-                                                    fontSize: "1.2em",
-                                                    fontWeight: "bold",
-                                                  }}
-                                                  onClick={() => removeSavedItem(savedItem)}
-                                                  >
-                                                    Remove saved item
-                                                  </button>
-                                                  <button
-                                                  onMouseEnter={(e) => {
-                                                    e.currentTarget.style.transform="translateY(-5px)";
-                                                    e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
-                                                    e.currentTarget.style.opacity= "1";
-                                                  }}
-                                                  onMouseLeave={(e) => {
-                                                    e.currentTarget.style.transform="translateY(0px)";
-                                                    e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
-                                                    e.currentTarget.style.opacity= ".6";
-                            
-                                                  }} 
-                                                  style={{
-                                                    ...buttonViewStyle,
-                                                    opacity: ".6",
-                                                    color: "white",
-                                                    borderRadius: "10px",
-                                                    width:"fit-content",
-                                                    padding:"15x",
-                                                    fontSize: "1.2em",
-                                                    fontWeight: "bold",
-                                                  }}
-                                                  onClick={() => addToCart(savedItem)}
-                                                  >
-                                                    Add to cart
-                                                  </button>
+
+                                                <View width="100%">
+                                                    <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", fontSize: "1.5rem" }}>
+                                                        Fragrance:
+                                                    </Text>
+
+                                                    <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", fontSize: "1.3rem" }}>
+                                                        ▸ {savedItem.item?.name}{" "} {savedItem.item?.variation ? `(${savedItem.item.variation})`: savedItem.item?.size_ml ? `(${savedItem.item.size_ml} mL)` : ""}
+                                                    </Text>
+
+                                                    <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", fontSize: "1.5rem", marginTop: "0.4rem" }}>
+                                                        Price: ${savedItem.item.price}
+                                                    </Text>
+                                                </View>
+                                                <Flex
+                                                direction="row"
+                                                gap="2rem"
+                                                justifyContent="center"
+                                                alignItems="center"
+                                                width="100%"
+                                                marginTop="0.8rem"
+                                                >
+                                                <View
+                                                    style={{
+                                                    ...buttonStyling,
+                                                    border: "2px solid #8f0000",
+                                                    cursor: "pointer",
+                                                    padding: ".5rem 1rem",
+                                                    background: "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))",
+                                                    }}
+                                                    onClick={() => removeSavedItem(savedItem)}
+                                                >
+                                                    <Text
+                                                    style={{
+                                                        ...luxuryBodyStyle,
+                                                        color: "#ffffff",
+                                                        fontSize: "1.5rem",
+                                                        fontWeight: 500,
+                                                    }}
+                                                    >
+                                                    Remove Item
+                                                    </Text>
+                                                </View>
+
+                                                <View
+                                                    style={{
+                                                    ...buttonStyling,
+                                                    border: "2px solid #000000",
+                                                    cursor: "pointer",
+                                                    background: "linear-gradient(145deg, #00ff91, rgba(40, 35, 35, 0.82))",
+                                                    padding: ".5rem 1rem",
+                                                    }}
+                                                    onClick={() => addToCart(savedItem)}
+                                                >
+                                                    <Text
+                                                    style={{
+                                                        ...luxuryBodyStyle,
+                                                        color: "#ffffff",
+                                                        fontSize: "1.5rem",
+                                                        fontWeight: 500,
+                                                    }}
+                                                    >
+                                                    Add to Cart
+                                                    </Text>
+                                                </View>
                                                 </Flex>
-                                              </View>
-                            
+                                            </Flex>
                                             </View>
-                                          </Flex>
-                                        </Card>
-                                      ))}
+                                        </View>
+                                        ))}
                                     </View>
-                        </View>
-                    )}
+                            </View>
+                        )}
                     
                     {activeTab === "mixes" && (
                         <View marginTop="1rem"  >

@@ -1064,7 +1064,7 @@ export default function ProductsPanel() {
                                             borderRadius="6px"
                                             >
                                             <Text color="rgb(255, 196, 86)" textAlign={"left"}>
-                                                <strong>{prodList[0].name} — <br></br> {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"} </strong>
+                                                <strong>{prodList[0].name} — {prodList[0].stock_ml} mL {prodList[0].stock_ml < 1000 && "(LOW!)"} </strong>
                                             </Text>
                                         </Button>
                                         :
@@ -1087,7 +1087,7 @@ export default function ProductsPanel() {
                                             }}
                                             >
                                             <Text color="White" textAlign={"left"}>
-                                                <strong>{prodList[0].name} — <br></br> {prodList[0].stock_ml}ml {prodList[0].stock_ml < 1000 && "(LOW!)"} </strong>
+                                                <strong>{prodList[0].name} — {prodList[0].stock_ml} mL {prodList[0].stock_ml < 1000 && "(LOW!)"} </strong>
                                             </Text>
                                         </Button>
                                     }
