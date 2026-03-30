@@ -198,7 +198,7 @@ export default function Home() {
               variation="elevated"
               width="16rem"
               padding="1.75rem"
-              minHeight="26rem"
+              minHeight="15rem"
               border="1px solid rgba(190, 160, 150, 0.18)"
               borderRadius="15px"
               boxShadow="0 14px 28px rgba(0,0,0,0.22)"
@@ -228,7 +228,7 @@ export default function Home() {
                         marginBottom: "1rem",
                     }}
                 />
-                <View minHeight="7.5rem">
+                <View minHeight="4rem">
                   <Text style={bodyStyle} textAlign="center">
                     {prod.name}
                   </Text>
@@ -292,7 +292,7 @@ export default function Home() {
         <Card
           key={prod.id}
           variation="elevated"
-          minHeight="26rem"
+          minHeight="15rem"
           width="16rem"
           padding="1.75rem"
           border="1px solid rgba(190, 160, 150, 0.18)"
@@ -324,7 +324,7 @@ export default function Home() {
                 marginBottom: "1rem",
               }}
             />
-            <View minHeight="7.5rem">
+            <View minHeight="4rem">
               <Text style={bodyStyle} textAlign="center">
                 {prod.name}
               </Text>
@@ -373,7 +373,7 @@ export default function Home() {
         <Card
           key={prod.id}
           variation="elevated"
-          minHeight="26rem"
+          minHeight="15rem"
           width="16rem"
           padding="1.75rem"
           border="1px solid rgba(190, 160, 150, 0.18)"
@@ -405,7 +405,7 @@ export default function Home() {
                 marginBottom: "1rem",
               }}
             />
-            <View minHeight="7.5rem">
+            <View minHeight="4rem">
               <Text style={bodyStyle} textAlign="center">
                 {prod.name}
               </Text>
