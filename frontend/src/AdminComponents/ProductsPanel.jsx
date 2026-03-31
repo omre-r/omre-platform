@@ -6,6 +6,7 @@ import {getProductReq, getFilteredProductsReq, updateProductReq, updateProductSt
 import OptionsIcon from "../assets/options_icon.png"
 import SearchIcon from "../assets/search_icon.png"
 import EditIcon from "../assets/edit_icon.png"
+import { RefreshCw } from "lucide-react";
 
 // Custom Styling for fonts and amplify ui -------------------------------------- 
 const bodyStyle2 = {
@@ -967,23 +968,26 @@ export default function ProductsPanel() {
                                 </View>
                                 <View
                                     position={"relative"}
-                                    padding="9.5px"
-                                    borderRadius={"10px"}
-                                    onClick={() => {
+                                    onClick={async () => {
                                         resetToIdle();
-                                        loadProducts();
+                                        await loadProducts();
                                     }}
                                     style={{
-                                        ...buttonStyling,
-                                        border: "2px solid rgba(0, 0, 0)",
-                                        cursor: "pointer",
+                                        width: "50px",
+                                        height: "50px",
+                                        borderRadius: "10px",
+                                        border: "2px solid black",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
+                                        cursor: "pointer",
                                         flexShrink: 0,
-                                    }}>
-                                        Refresh
-                                </View>
+                                        background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                                        boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+                                    }}
+                                    >
+                                    <RefreshCw color="white" size={22} />
+                                    </View>
                             </Flex>
                             <Flex 
                                 direction="row"

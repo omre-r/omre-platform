@@ -7,6 +7,7 @@ import OptionsIcon from "../assets/options_icon.png"
 
 import { getFilteredUsersReq } from "../requests";
 import { data } from "react-router-dom";
+import { RefreshCw } from "lucide-react";
 
 
 // Custom Styling for fonts and amplify ui --------------------------------------
@@ -430,20 +431,25 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                             </View>
                             <View
                                 position={"relative"}
-                                padding="9.5px"
-                                borderRadius={"10px"}
-                                onClick={loadUsers}
+                                onClick={async () => {
+                                    await loadUsers();
+                                }}
                                 style={{
-                                    ...buttonStyling,
-                                    border: "2px solid rgba(0, 0, 0)",
-                                    cursor: "pointer",
+                                    width: "50px",
+                                    height: "50px",
+                                    borderRadius: "10px",
+                                    border: "2px solid black",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
+                                    cursor: "pointer",
                                     flexShrink: 0,
-                                }}>
-                                    Refresh
-                            </View>
+                                    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                                    boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+                                }}
+                                >
+                                <RefreshCw color="white" size={22} />
+                                </View>
                         </Flex>
                     </Flex>
 
