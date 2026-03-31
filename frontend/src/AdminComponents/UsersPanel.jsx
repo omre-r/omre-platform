@@ -179,9 +179,11 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
         height={"100%"}
         >
             <Flex
-            direction="row" 
-            gap="1rem" 
-            flex={"1"}
+            direction="row"
+            gap="1rem"
+            flex="1"
+            alignItems="stretch"
+            height="100%"
             >
             {/* Left card holding emails ---------------------------------------------*/}
             <Card

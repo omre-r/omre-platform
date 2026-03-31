@@ -75,7 +75,6 @@ export default function AdminDashboard() {
                 >   
                     <Card
                         variation="elevated"
-                        // height="35rem" // was "auto"
                         width="100%"
                         maxWidth="1500px"
                         margin="1rem auto"
@@ -86,10 +85,27 @@ export default function AdminDashboard() {
                         }}
                         >   
                         {/* Flex holding the sidebar and the main content ---------------------------- */}
-                        <Flex direction="row" gap="1.5rem" alignItems="stretch">
+                        <Flex 
+                            direction="row"
+                            gap="1.5rem"
+                            alignItems="stretch"
+                            width="100%"
+                            height="100%"
+                            style={{
+                                minWidth: 0,
+                                overflowX: "auto",
+                                overflowY: "hidden",
+                            }}
+                        >
 
                             {/* Sidebar flex showing tabs to choose from ---------------------------------- */}
-                            <Flex direction="column" gap=".8rem" alignItems="stretch">
+                            <Flex
+                                direction="column"
+                                gap=".8rem"
+                                alignItems="stretch"
+                                flexShrink="0"
+                                style={{ width: "180px" }}
+                                >
                                 <Button 
                                     justifyContent="center"
                                     style={{
@@ -134,12 +150,19 @@ export default function AdminDashboard() {
                             {/* Depending on which button is clicked will show appropriate mode */}
                             <Card
                                 minHeight="40em" // was "auto"
-                                width="80rem"
+                                height="100%"
+                                width="200%"
+                                maxWidth="100%"
                                 margin="1rem auto"
                                 padding="2rem"
                                 borderRadius="20px"
                                 style={{
                                     background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.35))",
+                                    boxSizing: "border-box",
+                                    minWidth: 0,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    //overflowX: "hidden",
                                 }}
                             >   
                             {usersMode && <UsersPanel />}

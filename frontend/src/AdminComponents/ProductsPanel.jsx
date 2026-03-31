@@ -672,9 +672,11 @@ export default function ProductsPanel() {
         height="100%"
         >
         <Flex
-        direction="row" 
-        gap="1rem" 
-        flex={1}
+        direction="row"
+        gap="1rem"
+        flex="1"
+        alignItems="stretch"
+        height="100%"   
         >                
             {/* Left card holding products ---------------------------------------------*/}
             {/* Will be shown as a list where each product is clickable  */}
@@ -1175,16 +1177,16 @@ export default function ProductsPanel() {
             
                 {/* Right card edit, delete, or adds information ----------------------------------------- */}
                 <Card
-                    flex="1.0"  
+                    flex="1.0" 
                     height="100%" 
                     padding="1rem" 
+                    position={"relative"}
                     style={{
                         background: "linear-gradient(145deg, rgba(255, 240, 235, 0.35), rgba(245, 225, 218, 0.28))",
                         backdropFilter: "blur(6px)",
                         border: "1px solid rgba(120, 80, 70, 0.18)",
                         borderRadius: "22px",
-                    }}
-                    overflow="auto">
+                    }}>
                         
                     <Flex 
                         direction="column"
@@ -1460,7 +1462,7 @@ export default function ProductsPanel() {
                                         width: "fit-content",
                                         margin: "0 auto",
                                     }}>
-                                    <Text style={{...luxuryHeadingStyle, fontSize:"2.2rem", color: "#FFFFFF"}}>User Information</Text> 
+                                    <Text style={{...luxuryHeadingStyle, fontSize:"2.2rem", color: "#FFFFFF"}}>Product Information</Text> 
                                 </Flex>
                                 <View
                                     marginTop="1rem"

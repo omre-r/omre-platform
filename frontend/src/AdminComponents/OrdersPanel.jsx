@@ -331,12 +331,15 @@ export default function OrdersPanel() {
 
         {/* RIGHT CARD */}
         <Card
-          flex="1"
-          padding="1rem"
+          flex="1.0" 
+          height="100%" 
+          padding="1rem" 
+          position={"relative"}
           style={{
-            background: "linear-gradient(145deg, rgba(255, 240, 235, 0.35), rgba(245, 225, 218, 0.28))",
-            backdropFilter: "blur(6px)",
-            borderRadius: "22px",
+              background: "linear-gradient(145deg, rgba(255, 240, 235, 0.35), rgba(245, 225, 218, 0.28))",
+              backdropFilter: "blur(6px)",
+              border: "1px solid rgba(120, 80, 70, 0.18)",
+              borderRadius: "22px",
           }}
         >
           <Flex direction="column">

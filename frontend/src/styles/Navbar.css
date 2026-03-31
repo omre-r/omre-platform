@@ -2,13 +2,16 @@
 .navbar {
     box-sizing: border-box;
     width: 100%; 
-    height: 55px;
+    height: 70px;
     padding: 0 2rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     background: linear-gradient(145deg, #300a0a, #110303);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    overflow-x: hidden;
 }
 
 /* Logo image within navbar ------------------------ */

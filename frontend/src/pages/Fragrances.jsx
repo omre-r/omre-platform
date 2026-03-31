@@ -196,6 +196,7 @@ export default function Home() {
         }}
       >
         <Flex  
+        wrap="wrap"
         padding="1rem 1.5rem"
         alignItems="center"
         justifyContent="center"
@@ -206,6 +207,8 @@ export default function Home() {
         marginBottom="0.5rem"
         marginTop="-2rem"
         style={{
+          width: "100%",
+          boxSizing: "border-box",
           background: "linear-gradient(145deg,  #480e0e76, rgba(20, 20, 20, 0.05))",
         }}>
         <View
