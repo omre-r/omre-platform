@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, Flex, Text, Button, View, SelectField, TextField } from "@aws-amplify/ui-react";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { getOrdersReq, getOrderReq, cancelOrderReq, getFilteredOrdersReq, updateOrderStatusReq } from "../requests";
+import { RefreshCw } from "lucide-react";
 
 import SearchIcon from "../assets/search_icon.png";
 
@@ -280,18 +281,18 @@ export default function OrdersPanel() {
                 <View
                   onClick={loadOrders}
                   style={{
-                    ...buttonStyling,
+                    width: "50px",
+                    height: "50px",
+                    borderRadius: "10px",
                     border: "2px solid black",
-                    borderRadius: "10px", 
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     cursor: "pointer",
+                    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
                   }}
                 >
-                  <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
-                    Refresh
-                  </Text>
+                  <RefreshCw color="white" size={22} />
                 </View>
               </Flex>
             </Flex>
@@ -309,16 +310,30 @@ export default function OrdersPanel() {
                 .map(order => (
                   <Button
                     key={order.id}
-                    style={buttonStyling}
                     onClick={() => viewOrder(order.id)}
                     width="100%"
                     justifyContent="flex-start"
                     marginBottom=".6rem"
+                    style={{
+                      ...buttonStyling,
+
+                      borderRadius: "10px",
+                      border: "2px solid black",
+
+                      // 🔥 BACKGROUND now reflects status
+                      background: `linear-gradient(145deg, ${
+                        statusStyles[order.status?.toLowerCase()] || "#444"
+                      }, rgba(20,20,20,0.92))`,
+
+                      color: "#ffffff",
+
+                      display: "flex",
+                      alignItems: "center",
+                    }}
                   >
                     <Text style={{
                       ...luxuryBodyStyle,
-                      color: statusStyles[order.status?.toLowerCase()] || "#ffffff",
-                      WebkitTextFillColor: statusStyles[order.status?.toLowerCase()] || "#ffffff",
+                      color: "#ffffff",
                       fontWeight: "600"
                     }}>
                       Order #{order.id.slice(0, 8)} — {order.status}
@@ -394,24 +409,19 @@ export default function OrdersPanel() {
             )}
 
             {selectedOrder && (
-              <Flex direction="column" gap="0.5rem" marginTop="1rem">
+              <Flex direction="column" gap="0.5rem" marginTop="1rem" >
 
                 <View style={{
-                  background: "linear-gradient(145deg, rgba(90,20,20,0.92), rgba(40,35,35,0.82))",
+                  background: `linear-gradient(145deg, ${
+                    statusStyles[selectedOrder.status?.toLowerCase()] || "#444"
+                  }, rgba(20,20,20,0.9))`,
                   padding: "10px",
                   borderRadius: "20px",
-                  border: "2px solid black"
+                  border: "2px solid black",
+                  textAlign: "left"
                 }}>
                   <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>Email: {selectedOrder.email}</Text>
-                  <Text style={luxuryBodyStyle}>
-                    Status:{" "}
-                    <span style={{
-                      color: statusStyles[selectedOrder.status?.toLowerCase()] || "#FFFFFF",
-                      fontWeight: "600"
-                    }}>
-                      {selectedOrder.status}
-                    </span>
-                  </Text>
+                  <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>Status: {selectedOrder.status}</Text>
                   <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>Total: ${selectedOrder.total}</Text>
                 </View>
 
