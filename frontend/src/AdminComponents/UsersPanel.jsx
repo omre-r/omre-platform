@@ -588,15 +588,19 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                                 background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
                             }}
                             >
-                                <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Email: {selectedUser.email}</Text>
-                                <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Name: {selectedUser.first_name} {selectedUser.last_name}</Text>
-                                <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
-                                <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Created: {new Date(selectedUser.created_at).toLocaleString()}</Text>
-                                <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString() : "Never"}</Text>
+                                <View
+                                style={{
+                                    flex: 1,
+                                    textAlign: "left",
+                                    paddingLeft: "1rem",
+                                }}>
+                                    <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Email: {selectedUser.email}</Text>
+                                    <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Name: {selectedUser.first_name} {selectedUser.last_name}</Text>
+                                    <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Favorite Notes: {selectedUser.favorite_notes ? selectedUser.favorite_notes : "--"}</Text>
+                                    <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Created: {new Date(selectedUser.created_at).toLocaleString()}</Text>
+                                    <Text style={{...luxuryBodyStyle, fontWeight:"500", color:"White"}}>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString() : "Never"}</Text>
+                                </View> 
                             </View>
-                            {/* TODO: Have last login implemented */}
-                            {/* <Text>Last Login: {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString(): "--"}</Text> */}
-
                             <Button 
                                 style={buttonStyling}
                                 onClick={() => setSelectedUser(null)}
