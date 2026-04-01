@@ -716,7 +716,7 @@ class Products{
 
     async removeReview(parentid, rating, client){
         if (!client){
-            return prepareRollback((c) => this.removeReview(rating, c));
+            return prepareRollback((c) => this.removeReview(parentid, rating, c));
         }
 
         try{
@@ -1005,7 +1005,10 @@ class Reviews{
         
         try{
             const query = `DELETE FROM reviews WHERE id = $1 RETURNING *`
-            const result = await client.query(query, [id]);
+            const result = (await client.query(query, [id]))?.rows?.[0];
+            if (!result){
+                throw new DBError("Failed to delete review");
+            }
 
             // update product rating
             const updatedProduct = await this.products.removeReview(result.productid, result.rating, client);
@@ -1013,8 +1016,7 @@ class Reviews{
                 throw DBError(updatedProduct.message);
             }
 
-            const images = result?.rows?.[0]?.images;
-            for (let image of images){
+            for (let image of result.images){
                 const key = image.replace(`${CLOUDFRONT_DOMAIN}/`, "");
                 try{
                     await s3Client.send(new DeleteObjectCommand({
