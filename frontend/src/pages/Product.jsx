@@ -66,6 +66,7 @@ export default function Product(){
     const [replyID, setReplyID] = useState("")
     const [replyMessage, setReplyMessage] = useState("")
     const [selectedRating, setSelectedRating] = useState(0);
+    const [averageRating, setAverageRating] = useState(0);
 
     const [reviewError, setReviewError] = useState("");
     const [replyError, setReplyError] = useState("");
@@ -175,8 +176,18 @@ export default function Product(){
     async function loadReviews() {
         setLoadingReviews(true);
         const data = await getProductReviewsReq(params.parentid);
-        setLoadingReviews(false);
-        setReviews(data?.data?.reviews || []);
+        setLoadingReviews(false)
+        if (!data.success){
+            return;
+        }
+        setReviews(data.data.reviews);
+
+        let total = 0;
+        for (const review of data.data.reviews){
+            total += Number(review.rating);
+        }
+        const average = total / data.data.reviews.length;
+        setAverageRating(Math.round((average * 10)) / 10);
     }
 
     async function submitReview(){
@@ -185,7 +196,11 @@ export default function Product(){
             return;
         }
         if (newReviewMessage === ""){
-            displayReviewError("Please enter a message first!")
+            displayReviewError("Please enter a message!")
+            return;
+        }
+        if (selectedRating === 0){
+            displayReviewError("Please select a rating!");
             return;
         }
         if (isProfane(newReviewMessage)){
@@ -223,7 +238,6 @@ export default function Product(){
     function applyRating(e){
         const ratingRect = e.target.getBoundingClientRect();
         const amountSelected = (e.clientX - ratingRect.left) / ratingRect.width;
-        console.log()
         setSelectedRating(Math.floor(amountSelected * ratings.length))
     }
 
@@ -748,6 +762,27 @@ export default function Product(){
             <Text style={headingStyle} marginBottom=".5rem">
             Reviews
             </Text>
+            {reviews.length !== 0 &&
+                <View>
+                    <Flex
+                    direction={"column"}
+                    alignItems={"center"}
+                    gap={"5px"}
+                    >
+                        <strong>Average Rating</strong>
+                        <Flex
+                        alignItems={"center"}>
+                            <View 
+                            width={"200px"}
+                            borderRadius={"10px"}
+                            backgroundColor={"rgba(80, 19, 19, 0.13)"}>
+                                <strong>{Number(averageRating)} / 5</strong>
+                                <img src={ratings[Math.round(averageRating * 2)]} width={"100%"} alt="" />
+                            </View>
+                        </Flex>
+                    </Flex>
+                </View>
+            }
             {/* leave a review section */}
             {userInfo !== null &&
             <View
@@ -920,7 +955,8 @@ export default function Product(){
                                 direction={"column"}
                                 flex={"1"}
                                 >      
-                                    <Flex>
+                                    <Flex
+                                    alignItems={"center"}>
                                         <h3 style={{marginBlock: "0"}}>
                                             {review.user.first_name} {review.user.last_name}
                                         </h3>

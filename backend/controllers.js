@@ -671,7 +671,6 @@ async function sendContactEmail(req, res) {
     await sesClient.send(command);
     return res.json({ success: true });
 }
-sendContactEmail = handleError(sendContactEmail);
 /* 
 Though probably not needed, we can use wrappers down the line that
 cater to some group flow. For example: 
@@ -743,6 +742,7 @@ clearSavedItems = handleError(clearSavedItems);
 updateSavedItems = handleError(updateSavedItems);
 
 getUploadURL = handleError(getUploadURL);
+sendContactEmail = handleError(sendContactEmail);
 
 
 
