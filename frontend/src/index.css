@@ -138,3 +138,23 @@ button.amplify-togglebutton {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Toast / snackbar animations */
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateX(110%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes toast-slide-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(110%); }
+}
+@keyframes toast-progress {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+.toast-enter {
+  animation: toast-slide-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.toast-exit {
+  animation: toast-slide-out 0.3s ease-in forwards;
+}

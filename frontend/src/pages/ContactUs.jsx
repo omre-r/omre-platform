@@ -4,6 +4,7 @@ import "@aws-amplify/ui-react/styles.css";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { sendContactEmailReq } from "../requests.js";
+import { useToast } from "../components/ToastContext";
 
 const headingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -55,7 +56,7 @@ export default function ContactUs() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const { toast } = useToast();
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -65,17 +66,17 @@ export default function ContactUs() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!form.name || !form.email || !form.message) return;
     if (!emailRegex.test(form.email)) {
-      setErrorMsg("Please enter a valid email address.");
+        toast("Please enter a valid email address.", "error");
       return;
     }
     setSending(true);
-    setErrorMsg("");
     const data = await sendContactEmailReq(form);
     setSending(false);
     if (!data.success) {
-      setErrorMsg("Something went wrong. Please try again.");
+      toast("Something went wrong. Please try again.", "error");
       return;
     }
+    toast("Message sent! We'll be in touch soon.", "success");
     setSubmitted(true);
   }
 
@@ -191,7 +192,6 @@ export default function ContactUs() {
                 }}>
                 <Text style={{...bodyStyle, color: "#FFFFFF"}}>{sending ? "Sending..." : "Send"}</Text>
               </button>
-              {errorMsg && <Text style={{ color: "red", marginTop: "0.75rem" }}>{errorMsg}</Text>}
             </div>
           )}
 
