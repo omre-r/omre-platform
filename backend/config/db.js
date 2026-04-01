@@ -101,6 +101,8 @@ async function createTables() {
             isfeatured BOOLEAN,
             ishidden BOOLEAN,
             created_at TIMESTAMP DEFAULT NOW()
+            review_count INTEGER DEFAULT 0,
+            review_average DECIMAL(10,1) DEFAULT 0
         )
     `);
     /*
@@ -451,7 +453,7 @@ class Products{
         if (!client){
             return prepareRollback((c) => this.createProduct(options, c));
         }
-        const {parentid, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden} = options;
+        const {parentid, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden, review_count, review_average} = options;
         const id = uuidv4();
 
         // Validation
@@ -474,9 +476,9 @@ class Products{
         }  
     
         let result;
-        const query = `INSERT INTO products (id, parentid, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *;`;
+        const query = `INSERT INTO products (id, parentid, type, name, variation, price, images, stock_ml, notes, description, isfeatured, ishidden, review_count, review_average) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *;`;
         try{
-            result = await client.query(query, [id, parentid ? parentid : uuidv4(), type, name, variation, price, JSON.stringify(images), stock_ml, JSON.stringify(notes), description, isfeatured, ishidden]);
+            result = await client.query(query, [id, parentid ? parentid : uuidv4(), type, name, variation, price, JSON.stringify(images), stock_ml, JSON.stringify(notes), description, isfeatured, ishidden, review_count, review_average]);
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
@@ -689,6 +691,55 @@ class Products{
         return {success: true, data: {products}}
     }
 
+    // add review and remove review could have been "updateReviews", but methods are designed based on flows. 
+    async addReview(parentid, rating, client){
+        if (!client){
+            return prepareRollback((c) => this.addReview(rating, c));
+        }
+
+        try{
+            const query = `
+            UPDATE products 
+            SET review_count = review_count + 1, 
+            review_average = ((review_average * review_count) + $1) / (review_count + 1)
+            WHERE parentid = $2;
+            `
+            const res = await client.query(query, [rating, parentid]);
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to update product rating stats when adding rating")
+        }
+        return {success: true}
+    }
+
+    async removeReview(parentid, rating, client){
+        if (!client){
+            return prepareRollback((c) => this.removeReview(rating, c));
+        }
+
+        try{
+            const query = `
+            UPDATE products 
+            SET review_count = review_count - 1, 
+            review_average = CASE 
+                WHEN review_count > 1 THEN ((review_average * review_count) - $1) / (review_count - 1) 
+                ELSE 0
+            END
+            WHERE parentid = $2;
+            `
+            const res = await client.query(query, [rating, parentid]);
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to update product rating stats when removing rating")
+        }
+        return {success: true}
+    }
+    async removeReview(){
+
+    }
+
     /*
     Expects object of fields in need of updating
     Ex) options === {type: "10ml spray", price: 35.85}
@@ -881,6 +932,10 @@ class Reviews{
             // rating DECIMAL(10, 1),
             // images JSONB DEFAULT '[]'::JSONB,
             // responses JSONB DEFAULT '[]'::JSONB,
+
+    Reviews(){
+        this.products = new Products();
+    }
     
     async createReview(options, client){
         if (!client){
@@ -907,6 +962,13 @@ class Reviews{
         if (invalidUrls.length > 0) {
             throw new DBError('All image URLs must be valid CloudFront URLs')
         }  
+
+        // update product rating
+        const updatedProduct = await this.products.addReview(productid, rating, client);
+        if (!updatedProduct.success){
+            throw DBError(updatedProduct.message);
+        }
+        
 
         let result;
         const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
@@ -946,6 +1008,13 @@ class Reviews{
         try{
             const query = `DELETE FROM reviews WHERE id = $1 RETURNING *`
             const result = await client.query(query, [id]);
+
+            // update product rating
+            const updatedProduct = await this.products.removeReview(result.productid, result.rating, client);
+            if (!updatedProduct.success){
+                throw DBError(updatedProduct.message);
+            }
+
             const images = result?.rows?.[0]?.images;
             for (let image of images){
                 const key = image.replace(`${CLOUDFRONT_DOMAIN}/`, "");

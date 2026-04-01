@@ -73,7 +73,9 @@ const defaultProductDraft = {
         },
         isfeatured: false,
         ishidden: false,
-        images: [], // Images are list of file products (Requests.js)
+        images: [], 
+        review_count: 0,
+        review_average: 0
 };
 
 // Products Admin Panel ---------------------------------------------
@@ -148,7 +150,9 @@ export default function ProductsPanel() {
             },
             isfeatured: product.isfeatured,
             ishidden: product.ishidden,
-            images: product.images 
+            images: product.images,
+            review_count: product.review_count,
+            review_average: product.review_average
         };
     }
 
@@ -543,6 +547,8 @@ export default function ProductsPanel() {
                 isfeatured: !!draft.isfeatured,
                 ishidden: !!draft.ishidden,
                 images: draft.images ?? [],
+                review_count: draft.review_count === 0 ? 0 : Number(draft.review_count),
+                review_average: draft.review_average === 0 ? 0 : Number(draft.review_average),
             };
             const validNums = validateNumbers(form.price, form.stock_ml)
             if (validNums) {
