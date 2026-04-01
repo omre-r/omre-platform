@@ -1029,7 +1029,14 @@ async function cancelOrder(orderId) {
                             <Text style={luxuryHeadingStyle2} marginBottom="1.5rem">
                                 Fragrances Saved For Later
                             </Text>
-                             <View
+                            <View
+                                style={{
+                                    width: "100%",
+                                    borderTop: "1px solid rgba(0,0,0,0.15)",
+                                    marginBottom: "1.5rem",
+                                }}
+                            />
+                            <View
                                     minWidth={"500px"}
                                     maxWidth={"120%"}
                                     margin={"auto"}>
