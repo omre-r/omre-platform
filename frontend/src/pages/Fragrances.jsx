@@ -579,7 +579,7 @@ export default function Home() {
                       {prod.review_count}
                     </Flex>
                   :
-                  <div style={{flex: "1"}}>Be the first to review!</div>
+                  <Text style={{...bodyStyle,flex: "1"}}>Be the first to review!</Text>
                   }
                 </View>
                 <Text
