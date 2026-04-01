@@ -769,14 +769,14 @@ export default function Product(){
                     alignItems={"center"}
                     gap={"5px"}
                     >
-                        <strong>Average Rating</strong>
+                        <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>Average Rating</Text>
                         <Flex
                         alignItems={"center"}>
                             <View 
                             width={"200px"}
                             borderRadius={"10px"}
                             backgroundColor={"rgba(80, 19, 19, 0.13)"}>
-                                <strong>{Number(averageRating)} / 5</strong>
+                                <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>{Number(averageRating)} / 5</Text>
                                 <img src={ratings[Math.round(averageRating * 2)]} width={"100%"} alt="" />
                             </View>
                         </Flex>
