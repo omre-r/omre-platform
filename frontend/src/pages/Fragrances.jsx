@@ -10,6 +10,20 @@ import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import OptionsIcon from "../assets/options_icon.png"
 import SearchIcon from "../assets/search_icon.png"
+
+import rating0 from "../assets/ratings/0.png";
+import rating1 from "../assets/ratings/1.png";
+import rating2 from "../assets/ratings/2.png";
+import rating3 from "../assets/ratings/3.png";
+import rating4 from "../assets/ratings/4.png";
+import rating5 from "../assets/ratings/5.png";
+import rating6 from "../assets/ratings/6.png";
+import rating7 from "../assets/ratings/7.png";
+import rating8 from "../assets/ratings/8.png";
+import rating9 from "../assets/ratings/9.png";
+import rating10 from "../assets/ratings/10.png";
+const ratings = [rating0, rating1, rating2, rating3, rating4, rating5, rating6, rating7, rating8, rating9, rating10];
+
 // fonts //
 const headingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -540,21 +554,36 @@ export default function Home() {
                     alt={prod.name}
                     style={{
                         width: "100%",
-                        height: "200px",
                         objectFit: "cover",
                         borderRadius: "10px",
                         display: "block",
                         marginBottom: "1rem",
                     }}/>
-                  <View minHeight="7.5rem">
+                  <View>
                     <Text style={bodyStyle} textAlign="center">
                       {prod.name}
                     </Text>
                   </View>
                 </View>
+                <View
+                color={"white"}
+                >
+                  {prod.review_count !== 0
+                  ?
+                    <Flex
+                    gap={"12px"}
+                    alignItems={"center"}
+                    width={"90%"}
+                    >
+                      <img style={{width: "100%"}} src={ratings[Math.round(prod.review_average * 2)]} alt="" />
+                      {prod.review_count}
+                    </Flex>
+                  :
+                  <div style={{flex: "1"}}>Be the first to review!</div>
+                  }
+                </View>
                 <Text
                   style={{ ...bodyStyle, fontWeight: 600 }}
-                  textAlign="center"
                 >
                   ${prod.price}
                 </Text>

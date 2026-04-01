@@ -100,7 +100,7 @@ async function createTables() {
             description TEXT,
             isfeatured BOOLEAN,
             ishidden BOOLEAN,
-            created_at TIMESTAMP DEFAULT NOW()
+            created_at TIMESTAMP DEFAULT NOW(),
             review_count INTEGER DEFAULT 0,
             review_average DECIMAL(10,1) DEFAULT 0
         )
@@ -223,6 +223,7 @@ async function prepareRollback(fn){
         return response
     }catch(err){
         if (client) await client.query("ROLLBACK");
+        console.log(err)
         if (!(err instanceof DBError)) return {success: false, message: "Uncaught error occurred", status: 500};
         return {success: false, message: err.message, status: err.code}
     }finally{
@@ -933,7 +934,7 @@ class Reviews{
             // images JSONB DEFAULT '[]'::JSONB,
             // responses JSONB DEFAULT '[]'::JSONB,
 
-    Reviews(){
+    constructor(){
         this.products = new Products();
     }
     
