@@ -737,9 +737,6 @@ class Products{
         }
         return {success: true}
     }
-    async removeReview(){
-
-    }
 
     /*
     Expects object of fields in need of updating
