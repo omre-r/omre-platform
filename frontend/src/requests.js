@@ -6,7 +6,7 @@ function handleError(fn){
       return await fn(...args)
     }catch(err){
       console.error(err)
-      return {success: false, message: `Error: ${err}`}
+      return {success: false, message: `${err}`}
     }
   }
 }
@@ -248,6 +248,7 @@ async function createReviewReq({customerid, productid, message, rating, images})
     });
     const data = await response.json();
     if (!data.success){
+        console.log("here", data.message)
         console.error(data.message || "req failed")
     }
     return data

@@ -67,6 +67,10 @@ export default function Product(){
     const [replyMessage, setReplyMessage] = useState("")
     const [selectedRating, setSelectedRating] = useState(0);
 
+    const [reviewError, setReviewError] = useState("");
+    const [replyError, setReplyError] = useState("");
+    
+
     useEffect(() => {
         const decodedAccessToken = getAccessToken();
         const decodedIdToken = getIDToken();
@@ -103,7 +107,19 @@ export default function Product(){
         setErrorMessage(message);
         setTimeout(() => {
             setErrorMessage(prev => prev === message ? "" : prev);
-        },5000);
+        },6000);
+    }
+    function displayReviewError(message){
+        setReviewError(message);
+        setTimeout(() => {
+            setReviewError(prev => prev === message ? "" : prev);
+        },6000);
+    }
+    function displayReplyError(message){
+        setReplyError(message);
+        setTimeout(() => {
+            setReplyError(prev => prev === message ? "" : prev);
+        },6000);
     }
 
     async function handleAddToCart(){
@@ -169,16 +185,18 @@ export default function Product(){
             return;
         }
         if (newReviewMessage === ""){
+            displayReviewError("Please enter a message first!")
             return;
         }
         if (isProfane(newReviewMessage)){
+            displayReviewError("Please keep your message appropriate!")
             return;
         }
         let imageUrls = [];
         if (attachedImages.length > 0){
             imageUrls = await uploadAndGetURlsReq(attachedImages, "reviews");
-            console.log(imageUrls)
             if (!imageUrls){
+                displayReviewError("Failed to upload images");
                 return;
             }
         }
@@ -191,6 +209,7 @@ export default function Product(){
         }
         const result = await createReviewReq(reviewForm);
         if (!result.success){
+            displayReviewError(result.message)
             return;
         }
         setNewReviewMessage("");
@@ -209,9 +228,19 @@ export default function Product(){
     }
 
     async function submitReply(review){
-        if (replyMessage === "") return;
-        if (isProfane(newReviewMessage)) return;
+        if (replyMessage === "") {
+            displayReplyError("Please enter a message!")
+            return;
+        };
+        if (isProfane(replyMessage)){ 
+            displayReplyError("Please keep your reply appropriate!")
+            return;
+        }
         const result = await respondToReviewReq(replyID, {message: replyMessage, isadmin: (userInfo.isAdmin && userInfo.sub !== review.customerid)})
+        if (!result.success){
+            displayReplyError(result.message);
+            return;
+        }
         loadReviews()
         setReplyMessage("");
         setReplyID(null);
@@ -238,8 +267,7 @@ export default function Product(){
             }
             if (file.size >= MAX_SIZE){
                 setAttachedImages([])
-                //setMessage("You can't upload images over 5MB");
-                //setTimeout(() => setMessage(""), 5000);
+                displayReviewError("You can't upload images over 5MB");
                 for (const f of validFiles){
                     URL.revokeObjectURL(f.url);
                 }
@@ -765,6 +793,7 @@ export default function Product(){
                                 </View>
                                 <img src={ratings[selectedRating]} width={"100%"} alt="" />
                             </View>
+                            <strong style={{color: "red", fontSize:"1.5em"}}>{reviewError}</strong>
                         </Flex>
 
                         <Flex>
@@ -929,7 +958,7 @@ export default function Product(){
                                     </Flex>
                                 </Flex>
                                 {/* additional options */}
-                                {userInfo?.sub === review.customerid &&
+                                {(userInfo?.sub === review.customerid || userInfo?.isAdmin) &&
                                 <Flex
                                 className={styles.more_options}
                                 gap={"3px"}
@@ -944,6 +973,7 @@ export default function Product(){
                                     }}
                                     onClick={() => setReplyID(review.id)}
                                     >Reply</button>
+                                    {userInfo?.sub === review.customerid &&
                                     <button
                                     onClick={() => removeReview(review.id)}
                                     style={{
@@ -951,6 +981,7 @@ export default function Product(){
                                         borderRadius: "5px"
                                     }}
                                     >Delete</button>
+                                    }
                                 </Flex>
                                 }
                             </Flex>
@@ -1034,7 +1065,6 @@ export default function Product(){
                                 flex={"1"}
                                 >      
                                     {userInfo?.isAdmin && userInfo?.sub !== review.customerid
-                                    
                                     ?
                                         <h3 style={{marginBlock: "0"}}>
                                             OMRE Fragrances
@@ -1044,6 +1074,7 @@ export default function Product(){
                                             {userInfo?.firstname} {userInfo?.lastname}
                                         </h3>
                                     }
+                                    <strong style={{color: "red"}}>{replyError}</strong>
                                     <Flex
                                     justifyContent={"left"}>
                                         <View 
