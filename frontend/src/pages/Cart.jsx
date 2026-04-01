@@ -21,6 +21,8 @@ import {
   createSavedItemReq,
 } from "../requests.js";
 
+import { useToast } from "../components/ToastContext";
+
 // custom styles
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -77,7 +79,7 @@ export default function Cart() {
   const [savedItems, setSavedItems] = useState([]);
   const [loadingSavedItems, setLoadingSavedItems] = useState(true);
 
-  const [message, setMessage] = useState("");
+  const { toast } = useToast();
   const [loadingRecommendations, setLoadingRecommendations] = useState(true); 
   const [recommendations, setRecommendations] = useState([]);
 
@@ -177,7 +179,7 @@ export default function Cart() {
   setCart(fullCart.filter(Boolean));
     } catch (err) {
       console.error(err);
-      setMessage("Failed to load cart.");
+      toast("Failed to load cart.", "error");
     } finally {
       setLoadingCart(false);
     }
@@ -260,7 +262,7 @@ export default function Cart() {
       setSavedItems(fullSavedItems.filter(Boolean));
     } catch (err) {
       console.error(err);
-      setMessage("Failed to load saved items.");
+      toast("Failed to load saved items.", "error");
     } finally {
       setLoadingSavedItems(false);
     }
@@ -285,14 +287,12 @@ export default function Cart() {
       type: cartitem.type
     });
     if (!savedItem.success || savedItem?.data?.exists){
-      setMessage(savedItem.message);
-      setTimeout(() => setMessage(""), 5000)
+      toast(savedItem.message || "Could not move to saved.", "error");
       return;
     }
     const cartItemRemoved = await updateCartReq(cartitem.customerid, cart.filter(item => item.id !== cartitem.id));
     if (!cartItemRemoved.success){
-      setMessage(cartItemRemoved.message);
-      setTimeout(() => setMessage(""), 5000)
+      toast(cartItemRemoved.message || "Failed to update cart.", "error");
       return;
     }
     
@@ -307,8 +307,7 @@ export default function Cart() {
       type: savedItem.type
     });
     if (!newCartItem.success){
-      setMessage(newCartItem.message);
-      setTimeout(() => setMessage(""), 5000);
+      toast(newCartItem.message || "Failed to add to cart.", "error");
       return;
     }
     loadCart();
@@ -317,8 +316,7 @@ export default function Cart() {
   async function removeSavedItem(savedItem) {
     const deletedItem = await deleteSavedItemReq(savedItem.id)
     if (!deletedItem.success){
-      setMessage(deletedItem.message);
-      setTimeout(() => setMessage(""), 5000);
+      toast(deletedItem.message || "Failed to remove item.", "error");
       return;
     }
     loadSavedItems();
@@ -330,7 +328,7 @@ export default function Cart() {
       await loadCart();
     } catch (err) {
       console.error(err);
-      setMessage("Failed to remove item.");
+      toast("Failed to remove item.", "error");
     }
   }
   async function increaseQuantity(id) {
@@ -338,7 +336,7 @@ export default function Cart() {
     if (!customerid) return;
     const targetItem = cart.find(item => item.id === id);
     if (targetItem.quantity >= 10) {
-      setMessage("Maximum quantity per item is 10.");
+      toast("Maximum quantity per item is 10.", "info");
       return;
     }
     const updatedCart = cart.map(item =>
@@ -384,7 +382,7 @@ async function checkout() {
   if (!customerid) return;
 
   if (cart.length === 0) {
-    setMessage("Your cart is empty.");
+    toast("Your cart is empty.", "info");
     return;
   }
 
@@ -393,20 +391,20 @@ async function checkout() {
     if (!response?.success) {
       const backendMessage = response?.message || "";
       if (backendMessage.includes("Failed to decrease product stock")) {
-        setMessage("Product out of stock.");
+        toast("Product out of stock.", "error");
       } 
       else {
-        setMessage(backendMessage || "Checkout failed.");
+        toast(backendMessage || "Checkout failed.", "error");
       }
       return;
     }
     await clearCartReq(customerid);
 
     setCart([]);
-    setMessage("Order placed successfully!");
+    toast("Order placed successfully!", "success");
   } catch (err) {
     console.error(err);
-    setMessage("Checkout failed.");
+    toast("Checkout failed.", "error");
   }
 }
 
@@ -692,19 +690,7 @@ async function checkout() {
 
           </Flex>
         )}
-        {message && (
-          <Text
-              style={{
-                  ...luxuryBodyStyle,
-                  color: message === "Order placed successfully!" ? "#2d6a2d" : "#8B0000",
-                  textAlign: "center",
-                  marginTop: "2.3rem",
-                  fontSize: "1.6rem"
-              }}>
-              {message}
-          </Text>
-        )}
-
+        
         <View
         minWidth={"500px"}
         maxWidth={"67%"}

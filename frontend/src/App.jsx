@@ -13,29 +13,32 @@ import ContactUs from "./pages/ContactUs";
 import Cart from "./pages/Cart";
 import Product from "./pages/Product";
 import Profile from "./pages/Profile";
+import { ToastProvider } from "./components/ToastContext";
+
 
 import './App.css'
 
 function App() {
   return (
-    <div>
-    <Router>
-      <Routes>
-        {/* we can add more routes here as needed, this is the home route which shows the home page */}
-        <Route path="/" element={<Home />} />
-        <Route path="/Auth" element={<Auth />} />
-        <Route path="/AdminDashboard" element={<AdminDashboard />} />
-        <Route path="/ForgotPassword" element={<ForgotPassword />} />
-        <Route path="/Mixology" element={<Mixology />} />
-        <Route path="/Fragrances" element={<Fragrances />} />
-        <Route path="/AboutUs" element={<AboutUs />} />
-        <Route path="/ContactUs" element={<ContactUs />} />
-        <Route path="/Cart" element={<Cart />} />
-        <Route path="/Fragrances/:parentid" element={<Product/>}/>
-        <Route path="/Profile" element={<Profile />} />
-      </Routes>
-    </Router>
-    </div>
+    <ToastProvider>
+      <div>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/Auth" element={<Auth />} />
+            <Route path="/AdminDashboard" element={<AdminDashboard />} />
+            <Route path="/ForgotPassword" element={<ForgotPassword />} />
+            <Route path="/Mixology" element={<Mixology />} />
+            <Route path="/Fragrances" element={<Fragrances />} />
+            <Route path="/AboutUs" element={<AboutUs />} />
+            <Route path="/ContactUs" element={<ContactUs />} />
+            <Route path="/Cart" element={<Cart />} />
+            <Route path="/Fragrances/:parentid" element={<Product/>}/>
+            <Route path="/Profile" element={<Profile />} />
+          </Routes>
+        </Router>
+      </div>
+    </ToastProvider>
   );
 }
 
