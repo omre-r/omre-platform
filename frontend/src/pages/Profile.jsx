@@ -908,7 +908,7 @@ async function cancelOrder(orderId) {
                                                             alignItems: "flex-start",
                                                             justifyContent: "flex-start",
                                                             textAlign: "left",
-                                                            width: "60%",
+                                                            width: "70%",
                                                             margin: "0 auto"
                                                         }}>
                                                         <View>
@@ -1044,7 +1044,7 @@ async function cancelOrder(orderId) {
                                             style={{
                                             ...tableViewStyle,
                                             margin: "0 auto 1.5rem auto",
-                                            width: "35%",
+                                            width: "55%",
                                             textAlign: "left",
                                             alignItems: "flex-start",
                                             justifyContent: "flex-start",
@@ -1072,8 +1072,8 @@ async function cancelOrder(orderId) {
                                                     src={savedItem.item.images[0]}
                                                     alt={savedItem.item.name}
                                                     style={{
-                                                        width: "200px",
-                                                        height: "200px",
+                                                        width: "250px",
+                                                        height: "250px",
                                                         objectFit: "cover",
                                                         display: "block",
                                                     }}
@@ -1195,7 +1195,7 @@ async function cancelOrder(orderId) {
                                                         ...tableViewStyle,
                                                         marginLeft: "0rem",
                                                         textAlign: "left",
-                                                        width: "35%",
+                                                        width: "55%",
                                                         margin: "0 auto"
                                                     }}>
                                                     <View>

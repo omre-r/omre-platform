@@ -769,14 +769,14 @@ export default function Product(){
                     alignItems={"center"}
                     gap={"5px"}
                     >
-                        <strong>Average Rating</strong>
+                        <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>Average Rating</Text>
                         <Flex
                         alignItems={"center"}>
                             <View 
                             width={"200px"}
                             borderRadius={"10px"}
                             backgroundColor={"rgba(80, 19, 19, 0.13)"}>
-                                <strong>{Number(averageRating)} / 5</strong>
+                                <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>{Number(averageRating)} / 5</Text>
                                 <img src={ratings[Math.round(averageRating * 2)]} width={"100%"} alt="" />
                             </View>
                         </Flex>
@@ -814,7 +814,7 @@ export default function Product(){
                         direction={"column"}
                         gap={"3px"}>
                             <h2 style={{marginBlock: "3px"}}>
-                                {userInfo.firstname} {userInfo.lastname}
+                                <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>{userInfo.firstname} {userInfo.lastname}</Text>
                             </h2>
                             <View 
                             className={styles.rating}
@@ -868,6 +868,8 @@ export default function Product(){
                             onChange={(e) => setNewReviewMessage(e.target.value)}
                             maxLength={"500"}
                             style={{
+                                ...bodyStyle,
+                                color: "Black",
                                 flex: "1",
                                 borderTop: "none",
                                 borderLeft: "none",
@@ -890,7 +892,7 @@ export default function Product(){
                                 fontSize: "1.5em",
                                 backgroundColor: "rgba(250,250,250,.3)"
                             }}>
-                                Attach Images
+                                <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>Attatch Images</Text>
                                 <input type="file" hidden multiple onChange={addImages}></input>
                             </label>
                             <button
@@ -903,7 +905,7 @@ export default function Product(){
                                 fontSize: "1.5em",
                                 backgroundColor: "rgba(250,250,250,.3)"
                             }}
-                            >Submit
+                            ><Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>Submit</Text>
                             </button>
                         </Flex>
                     </Flex>
@@ -912,7 +914,9 @@ export default function Product(){
             }
             {/* List of past reviews */}
             {reviews.length === 0 && 
-            <h2>No reviews yet...</h2>}
+            <h2>
+                <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>No reviews yet...</Text>
+            </h2>}
             <Flex 
                 direction={"column"}
                 justifyContent="center"
@@ -958,7 +962,7 @@ export default function Product(){
                                     <Flex
                                     alignItems={"center"}>
                                         <h3 style={{marginBlock: "0"}}>
-                                            {review.user.first_name} {review.user.last_name}
+                                            <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.8rem",}}>{review.user.first_name} {review.user.last_name}</Text>
                                         </h3>
 
                                         <View 
@@ -989,7 +993,7 @@ export default function Product(){
                                                     
                                                 </View>
                                             ))}                                       
-                                            {review.message}
+                                            <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>{review.message}</Text>
                                         </View>
                                     </Flex>
                                 </Flex>
@@ -1008,7 +1012,7 @@ export default function Product(){
                                         borderRadius: "5px"
                                     }}
                                     onClick={() => setReplyID(review.id)}
-                                    >Reply</button>
+                                    ><Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>Reply</Text></button>
                                     {userInfo?.sub === review.customerid &&
                                     <button
                                     onClick={() => removeReview(review.id)}
@@ -1016,7 +1020,7 @@ export default function Product(){
                                         backgroundColor: "transparent",
                                         borderRadius: "5px"
                                     }}
-                                    >Delete</button>
+                                    ><Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>Delete</Text></button>
                                     }
                                 </Flex>
                                 }
@@ -1055,11 +1059,11 @@ export default function Product(){
                                             {!res.isadmin 
                                             ?
                                                 <h3 style={{marginBlock: "0"}}> 
-                                                    {review.user.first_name} {review.user.last_name}
+                                                    <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.8rem",}}>{review.user.first_name} {review.user.last_name}</Text>
                                                 </h3>
                                             :
-                                                <h3 style={{marginBlock: "0"}}>
-                                                   OMRE Fragrances
+                                                <h3 style={{marginBlock: "0"}}> 
+                                                   <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.8rem",}}>OMRE Fragrances</Text>
                                                 </h3>
                                             }
                                             <Flex
@@ -1069,7 +1073,7 @@ export default function Product(){
                                                 fontSize={"1.2em"}
                                                 style={{overflowWrap: "break-word", wordBreak: "break-word"}}
                                                 >                                     
-                                                    {res.message}
+                                                    <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>{res.message}</Text>
                                                 </View>
                                             </Flex>
                                         </Flex>
@@ -1103,11 +1107,11 @@ export default function Product(){
                                     {userInfo?.isAdmin && userInfo?.sub !== review.customerid
                                     ?
                                         <h3 style={{marginBlock: "0"}}>
-                                            OMRE Fragrances
+                                            <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>OMRE Fragrances</Text>
                                         </h3>
                                     :
                                         <h3 style={{marginBlock: "0"}}>
-                                            {userInfo?.firstname} {userInfo?.lastname}
+                                            <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>{userInfo?.firstname} {userInfo?.lastname}</Text>
                                         </h3>
                                     }
                                     <strong style={{color: "red"}}>{replyError}</strong>
@@ -1146,7 +1150,7 @@ export default function Product(){
                                             backgroundColor: "rgba(250,250,250,.3)"
                                         }}
                                         onClick={() => {setReplyID(null);setReplyMessage("")}}
-                                        >Cancel</button>
+                                        ><Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>Cancel</Text></button>
                                         <button
                                             onClick={() => submitReply(review)}
                                             style={{
@@ -1157,7 +1161,7 @@ export default function Product(){
                                                 fontSize: ".8em",
                                                 backgroundColor: "rgba(250,250,250,.3)"
                                             }}
-                                            >Submit
+                                            ><Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>Submit</Text>
                                         </button>
                                         </View>
                                     </Flex>

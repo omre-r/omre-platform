@@ -422,13 +422,15 @@ async function checkout() {
         minHeight="100vh"
         paddingTop="3rem"
         paddingLeft="3rem"
-        paddingRight="3rem"
-        paddingBottom="3rem"
         style={{
+          boxSizing: "border-box",
+          paddingLeft: "clamp(1rem, 4vw, 3rem)",
+          paddingRight: "clamp(1rem, 4vw, 3rem)",
           backgroundImage: `url(${LuxuryBackground})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "repeat",
+          overflowX: "hidden",
         }}
       >
         <Text style={luxuryHeadingStyle} marginBottom="2rem">
@@ -451,7 +453,18 @@ async function checkout() {
         )}
 
         {!loadingCart && cart.length > 0 && (
-          <Flex alignItems="flex-start" gap="3rem">
+            <View
+            width="100%"
+            style={{
+              overflowX: "auto",
+              overflowY: "hidden",
+            }}
+          >
+            <Flex
+              alignItems="flex-start"
+              gap="2rem"
+              style={{ minWidth: "1050px" }}
+            >
 
             {/* LEFT 67% */}
             <Flex 
@@ -689,6 +702,7 @@ async function checkout() {
             </View>
 
           </Flex>
+          </View>
         )}
         
         <View
