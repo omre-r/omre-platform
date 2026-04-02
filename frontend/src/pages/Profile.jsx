@@ -641,10 +641,6 @@ async function cancelOrder(orderId, reason) {
                   backgroundPosition: "center",
                   backgroundRepeat: "repeat",
                 }}>
-                {/* TODO: Implementation of showing the users first name will be here
-                    Make sure that I implement where if user name doesnt load properly 
-                    just make it show different message that doesnt require name
-                    */}
                 <Text 
                     style={luxuryHeadingStyle}
                     marginTop="1rem">
@@ -656,6 +652,7 @@ async function cancelOrder(orderId, reason) {
                     gap="5rem"
                     marginTop="2rem"
                     >
+                    {/* Ability to switch between tabs of the page to access different user information ------------------------------ */}
                     {[
                     { key: "overview", label: "Overview" },
                     { key: "orders", label: "Orders" },
@@ -686,6 +683,8 @@ async function cancelOrder(orderId, reason) {
                         minHeight: "500px",
                     }}
                     >   
+                    {/* User overview tab ---------------------------------------------------------
+                    Shows users specific profile information */}
                     {activeTab === "overview" && (
                         <View>
                             <Text style={luxuryHeadingStyle2} marginBottom="1rem">
@@ -709,22 +708,6 @@ async function cancelOrder(orderId, reason) {
                                             day: 'numeric'
                                         })} 
                                         <br></br>
-                                        {/*  
-                                        <Flex justifyContent="flex-end">
-                                        <View
-                                        style={{
-                                            padding: "0.9rem 2.2rem",
-                                            border: "1px solid #35312D",
-                                            borderRadius: "28px",
-                                            background: "linear-gradient(145deg,  #FDDDBE, #ffd5cc)",
-                                            cursor: "pointer",
-                                            boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                                            transition: "all 0.2s ease",
-                                        }}>
-                                        <Text style={{...luxuryBodyStyle, color: "#000000"}}>Edit Profile</Text>
-                                        </View>
-                                        </Flex>
-                                        */}
                                     </Text>
                                 </View>
                                 <View style={cardStyle}> 
@@ -760,7 +743,9 @@ async function cancelOrder(orderId, reason) {
                             </Grid>                    
                         </View>
                     )}
-
+                    {/* Users order tab ----------------------------------------- */}
+                    {/* Displays information on previous orders of user and grants ability to user to cancel orders */}
+                    {/* Displays images of products within orders */}
                     {activeTab === "orders" && (
                         <View>
                             <Flex
@@ -768,6 +753,7 @@ async function cancelOrder(orderId, reason) {
                                 justifyContent="center"
                                 alignItems="center"
                                 gap="1rem">
+                                {/* Ability to search by order id within orders ----------------------------------- */}
                                 <View position={"relative"}>
                                     <input
                                         type="text"
@@ -812,6 +798,7 @@ async function cancelOrder(orderId, reason) {
                                             Search by order id...
                                         </Text>
                                     )}
+                                    {/* Ability to filter orders by status ----------------------------------- */}
                                     <section
                                         style={{
                                             display: "flex",
@@ -883,6 +870,7 @@ async function cancelOrder(orderId, reason) {
                                             </TableRow>
                                         </TableHead>
 
+                                        {/* Listing order information in multiple rows --------------------------------------------- */}
                                         {userOrders.filter((order) => statusFilter === "all" ? true : order.status?.toLowerCase() === statusFilter).map((order) => {
                                             const status = order.status.toLowerCase();
                                             const canCancel = ["pending", "mixing"].includes(status);
@@ -1093,6 +1081,7 @@ async function cancelOrder(orderId, reason) {
                         </View>
                     )}
 
+                    {/* Tab to access fragrances a user saves for later ---------------------------------------------------- */}
                     {activeTab === "sfl" && (
                         <View>
                             <Text style={luxuryHeadingStyle2} marginBottom="1.5rem">
@@ -1245,6 +1234,7 @@ async function cancelOrder(orderId, reason) {
                             </View>
                         )}
                     
+                    {/* Tab to access a users saved mixes from mixology ---------------------------------------------------- */}
                     {activeTab === "mixes" && (
                         <View marginTop="1rem"  >
                             {message && (
@@ -1298,6 +1288,7 @@ async function cancelOrder(orderId, reason) {
                                                                 wrap="wrap"
                                                                 marginBottom="1.25rem"
                                                             >
+                                                                {/* Building a list of the fragrances by productID and percetange ------------------------------------------ */}
                                                                 {[
                                                                     {
                                                                         productId: blend.frag1_productid,
@@ -1307,6 +1298,7 @@ async function cancelOrder(orderId, reason) {
                                                                         productId: blend.frag2_productid,
                                                                         pct: blend.frag2_pct,
                                                                     },
+                                                                    // if fragrance 3 exists then add it to the array otherwise skip it
                                                                     ...(blend.frag3_productid
                                                                         ? [
                                                                             {
@@ -1315,8 +1307,9 @@ async function cancelOrder(orderId, reason) {
                                                                             },
                                                                         ]
                                                                         : []),
-                                                                ].map((frag, index) => {
+                                                                ].map((frag, index) => { // Then we loop through every item of our previously created array
                                                                     const matchedProduct = products.find(
+                                                                        // Look through products array to find matching product id to get the fragrance name and image for each fragrance in the blend
                                                                         (p) => String(getProductId(p)) === String(frag.productId)
                                                                     );
                                                                     if (!matchedProduct) return null;
@@ -1392,12 +1385,13 @@ async function cancelOrder(orderId, reason) {
                                                             </Text>
                                                         </View>
                                                     </View>
+                                                    {/* Ability to add blend to cart or delete from profile -------------------------------------------------- */}
                                                     <Flex 
-                                                            direction="row" 
-                                                            gap="2rem"
-                                                            justifyContent="center"
-                                                            alignItems="center"
-                                                            width="100%">
+                                                        direction="row" 
+                                                        gap="2rem"
+                                                        justifyContent="center"
+                                                        alignItems="center"
+                                                        width="100%">
                                                             <View 
                                                                 style={{
                                                                         ...buttonStyling, 
@@ -1445,6 +1439,7 @@ async function cancelOrder(orderId, reason) {
                             )}
                         </View>
                     )}
+                    {/* Tab so user can update preferences for their profile ---------------------------------------------------- */}
                     {activeTab === "preferences" && (
                         <View>
                             <Text 
@@ -1536,6 +1531,8 @@ async function cancelOrder(orderId, reason) {
                             )}
                         </View>
                     )}
+                    {/* Cancel order confirmation for orders ------------------------------------------ */}
+                    {/* This pop-up appears when the user wants to cancel an order and appears above everything */}
                     {confirmCancelOrder && (
                         <View
                             style={{
@@ -1567,6 +1564,7 @@ async function cancelOrder(orderId, reason) {
                                 <Text style={{ ...luxuryBodyStyle, marginTop: "10px", color: "White", fontSize: "1.2rem" }}>
                                     Are you sure you want to cancel this order?
                                 </Text>
+                                {/* User must enter a cancellation reason for an order, if not button will be grayed out to submit */}
                                 <TextField
                                     value={cancelReason}
                                     onChange={(e) => setCancelReason(e.target.value)}
