@@ -1,5 +1,5 @@
 import Navbar from "../components/Navbar";
-import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, ToggleButton, Card } from "@aws-amplify/ui-react";
+import { View, Flex, Text, Button, Grid, Table, TableRow, TableCell, TableHead, ToggleButton, TextField } from "@aws-amplify/ui-react";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { useEffect, useState } from "react";
@@ -151,6 +151,7 @@ export default function Profile() {
     const threeNoteBlends = loadedBlends.filter((blend) => blend.frag3_productid).length;
 
     const [confirmCancelOrder, setConfirmCancelOrder] = useState(null);
+    const [cancelReason, setCancelReason] = useState("");
 
     // Filter and search ------------------------------------------------------------------
     const [orderIdSearch, setOrderIdSearch] = useState("");
@@ -544,9 +545,9 @@ async function addToCart(savedItem) {
     }
 
 // Cancel Order 
-async function cancelOrder(orderId) {
+async function cancelOrder(orderId, reason) {
     try {
-        const data = await cancelOrderReq(orderId, "User cancelled order");
+        const data = await cancelOrderReq(orderId, reason);
 
         if (!data.success) {
             setMessage(data.message || "Error cancelling order.");
@@ -1200,20 +1201,80 @@ async function cancelOrder(orderId) {
                                                 <View  
                                                     style={{
                                                         ...tableViewStyle,
-                                                        marginLeft: "0rem",
-                                                        textAlign: "left",
+                                                        margin: "0 auto",
                                                         width: "55%",
-                                                        margin: "0 auto"
+                                                        textAlign: "left",
+                                                        alignItems: "flex-start",
+                                                        justifyContent: "flex-start",
+                                                        minHeight: "unset",
+                                                        padding: "1.8rem",
                                                     }}>
                                                     <View>
                                                         <View marginBottom="2rem">
+                                                            {/* Flex to load images of products for the mixes ------------------------------------- */}
+                                                            <Flex
+                                                                direction="row"
+                                                                gap="1rem"
+                                                                justifyContent="flex-start"
+                                                                alignItems="center"
+                                                                wrap="wrap"
+                                                                marginBottom="1rem"
+                                                                >
+                                                                {/* Find the product_id that matches in the products state to get the images */}
+                                                                {products.find((p) => String(getProductId(p)) === String(blend.frag1_productid))?.images?.[0] && (
+                                                                    <img
+                                                                    src={products.find((p) => String(getProductId(p)) === String(blend.frag1_productid))?.images?.[0]}
+                                                                    alt={getProductNameById(blend.frag1_productid)}
+                                                                    style={{
+                                                                        width: "130px",
+                                                                        height: "130px",
+                                                                        objectFit: "cover",
+                                                                        borderRadius: "16px",
+                                                                        border: "2px solid rgba(0,0,0,0.55)",
+                                                                        display: "block",
+                                                                    }}
+                                                                    />
+                                                                )}
+
+                                                                {products.find((p) => String(getProductId(p)) === String(blend.frag2_productid))?.images?.[0] && (
+                                                                    <img
+                                                                    src={products.find((p) => String(getProductId(p)) === String(blend.frag2_productid))?.images?.[0]}
+                                                                    alt={getProductNameById(blend.frag2_productid)}
+                                                                    style={{
+                                                                        width: "130px",
+                                                                        height: "130px",
+                                                                        objectFit: "cover",
+                                                                        borderRadius: "16px",
+                                                                        border: "2px solid rgba(0,0,0,0.55)",
+                                                                        display: "block",
+                                                                    }}
+                                                                    />
+                                                                )}
+
+                                                                {blend.frag3_productid &&
+                                                                    products.find((p) => String(getProductId(p)) === String(blend.frag3_productid))?.images?.[0] && (
+                                                                    <img
+                                                                        src={products.find((p) => String(getProductId(p)) === String(blend.frag3_productid))?.images?.[0]}
+                                                                        alt={getProductNameById(blend.frag3_productid)}
+                                                                        style={{
+                                                                        width: "130px",
+                                                                        height: "130px",
+                                                                        objectFit: "cover",
+                                                                        borderRadius: "16px",
+                                                                        border: "2px solid rgba(0,0,0,0.55)",
+                                                                        display: "block",
+                                                                        }}
+                                                                    />
+                                                                )}
+                                                            </Flex>
                                                             Blend: <br></br>
                                                             ▸ {getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%) <br></br>
                                                             ▸ {getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%) <br></br>
                                                             {blend.frag3_productid && (<>▸ {getProductNameById(blend.frag3_productid)} ({blend.frag3_pct}%) <br></br></>)}
                                                             Sizing: {blend.size_ml} ML
                                                         </View>
-                                                        <Flex 
+                                                    </View>
+                                                    <Flex 
                                                             direction="row" 
                                                             gap="2rem"
                                                             justifyContent="center"
@@ -1258,7 +1319,6 @@ async function cancelOrder(orderId) {
                                                                 </Text>
                                                             </View>
                                                         </Flex>
-                                                    </View>
                                                 </View>
                                             </TableCell>
                                         </TableRow>
@@ -1386,26 +1446,52 @@ async function cancelOrder(orderId) {
                                 <Text style={{ ...luxuryHeadingStyle2, color: "White" }}>
                                     Cancel Order?
                                 </Text>
-                                <Text style={{ ...luxuryBodyStyle, marginTop: "10px", color: "White" }}>
+                                <Text style={{ ...luxuryBodyStyle, marginTop: "10px", color: "White", fontSize: "1.2rem" }}>
                                     Are you sure you want to cancel this order?
                                 </Text>
+                                <TextField
+                                    value={cancelReason}
+                                    onChange={(e) => setCancelReason(e.target.value)}
+                                    placeholder="Provide a cancellation reason."
+                                    style={{
+                                        ...luxuryBodyStyle,
+                                        width: "100%",
+                                        minHeight: "90px",
+                                        marginTop: "18px",
+                                        padding: "10px",
+                                        borderRadius: "12px",
+                                        border: "2px solid rgba(255,255,255,0.2)",
+                                        background: "rgba(255,255,255,0.08)",
+                                        color: "#FFFFFF",
+                                        fontSize: "1.2rem",
+                                        boxSizing: "border-box",
+                                    }}
+                                />
                                 <Flex justifyContent="space-between" marginTop="20px">
                                     <Button
-                                        onClick={() => setConfirmCancelOrder(null)}
-                                        style={{...buttonStyling,  padding: "1.5rem 1.5rem",}}>
+                                        onClick={() => {
+                                                setConfirmCancelOrder(null);
+                                                setCancelReason("");
+                                            }}
+                                        style={{...buttonStyling,  padding: ".5rem 3rem",}}>
                                         <Text color="White" fontSize="1.2rem">No</Text>
                                     </Button>
                                     <Button
-                                        onClick={async () => {
-                                            // Earlier we set the confirmCancelOrder to be the order id, so this just sends the order id
-                                            await cancelOrder(confirmCancelOrder);
-                                            setConfirmCancelOrder(null);
-                                        }}
+                                           onClick={async () => {
+                                                if (!cancelReason.trim()) {
+                                                    setMessage("Please provide a cancellation reason.");
+                                                    return;
+                                                }
+
+                                                await cancelOrder(confirmCancelOrder, cancelReason.trim());
+                                                setConfirmCancelOrder(null);
+                                            }}
                                             style={{...buttonStyling,  
-                                            padding: "1.5rem 1.5rem",
-                                            background: "linear-gradient(145deg, #ff2525d7, rgba(20,20,20,0.92))"
-                                        }}>
-                                        <Text color="White" fontSize="1.2rem">Yes</Text>
+                                            padding: ".5rem 2rem",
+                                            background: cancelReason.trim() ? "linear-gradient(145deg, #ff2525d7, rgba(20,20,20,0.92))" : "linear-gradient(145deg, #f4f4f4, rgba(40,40,40,0.92))",
+                                            cursor: cancelReason.trim() ? "pointer" : "not-allowed",
+                                         }}>
+                                        <Text style={{ color: "White", fontSize: "1.2rem" }}>Cancel</Text>
                                     </Button>
                                 </Flex>
                             </View>

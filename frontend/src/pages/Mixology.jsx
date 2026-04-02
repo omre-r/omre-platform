@@ -761,20 +761,80 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                         <View  
                                             style={{
                                                 ...tableViewStyle,
-                                                marginLeft: "0rem",
+                                                margin: "0 auto",
+                                                width: "55%",
                                                 textAlign: "left",
-                                                width: "35%",
-                                                margin: "0 auto"
+                                                alignItems: "flex-start",
+                                                justifyContent: "flex-start",
+                                                minHeight: "unset",
+                                                padding: "1.8rem",
                                             }}>
                                             <View>
                                                 <View marginBottom="2rem">
+                                                    {/* Flex to load images of products for the mixes ------------------------------------- */}
+                                                    <Flex
+                                                        direction="row"
+                                                        gap="1rem"
+                                                        justifyContent="flex-start"
+                                                        alignItems="center"
+                                                        wrap="wrap"
+                                                        marginBottom="1rem"
+                                                        >
+                                                        {/* Find the product_id that matches in the products state to get the images */}
+                                                        {products.find((p) => String(getProductId(p)) === String(blend.frag1_productid))?.images?.[0] && (
+                                                            <img
+                                                            src={products.find((p) => String(getProductId(p)) === String(blend.frag1_productid))?.images?.[0]}
+                                                            alt={getProductNameById(blend.frag1_productid)}
+                                                            style={{
+                                                                width: "110px",
+                                                                height: "110px",
+                                                                objectFit: "cover",
+                                                                borderRadius: "16px",
+                                                                border: "2px solid rgba(0,0,0,0.55)",
+                                                                display: "block",
+                                                            }}
+                                                            />
+                                                        )}
+
+                                                        {products.find((p) => String(getProductId(p)) === String(blend.frag2_productid))?.images?.[0] && (
+                                                            <img
+                                                            src={products.find((p) => String(getProductId(p)) === String(blend.frag2_productid))?.images?.[0]}
+                                                            alt={getProductNameById(blend.frag2_productid)}
+                                                            style={{
+                                                                width: "110px",
+                                                                height: "110px",
+                                                                objectFit: "cover",
+                                                                borderRadius: "16px",
+                                                                border: "2px solid rgba(0,0,0,0.55)",
+                                                                display: "block",
+                                                            }}
+                                                            />
+                                                        )}
+
+                                                        {blend.frag3_productid &&
+                                                            products.find((p) => String(getProductId(p)) === String(blend.frag3_productid))?.images?.[0] && (
+                                                            <img
+                                                                src={products.find((p) => String(getProductId(p)) === String(blend.frag3_productid))?.images?.[0]}
+                                                                alt={getProductNameById(blend.frag3_productid)}
+                                                                style={{
+                                                                width: "110px",
+                                                                height: "110px",
+                                                                objectFit: "cover",
+                                                                borderRadius: "16px",
+                                                                border: "2px solid rgba(0,0,0,0.55)",
+                                                                display: "block",
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </Flex>
                                                     Blend: <br></br>
                                                     ▸ {getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%) <br></br>
                                                     ▸ {getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%) <br></br>
                                                     {blend.frag3_productid && (<>▸ {getProductNameById(blend.frag3_productid)} ({blend.frag3_pct}%) <br></br></>)}
                                                     Sizing: {blend.size_ml} ML
                                                 </View>
-                                                <Flex 
+                                            </View>
+                                            <Flex 
                                                     direction="row" 
                                                     gap="2rem"
                                                     justifyContent="center"
@@ -819,7 +879,6 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                                         </Text>
                                                     </View>
                                                 </Flex>
-                                            </View>
                                         </View>
                                     </TableCell>
                                 </TableRow>
