@@ -304,42 +304,51 @@ export default function OrdersPanel() {
             )}
 
             {/* LIST */}
-            <View className="orders-scroll" style={{overflowY: "auto", marginTop: "1rem", height: "25rem"}}>
-              {orders
-                .filter(o => statusFilter === "all" || o.status === statusFilter)
-                .map(order => (
-                  <Button
-                    key={order.id}
-                    onClick={() => viewOrder(order.id)}
-                    width="100%"
-                    justifyContent="flex-start"
-                    marginBottom=".6rem"
-                    style={{
-                      ...buttonStyling,
+            <View
+              className="orders-scroll"
+              style={{
+                overflowY: "auto",
+                marginTop: "1rem",
+                height: "25rem",
+              }}
+            >
+              <Flex wrap="wrap" gap="0.6rem">
+                {orders
+                  .filter(o => statusFilter === "all" || o.status === statusFilter)
+                  .map(order => (
+                    <Button
+                      key={order.id}
+                      onClick={() => viewOrder(order.id)}
+                      style={{
+                        ...buttonStyling,
 
-                      borderRadius: "10px",
-                      border: "2px solid black",
+                        width: "calc(50% - 0.3rem)", 
+                        justifyContent: "flex-start",
 
-                      // 🔥 BACKGROUND now reflects status
-                      background: `linear-gradient(145deg, ${
-                        statusStyles[order.status?.toLowerCase()] || "#444"
-                      }, rgba(20,20,20,0.92))`,
+                        borderRadius: "10px",
+                        border: "2px solid black",
 
-                      color: "#ffffff",
+                        background: `linear-gradient(145deg, ${
+                          statusStyles[order.status?.toLowerCase()] || "#444"
+                        }, rgba(20,20,20,0.92))`,
 
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text style={{
-                      ...luxuryBodyStyle,
-                      color: "#ffffff",
-                      fontWeight: "600"
-                    }}>
-                      Order #{order.id.slice(0, 8)} — {order.status}
-                    </Text>
-                  </Button>
-                ))}
+                        color: "#ffffff",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          ...luxuryBodyStyle,
+                          color: "#ffffff",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Order #{order.id.slice(0, 8)} — {order.status}
+                      </Text>
+                    </Button>
+                  ))}
+              </Flex>
             </View>
           </Flex>
         </Card>
@@ -424,6 +433,28 @@ export default function OrdersPanel() {
                   <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>Status: {selectedOrder.status}</Text>
                   <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>Total: ${selectedOrder.total}</Text>
                 </View>
+                {/* ITEMS */}
+{selectedOrder.items?.map((orderItem, i) => {
+  if (orderItem.type === "blend") {
+    const blend = orderItem.item;
+
+    return (
+      <View key={i}>
+        <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
+          Custom Blend – {blend.size_ml}ml x{orderItem.quantity}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View key={i}>
+      <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
+        {orderItem.item?.name} x{orderItem.quantity}
+      </Text>
+    </View>
+  );
+})}
 
                 {/*STATUS*/}
                 <Flex
