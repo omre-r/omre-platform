@@ -6,7 +6,7 @@ import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import Omre2 from "../assets/Mixology/OMRE2.png";
 import BottleFill from "../components/BottleFill";
-
+import { useToast } from "../components/ToastContext";
 
 /*
 Custom Styles ------------------------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ const buttonStyling = {
 }
 
 export default function Mixology() {
-    const [message, setMessage] = useState("");
+    const { toast } = useToast();
     const [blendLoading, setBlendLoading] = useState(false);  // prevents double clicks
 
     // Set cologne choices --------------------------------------------------------
@@ -133,7 +133,7 @@ export default function Mixology() {
                 break
             };
         }
-        setMessage("");
+
         try {
             const data = await getUserSavedBlendsReq(userid);
             if (!data.success){
@@ -142,7 +142,7 @@ export default function Mixology() {
             setLoadedBlends(data.data.blends);
         }
         catch (error) {
-            setMessage(error.message || "Error loading saved blends.");
+            toast(error.message || "Error loading saved blends.", "error");
         }
     }
 
@@ -250,7 +250,6 @@ export default function Mixology() {
 
     // Load products from backend ---------------------------------------
     async function loadProducts() {
-        setMessage("");
         setLoadingProducts(true);
         try {
             const data = await getActiveProductsReq();  
@@ -260,7 +259,7 @@ export default function Mixology() {
             setProducts(data.data.products)
         }
         catch (error) {
-            setMessage(error.message || "Error loading products.");
+            toast(error.message || "Error loading products.", "error");
         }
         finally {
             setLoadingProducts(false);
@@ -278,20 +277,20 @@ export default function Mixology() {
                 break
             };
         }
-        setMessage("");
+       
         try {
             const data = await deleteUserBlendReq(userid, blendId);
             if (!data.success) {
-                setMessage(data.message || "Failed to delete blend.");
+                toast(data.message || "Failed to delete blend.", "error");
                 return;
             }
             // Remove deleted blend from loaded blends to update table
             // This is done here after a successful delete request to the backend to ensure the frontend state matches the backend data
             setLoadedBlends((prev) => prev.filter((b) => b.id !== blendId));
 
-            setMessage("Blend deleted successfully!");
+            toast("Blend deleted successfully!", "success");
         } catch (err) {
-            setMessage("Failed to delete blend.");
+            toast("Failed to delete blend.", "error");
         }
     }
 
@@ -322,11 +321,11 @@ export default function Mixology() {
     // Frontend validation before hitting the backend
     function validateBlendSelections() {
         if (!cologne1Id || !cologne2Id) {
-            setMessage("Please select at least 2 fragrances.");
+            toast("Please select at least 2 fragrances.", "error");
             return false;
         }
         if (thirdCologneSelectedMode && !cologne3Id) {
-            setMessage("Please select a 3rd fragrance or remove it.");
+            toast("Please select a 3rd fragrance or remove it.", "error");
             return false;
         }
         return true;
@@ -335,16 +334,16 @@ export default function Mixology() {
     async function handleSaveBlend() {
         if (!validateBlendSelections()) return;
         setBlendLoading(true);
-        setMessage("");
+        
         try {
             const data = await saveBlendReq(buildBlendPayload());
             if (!data.success) {
-                setMessage(data.message || "Failed to save blend.");
+                toast(data.message || "Failed to save blend.", "error");
                 return;
             }
-            setMessage("Blend saved successfully!");
+            toast("Blend saved successfully!", "success");
         } catch (err) {
-            setMessage("Failed to save blend.");
+            toast("Failed to save blend.", "error");
         } finally {
             setBlendLoading(false);
         }
@@ -353,19 +352,19 @@ export default function Mixology() {
 async function handleAddToCart() {
     if (!validateBlendSelections()) return;
     setBlendLoading(true);
-    setMessage("");
+   
     try {
         const blendPayload = buildBlendPayload();
 
         // Save blend first to get a persistent blend ID
         const saveRes = await saveBlendReq(blendPayload);
         if (!saveRes.success) {
-            setMessage(saveRes.message || "Failed to save blend.");
+            toast(saveRes.message || "Failed to save blend.", "error");
             return;
         }
         const blendId = saveRes.data.blend.id;
         if (!blendId) {
-            setMessage("Failed getting blendId.");
+            toast("Failed getting blendId.", "error");
             return;
         }
 
@@ -377,17 +376,17 @@ async function handleAddToCart() {
         });
 
         if (cartRes.stockUnavailable) {
-            setMessage(cartRes.message || "Not enough stock for this blend.");
+            toast(cartRes.message || "Not enough stock for this blend.", "error");
             return;
         }
         if (!cartRes.success) {
-            setMessage(cartRes.message || "Failed to add blend to cart.");
+            toast(cartRes.message || "Failed to add blend to cart.", "error");
             return;
         }
 
-        setMessage("Blend added to cart!");
+        toast("Blend added to cart!", "success");
     } catch (err) {
-        setMessage("Failed to add blend to cart.");
+        toast("Failed to add blend to cart.", "error");
     } finally {
         setBlendLoading(false);
     }
@@ -398,7 +397,7 @@ async function handleAddToCart() {
 // Making sure that we create the payload, check userid, product stock,
 async function handleAddSavedBlendToCart(savedBlend) {
     setBlendLoading(true);
-    setMessage("");
+
     try {
         let userid;
         for (let key of Object.keys(localStorage)){
@@ -411,7 +410,7 @@ async function handleAddSavedBlendToCart(savedBlend) {
             };
         }
         if (!userid) {
-            setMessage("User not found. Please log in again.");
+            toast("User not found. Please log in again.", "error");
             return;
         }
 
@@ -423,18 +422,18 @@ async function handleAddSavedBlendToCart(savedBlend) {
         });
 
         if (cartRes.stockUnavailable) {
-            setMessage(cartRes.message || "Not enough stock for this blend.");
+            toast(cartRes.message || "Not enough stock for this blend.", "error");
             return;
         }
         if (!cartRes.success) {
-            setMessage(cartRes.message || "Failed to add blend to cart.");
+            toast(cartRes.message || "Failed to add blend to cart.", "error");
             return;
         }
 
-        setMessage("Blend added to cart!");
+        toast("Blend added to cart!", "success");
     } catch (err) {
         console.error(err);
-        setMessage("Failed to add blend to cart.");
+        toast("Failed to add blend to cart.", "error");
     } finally {
         setBlendLoading(false);
     }
@@ -724,18 +723,6 @@ async function handleAddSavedBlendToCart(savedBlend) {
                             <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>{loadTable ? "Hide blends" : "Load blends"}</Text> 
                         </Button>
                     </Flex>
-                    {message && (
-                        <Text
-                            style={{
-                                ...luxuryBodyStyle,
-                                color: message === "Blend Ready!" || message === "Blend saved successfully!" || message === "Blend added to cart!" || message === "Blend deleted successfully!" ? "#2d6a2d" : "#8B0000",
-                                textAlign: "center",
-                                marginTop: "2.3rem",
-                                fontSize: "1.6rem"
-                            }}>
-                            {message}
-                        </Text>
-                    )}
                 </View>
 
                 {loadTable && (
@@ -774,20 +761,80 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                         <View  
                                             style={{
                                                 ...tableViewStyle,
-                                                marginLeft: "0rem",
+                                                margin: "0 auto",
+                                                width: "55%",
                                                 textAlign: "left",
-                                                width: "35%",
-                                                margin: "0 auto"
+                                                alignItems: "flex-start",
+                                                justifyContent: "flex-start",
+                                                minHeight: "unset",
+                                                padding: "1.8rem",
                                             }}>
                                             <View>
                                                 <View marginBottom="2rem">
+                                                    {/* Flex to load images of products for the mixes ------------------------------------- */}
+                                                    <Flex
+                                                        direction="row"
+                                                        gap="1rem"
+                                                        justifyContent="flex-start"
+                                                        alignItems="center"
+                                                        wrap="wrap"
+                                                        marginBottom="1rem"
+                                                        >
+                                                        {/* Find the product_id that matches in the products state to get the images */}
+                                                        {products.find((p) => String(getProductId(p)) === String(blend.frag1_productid))?.images?.[0] && (
+                                                            <img
+                                                            src={products.find((p) => String(getProductId(p)) === String(blend.frag1_productid))?.images?.[0]}
+                                                            alt={getProductNameById(blend.frag1_productid)}
+                                                            style={{
+                                                                width: "110px",
+                                                                height: "110px",
+                                                                objectFit: "cover",
+                                                                borderRadius: "16px",
+                                                                border: "2px solid rgba(0,0,0,0.55)",
+                                                                display: "block",
+                                                            }}
+                                                            />
+                                                        )}
+
+                                                        {products.find((p) => String(getProductId(p)) === String(blend.frag2_productid))?.images?.[0] && (
+                                                            <img
+                                                            src={products.find((p) => String(getProductId(p)) === String(blend.frag2_productid))?.images?.[0]}
+                                                            alt={getProductNameById(blend.frag2_productid)}
+                                                            style={{
+                                                                width: "110px",
+                                                                height: "110px",
+                                                                objectFit: "cover",
+                                                                borderRadius: "16px",
+                                                                border: "2px solid rgba(0,0,0,0.55)",
+                                                                display: "block",
+                                                            }}
+                                                            />
+                                                        )}
+
+                                                        {blend.frag3_productid &&
+                                                            products.find((p) => String(getProductId(p)) === String(blend.frag3_productid))?.images?.[0] && (
+                                                            <img
+                                                                src={products.find((p) => String(getProductId(p)) === String(blend.frag3_productid))?.images?.[0]}
+                                                                alt={getProductNameById(blend.frag3_productid)}
+                                                                style={{
+                                                                width: "110px",
+                                                                height: "110px",
+                                                                objectFit: "cover",
+                                                                borderRadius: "16px",
+                                                                border: "2px solid rgba(0,0,0,0.55)",
+                                                                display: "block",
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </Flex>
                                                     Blend: <br></br>
                                                     ▸ {getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%) <br></br>
                                                     ▸ {getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%) <br></br>
                                                     {blend.frag3_productid && (<>▸ {getProductNameById(blend.frag3_productid)} ({blend.frag3_pct}%) <br></br></>)}
                                                     Sizing: {blend.size_ml} ML
                                                 </View>
-                                                <Flex 
+                                            </View>
+                                            <Flex 
                                                     direction="row" 
                                                     gap="2rem"
                                                     justifyContent="center"
@@ -832,7 +879,6 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                                         </Text>
                                                     </View>
                                                 </Flex>
-                                            </View>
                                         </View>
                                     </TableCell>
                                 </TableRow>

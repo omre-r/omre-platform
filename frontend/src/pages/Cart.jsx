@@ -544,9 +544,11 @@ async function checkout() {
                               cursor: cartItem.quantity >= 10 ? "not-allowed" : "pointer"
                             }}
                             onClick={() => {
-                              if (cartItem.quantity < 10) {
-                                increaseQuantity(cartItem.id);
+                              if (cartItem.quantity >= 10) {
+                                toast("Maximum quantity per item is 10.", "info");
+                                return;
                               }
+                              increaseQuantity(cartItem.id);
                             }}
                             onMouseEnter={(e) => {
                               e.currentTarget.style.transform="translateY(-5px)";

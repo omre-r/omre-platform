@@ -1324,7 +1324,7 @@ export default function ProductsPanel() {
                                 <View columnSpan={2}>
                                     <TextAreaField
                                     textAlign={"left"}
-                                    style={{height: "50px"}}
+                                    style={{...compactStyle, height: "50px"}}
                                     placeholder={"Description"}
                                     value={draft.description}
                                     onChange={(e) => {

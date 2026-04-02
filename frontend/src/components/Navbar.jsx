@@ -9,7 +9,7 @@ Explaining only necessary imports
     - loadingAuth : To make sure authentication is done
 */ 
 
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import logo from "../assets/Logo.png";
 import "../styles/Navbar.css";
 import { useAuth } from "../context/AuthContext";
@@ -43,76 +43,75 @@ const Navbar = () => {
       <div className="nav-left">
         {/* Navbar Logo ------------------------------------------------------------------------------------------ */}
         {/* On click will take user back to home page */}
-        <Link to="/" className="logo-link">
+        <NavLink to="/" className="logo-link">
           <img src={logo} alt="OMRE Logo" className="logo-image" />
-        </Link>
+        </NavLink>
 
-        <Link
+        <NavLink
           to="/fragrances"
-          className="nav-item"
+          className={({ isActive }) =>
+            isActive ? "nav-item active-nav" : "nav-item"
+          }
           style={luxuryBodyStyle}
           >
           Fragrances
-        </Link>
+        </NavLink>
 
 
         {/* {!isAdmin && (  */}
           <>
-          
-          {/* Maybe add later, this page seems unneccessary for prototype3*/}
-          {/*  
-            <Link
-              to="/fragrancebar"
-              className="nav-item"
-              style={luxuryBodyStyle}
-              >
-              Fragrance Bar
-            </Link>
-          */}
-
-            <Link
+            <NavLink
               to="/AboutUs"
-              className="nav-item"
+              className={({ isActive }) =>
+                isActive ? "nav-item active-nav" : "nav-item"
+              }
               style={luxuryBodyStyle}
               >
               About
-            </Link>
+            </NavLink>
 
-            <Link
+            <NavLink
               to="/ContactUs"
-              className="nav-item"
+              className={({ isActive }) =>
+                isActive ? "nav-item active-nav" : "nav-item"
+              }
               style={luxuryBodyStyle}
               >
               Contact
-            </Link>
+            </NavLink>
         </> 
-        {/* )} */}
       </div>
 
       {/* Navbar Links ---------------------------------------------------------------------------------------- */}
       {/* Link to auth is shown if loadingAuth false & is not authenticated */}
       <nav className="nav-links">
         {!loadingAuth && !isAuthenticated && (
-          <Link to="/Auth" 
-          className="nav-item"
-          style={luxuryBodyStyle} >Sign In</Link>
+          <NavLink to="/Auth" 
+          className={({ isActive }) =>
+            isActive ? "nav-item active-nav" : "nav-item"
+          }
+          style={luxuryBodyStyle} >Sign In</NavLink>
         )}
 
         {!loadingAuth && isAuthenticated && isAdmin && (  
-          <Link to="/AdminDashboard" 
-          className="nav-item"
-          style={luxuryBodyStyle}>Admin Dashboard</Link>
+          <NavLink to="/AdminDashboard" 
+          className={({ isActive }) =>
+            isActive ? "nav-item active-nav" : "nav-item"
+          }
+          style={luxuryBodyStyle}>Admin Dashboard</NavLink>
         )}
 
         {!loadingAuth && isAuthenticated && (
-          <Link to="/Mixology" 
-          className="nav-item"
-          style={luxuryBodyStyle} >Mixology</Link>
+          <NavLink to="/Mixology" 
+          className={({ isActive }) =>
+            isActive ? "nav-item active-nav" : "nav-item"
+          }
+          style={luxuryBodyStyle} >Mixology</NavLink>
         )}
 
         {/* If loadingAuth is false (complete) and user is authenticated, will have ability to log out */}
         {!loadingAuth && isAuthenticated && (
-          <Link 
+          <NavLink 
             color="#F5F5F5" 
             style={luxuryBodyStyle}                       
             variation="primary"                                                                
@@ -120,18 +119,24 @@ const Navbar = () => {
             onClick={() => handleLogout()}           
             >
             Sign Out
-          </Link>
+          </NavLink>
         )}
         {!loadingAuth && isAuthenticated && (
-          <Link to="/Cart" className="nav-item">
+          <NavLink to="/Cart" 
+          className={({ isActive }) =>
+            isActive ? "nav-item active-nav" : "nav-item"
+          }>
             <img src={cartIcon} alt="Cart" className="cart-icon" />
-          </Link>
+          </NavLink>
         )}
 
         {!loadingAuth && isAuthenticated && (
-            <Link to="/Profile" className="nav-item">
+            <NavLink to="/Profile" 
+            className={({ isActive }) =>
+              isActive ? "nav-item active-nav" : "nav-item"
+            }>
               <img src={profileIcon} alt="Profile" className="cart-icon" />
-            </Link>
+            </NavLink>
         )}
       </nav>
     </header>
