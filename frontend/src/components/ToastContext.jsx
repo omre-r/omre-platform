@@ -14,7 +14,7 @@ export function ToastProvider({ children }) {
     const [toasts, setToasts] = useState([]);
     const timers = useRef({});
 
-    const toast = useCallback((message, type = "info", duration = 3200) => {
+    const toast = useCallback((message, type = "info", duration = 8000) => {
         const id = Date.now() + Math.random();
         setToasts(prev => [...prev, { id, message, type, exiting: false }]);
 
@@ -82,8 +82,8 @@ function Toast({ t, onDismiss }) {
                     display: "flex",
                     alignItems: "center",
                     gap: "12px",
-                    minWidth: "260px",
-                    maxWidth: "360px",
+                    minWidth: "360px",
+                    maxWidth: "480px",
                     padding: "14px 16px",
                     background: "linear-gradient(145deg, #2a0808ee, rgba(14,14,14,0.97))",
                     border: "1px solid rgba(255,255,255,0.1)",
@@ -103,7 +103,7 @@ function Toast({ t, onDismiss }) {
                 <span style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontWeight: 600,
-                    fontSize: "1.05rem",
+                    fontSize: "1.40rem",
                     letterSpacing: "0.3px",
                     color: "#f0ebe6",
                     flex: 1,
@@ -139,7 +139,7 @@ function Toast({ t, onDismiss }) {
                 background: borderColor,
                 opacity: 0.22,
                 borderRadius: "0 0 12px 12px",
-                animation: "toast-progress 3.2s linear forwards",
+                animation: "toast-progress 6s linear forwards",
             }} />
         </div>
     );
