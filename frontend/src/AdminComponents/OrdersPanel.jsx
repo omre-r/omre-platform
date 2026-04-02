@@ -433,28 +433,67 @@ export default function OrdersPanel() {
                   <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>Status: {selectedOrder.status}</Text>
                   <Text style={{...luxuryBodyStyle, color:"#FFFFFF"}}>Total: ${selectedOrder.total}</Text>
                 </View>
-                {/* ITEMS */}
-{selectedOrder.items?.map((orderItem, i) => {
-  if (orderItem.type === "blend") {
-    const blend = orderItem.item;
+                {/* ITEMS SECTION */}
+                <View
+                  style={{
+                    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                    padding: "12px",
+                    borderRadius: "20px",
+                    border: "2px solid black",
+                    textAlign: "left"
+                  }}
+                >
+                  <Text
+                    style={{
+                      ...luxuryBodyStyle,
+                      color: "#FFFFFF",
+                      fontWeight: "700",
+                      marginBottom: "6px"
+                    }}
+                  >
+                    Items
+                  </Text>
+                  {selectedOrder.items?.map((orderItem, i) => {
+                    if (orderItem.type === "product") {
+                      return (
+                        <Text key={i} style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
+                          {orderItem.item?.name} x{orderItem.quantity}
+                        </Text>
+                      );
+                    }
+                    if (orderItem.type === "blend") {
+                      const blend = orderItem.item;
 
-    return (
-      <View key={i}>
-        <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
-          Custom Blend – {blend.size_ml}ml x{orderItem.quantity}
-        </Text>
-      </View>
-    );
-  }
+                      return (
+                        <View key={i} style={{ marginTop: "6px" }}>
+                          <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
+                            Custom Blend – {blend.size_ml}ml x{orderItem.quantity}
+                          </Text>
 
-  return (
-    <View key={i}>
-      <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
-        {orderItem.item?.name} x{orderItem.quantity}
-      </Text>
-    </View>
-  );
-})}
+                          {blend.frag1_productid && (
+                            <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", marginLeft: "10px" }}>
+                              • {blend.frag1_pct}% {blend.frag1_name || "Unknown Fragrance"}
+                            </Text>
+                          )}
+
+                          {blend.frag2_productid && (
+                            <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", marginLeft: "10px" }}>
+                              • {blend.frag2_pct}% {blend.frag2_name || "Unknown Fragrance"}
+                            </Text>
+                          )}
+
+                          {blend.frag3_productid && (
+                            <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", marginLeft: "10px" }}>
+                              • {blend.frag3_pct}% {blend.frag3_name || "Unknown Fragrance"}
+                            </Text>
+                          )}
+                        </View>
+                      );
+                    }
+
+                    return null;
+                  })}
+                </View>
 
                 {/*STATUS*/}
                 <Flex
