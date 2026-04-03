@@ -242,7 +242,7 @@ export default function Home() {
             borderRadius: "16px",
             textAlign: "center",
             border: "1px solid rgba(255,255,255,0.18)",
-            background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+            background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
             color: "#F8F4F0",
             boxShadow: "0 8px 18px rgba(0,0,0,0.22)",
             cursor: "pointer",
@@ -270,7 +270,7 @@ export default function Home() {
             borderRadius: "16px",
             textAlign: "center",
             border: "1px solid rgba(255,255,255,0.18)",
-            background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+            background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
             color: "#F8F4F0",
             boxShadow: "0 8px 18px rgba(0,0,0,0.22)",
           }}
@@ -289,7 +289,7 @@ export default function Home() {
           padding="0.35rem"
           borderRadius="18px"
           style={{
-            background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+            background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
             boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
             border: "1px solid rgba(255,255,255,0.16)",
           }}
@@ -340,7 +340,7 @@ export default function Home() {
         height="58px"
         borderRadius="16px"
         style={{
-          background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
+          background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
           boxShadow: "0 8px 18px rgba(0,0,0,0.25)",
           border: "1px solid rgba(255,255,255,0.16)",
           cursor: "pointer",
@@ -536,7 +536,7 @@ export default function Home() {
               borderRadius="15px"
               boxShadow="0 14px 28px rgba(0,0,0,0.22)"
               style={{
-                background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
               }}
             >
               <Link 
@@ -601,7 +601,7 @@ export default function Home() {
               padding: "0.9rem 2.2rem",
               border: "1px solid rgba(255,255,255,0.35)",
               borderRadius: "28px",
-              background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+              background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
               cursor: "pointer",
               boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
               transition: "all 0.2s ease",

@@ -418,7 +418,7 @@ export default function Product(){
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "1.8rem",
                     backdropFilter: "blur(6px)",
-                    background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                    background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                     color:"white",
                     margin: 0,
                     padding: "10px",
@@ -462,13 +462,13 @@ export default function Product(){
                                     style={{
                                         fontFamily: "'Cormorant Garamond', serif",
                                         padding: "8px 12px",
-                                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                                        background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                                         borderRadius: "8px",
                                         fontSize: "1.55rem",
                                         fontWeight: "400",
                                         color:"white",
                                         ...(isSelected && {
-                                            border: "4px solid rgba(0,0,0,0.65)",
+                                            border: "3px solid rgba(0,0,0,0.65)",
                                         }),
                                     }}
                                     >
@@ -501,7 +501,7 @@ export default function Product(){
                         fontSize: "1.4rem",
                         maxHeight: "300px",
                         overflowY: "auto",
-                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                        background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                         color: "white",
                         
                     }}
@@ -550,7 +550,7 @@ export default function Product(){
                                     padding={"3px 8px"}
                                     borderRadius={"5px 10px"}
                                     style={{
-                                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                                        background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                                     }}
                                     fontStyle={"italic"}
                                     color={"white"}
@@ -578,7 +578,7 @@ export default function Product(){
                                     padding={"3px 8px"}
                                     borderRadius={"5px 10px"}
                                     style={{
-                                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                                        background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                                     }}
                                     fontStyle={"italic"}
                                     color={"white"}
@@ -613,7 +613,7 @@ export default function Product(){
                                     padding={"3px 8px"}
                                     borderRadius={"5px 10px"}
                                     style={{
-                                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                                        background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                                     }}
                                     fontStyle={"italic"}
                                     color={"white"}
@@ -624,6 +624,9 @@ export default function Product(){
                             })}
                             {selectedProduct.notes.base.length === 0 &&
                             <Text
+                            fontFamily={"'Cormorant Garamond', serif"}
+                            fontSize={"1.3rem"}
+                            fontWeight={"800"}
                             paddingLeft={"20px"}
                             >
                                 None
@@ -649,7 +652,7 @@ export default function Product(){
                             borderRadius: "14px",
                             background: Number(selectedProduct.stock_ml) <= 0
                                 ? "linear-gradient(145deg, rgba(80,80,80,0.7), rgba(20,20,20,0.5))"
-                                : "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                                : "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                             color: Number(selectedProduct.stock_ml) <= 0 ? "rgba(255,255,255,0.4)" : "white",
                             backgroundSize: "200% 200%",
                             backgroundPosition: "0% 25%",
@@ -711,7 +714,7 @@ export default function Product(){
                     borderRadius="20px"
                     boxShadow="0 14px 28px rgba(0,0,0,0.22)"
                     style={{
-                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                        background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                     }}>
                     <Link 
                         to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
@@ -729,7 +732,7 @@ export default function Product(){
                                 marginBottom: "1rem",
                             }}
                         />
-                        <View minHeight="7.5rem">
+                        <View minHeight="3.5rem">
                             <Text style={{...bodyStyle, fontSize: "1.2rem"}} textAlign="center">
                                 {prod.name}
                             </Text>

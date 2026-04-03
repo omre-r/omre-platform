@@ -59,7 +59,7 @@ const tableBodyStyle = {
 };
 
 const cardStyle = {
-    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+    background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
     borderRadius: "14px",
     padding: "1.5rem",
     minHeight: "250px",
@@ -72,7 +72,7 @@ const tableViewStyle = {
     padding: "1.2rem 1.5rem",
     border: "1px solid rgba(255,255,255,0.35)",
     borderRadius: "14px",
-    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+    background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
     boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
     display: "flex",
     flexDirection: "column",
@@ -90,22 +90,12 @@ const buttonStyling = {
     padding: ".9rem .2rem",
     border: "2px solid rgba(0, 0, 0)",
     borderRadius: "10px",
-    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+    background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
     color: "#FFFFFF",
     cursor: "pointer",
     boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
     transition: "all 0.2s ease",
 }
-const buttonViewStyle = {
-  padding: "0.9rem 2.2rem",
-  border: "1px solid rgba(255,255,255,0.35)",
-  borderRadius: "28px",
-  // navbar color for later reference :  #300a0a
-  background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
-  cursor: "pointer",
-  boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-  transition: "all 0.2s ease",
-};
 
 export default function Profile() {
     const [message, setMessage] = useState("");
@@ -591,7 +581,7 @@ async function cancelOrder(orderId, reason) {
             width: "100%",
             borderRadius: "10px",
             border: isSelected ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(0,0,0,0.12)",
-            background: isSelected ? "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))" : "linear-gradient(145deg,  #FDDDBE, #f9dad2)",
+            background: isSelected ? "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))" : "linear-gradient(145deg,  #FDDDBE, #f9dad2)",
             boxShadow: isSelected ? "0 8px 18px rgba(0,0,0,0.25)" : "0 2px 6px rgba(0,0,0,0.06)",
         };
     }
@@ -772,7 +762,7 @@ async function cancelOrder(orderId, reason) {
                                             paddingRight: "42px",
                                             borderRadius: "8px",
                                             border: "2px solid rgba(0, 0, 0)",
-                                            background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                                            background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                                             color: "#FFFFFF",
                                             caretColor: "#FFFFFF",
                                             fontFamily: "'Cormorant Garamond', serif",
@@ -838,7 +828,7 @@ async function cancelOrder(orderId, reason) {
                                         padding: "0.7rem 1.2rem",
                                         border: "2px solid rgba(0, 0, 0)",
                                         borderRadius: "10px",
-                                        background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                                        background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                                         color: "#FFFFFF",
                                         cursor: "pointer",
                                         boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
@@ -846,12 +836,12 @@ async function cancelOrder(orderId, reason) {
                                         outline: "none",
                                     }}
                                 >
-                                    <option value="all" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>All Statuses</option>
-                                    <option value="pending" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>Pending</option>
-                                    <option value="mixing" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>Mixing</option>
-                                    <option value="ready" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>Ready</option>
-                                    <option value="fulfilled" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>Fulfilled</option>
-                                    <option value="canceled" style={{ backgroundColor: "#2b1a1a", color: "#FFFFFF" }}>Canceled</option>
+                                    <option value="all" style={{ backgroundColor: "#9a2424", color: "#FFFFFF" }}>All Statuses</option>
+                                    <option value="pending" style={{ backgroundColor: "#9a2424", color: "#FFFFFF" }}>Pending</option>
+                                    <option value="mixing" style={{ backgroundColor: "#9a2424", color: "#FFFFFF" }}>Mixing</option>
+                                    <option value="ready" style={{ backgroundColor: "#9a2424", color: "#FFFFFF" }}>Ready</option>
+                                    <option value="fulfilled" style={{ backgroundColor: "#9a2424", color: "#FFFFFF" }}>Fulfilled</option>
+                                    <option value="canceled" style={{ backgroundColor: "#9a2424", color: "#FFFFFF" }}>Canceled</option>
                                 </select>
                             </View>
                             </Flex>
@@ -1495,7 +1485,7 @@ async function cancelOrder(orderId, reason) {
                                         padding: "0.9rem 2.2rem",
                                         border: "1px solid rgba(255,255,255,0.35)",
                                         borderRadius: "28px",
-                                        background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                                        background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                                         boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
                                         transition: "all 0.2s ease",
                                     }}
@@ -1507,7 +1497,7 @@ async function cancelOrder(orderId, reason) {
                                         padding: "0.9rem 2.2rem",
                                         border: "1px solid rgba(255,255,255,0.35)",
                                         borderRadius: "28px",
-                                        background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+                                        background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                                         cursor: "pointer",
                                         boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
                                         transition: "all 0.2s ease",
