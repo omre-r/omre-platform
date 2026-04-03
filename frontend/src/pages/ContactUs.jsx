@@ -56,6 +56,7 @@ export default function ContactUs() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const { toast } = useToast();
 
   function handleChange(e) {
@@ -102,22 +103,6 @@ export default function ContactUs() {
           <Text style={headingStyle} marginBottom="0.5rem">
             Contact Us
           </Text>
-          <hr style={dividerStyle} />
-
-          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.6rem" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7a1f00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/>
-            </svg>
-            <Text style={bodyStyle}>info@omrefragrances.com</Text>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "2rem" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7a1f00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8" fill="#7a1f00"/>
-            </svg>
-            <Text style={bodyStyle}>@Omrefragrances</Text>
-          </div>
-
           <hr style={dividerStyle} />
 
           {submitted ? (
@@ -177,18 +162,21 @@ export default function ContactUs() {
               <button
                 onClick={handleSubmit}
                 disabled={sending}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
                 style={{
                     ...bodyStyle,
                     fontSize: "1rem",
                     padding: "0.9rem 2.2rem",
                     border: "1px solid rgba(255,255,255,0.35)",
                     borderRadius: "28px",
-                    background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+                    background: isHovered ? "linear-gradient(145deg,  #c23434, rgba(20,20,20,0.9))" : "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                     color: "#FFFFFF",
                     cursor: sending ? "not-allowed" : "pointer",
                     opacity: sending ? 0.7 : 1,
                     boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                    transition: "all 0.2s ease",
+                    transform: isHovered ? "translateY(-5px)" : "translateY(0px)",
+                    transition: "all 1s ease",
                 }}>
                 <Text style={{...bodyStyle, color: "#FFFFFF"}}>{sending ? "Sending..." : "Send"}</Text>
               </button>

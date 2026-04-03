@@ -52,24 +52,11 @@ const buttonViewStyle = {
   border: "1px solid rgba(255,255,255,0.35)",
   borderRadius: "28px",
   // navbar color for later reference :  #300a0a
-  background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
+  background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
   cursor: "pointer",
   boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
   transition: "all 0.2s ease",
 };
-
-const buttonStyling = {
-    ...luxuryBodyStyle, 
-    fontSize: "1.2rem",
-    padding: ".9rem .2rem",
-    border: "2px solid rgba(0, 0, 0)",
-    borderRadius: "10px",
-    background: "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
-    color: "#FFFFFF",
-    cursor: "pointer",
-    boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
-    transition: "all 0.2s ease",
-}
 
 // components
 export default function Cart() {
@@ -82,6 +69,8 @@ export default function Cart() {
   const { toast } = useToast();
   const [loadingRecommendations, setLoadingRecommendations] = useState(true); 
   const [recommendations, setRecommendations] = useState([]);
+
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     loadCart();
@@ -523,7 +512,7 @@ async function checkout() {
                         </Flex>
                         <Flex gap="3rem">
                           <View
-                            style={buttonViewStyle}
+                            style={{...buttonViewStyle, border: "1px solid rgba(0, 0, 0, 1)", borderRadius: "10px",}}
                             onClick={() => decreaseQuantity(cartItem.id)}
                             onMouseEnter={(e) => {
                               e.currentTarget.style.transform="translateY(-5px)";
@@ -540,8 +529,10 @@ async function checkout() {
                           <View
                             style={{
                               ...buttonViewStyle,
+                              borderRadius: "10px",
                               opacity: cartItem.quantity >= 10 ? 0.4 : 1,
-                              cursor: cartItem.quantity >= 10 ? "not-allowed" : "pointer"
+                              cursor: cartItem.quantity >= 10 ? "not-allowed" : "pointer",
+                              border: "1px solid rgba(0, 0, 0, 1)",
                             }}
                             onClick={() => {
                               if (cartItem.quantity >= 10) {
@@ -570,49 +561,37 @@ async function checkout() {
                         marginLeft={"auto"}>
                         {savedItems.some(saved => cartItem.itemid === saved.itemid)
                         ?
-                        <Button
+                        <button
                         style={{
                           ...buttonViewStyle,
-                          //...buttonStyling,
-                          opacity: ".8",
                           color: "white",
                           borderRadius: "10px",
                           width:"fit-content",
-                          padding:"15x",
+                          padding:"10px",
                           fontSize: "1.2em",
                           fontWeight: "bold",
+                          border: "1px solid rgb(0, 0, 0)",
                         }}
                         disabled
                         >
                           <Text style={luxuryBodyStyle}>Save for later</Text>
-                        </Button>
+                        </button>
                         :
-                          <Button
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform="translateY(-5px)";
-                            e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
-                            e.currentTarget.style.opacity= "1";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform="translateY(0px)";
-                            e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
-                            e.currentTarget.style.opacity= ".8";
-
-                          }} 
-                          onClick={() => moveToSaved(cartItem)}
-                          style={{
-                            ...buttonViewStyle,
-                            opacity: ".6",
-                            color: "white",
-                            borderRadius: "10px",
-                            width:"fit-content",
-                            padding:"15x",
-                            fontSize: "1.2em",
-                            fontWeight: "bold",
-                          }}
-                          >
+                          <button
+                            onClick={() => moveToSaved(cartItem)}
+                            style={{
+                              ...buttonViewStyle,
+                              color: "white",
+                              borderRadius: "10px",
+                              width:"fit-content",
+                              padding:"10px",
+                              fontSize: "1.2em",
+                              fontWeight: "bold",
+                              border: "1px solid rgb(0, 0, 0)", 
+                            }}
+                            >
                             <Text style={luxuryBodyStyle}>Save for later</Text>
-                          </Button>
+                          </button>
                         }
                         </View>
 
@@ -687,19 +666,19 @@ async function checkout() {
               </Flex>
 
               <Flex justifyContent="center" marginTop="2rem">
-                <View 
-                    style={buttonViewStyle}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform="translateY(-5px)";
-                      e.currentTarget.style.boxShadow="0 12px 24px rgba(0,0,0,0.45)";
+                <Button
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    style={{
+                        ...buttonViewStyle,
+                        background: isHovered ? "linear-gradient(145deg,  #c23434, rgba(20,20,20,0.9))" : "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
+                        transform: isHovered ? "translateY(-5px)" : "translateY(0px)",
+                        transition: "all 1s ease",
                     }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform="translateY(0px)";
-                      e.currentTarget.style.boxShadow="0 8px 18px rgba(0,0,0,0.35)";
-                    }} 
                     onClick={checkout}>
+                   
                   <Text style={luxuryBodyStyle}>Checkout</Text>
-                </View>
+                </Button>
               </Flex>
             </View>
 
@@ -857,7 +836,7 @@ async function checkout() {
                       borderRadius="20px"
                       boxShadow="0 14px 28px rgba(0,0,0,0.22)"
                       style={{
-                        background: "linear-gradient(145deg,  #480e0ee2, rgba(20, 20, 20, 0.65))",
+                        background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
                       }}>
                     <Link 
                       to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
