@@ -259,8 +259,8 @@ export default function Home() {
                     alignItems={"center"}
                     width={"90%"}
                     >
-                      <img style={{width: "100%"}} src={ratings[Math.round(prod.review_average * 2)]} alt="" />
-                      {prod.review_count}
+                      <img style={{width: "95%"}} src={ratings[Math.round(prod.review_average * 2)]} alt="" />
+                      <Text style={{...bodyStyle,flex: "1"}}>{prod.review_count}</Text>
                     </Flex>
                   :
                   <Text style={{...bodyStyle,flex: "1"}}>Be the first to review!</Text>
@@ -372,8 +372,8 @@ export default function Home() {
                 alignItems={"center"}
                 width={"90%"}
                 >
-                  <img style={{width: "100%"}} src={ratings[Math.round(prod.review_average * 2)]} alt="" />
-                  {prod.review_count}
+                  <img style={{width: "95%"}} src={ratings[Math.round(prod.review_average * 2)]} alt="" />
+                  <Text style={{...bodyStyle,flex: "1"}}>{prod.review_count}</Text>
                 </Flex>
               :
               <Text style={{...bodyStyle,flex: "1"}}>Be the first to review!</Text>
@@ -470,8 +470,8 @@ export default function Home() {
                 alignItems={"center"}
                 width={"90%"}
                 >
-                  <img style={{width: "100%"}} src={ratings[Math.round(prod.review_average * 2)]} alt="" />
-                  {prod.review_count}
+                  <img style={{width: "95%"}} src={ratings[Math.round(prod.review_average * 2)]} alt="" />
+                  <Text style={{...bodyStyle,flex: "1"}}>{prod.review_count}</Text>
                 </Flex>
               :
               <Text style={{...bodyStyle,flex: "1"}}>Be the first to review!</Text>
