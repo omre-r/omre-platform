@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq, createCartItemReq, updatePreferredNotesReq, getUserReq, getUserOrdersReq, cancelOrderReq, getFilteredOrdersReq , getSavedItemsReq, deleteSavedItemReq, getBlendByIdReq, getProductReq} from "../requests.js";
 import SearchIcon from "../assets/search_icon.png";
 import CustomMixImage from "../assets/CustomMixImage.png";
+import { useToast } from "../components/ToastContext";
 
 // Fonts ----------------------------------------------
 const luxuryHeadingStyle = {
@@ -98,7 +99,7 @@ const buttonStyling = {
 }
 
 export default function Profile() {
-    const [message, setMessage] = useState("");
+   const { toast } = useToast();
     const [activeTab, setActiveTab] = useState("overview");    
     const [selectedNotes, setSelectedNotes] = useState([]); 
     const [loadedBlends, setLoadedBlends] = useState([]);
@@ -177,7 +178,7 @@ export default function Profile() {
 
     // Load products from backend ---------------------------------------
     async function loadProducts() {
-        setMessage("");
+        
         try {
             const data = await getActiveProductsReq();  
             if (!data.success){
@@ -186,7 +187,7 @@ export default function Profile() {
             setProducts(data.data.products)
         }
         catch (error) {
-            setMessage(error.message || "Error loading products.");
+            toast(error.message || "Error loading products.", "error");
         }
     }
 
@@ -201,7 +202,7 @@ export default function Profile() {
                 break
             };
         }
-        setMessage("");
+        
         try {
             const data = await getUserSavedBlendsReq(userid);
             if (!data.success){
@@ -210,7 +211,7 @@ export default function Profile() {
             setLoadedBlends(data.data.blends);
         }
         catch (error) {
-            setMessage(error.message || "Error loading saved blends.");
+            toast(error.message || "Error loading saved blends.", "error");
         }
     }
 
@@ -225,20 +226,20 @@ export default function Profile() {
                 break
             };
         }
-        setMessage("");
+        
         try {
             const data = await deleteUserBlendReq(userid, blendId);
             if (!data.success) {
-                setMessage(data.message || "Failed to delete blend.");
+                toast(data.message || "Failed to delete blend.", "error");
                 return;
             }
             // Remove deleted blend from loaded blends to update table
             // This is done here after a successful delete request to the backend to ensure the frontend state matches the backend data
             setLoadedBlends((prev) => prev.filter((b) => b.id !== blendId));
 
-            setMessage("Blend deleted successfully!");
+            toast("Blend deleted successfully!", "success");
         } catch (err) {
-            setMessage("Failed to delete blend.");
+            toast("Failed to delete blend.", "error");
         }
     }
 
@@ -246,7 +247,7 @@ export default function Profile() {
     // Making sure that we create the payload, check userid, product stock,
     async function handleAddSavedBlendToCart(savedBlend) {
     setBlendLoading(true);
-    setMessage("");
+    
     try {
         let userid;
         for (let key of Object.keys(localStorage)){
@@ -259,7 +260,7 @@ export default function Profile() {
             };
         }
         if (!userid) {
-            setMessage("User not found. Please log in again.");
+            toast("User not found. Please log in again.", "error");
             return;
         }
 
@@ -271,18 +272,18 @@ export default function Profile() {
         });
 
         if (cartRes.stockUnavailable) {
-            setMessage(cartRes.message || "Not enough stock for this blend.");
+            toast(cartRes.message || "Not enough stock for this blend.", "error");
             return;
         }
         if (!cartRes.success) {
-            setMessage(cartRes.message || "Failed to add blend to cart.");
+            toast(cartRes.message || "Failed to add blend to cart.", "error");
             return;
         }
 
-        setMessage("Blend added to cart!");
+        toast("Blend added to cart!", "success");
     } catch (err) {
         console.error(err);
-        setMessage("Failed to add blend to cart.");
+        toast("Failed to add blend to cart.", "error");
     } finally {
         setBlendLoading(false);
     }
@@ -300,17 +301,17 @@ export default function Profile() {
                 break;
             }
         }
-        setMessage("");
+        
         // update preferred notes sending the selectedNotes array with userId
         try {
             const data = await updatePreferredNotesReq(userid, selectedNotes);
             if (!data.success) {
                 throw new Error(data.message);
             }
-            setMessage("Preferred fragrances saved to profile!");
+            toast("Preferred fragrances saved to profile!", "success");
         } 
         catch (error) {
-            setMessage(error.message || "Failed to save fragrance preferences.");
+            toast(error.message || "Failed to save fragrance preferences.", "error");
         }
     }
 
@@ -326,7 +327,7 @@ export default function Profile() {
                 break;
             }
         }
-        setMessage("");
+    
         try {
             // Clear the users selected notes with empty array
             const data = await updatePreferredNotesReq(userid, []);
@@ -334,9 +335,9 @@ export default function Profile() {
                 throw new Error(data.message);
             }
             setSelectedNotes([]);
-            setMessage("Preferred fragrances cleared from profile!");
+            toast("Preferred fragrances cleared from profile!", "success");
         } catch (error) {
-            setMessage(error.message || "Failed to clear fragrance preferences.");
+            toast(error.message || "Failed to clear fragrance preferences.", "error");
         }
     }
 
@@ -390,7 +391,7 @@ async function loadUserOrders() {
             break;
         }
     }
-    setMessage("");
+    
     setOrdersLoading(true);
     try {
         const orders = await getUserOrdersReq(userid);
@@ -418,7 +419,7 @@ async function loadUserOrders() {
         setUserOrders(parsedOrders);
     } 
     catch (error) {
-        setMessage(error.message || "Error loading orders.");
+        toast(error.message || "Error loading orders.", "error");
     }
     finally {
         setOrdersLoading(false);
@@ -503,7 +504,7 @@ const customerid = await getCustomerId();
     setSavedItems(fullSavedItems.filter(Boolean));
 } catch (err) {
     console.error(err);
-    setMessage("Failed to load saved items.");
+    toast("Failed to load saved items.", "error");
 } finally {
     setLoadingSavedItems(false);
 }
@@ -513,8 +514,7 @@ const customerid = await getCustomerId();
 async function removeSavedItem(savedItem) {
     const deletedItem = await deleteSavedItemReq(savedItem.id)
     if (!deletedItem.success){
-      setMessage(deletedItem.message);
-      setTimeout(() => setMessage(""), 5000);
+      toast(deletedItem.message || "Failed to remove saved item.", "error")
       return;
     }
     loadSavedItems();
@@ -528,8 +528,7 @@ async function addToCart(savedItem) {
         type: savedItem.type
       });
       if (!newCartItem.success){
-        setMessage(newCartItem.message);
-        setTimeout(() => setMessage(""), 5000);
+        toast(newCartItem.message || "Failed to add to cart.", "error")
         return;
       }
       loadCart();
@@ -541,15 +540,15 @@ async function cancelOrder(orderId, reason) {
         const data = await cancelOrderReq(orderId, reason);
 
         if (!data.success) {
-            setMessage(data.message || "Error cancelling order.");
+            toast(data.message || "Error cancelling order.", "error")
             return;
         }
 
         await loadUserOrders();
-        setMessage("Order cancelled successfully.");
+        toast("Order cancelled successfully.", "success")
     } 
     catch (error) {
-        setMessage(error.message || "Error cancelling order.");
+        toast(error.message || "Error cancelling order.", "error")
     }
 }
 
@@ -1227,16 +1226,7 @@ async function cancelOrder(orderId, reason) {
                     {/* Tab to access a users saved mixes from mixology ---------------------------------------------------- */}
                     {activeTab === "mixes" && (
                         <View marginTop="1rem"  >
-                            {message && (
-                            <Text
-                                style={{
-                                    ...luxuryBodyStyle,
-                                    marginTop: "0.5rem",
-                                    color: "#2B1E1A"
-                                }}
-                            >
-                                {message}
-                            </Text>)}
+                            
                             {/* If no blends are currently saved to users profile */}
                             {loadedBlends.length === 0 ? (
                                 <Text style={luxuryBodyStyle}>
@@ -1506,19 +1496,7 @@ async function cancelOrder(orderId, reason) {
                                     <Text style={{...luxuryBodyStyle, color: "#FFFFFF"}}>Clear All</Text>
                                 </Button>
                             </Flex>
-                            {message && (
-                            <Text
-                                style={{
-                                    ...luxuryBodyStyle,
-                                    color: message === "Preferred fragrances saved to profile!" || message === "Preferred fragrances cleared from profile!" ? "#2d6a2d" : "#8B0000",
-                                    textAlign: "center",
-                                    marginTop: "1rem",
-                                    marginBottom: "1rem",
-                                    fontSize: "1.6rem"
-                                }}>
-                                {message}
-                            </Text>
-                            )}
+                            
                         </View>
                     )}
                     {/* Cancel order confirmation for orders ------------------------------------------ */}
@@ -1585,7 +1563,7 @@ async function cancelOrder(orderId, reason) {
                                     <Button
                                            onClick={async () => {
                                                 if (!cancelReason.trim()) {
-                                                    setMessage("Please provide a cancellation reason.");
+                                                    toast("Please provide a cancellation reason.", "error")
                                                     return;
                                                 }
 
