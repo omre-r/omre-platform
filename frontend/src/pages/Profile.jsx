@@ -518,6 +518,7 @@ async function removeSavedItem(savedItem) {
       return;
     }
     loadSavedItems();
+    toast(deletedItem.message || "Item has been removed.", "success")
   }
 
   // Add saved item to cart ----------------------------------
@@ -531,6 +532,7 @@ async function addToCart(savedItem) {
         toast(newCartItem.message || "Failed to add to cart.", "error")
         return;
       }
+      toast(newCartItem.message || "Item added to cart.", "success")
       loadCart();
     }
 

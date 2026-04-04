@@ -19,6 +19,12 @@ const luxuryHeadingStyle = {
   fontSize: "2.5rem",
   letterSpacing: "0.5px",
 };
+const luxuryHeadingStyle2 = {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontWeight: 1000,
+    fontSize: "2.0rem",
+    letterSpacing: "0.5px",
+};
 const luxurySubheadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 700,
@@ -726,29 +732,18 @@ async function handleAddSavedBlendToCart(savedBlend) {
                 </View>
 
                 {loadTable && (
-                    <View marginTop="1rem" width="100%"  >
-                        {/* This is used to verify that a user has created a specific amount of blends */}
-                        {/* <Text>Loaded Blends Count: {loadedBlends.length}</Text> */}
-
-                        <Text 
-                            style={luxurySubheadingStyle}>
-                            Your Saved Blends
+                    <View marginTop="1rem"  >           
+                    {/* If no blends are currently saved to users profile */}
+                    {loadedBlends.length === 0 ? (
+                        <Text style={luxuryBodyStyle}>
+                            No saved blends yet. Create one above and press “Save Fragrance”.
                         </Text>
-                        {/* If no blends are currently saved to users profile */}
-                        {loadedBlends.length === 0 ? (
-                            <Text style={luxuryBodyStyle}>
-                                No saved blends yet. Create one above and press “Save Fragrance”.
-                            </Text>
-                        ) : ( 
-                            <View
-                                style={{ 
-                                    background: "linear-gradient(145deg,  #480e0e76, rgba(20, 20, 20, 0.05))",
-                                    borderRadius: "14px",
-                                }}>
-                            <Table>
+                    ) : ( 
+
+                        <Table>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell style={tableHeaderStyle}>Blend Information</TableCell>
+                                    <TableCell style={tableHeaderStyle}>Your Saved Blends</TableCell>
                                 </TableRow>
                             </TableHead>
                             {loadedBlends.map((blend) => (
@@ -762,84 +757,127 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                             style={{
                                                 ...tableViewStyle,
                                                 margin: "0 auto",
-                                                width: "55%",
+                                                width: "75%",
                                                 textAlign: "left",
                                                 alignItems: "flex-start",
                                                 justifyContent: "flex-start",
                                                 minHeight: "unset",
                                                 padding: "1.8rem",
                                             }}>
-                                            <View>
+                                            <View width="100%">
                                                 <View marginBottom="2rem">
-                                                    {/* Flex to load images of products for the mixes ------------------------------------- */}
                                                     <Flex
                                                         direction="row"
                                                         gap="1rem"
                                                         justifyContent="flex-start"
-                                                        alignItems="center"
+                                                        alignItems="stretch"
                                                         wrap="wrap"
-                                                        marginBottom="1rem"
-                                                        >
-                                                        {/* Find the product_id that matches in the products state to get the images */}
-                                                        {products.find((p) => String(getProductId(p)) === String(blend.frag1_productid))?.images?.[0] && (
-                                                            <img
-                                                            src={products.find((p) => String(getProductId(p)) === String(blend.frag1_productid))?.images?.[0]}
-                                                            alt={getProductNameById(blend.frag1_productid)}
-                                                            style={{
-                                                                width: "110px",
-                                                                height: "110px",
-                                                                objectFit: "cover",
-                                                                borderRadius: "16px",
-                                                                border: "2px solid rgba(0,0,0,0.55)",
-                                                                display: "block",
-                                                            }}
-                                                            />
-                                                        )}
+                                                        marginBottom="1.25rem"
+                                                    >
+                                                        {/* Building a list of the fragrances by productID and percetange ------------------------------------------ */}
+                                                        {[
+                                                            {
+                                                                productId: blend.frag1_productid,
+                                                                pct: blend.frag1_pct,
+                                                            },
+                                                            {
+                                                                productId: blend.frag2_productid,
+                                                                pct: blend.frag2_pct,
+                                                            },
+                                                            // if fragrance 3 exists then add it to the array otherwise skip it
+                                                            ...(blend.frag3_productid
+                                                                ? [
+                                                                    {
+                                                                        productId: blend.frag3_productid,
+                                                                        pct: blend.frag3_pct,
+                                                                    },
+                                                                ]
+                                                                : []),
+                                                        ].map((frag, index) => { // Then we loop through every item of our previously created array
+                                                            const matchedProduct = products.find(
+                                                                // Look through products array to find matching product id to get the fragrance name and image for each fragrance in the blend
+                                                                (p) => String(getProductId(p)) === String(frag.productId)
+                                                            );
+                                                            if (!matchedProduct) return null;
+                                                            return (
+                                                                <View
+                                                                    key={index}
+                                                                    style={{
+                                                                        width: "200px",
+                                                                        padding: "1rem",
+                                                                        borderRadius: "16px",
+                                                                        background: "rgba(255,255,255,0.06)",
+                                                                        border: "1px solid rgba(255,255,255,0.15)",
+                                                                        boxShadow: "0 4px 10px rgba(0,0,0,0.18)",
+                                                                        textAlign: "left",
+                                                                    }}
+                                                                >
+                                                                    {matchedProduct.images?.[0] && (
+                                                                        <View
+                                                                            style={{
+                                                                                borderRadius: "14px",
+                                                                                overflow: "hidden",
+                                                                                border: "2px solid rgba(0,0,0,0.55)",
+                                                                                marginBottom: "0.75rem",
+                                                                            }}
+                                                                        >
+                                                                            <img
+                                                                                src={matchedProduct.images[0]}
+                                                                                alt={matchedProduct.name}
+                                                                                style={{
+                                                                                    width: "120%",
+                                                                                    height: "160px",
+                                                                                    objectFit: "cover",
+                                                                                    display: "block",
+                                                                                }}
+                                                                            />
+                                                                        </View>
+                                                                    )}
 
-                                                        {products.find((p) => String(getProductId(p)) === String(blend.frag2_productid))?.images?.[0] && (
-                                                            <img
-                                                            src={products.find((p) => String(getProductId(p)) === String(blend.frag2_productid))?.images?.[0]}
-                                                            alt={getProductNameById(blend.frag2_productid)}
-                                                            style={{
-                                                                width: "110px",
-                                                                height: "110px",
-                                                                objectFit: "cover",
-                                                                borderRadius: "16px",
-                                                                border: "2px solid rgba(0,0,0,0.55)",
-                                                                display: "block",
-                                                            }}
-                                                            />
-                                                        )}
+                                                                    <Text
+                                                                        style={{
+                                                                            ...luxuryBodyStyle,
+                                                                            color: "#FFFFFF",
+                                                                            fontSize: "1.2rem",
+                                                                            lineHeight: "1.35",
+                                                                        }}
+                                                                    >
+                                                                        ✦ {matchedProduct.name}
+                                                                    </Text>
 
-                                                        {blend.frag3_productid &&
-                                                            products.find((p) => String(getProductId(p)) === String(blend.frag3_productid))?.images?.[0] && (
-                                                            <img
-                                                                src={products.find((p) => String(getProductId(p)) === String(blend.frag3_productid))?.images?.[0]}
-                                                                alt={getProductNameById(blend.frag3_productid)}
-                                                                style={{
-                                                                width: "110px",
-                                                                height: "110px",
-                                                                objectFit: "cover",
-                                                                borderRadius: "16px",
-                                                                border: "2px solid rgba(0,0,0,0.55)",
-                                                                display: "block",
-                                                                }}
-                                                            />
-                                                        )}
+                                                                    <Text
+                                                                        style={{
+                                                                            ...luxuryBodyStyle,
+                                                                            color: "#FFFFFF",
+                                                                            fontSize: "1.2rem",
+                                                                            marginTop: "0.2rem",
+                                                                        }}
+                                                                    >
+                                                                        Percentage: {frag.pct}%
+                                                                    </Text>
+                                                                </View>
+                                                            );
+                                                        })}
                                                     </Flex>
-                                                    Blend: <br></br>
-                                                    ▸ {getProductNameById(blend.frag1_productid)} ({blend.frag1_pct}%) <br></br>
-                                                    ▸ {getProductNameById(blend.frag2_productid)} ({blend.frag2_pct}%) <br></br>
-                                                    {blend.frag3_productid && (<>▸ {getProductNameById(blend.frag3_productid)} ({blend.frag3_pct}%) <br></br></>)}
-                                                    Sizing: {blend.size_ml} ML
+
+                                                    <Text
+                                                        style={{
+                                                            ...luxuryBodyStyle,
+                                                            color: "#FFFFFF",
+                                                            fontSize: "1.5rem",
+                                                        }}
+                                                    >
+                                                        Size: {blend.size_ml}ml
+                                                    </Text>
                                                 </View>
                                             </View>
+                                            {/* Ability to add blend to cart or delete from profile -------------------------------------------------- */}
                                             <Flex 
-                                                    direction="row" 
-                                                    gap="2rem"
-                                                    justifyContent="center"
-                                                    alignItems="center"
-                                                    width="100%">
+                                                direction="row" 
+                                                gap="2rem"
+                                                justifyContent="center"
+                                                alignItems="center"
+                                                width="100%">
                                                     <View 
                                                         style={{
                                                                 ...buttonStyling, 
@@ -884,9 +922,8 @@ async function handleAddSavedBlendToCart(savedBlend) {
                                 </TableRow>
                             ))}
                             </Table>
-                        </View>
-                        )}
-                    </View>
+                    )}
+                </View>
                 )}
             </Flex>
         </View>

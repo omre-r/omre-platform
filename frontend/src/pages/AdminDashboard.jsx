@@ -105,6 +105,7 @@ export default function AdminDashboard() {
                                 alignItems="stretch"
                                 flexShrink="0"
                                 style={{ width: "180px" }}
+                                marginLeft={"1rem"}
                                 >
                                 <Button 
                                     justifyContent="center"
