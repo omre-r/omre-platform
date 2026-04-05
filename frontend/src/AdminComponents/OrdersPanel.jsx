@@ -5,6 +5,7 @@ import { getOrdersReq, getOrderReq, cancelOrderReq, getFilteredOrdersReq, update
 import { RefreshCw } from "lucide-react";
 
 import SearchIcon from "../assets/search_icon.png";
+import { useToast } from "../components/ToastContext";
 
 // ---------------- STYLES ----------------
 const luxuryHeadingStyle = {
@@ -50,7 +51,7 @@ export default function OrdersPanel() {
   const [status, setStatus] = useState("");
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingOrder, setLoadingOrder] = useState(false);
-  const [msg, setMessage] = useState("");
+  const { toast } = useToast();
   const [statusFilter, setStatusFilter] = useState("all");
   const [cancelReason, setCancelReason] = useState("");
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -72,7 +73,7 @@ export default function OrdersPanel() {
       const data = await getOrdersReq();
       setOrders(data?.data?.orders || []);
     } catch (error) {
-      setMessage(error.message);
+      toast(error.message || "Error loading orders.", "error");
     } finally {
       setLoadingOrders(false);
     }
@@ -81,7 +82,7 @@ export default function OrdersPanel() {
   async function viewOrder(orderId) {
     setLoadingOrder(true);
     setSelectedOrder(null);
-    setMessage("");
+    
     setCancelReason("");
     setConfirmCancel(false);
 
@@ -97,7 +98,7 @@ export default function OrdersPanel() {
       setSelectedOrder(order);
       setStatus(order?.status || "");
     } catch (error) {
-      setMessage(error.message);
+      toast(error.message || "Error loading order.", "error");
     } finally {
       setLoadingOrder(false);
     }
@@ -113,7 +114,7 @@ export default function OrdersPanel() {
 
   async function cancelOrder(orderId) {
     if (!cancelReason) {
-      setMessage("Please enter a cancellation reason.");
+      toast("Please enter a cancellation reason.", "error");
       return;
     }
 
@@ -296,13 +297,6 @@ export default function OrdersPanel() {
                 </View>
               </Flex>
             </Flex>
-
-            {msg && (
-              <Text style={{ ...luxuryBodyStyle, color: "#ffffff", marginTop: "0.5rem" }}>
-                {msg}
-              </Text>
-            )}
-
             {/* LIST */}
             <View
               className="orders-scroll"
@@ -627,7 +621,7 @@ export default function OrdersPanel() {
 
                       <Button style={buttonStyling} onClick={() => {
                         setConfirmCancel(false);
-                        setMessage(""); 
+                        
                       }}>
                         <Text style={{ color: "#fff" }}>No</Text>
                       </Button>
