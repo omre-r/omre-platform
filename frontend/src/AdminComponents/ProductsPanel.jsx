@@ -7,6 +7,7 @@ import OptionsIcon from "../assets/options_icon.png"
 import SearchIcon from "../assets/search_icon.png"
 import EditIcon from "../assets/edit_icon.png"
 import { RefreshCw } from "lucide-react";
+import { useToast } from "../components/ToastContext";
 
 // Custom Styling for fonts and amplify ui -------------------------------------- 
 const bodyStyle2 = {
@@ -89,7 +90,7 @@ export default function ProductsPanel() {
 
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [loadingProduct, setLoadingProduct] = useState(false);
-    const [message, setMessage] = useState("");
+    const { toast } = useToast();
 
     // UI mode switch ---------------------------------------
     // Will switch depending on editing, removing, or adding
@@ -175,8 +176,8 @@ export default function ProductsPanel() {
             }
             if (file.size >= MAX_SIZE){
                 setFiles([])
-                setMessage("You can't upload images over 5MB");
-                setTimeout(() => setMessage(""), 5000);
+                toast("You can't upload images over 5MB.", "error")
+                
                 for (const f of validFiles){
                     URL.revokeObjectURL(defaultProductDraft.url);
                 }
@@ -207,7 +208,7 @@ export default function ProductsPanel() {
         setIsUploading(false);
         if (!imageurls){
             setFiles([]);
-            setMessage("Failed to upload images");
+            toast("Failed to upload images.", "error");
         }
         setDraft(prev => {
             return {
@@ -387,7 +388,7 @@ export default function ProductsPanel() {
     }
 
     async function filterProducts(filters){
-        setMessage("");
+        
         setLoadingProducts(true);
         try {
             const data = await getFilteredProductsReq({...filters});
@@ -397,7 +398,7 @@ export default function ProductsPanel() {
             setProducts(groupRelevantElements(data.data.products));
         }
         catch (error) {
-            setMessage(error.message || "Failed to get filtered products.");
+            toast(error.message || "Failed to get filtered products.", "error");
         }
         finally {
             setLoadingProducts(false);
@@ -440,7 +441,7 @@ export default function ProductsPanel() {
     
     // Left card  loading---------------------------------------------------------------
     async function loadProducts() {
-        setMessage("");
+        
         setLoadingProducts(true);
         try {
             const data = await getProductsReq();
@@ -450,7 +451,7 @@ export default function ProductsPanel() {
             setProducts(groupRelevantElements(data.data.products));
         }
         catch (error) {
-            setMessage(error.message || "Error loading products.");
+            toast(error.message || "Error loading products.", "error");
         }
         finally {
             setLoadingProducts(false);
@@ -461,14 +462,14 @@ export default function ProductsPanel() {
     // Removing a product ---------------------------------------------------------------------------------
     // get the product id of the select product and send the id to the backend deleteProductReq function
     async function removeProduct() {
-        setMessage("")
+        
         if (!selectedProduct) {
             return;
         }
         try {
             const id = getProductId(selectedProduct);
             if (!id) {
-                setMessage("ID Error in removing products")
+                toast("ID Error in removing products.", "error")
                 return;
             }
 
@@ -476,27 +477,27 @@ export default function ProductsPanel() {
             if (!data.success){
                 throw new Error(data.message);
             }
-            setMessage("Deleted product: " + selectedProduct.name);
+            toast("Deleted product: " + selectedProduct.name, "success");
             resetToIdle();
             await loadProducts();
         } 
         catch (error) {
-            setMessage(error.message || "Error removing product.");
+            toast(error.message || "Error removing product.", "error")
         }
     }
 
     // Hide a product from website display -----------------------------------
     // Gather the products id and check the status if it is hidden or not, will update status on button click
     async function hideProduct() {
-        setMessage("")
+        
         try {
             if (!selectedProduct) {
-                setMessage("No product selected");
+                toast("No product selected.", "error");
                 return;
             }
             const id = getProductId(selectedProduct);
             if (!id) {
-                setMessage("Product does not have id");
+                toast("Product does not have id.", "error");
                 return;
             }
             // Check if product is hidden, will hide or unhide depending on which
@@ -506,26 +507,26 @@ export default function ProductsPanel() {
             if (!data.success){
                 throw new Error(data.message);
             }
-            setMessage(`${hiddenStatus ? "Hidden" : "Unhidden"}: ${selectedProduct.name}`);
+            toast(`${hiddenStatus ? "Hidden" : "Unhidden"}: ${selectedProduct.name}`, "success");
             await loadProducts();
             resetToIdle();
         }
         catch(error) {
-            setMessage(error.message || "Error hiding product.");
+            toast(error.message || "Error hiding product.", "error");
         }
     }
 
     // Adding a product to the backend ---------------------------------------------------------------------------
     // Type and name of product must be required but other information is not mandatory at this point
     async function addProduct() {
-        setMessage("")
+        
         try {
             if (!canSave) {
-                setMessage("Type and name are required.");
+                toast("Type and name are required.", "error");
                 return;
             }
             if (draft.images.length === 0){
-                setMessage("At least 1 image is required.");
+                toast("At least 1 image is required.", "error");
                 return;
             }
             // Pull info from draft 
@@ -552,11 +553,11 @@ export default function ProductsPanel() {
             };
             const validNums = validateNumbers(form.price, form.stock_ml)
             if (validNums) {
-                setMessage(validNums);
+                toast(validNums, "error");
                 return;
             }
             if (!form.variation){
-                setMessage("Please select a variation");
+                toast("Please select a variation.", "error");
                 return
             }
             const data = await createProductReq(form);
@@ -564,30 +565,30 @@ export default function ProductsPanel() {
                 throw new Error(data.message);
             }
             const newProduct = data.data.product;
-            setMessage(`Created: ${newProduct.name}`);
+            toast(`Created: ${newProduct.name}`, "success");
             resetToIdle();
             await loadProducts();
         }
         catch(error) {
-            setMessage(error.message || "Error adding product.");
+            toast(error.message || "Error adding product.", "error")
         }
     }
 
     // When updating a products information ---------------------------------------------------------
     // Gather the product id and create the form based on information already entered
     async function updateProduct() {
-        setMessage("")
+        
         try {
             if(!selectedProduct) {
                 return;
             }
             const id = getProductId(selectedProduct);
             if (!id) {
-                setMessage("Product does not have id");
+                toast("Product does not have id.", "error");
                 return;
             }
             if (!canSave) {
-                setMessage("Type and name are required.");
+                toast("Type and name are required.", "error");
                 return;
             }
             // makeDraftFromProduct function will be called and that will be setting the draft with the existing info
@@ -608,7 +609,7 @@ export default function ProductsPanel() {
             };
             const validNums = validateNumbers(form.price, null)
             if (validNums) {
-                setMessage(validNums);
+                toast(validNums, "error");
                 return;
             }
             // Only include images if user actually selected new files
@@ -619,18 +620,18 @@ export default function ProductsPanel() {
             if (!data.success){
                 throw new Error(data.message);
             }
-            setMessage(`Updated: ${form.name}`);
+            toast(`Updated: ${form.name}`, "success");
             await loadProducts();
             resetToIdle();
         }
         catch(error) {
-            setMessage(error.message || "Error updating product.");
+            toast(error.message || "Error updating product.", "error");
         }
     }
 
     // stock updates get a specific function as they are outside normal flow -------------------------------------------------- 
     async function updateProductStock() {
-        setMessage("")
+        
         try {
             if(!selectedProduct) {
                 return;
@@ -642,7 +643,7 @@ export default function ProductsPanel() {
             };
             const validNums = validateNumbers(null, form.stock_ml)
             if (validNums) {
-                setMessage(validNums);
+                toast(validNums, "error")
                 return;
             }
             const data = await updateProductStockReq(selectedProduct.parentid, form.stock_ml);
@@ -651,9 +652,9 @@ export default function ProductsPanel() {
             }
             await loadProducts();
             resetToIdle();
-        }
-        catch(error) {
-            setMessage(error.message || "Error updating product.");
+            }
+            catch(error) {
+                toast(error.message || "Error updating product.", "error")
         }
     }
 
@@ -1049,11 +1050,6 @@ export default function ProductsPanel() {
                             </Flex>
                         </Flex>
 
-                        {message && (
-                        <Text style={luxuryBodyStyle} marginTop="0.5rem" color="black">
-                            {message}
-                        </Text>
-                        )}
                         <View overflow="auto" height="25rem" marginTop="1rem"> 
                             {/* Below creating a list of all the products ---------------------------- */}
                             {sortedProducts.map((prodList) => {
@@ -1091,10 +1087,10 @@ export default function ProductsPanel() {
                                             onClick={() => {
                                                 const id = getProductId(prodList[0]);
                                                 if (!id) {
-                                                    setMessage("Product ID missing.");
+                                                    toast("Product ID missing.", "error");
                                                     return;
                                                 }
-                                                setMessage("");
+                                                
                                                 resetToEdit(prodList[0]);
                                             }}
                                             >
@@ -1396,7 +1392,7 @@ export default function ProductsPanel() {
                                             padding="0.5rem 1.3rem"
                                             onClick={() => {
                                                 if (!canSave) {
-                                                    setMessage("Please fill out type and name information.");
+                                                    toast("Please fill out type and name information.", "error")
                                                     return;
                                                 }
                                                 // in case of append, it will include the parentid of the selected product
@@ -1413,7 +1409,7 @@ export default function ProductsPanel() {
                                             borderRadius="10px"
                                             padding="0.5rem .7rem"
                                             onClick={() => {
-                                                setMessage("");
+                                                
                                                 resetToIdle();
                                             }}
                                         >
@@ -1441,7 +1437,7 @@ export default function ProductsPanel() {
                                     <Button
                                         style={buttonStyling}
                                         onClick={() => {
-                                            setMessage("");
+                                            
                                             if (selectedProduct) {
                                                 setActiveMode(MODES.IDLE);
                                                 setSelectedProduct(null);
