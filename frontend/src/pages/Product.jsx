@@ -11,6 +11,7 @@ import Navbar from "../components/Navbar";
 
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import ProfileIcon from "../assets/profileIconClean.png";
+import { useToast } from "../components/ToastContext";
 
 import rating0 from "../assets/ratings/0.png";
 import rating1 from "../assets/ratings/1.png";
@@ -52,7 +53,6 @@ export default function Product(){
     const [recommendations, setRecommendations] = useState([]);
 
     const [displayedImage, setDisplayedImage] = useState(0)
-    const [errorMessage, setErrorMessage] = useState("")
 
     const [isAuthenticated, setIsAuthenticated] = useState(() => !!getIDToken());
 
@@ -68,8 +68,7 @@ export default function Product(){
     const [selectedRating, setSelectedRating] = useState(0);
     const [averageRating, setAverageRating] = useState(0);
 
-    const [reviewError, setReviewError] = useState("");
-    const [replyError, setReplyError] = useState("");
+    const { toast } = useToast();
     
 
     useEffect(() => {
@@ -104,28 +103,11 @@ export default function Product(){
         }
     }, [selectedProduct])
 
-    function displayTemporaryError(message){
-        setErrorMessage(message);
-        setTimeout(() => {
-            setErrorMessage(prev => prev === message ? "" : prev);
-        },6000);
-    }
-    function displayReviewError(message){
-        setReviewError(message);
-        setTimeout(() => {
-            setReviewError(prev => prev === message ? "" : prev);
-        },6000);
-    }
-    function displayReplyError(message){
-        setReplyError(message);
-        setTimeout(() => {
-            setReplyError(prev => prev === message ? "" : prev);
-        },6000);
-    }
+    
 
     async function handleAddToCart(){
         if (!isAuthenticated){
-            displayTemporaryError("Please create an account first");
+            toast("Please create an account first.", "error")
             return;
         }
 
@@ -137,9 +119,11 @@ export default function Product(){
             type: "product"
         });
         if (!data.success){
-            displayTemporaryError(data.message);
+            toast(data.message, "error")
             return;
         }
+        toast("Added to cart!", "success");
+
         setAddToCartText("Added to cart!");
         setTimeout(() => {
             setAddToCartText("Add To Cart");
@@ -152,7 +136,7 @@ export default function Product(){
         
         setLoadingProduct(false)
         if (!data.success){
-            setErrorMessage(data.message);
+            toast(data.message, "error")
             return;
         }
         const prods = data.data.products;
@@ -196,22 +180,22 @@ export default function Product(){
             return;
         }
         if (newReviewMessage === ""){
-            displayReviewError("Please enter a message!")
+            toast("Please enter a message!", "error")
             return;
         }
         if (selectedRating === 0){
-            displayReviewError("Please select a rating!");
+            toast("Please select a rating!", "error")
             return;
         }
         if (isProfane(newReviewMessage)){
-            displayReviewError("Please keep your message appropriate!")
+           toast("Please keep your message appropriate!", "error")
             return;
         }
         let imageUrls = [];
         if (attachedImages.length > 0){
             imageUrls = await uploadAndGetURlsReq(attachedImages, "reviews");
             if (!imageUrls){
-                displayReviewError("Failed to upload images");
+                toast("Failed to upload images.", "error")
                 return;
             }
         }
@@ -224,7 +208,7 @@ export default function Product(){
         }
         const result = await createReviewReq(reviewForm);
         if (!result.success){
-            displayReviewError(result.message)
+            toast(result.message, "error")
             return;
         }
         setNewReviewMessage("");
@@ -243,16 +227,16 @@ export default function Product(){
 
     async function submitReply(review){
         if (replyMessage === "") {
-            displayReplyError("Please enter a message!")
+            toast("Please enter a message!", "error")
             return;
         };
         if (isProfane(replyMessage)){ 
-            displayReplyError("Please keep your reply appropriate!")
+            toast("Please keep your reply appropriate!", "error")
             return;
         }
         const result = await respondToReviewReq(replyID, {message: replyMessage, isadmin: (userInfo.isAdmin && userInfo.sub !== review.customerid)})
         if (!result.success){
-            displayReplyError(result.message);
+           toast(result.message, "error")
             return;
         }
         loadReviews()
@@ -281,7 +265,7 @@ export default function Product(){
             }
             if (file.size >= MAX_SIZE){
                 setAttachedImages([])
-                displayReviewError("You can't upload images over 5MB");
+                toast("You can't upload images over 5MB.", "error")
                 for (const f of validFiles){
                     URL.revokeObjectURL(f.url);
                 }
@@ -677,8 +661,7 @@ export default function Product(){
                     >
                         {Number(selectedProduct.stock_ml) <= 0 ? "Out of Stock" : addToCartText}
                     </button>
-                    {errorMessage && 
-                    <Text style={{color:"red", fontSize: "1.2rem"}}>{errorMessage}</Text>}
+                    
                 </View>
             </Flex>
         </Flex>
@@ -831,7 +814,7 @@ export default function Product(){
                                 </View>
                                 <img src={ratings[selectedRating]} width={"100%"} alt="" />
                             </View>
-                            <strong style={{color: "red", fontSize:"1.5em"}}>{reviewError}</strong>
+                            
                         </Flex>
 
                         <Flex>
@@ -1117,7 +1100,7 @@ export default function Product(){
                                             <Text style={{...bodyStyle, color: "Black", fontWeight: 700, fontSize: "1.5rem",}}>{userInfo?.firstname} {userInfo?.lastname}</Text>
                                         </h3>
                                     }
-                                    <strong style={{color: "red"}}>{replyError}</strong>
+                                    
                                     <Flex
                                     justifyContent={"left"}>
                                         <View 
