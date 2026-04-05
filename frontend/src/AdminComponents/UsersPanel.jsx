@@ -8,7 +8,7 @@ import OptionsIcon from "../assets/options_icon.png"
 import { getFilteredUsersReq } from "../requests";
 import { data } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
-
+import { useToast } from "../components/ToastContext";
 
 // Custom Styling for fonts and amplify ui --------------------------------------
 const bodyStyle2 = {
@@ -57,8 +57,7 @@ export default function UsersPanel() {
     const [selectedUser, setSelectedUser] = useState(null);
     const [loadingUsers, setLoadingUsers] = useState(true);
     const [loadingUser, setLoadingUser] = useState(false);
-    const [msg, setMessage] = useState("");
-
+    const { toast } = useToast();
     // search and filter
     const [search, setSearch] = useState("")
     const [includeSearch, setIncludeSearch] = useState(false)
@@ -75,7 +74,7 @@ export default function UsersPanel() {
     // Load users ------------------------------------------------------------------
     // Pull user information from API URL and if fails show error message
     async function loadUsers() {
-        setMessage("");
+        
         setLoadingUsers(true);
         try {
             const response = await fetch(`${API_URL}/admin/users`);    
@@ -86,7 +85,7 @@ export default function UsersPanel() {
             setUsers(data.users);
         }
         catch (error) {
-            setMessage(error.message || "Error loading users.");
+            toast(error.message || "Error loading users.", "error")
         }
         finally {
             setLoadingUsers(false);
@@ -94,7 +93,7 @@ export default function UsersPanel() {
     }
 
     async function filterUsers(filters) {
-        setMessage("");
+        
         setLoadingUsers(true);
         try {
             const response = await getFilteredUsersReq(filters)
@@ -104,7 +103,7 @@ export default function UsersPanel() {
             setUsers(response.data.users);
         }
         catch (error) {
-            setMessage(error.message || "Error loading users.");
+            toast(error.message || "Error loading users.", "error")
         }
         finally {
             setLoadingUsers(false);
@@ -115,7 +114,7 @@ export default function UsersPanel() {
     // After user information is loaded one can click on an email and show deeper information on card to the right
     // Will use API URL to get to user information
     async function viewUser(userId) {
-        setMessage("");
+        
         setLoadingUser(true);
         setSelectedUser(null);
         try {
@@ -127,7 +126,7 @@ export default function UsersPanel() {
             setSelectedUser(data.user);
         }
         catch (error) {
-            setMessage(error.message || "Error viewing user.");
+            toast(error.message || "Error viewing user.", "error")
         }
         finally {
             setLoadingUser(false);
@@ -454,16 +453,6 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                                 </View>
                         </Flex>
                     </Flex>
-
-                    {msg && (
-                        <Text 
-                            color="Black" 
-                            style={luxuryBodyStyle} 
-                            marginTop="0.5rem">
-                            {msg}
-                        </Text>
-                    )}
-
                     <View 
                         className="users-scroll"
                         style={{overflowY: "auto"}}
