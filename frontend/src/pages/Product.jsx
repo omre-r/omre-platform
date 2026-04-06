@@ -573,6 +573,9 @@ export default function Product(){
                             })}
                             {selectedProduct.notes.heart.length === 0 &&
                             <Text
+                            fontFamily={"'Cormorant Garamond', serif"}
+                            fontSize={"1.3rem"}
+                            fontWeight={"800"}
                             paddingLeft={"20px"}
 
                             >

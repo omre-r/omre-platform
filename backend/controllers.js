@@ -342,6 +342,20 @@ async function updateOrderStatus(req, res) {
   if (!result.success){
     return res.status(result.status).json(result);
   }
+
+  // if order status update was successful, get order details and send email to customer notifying them of the update 
+  // If fails to send email, we still want to return success for the order status update — we don't want a failed email to prevent the order from being updated
+  try {
+    const orderResult = await orders.getOrder(id);
+    const order = orderResult?.data?.order;
+
+    if (order?.email && order?.id) {
+      await sendOrderStatusUpdateEmail(order.email, order);
+    }
+  }
+  catch (err) {
+    console.error("Failed to send order status update email:", err);
+  }
   return res.json(result);
 }
 
@@ -692,12 +706,36 @@ Total: $${Number(order.total).toFixed(2)}
 Items:
 ${itemsText}
 
-We'll notify you when your order ships!`
+We'll notify you when your order status updates!`
               }
             }
           }
         });
   await sesClient.send(command);
+}
+
+// Function to send an email to users email after their order status updates, with new status and order details ------------------------------------------------------
+async function sendOrderStatusUpdateEmail(toEmail, order) {
+    const command = new SendEmailCommand({
+        Source: SES_FROM_EMAIL,
+        Destination: { ToAddresses: [toEmail] },
+        // TODO: we can make this HTML and add some styling down the line, but for now we'll keep it simple with plain text
+        Message: {
+            Subject: { Data: `OMRÉ Order Update — Order #${order.id.slice(0, 8)} is ${order.status}!` },
+            Body: {
+                Text: {
+                    Data: `Your order with OMRÉ has been updated.
+Order ID: ${order.id.slice(0, 8)}
+New Status: ${order.status}
+
+If you have any questions, please contact our support team.
+
+Thank you for shopping with OMRÉ!`
+                }
+            }
+        }
+    });
+    await sesClient.send(command);
 }
 
 
