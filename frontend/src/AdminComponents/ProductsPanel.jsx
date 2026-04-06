@@ -1039,133 +1039,135 @@ export default function ProductsPanel() {
                             </Flex>
                         </Flex>
 
-                        <View overflow="auto" height="25rem" marginTop="1rem"> 
-                            {/* Below creating a list of all the products ---------------------------- */}
+                        <View className="hide-scrollbar" overflow="auto" height="25rem" marginTop="1rem" padding="0.5rem">
                             {sortedProducts.map((prodList) => {
+                                const isSelected = selectedProduct?.parentid === prodList[0].parentid;
+
                                 return (
-                                <Flex
-                                    direction={"column"}
-                                    gap="0.6rem"
-                                    marginBottom="0.6rem"
-                                >
-                                    {
-                                        selectedProduct?.parentid === prodList[0].parentid 
-                                        ? 
+                                    <Flex
+                                        direction={"column"}
+                                        gap="0.6rem"
+                                        marginBottom="0.6rem"
+                                        key={prodList[0].parentid}
+                                    >
                                         <Button
-                                            key={prodList[0].parentid}
-                                            style={{...buttonStyling}}
-                                            variation="link"
-                                            justifyContent="flex-start"
-                                            width="100%"
-                                            border=".5px solid #111"
-                                            borderRadius="6px"
-                                            >
-                                            <Text color="rgb(255, 196, 86)" textAlign={"left"}>
-                                                <strong>{prodList[0].name} — {prodList[0].stock_ml} mL {prodList[0].stock_ml < 1000 && "(LOW!)"} </strong>
-                                            </Text>
-                                        </Button>
-                                        :
-                                        <Button
-                                            key={prodList[0].parentid}
-                                            style={{...buttonStyling}}
-                                            variation="link"
-                                            justifyContent="flex-start"
-                                            width="100%"
-                                            border=".5px solid #111"
-                                            borderRadius="6px"
-                                            onClick={() => {
-                                                const id = getProductId(prodList[0]);
-                                                if (!id) {
-                                                    toast("Product ID missing.", "error");
-                                                    return;
-                                                }
-                                                
-                                                resetToEdit(prodList[0]);
+                                            style={{
+                                                ...buttonStyling,
+                                                width: "100%",
+                                                justifyContent: "flex-start",
+                                                marginBottom: ".4rem",
+                                                border: isSelected ? "2px solid gold" : ".5px solid #111",
+                                                boxShadow: isSelected ? "0 0 12px gold" : buttonStyling.boxShadow,
+                                                transform: isSelected ? "scale(1.02)" : "scale(1)",
+                                                textAlign: "left",
+                                                borderRadius: "6px",
+                                                background: prodList[0].stock_ml < 1000
+                                                    ? "linear-gradient(145deg, #ff4d4d, #cc0000)" 
+                                                    : buttonStyling.background,
+                                                color: prodList[0].stock_ml < 1000 ? "#ffffff" : buttonStyling.color,
                                             }}
+                                            onClick={() => {
+                                                if (!isSelected) {
+                                                    const id = getProductId(prodList[0]);
+                                                    if (!id) {
+                                                        toast("Product ID missing.", "error");
+                                                        return;
+                                                    }
+                                                    resetToEdit(prodList[0]);
+                                                }
+                                            }}
+                                        >
+                                            <Text
+                                                style={{
+                                                    ...luxuryBodyStyle,
+                                                    fontWeight: "600",
+                                                    color: prodList[0].stock_ml < 1000 ? "#ffffff" : "#FFFFFF",
+                                                    overflow: "hidden",
+                                                    whiteSpace: "nowrap",
+                                                    textOverflow: "ellipsis",
+                                                    textAlign: "left",
+                                                    flex: 1
+                                                }}
                                             >
-                                            <Text color="White" textAlign={"left"}>
-                                                <strong>{prodList[0].name} — {prodList[0].stock_ml} mL {prodList[0].stock_ml < 1000 && "(LOW!)"} </strong>
+                                                {prodList[0].name} — {prodList[0].stock_ml} mL {prodList[0].stock_ml < 1000 && "(LOW!)"}
                                             </Text>
                                         </Button>
-                                    }
-                                    {selectedProduct?.parentid === prodList[0].parentid &&
-                                    <Flex>
-                                        <Flex
-                                        alignItems={"center"}
-                                        justifyContent={"left"}
-                                        gap={"5px"}>
-                                            <Text>Stock</Text>
-                                            <input 
-                                                style={{...buttonStyling, width: "100px", padding: "5px 10px", borderRadius: "5px"}}
-                                                color="White"
-                                                placeholder="Stock (ml)"
-                                                type="number"
-                                                value={draft.stock_ml} 
-                                                onChange={(e) => setDraftField("stock_ml", e.target.value)} 
-                                            />
-                                            {Math.floor(draft.stock_ml) !== Math.floor(selectedProduct.stock_ml) &&
-                                                <Button
-                                                onClick={updateProductStock}
-                                                style={{
-                                                    
-                                                    overflow: "hidden", 
-                                                    width: "40px", 
-                                                    height: "40px", 
-                                                    padding:"5px", 
-                                                    border: "solid",
-                                                    borderWidth: "1px",
-                                                    borderRadius: "4px",
-                                                    boxShadow: "0 0 4px inset"
-                                                }}
+
+                                        {isSelected && (
+                                            <Flex>
+                                                {/* Everything inside stays exactly the same */}
+                                                <Flex alignItems={"center"} justifyContent={"left"} gap={"5px"}>
+                                                    <Text color="White">Stock</Text>
+                                                    <input 
+                                                        style={{...buttonStyling, width: "100px", padding: "5px 10px", borderRadius: "5px"}}
+                                                        color="White"
+                                                        placeholder="Stock (ml)"
+                                                        type="number"
+                                                        value={draft.stock_ml} 
+                                                        onChange={(e) => setDraftField("stock_ml", e.target.value)} 
+                                                    />
+                                                    {Math.floor(draft.stock_ml) !== Math.floor(selectedProduct.stock_ml) &&
+                                                        <Button
+                                                            onClick={updateProductStock}
+                                                            style={{
+                                                                overflow: "hidden", 
+                                                                width: "40px", 
+                                                                height: "40px", 
+                                                                padding:"5px", 
+                                                                border: "solid",
+                                                                borderWidth: "1px",
+                                                                borderRadius: "4px",
+                                                                boxShadow: "0 0 4px inset"
+                                                            }}
+                                                        >
+                                                            <img src={EditIcon} width={"100%"} alt="Edit" />
+                                                        </Button>
+                                                    }
+                                                </Flex>
+                                                <Flex 
+                                                    wrap={"wrap"}
+                                                    gap={"5px"}
+                                                    justifyContent={"center"}
+                                                    marginBlock={"10px"}
+                                                >
+                                                    {prodList.map(prod => (
+                                                        <Button
+                                                            style={{
+                                                                ...buttonStyling,
+                                                                boxShadow: selectedProduct?.id === prod.id ? "0 0 10px rgb(255, 217, 103)" : buttonStyling.boxShadow,
+                                                                cursor: "pointer",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                flexShrink: 0,
+                                                            }}
+                                                            padding={"5px 10px"}
+                                                            onClick={() => resetToEdit(prod)}
+                                                        >
+                                                            <Text color="White" fontSize="1.5rem" fontWeight="800">{prod.variation}</Text>
+                                                        </Button>
+                                                    ))}
+                                                    <Button
+                                                        padding={"5px 10px"}
+                                                        style={activeMode === MODES.APPEND ? {...buttonStyling, opacity: ".7", boxShadow: "0 0 5px inset"} : {
+                                                            ...buttonStyling,
+                                                            border: "2px solid rgba(0, 0, 0)",
+                                                            cursor: "pointer",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            flexShrink: 0,
+                                                        }}
+                                                        onClick={() => resetToAppend(selectedProduct)}
                                                     >
-                                                    <img src={EditIcon} width={"100%"} alt="Edit" />
-                                                </Button>
-                                            }
-                                        </Flex>
-                                        <Flex 
-                                        wrap={"wrap"}
-                                        gap={"5px"}
-                                        justifyContent={"center"}
-                                        marginBlock={"10px"}>
-                                            {prodList.map(prod => (
-                                                <Button
-                                                style={{
-                                                    ...buttonStyling,
-                                                    boxShadow: selectedProduct?.id === prod.id ? "0 0 10px rgb(255, 217, 103)" : buttonStyling.boxShadow,
-                                                    cursor: "pointer",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    flexShrink: 0,}}
-                                                padding={"5px 10px"}
-                                                onClick={() => {
-                                                    resetToEdit(prod)
-                                                }}>
-                                                    <Text color="White" fontSize="1.5rem" fontWeight="800">{prod.variation}</Text>
-                                                </Button>
-                                            ))}
-                                                <Button
-                                                padding={"5px 10px"}
-                                                style={activeMode === MODES.APPEND ? {...buttonStyling, opacity: ".7", boxShadow: "0 0 5px inset"} : {
-                                                    ...buttonStyling,
-                                                    border: "2px solid rgba(0, 0, 0)",
-                                                    cursor: "pointer",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    flexShrink: 0,}}
-                                                onClick={() => {
-                                                    resetToAppend(selectedProduct);
-                                                }}>
-                                                    <Text color="White" fontSize="1.5rem" fontWeight="800">+</Text>
-                                                </Button>
-                                        </Flex>
+                                                        <Text color="White" fontSize="1.5rem" fontWeight="800">+</Text>
+                                                    </Button>
+                                                </Flex>
+                                            </Flex>
+                                        )}
                                     </Flex>
-
-                                    }
-
-                                </Flex>
-                            )})}
+                                );
+                            })}
                         </View>
                     </Flex>
                 </Card>
