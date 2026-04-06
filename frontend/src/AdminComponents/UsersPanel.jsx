@@ -445,28 +445,49 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     </Flex>
                     <View 
                         className="users-scroll"
-                        style={{overflowY: "auto"}}
+                        style={{ overflowY: "auto" }}
                         height={"25rem"}
-                        marginTop="1rem">
-                        {sortedUsers.length === 0 &&
-                        <Text>No users found!</Text>}
+                        marginTop="1rem"
+                        padding= "0.6rem"
+                    >
+                        {sortedUsers.length === 0 && <Text>No users found!</Text>}
                         {sortedUsers.map((currentUser) => (
                             <Button
                                 key={currentUser.user_id}
-                                style={{...buttonStyling, }}
-                                border="2px solid rgba(0, 0, 0)"
-                                variation="link"
-                                marginBottom=".8rem"
                                 onClick={() => viewUser(currentUser.user_id)}
-                                justifyContent="flex-start"
-                                width="100%"
-                                >
+                                style={{
+                                    ...buttonStyling,
+                                    width: "100%",
+                                    justifyContent: "flex-start",
+                                    marginBottom: ".8rem",
+                                    border: selectedUser?.user_id === currentUser.user_id
+                                        ? "2px solid gold"
+                                        : "2px solid rgba(0,0,0,0.8)",
+                                    boxShadow: selectedUser?.user_id === currentUser.user_id
+                                        ? "0 0 12px gold"
+                                        : buttonStyling.boxShadow,
+                                    transform: selectedUser?.user_id === currentUser.user_id
+                                        ? "scale(1.02)"
+                                        : "scale(1)",
+                                    textAlign: "left",
+                                    background: currentUser.is_admin
+                                        ? "linear-gradient(145deg, #007f3f, #005f28)" 
+                                        : buttonStyling.background,
+                                    color: currentUser.is_admin ? "#ffffff" : buttonStyling.color,
+                                }}
+                            >
                                 <Text 
                                     style={{
                                         ...luxuryBodyStyle,
                                         fontWeight: "600",
-                                        color: currentUser.is_admin ? "#00ff91" : "#FFFFFF",
-                                    }}>
+                                        color: currentUser.is_admin ? "#ffffff" : "#FFFFFF",
+                                        overflow: "hidden",
+                                        whiteSpace: "nowrap",
+                                        textOverflow: "ellipsis",
+                                        textAlign: "left",  
+                                        flex: 1
+                                    }}
+                                >
                                     {currentUser.email}
                                 </Text>
                             </Button>
