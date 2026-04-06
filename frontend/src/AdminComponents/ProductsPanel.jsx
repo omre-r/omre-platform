@@ -708,17 +708,6 @@ export default function ProductsPanel() {
                         justifyContent="space-between" 
                         alignItems="center"
                         wrap="wrap">
-                        <Text 
-                            style={{
-                                padding: ".5rem .5rem",
-                                border: "2px solid rgba(0, 0, 0)",
-                                borderRadius: "10px",
-                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
-                                alignItems: "center",     
-                                justifyContent: "center", 
-                            }}>
-                            <Text style={{...luxuryBodyStyle, fontSize:"2rem", color: "#FFFFFF"}}>Products</Text> 
-                        </Text>
                         {/* Search bar for products ---------------------------------------- */}
                         <Flex  
                             padding={"10px"}    

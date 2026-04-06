@@ -205,17 +205,7 @@ const sortedUsers = [...users].sort((a, b) => a.email.localeCompare(b.email));
                     <Flex 
                         justifyContent="space-between" 
                         alignItems="center">   
-                        <Text 
-                            style={{
-                                padding: ".5rem .5rem",
-                                border: "2px solid rgba(0, 0, 0)",
-                                borderRadius: "10px",
-                                background: "linear-gradient(145deg,  #480e0e, rgba(20,20,20,0.9))",
-                                alignItems: "center",     
-                                justifyContent: "center", 
-                            }}>
-                            <Text style={{...luxuryBodyStyle, fontSize:"2rem", color: "#FFFFFF"}}>Users</Text> 
-                        </Text>
+                        
                         <Flex  
                         padding={"10px"}    
                         alignItems={"center"}

@@ -154,19 +154,7 @@ export default function OrdersPanel() {
 
             {/* HEADER */}
             <Flex justifyContent="space-between" alignItems="center">
-              <Text style={{
-                padding: ".5rem",
-                border: "2px solid black",
-                borderRadius: "10px",
-                background: "linear-gradient(145deg, #480e0e, rgba(20,20,20,0.9))",
-              }}>
-                <Text style={{ ...luxuryBodyStyle, fontSize: "2rem", color: "#fff" }}>
-                  Orders
-                </Text>
-              </Text>
-
               <Flex gap="10px" alignItems="center">
-
                 {/* SEARCH */}
                 <Flex  
                   padding={"10px"}    
@@ -306,7 +294,7 @@ export default function OrdersPanel() {
                 height: "37rem",
                 paddingLeft: "0.6rem",  
                 paddingRight: "0.6rem",
-                paddingTop: "0.6rem",
+                paddingTop: "0.2rem",
                 paddingBottom: "0.6rem",
               }}
             >
@@ -314,42 +302,52 @@ export default function OrdersPanel() {
                 {orders
                   .filter(o => statusFilter === "all" || o.status === statusFilter)
                   .map(order => (
-                    <Button
-                      key={order.id}
-                      onClick={() => viewOrder(order.id)}
-                      style={{
-                        ...buttonStyling,
-                        width: "calc(50% - 0.6rem)", 
-                        justifyContent: "flex-start",
-                        borderRadius: "10px",
-                        border: selectedOrder?.id === order.id
-                          ? "2px solid gold"
-                          : "2px solid black",
-                        boxShadow: selectedOrder?.id === order.id
-                          ? "0 0 12px gold"
-                          : buttonStyling.boxShadow,
-                        transform: selectedOrder?.id === order.id
-                          ? "scale(1.02)"
-                          : "scale(1)",
-                        background: `linear-gradient(145deg, ${
-                          statusStyles[order.status?.toLowerCase()] || "#444"
-                        }, rgba(20,20,20,0.92))`,
-
-                        color: "#ffffff",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Text
+                    <View key={order.id} style={{ flex: "0 0 48%" }}>
+                      <Button
+                        onClick={() => viewOrder(order.id)}
                         style={{
-                          ...luxuryBodyStyle,
+                          ...buttonStyling,
+                          width: "100%",  
+                          height: "60px",
+                          justifyContent: "flex-start",
+                          borderRadius: "10px",
+                          border: selectedOrder?.id === order.id
+                            ? "2px solid gold"
+                            : "2px solid black",
+                          boxShadow: selectedOrder?.id === order.id
+                            ? "0 0 12px gold"
+                            : buttonStyling.boxShadow,
+                          transform: selectedOrder?.id === order.id
+                            ? "scale(1.02)"
+                            : "scale(1)",
+                          background: `linear-gradient(145deg, ${
+                            statusStyles[order.status?.toLowerCase()] || "#444"
+                          }, rgba(20,20,20,0.92))`,
                           color: "#ffffff",
-                          fontWeight: "600",
+                          display: "flex",
+                          alignItems: "center",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          paddingLeft: "12px",
+                          paddingRight: "12px",
                         }}
                       >
-                        Order #{order.id.slice(0, 8)} — {order.status}
-                      </Text>
-                    </Button>
+                        <Text
+                          style={{
+                            ...luxuryBodyStyle,
+                            color: "#ffffff",
+                            fontWeight: 600,
+                            flex: 1,  
+                            overflow: "hidden",
+                            whiteSpace: "nowrap",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          Order #{order.id.slice(0, 8)} — {order.status}
+                        </Text>
+                      </Button>
+                    </View>
                   ))}
               </Flex>
             </View>
