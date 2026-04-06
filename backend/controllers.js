@@ -372,6 +372,19 @@ async function createOrder(req, res) {
   if (!result.success){
     return res.status(result.status).json(result);
   }
+  try {
+    const userResult = await users.getUser(customerid);
+    const user = userResult?.data?.user;
+    const order = result?.data?.order;
+
+    if (user?.email && order?.id) {
+      await sendOrderPlacedEmail(user.email, order);
+    }
+  } 
+  catch (err) {
+    console.error("Failed to send order confirmation email:", err);
+  }
+
   return res.json(result);
 }
 
@@ -648,6 +661,45 @@ async function getRecommendations(req, res) {
     return res.json(result);
 }
 
+// Function to send an email to users email after they place an order, with order details ------------------------------------------------------
+async function sendOrderPlacedEmail(toEmail, order) {
+    // Build the items text for the email body based on product or blend
+    const itemsText = order.items.map(item => {
+      if (item.type === "product") {
+        return `- ${item.item?.name || "Product"} (x${item.quantity})`;
+      }
+      if (item.type === "blend") {
+        return `- Custom Blend (x${item.quantity})`;
+      }
+      return `- Item (x${item.quantity})`;
+    })
+    .join("\n");
+
+  // Send the email using AWS SES
+  const command = new SendEmailCommand({
+      Source: SES_FROM_EMAIL,
+      Destination: { ToAddresses: [toEmail] },
+      // TODO: we can make this HTML and add some styling down the line, but for now we'll keep it simple with plain text
+      Message: {
+          Subject: { Data: `OMRÉ Order Confirmation — Order #${order.id.slice(0, 8)}` },
+          Body: {
+              Text: {
+                  Data: `Thank you for your order with OMRÉ!
+
+Order ID: ${order.id.slice(0, 8)}
+Total: $${Number(order.total).toFixed(2)}
+
+Items:
+${itemsText}
+
+We'll notify you when your order ships!`
+              }
+            }
+          }
+        });
+  await sesClient.send(command);
+}
+
 
 // path: POST /contact
 async function sendContactEmail(req, res) {
@@ -671,6 +723,7 @@ async function sendContactEmail(req, res) {
     await sesClient.send(command);
     return res.json({ success: true });
 }
+
 /* 
 Though probably not needed, we can use wrappers down the line that
 cater to some group flow. For example: 
