@@ -303,7 +303,11 @@ export default function OrdersPanel() {
               style={{
                 overflowY: "auto",
                 marginTop: "1rem",
-                height: "25rem",
+                height: "37rem",
+                paddingLeft: "0.6rem",  
+                paddingRight: "0.6rem",
+                paddingTop: "0.6rem",
+                paddingBottom: "0.6rem",
               }}
             >
               <Flex wrap="wrap" gap="0.6rem">
@@ -315,13 +319,18 @@ export default function OrdersPanel() {
                       onClick={() => viewOrder(order.id)}
                       style={{
                         ...buttonStyling,
-
-                        width: "calc(50% - 0.3rem)", 
+                        width: "calc(50% - 0.6rem)", 
                         justifyContent: "flex-start",
-
                         borderRadius: "10px",
-                        border: "2px solid black",
-
+                        border: selectedOrder?.id === order.id
+                          ? "2px solid gold"
+                          : "2px solid black",
+                        boxShadow: selectedOrder?.id === order.id
+                          ? "0 0 12px gold"
+                          : buttonStyling.boxShadow,
+                        transform: selectedOrder?.id === order.id
+                          ? "scale(1.02)"
+                          : "scale(1)",
                         background: `linear-gradient(145deg, ${
                           statusStyles[order.status?.toLowerCase()] || "#444"
                         }, rgba(20,20,20,0.92))`,
@@ -447,46 +456,55 @@ export default function OrdersPanel() {
                   >
                     Items
                   </Text>
-                  {selectedOrder.items?.map((orderItem, i) => {
-                    if (orderItem.type === "product") {
-                      return (
-                        <Text key={i} style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
-                          {orderItem.item?.name} x{orderItem.quantity}
-                        </Text>
-                      );
-                    }
-                    if (orderItem.type === "blend") {
-                      const blend = orderItem.item;
-
-                      return (
-                        <View key={i} style={{ marginTop: "6px" }}>
-                          <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
-                            Custom Blend – {blend.size_ml}ml x{orderItem.quantity}
+                  <View
+                    style={{
+                      maxHeight: "200px",   
+                      overflowY: "auto",
+                      paddingRight: "6px"   
+                    }}
+                  >
+                    {selectedOrder.items?.map((orderItem, i) => {
+                      if (orderItem.type === "product") {
+                        return (
+                          <Text key={i} style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
+                            {orderItem.item?.name} x{orderItem.quantity}
                           </Text>
+                        );
+                      }
 
-                          {blend.frag1_productid && (
-                            <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", marginLeft: "10px" }}>
-                              • {blend.frag1_pct}% {blend.frag1_name || "Unknown Fragrance"}
+                      if (orderItem.type === "blend") {
+                        const blend = orderItem.item;
+
+                        return (
+                          <View key={i} style={{ marginTop: "6px" }}>
+                            <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
+                              Custom Blend – {blend.size_ml}ml x{orderItem.quantity}
                             </Text>
-                          )}
 
-                          {blend.frag2_productid && (
-                            <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", marginLeft: "10px" }}>
-                              • {blend.frag2_pct}% {blend.frag2_name || "Unknown Fragrance"}
-                            </Text>
-                          )}
+                            {blend.frag1_productid && (
+                              <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", marginLeft: "10px" }}>
+                                • {blend.frag1_pct}% {blend.frag1_name || "Unknown Fragrance"}
+                              </Text>
+                            )}
 
-                          {blend.frag3_productid && (
-                            <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", marginLeft: "10px" }}>
-                              • {blend.frag3_pct}% {blend.frag3_name || "Unknown Fragrance"}
-                            </Text>
-                          )}
-                        </View>
-                      );
-                    }
+                            {blend.frag2_productid && (
+                              <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", marginLeft: "10px" }}>
+                                • {blend.frag2_pct}% {blend.frag2_name || "Unknown Fragrance"}
+                              </Text>
+                            )}
 
-                    return null;
-                  })}
+                            {blend.frag3_productid && (
+                              <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF", marginLeft: "10px" }}>
+                                • {blend.frag3_pct}% {blend.frag3_name || "Unknown Fragrance"}
+                              </Text>
+                            )}
+                          </View>
+                        );
+                      }
+
+                      return null;
+                    })}
+                  </View>
                 </View>
 
                 {/*STATUS*/}
