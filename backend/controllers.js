@@ -403,8 +403,8 @@ async function getUserOrders(req, res) {
 
 // path: POST /orders
 async function createOrder(req, res) {
-  const {customerid} = req.body
-  const result = await orders.createOrder(customerid);
+  const {customerid, storeCredit} = req.body
+  const result = await orders.createOrder(customerid, storeCredit);
   if (!result.success){
     return res.status(result.status).json(result);
   }

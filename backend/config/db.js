@@ -157,7 +157,8 @@ async function createTables() {
             items JSONB,
             total DECIMAL(10, 2),
             status VARCHAR(100) DEFAULT 'pending',
-            cancelreason VARCHAR(500)
+            cancelreason VARCHAR(500),
+            store_credit  DECIMAL(10, 2) DEFAULT 0
         )
     `);
 
@@ -1233,14 +1234,15 @@ class Orders{
     static filterableFields = ["email",]
 
     constructor(){
+        this.users = new Users();
         this.products = new Products();
         this.blends = new Blends()
         this.cartItems = new CartItems()
     }
 
-    async createOrder(customerid, client){
+    async createOrder(customerid, storeCredit, client){
         if (!client){
-            return prepareRollback((c) => this.createOrder(customerid, c));
+            return prepareRollback((c) => this.createOrder(customerid, storeCredit, c));
         }
         let order;
         try{
@@ -1292,9 +1294,18 @@ class Orders{
                 }
                 items.push({itemid, quantity, type, item})
             }
+            
+            if (storeCredit > 0){
+                const reduceCredit = this.users.reduceStoreCredit(customerid, Math.min(storeCredit, total), client);
+                if (!reduceCredit?.success){
+                    throw new DBError(reduceCredit.message);
+                }
+            }
+            
+
             const id = uuidv4()
-            const query = `INSERT INTO orders (id, customerid, items, total) VALUES ($1, $2, $3, $4) RETURNING *;`;
-            order = (await client.query(query, [id, customerid, JSON.stringify(items), total])).rows[0];
+            const query = `INSERT INTO orders (id, customerid, items, total, store_credit) VALUES ($1, $2, $3, $4) RETURNING *;`;
+            order = (await client.query(query, [id, customerid, JSON.stringify(items), total, storeCredit])).rows[0];
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
@@ -1340,6 +1351,12 @@ class Orders{
             const order = (await client.query(query, [cancelreason, id]))?.rows?.[0];
             if (!order){
                 throw new DBError("Order does not exist or already canceled.");
+            }
+            if (order.store_credit > 0){
+                const addCredit = this.users.addStoreCredit(customerid, order.store_credit, client);
+                if (!addCredit?.success){
+                    throw new DBError(addCredit.message);
+                }
             }
 
             //If a product, blend, or products used in a blend don't exist, we continue because items that don't exist don't need their stock restored

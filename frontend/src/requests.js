@@ -371,7 +371,7 @@ async function getUserOrdersReq(customerid){
     return data;
 }
 
-async function createOrderReq({customerid}){
+async function createOrderReq({customerid, storeCredit = 0}){
     const response = await fetch(backendURL + `/orders`, {
         method: "POST",
         headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
