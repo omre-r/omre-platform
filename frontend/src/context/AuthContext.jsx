@@ -96,6 +96,7 @@ export function AuthProvider({ children }) {
             loadingAuth,
             isAuthenticated,
             user,
+            setUserInfo,
             userInfo,
             isAdmin,
             refreshAuth,

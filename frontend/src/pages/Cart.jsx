@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { View, Card, Flex, Text, Button } from "@aws-amplify/ui-react";
+import { View, Card, Flex, Text, Button, SwitchField } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { fetchAuthSession } from "aws-amplify/auth";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
+
 import {
   getCartReq,
   deleteCartItemReq,
@@ -19,9 +20,12 @@ import {
   getSavedItemsReq,
   deleteSavedItemReq,
   createSavedItemReq,
+  addStoreCreditReq,
 } from "../requests.js";
 
 import { useToast } from "../components/ToastContext";
+import { useAuth } from "../context/AuthContext";
+
 
 // custom styles
 const luxuryHeadingStyle = {
@@ -60,6 +64,7 @@ const buttonViewStyle = {
 
 // components
 export default function Cart() {
+  const {userInfo, setUserInfo, refreshAuth} = useAuth();
   const [cart, setCart] = useState([]);
   const [loadingCart, setLoadingCart] = useState(true);
 
@@ -71,6 +76,7 @@ export default function Cart() {
   const [recommendations, setRecommendations] = useState([]);
 
   const [isHovered, setIsHovered] = useState(false);
+  const [usingStoreCredit, setUsingStoreCredit] = useState(true);
 
   useEffect(() => {
     loadCart();
@@ -375,8 +381,15 @@ async function checkout() {
     return;
   }
 
+  let earnedCredit = total;
+  if (usingStoreCredit && userInfo.store_credit){
+    earnedCredit -= userInfo.store_credit
+  }
+  earnedCredit = (earnedCredit * .05).toFixed(2);
+
   try {
-    const response = await createOrderReq({ customerid });
+
+    const response = await createOrderReq({ customerid, storeCredit: usingStoreCredit && userInfo?.store_credit ? userInfo?.store_credit : 0 });
     if (!response?.success) {
       const backendMessage = response?.message || "";
       if (backendMessage.includes("Failed to decrease product stock")) {
@@ -389,8 +402,19 @@ async function checkout() {
     }
     await clearCartReq(customerid);
 
+    if (earnedCredit > 0){
+      const addCredit = await addStoreCreditReq(getIDToken()?.sub, earnedCredit);
+      if (!addCredit.success){
+        toast("Failed to add store credit.");
+      }else{
+        toast(`You've earned $${earnedCredit} in store credit!`, "success");
+      }
+      
+    }
+    
     setCart([]);
-    toast("Order placed successfully!", "success");
+    toast("Order placed successfully!", "success");   
+    refreshAuth()
   } catch (err) {
     console.error(err);
     toast("Checkout failed.", "error");
@@ -653,6 +677,20 @@ async function checkout() {
                   borderRadius: "999px"
                 }}
               />
+              <Flex
+              justifyContent={"space-between"}
+              fontFamily= "Cormorant Garamond, serif"
+              fontWeight="bold"
+              fontSize={"1.2em"}
+              >
+                <Text>Use store credit?</Text>
+                <SwitchField 
+                isChecked={usingStoreCredit}
+                onChange={e => setUsingStoreCredit(e.target.checked)}>
+
+                </SwitchField>
+              </Flex>
+              
               <Flex 
                 justifyContent="space-between"
                 alignItems="center"
@@ -661,10 +699,27 @@ async function checkout() {
                 borderTop="2px solid rgba(60, 20, 20, 0.18)">
                 <Text style={luxuryHeadingStyle}>Total</Text>
                 <Text style={luxuryHeadingStyle}>
-                  ${total.toFixed(2)}
+                  {usingStoreCredit && userInfo?.store_credit
+                  ?
+                    Math.max((total - Number(userInfo.store_credit)), 0.00).toFixed(2)
+                  :
+                    total.toFixed(2)
+                  }
                 </Text>
               </Flex>
-
+              {usingStoreCredit && 
+              <Flex
+              justifyContent={"space-between"}
+              alignItems={"center"}
+              fontFamily= "Cormorant Garamond, serif"
+              fontWeight="bold"
+              fontSize={"1.3em"}
+              fontStyle={"italic"}
+              color={"green"}
+              >
+                <section>Store Credit</section>
+                <section>- {Math.min(Number(userInfo?.store_credit), total.toFixed(2)).toFixed(2)}</section>
+              </Flex>}
               <Flex justifyContent="center" marginTop="2rem">
                 <Button
                     onMouseEnter={() => setIsHovered(true)}
