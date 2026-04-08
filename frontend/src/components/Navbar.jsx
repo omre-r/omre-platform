@@ -14,7 +14,8 @@ import logo from "../assets/Logo.png";
 import "../styles/Navbar.css";
 import { useAuth } from "../context/AuthContext";
 import cartIcon from "../assets/cartIcon.png";
-import profileIcon from "../assets/profileIcon.png";
+import profileIcon from "../assets/profileIcon1to1.png";
+import { useEffect } from "react";
 
 const luxuryBodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
@@ -31,7 +32,7 @@ const Navbar = () => {
   // Pulling functions from AuthContext to check authentication
   // handle log out function called from AuthContext to logout and move back to login page after
   const navigate = useNavigate();
-  const { isAuthenticated, logout, isAdmin, loadingAuth } = useAuth();
+  const { isAuthenticated, logout, isAdmin, loadingAuth, userInfo } = useAuth();
   async function handleLogout() {
     await logout(); 
     navigate("/Auth"); 
@@ -135,7 +136,24 @@ const Navbar = () => {
             className={({ isActive }) =>
               isActive ? "nav-item active-nav" : "nav-item"
             }>
-              <img src={profileIcon} alt="Profile" className="cart-icon" />
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center"
+              }}>
+                <section
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  overflow: "hidden",
+
+                  }}>
+                  <img src={profileIcon} style={{width:"100%", height: "100%"}} alt="Profile" className="cart-icon" />
+                </section>
+                {userInfo?.hasOwnProperty("store_credit") && <span style={{fontSize: ".7rem"}}>${userInfo.store_credit}</span>}
+
+              </div>
             </NavLink>
         )}
       </nav>

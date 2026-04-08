@@ -22,6 +22,7 @@ Explaining only necessary imports
 */ 
 import { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser, fetchAuthSession, signOut } from "aws-amplify/auth";
+import { getUserReq } from "../requests";
 
 // Creating global context container for app ----------------------------------------
 const AuthContext = createContext(null);
@@ -35,6 +36,7 @@ export function AuthProvider({ children }) {
     const [loadingAuth, setLoadingAuth] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState(null); 
+    const [userInfo, setUserInfo] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
 
     // RefreshAuth, checks status ----------------------------------------------------
@@ -46,27 +48,15 @@ export function AuthProvider({ children }) {
         setUser(currentUser);
         setIsAuthenticated(true);
 
-        // Fetch session and update last_login
-        try {
-            const session = await fetchAuthSession();
-            const token = session.tokens.accessToken?.jwtToken;
-
-            if (token) {
-                await fetch(`/users/${currentUser.attributes.sub}/last-login`, {
-                    method: "PUT",
-                    headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                    },
-                });
-            }
-        } catch (err) {
-            console.error("Failed to update last_login:", err);
-        }
-
         // Check if admin
         try {
             const session = await fetchAuthSession();
+            const sub = session?.tokens?.idToken?.payload?.sub;
+            if (sub){
+                getUserReq(sub)
+                .then(info => {info.success && setUserInfo(info.data.user)});
+            }
+
             const groups = session?.tokens?.accessToken?.payload?.["cognito:groups"] || [];
             setIsAdmin(Array.isArray(groups) && groups.includes("admin"));
         } catch {
@@ -106,6 +96,7 @@ export function AuthProvider({ children }) {
             loadingAuth,
             isAuthenticated,
             user,
+            userInfo,
             isAdmin,
             refreshAuth,
             logout,
