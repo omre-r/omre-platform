@@ -1,0 +1,139 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8, 8, 8, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  height: 64px;
+}
+
+.logo {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  letter-spacing: var(--tracking-wider);
+  color: var(--color-accent);
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  flex: 1;
+}
+
+.link {
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  transition: color var(--ease-fast);
+}
+
+.link:hover,
+.active {
+  color: var(--color-text-primary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  margin-left: auto;
+}
+
+.cartBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  transition: color var(--ease-fast);
+}
+
+.cartBtn:hover {
+  color: var(--color-text-primary);
+}
+
+.cartBadge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: var(--color-accent);
+  color: #000;
+  font-size: 0.6rem;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userMenu {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.userName {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.roleLink {
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-accent);
+  transition: color var(--ease-fast);
+}
+
+.roleLink:hover {
+  color: var(--color-accent-hover);
+}
+
+.logoutBtn {
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  transition: color var(--ease-fast);
+}
+
+.logoutBtn:hover {
+  color: var(--color-text-secondary);
+}
+
+.authLinks {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--sp-2) var(--sp-5);
+  background: var(--color-accent);
+  color: #000;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  transition: background var(--ease-fast);
+}
+
+.btnPrimary:hover {
+  background: var(--color-accent-hover);
+}

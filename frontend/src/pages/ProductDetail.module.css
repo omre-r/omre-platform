@@ -1,0 +1,231 @@
+.page {
+  flex: 1;
+  padding: var(--sp-10) 0 var(--sp-20);
+}
+
+.state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-20);
+  color: var(--color-text-muted);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--sp-10);
+}
+
+.breadcrumb a {
+  color: var(--color-text-secondary);
+  transition: color var(--ease-fast);
+}
+
+.breadcrumb a:hover {
+  color: var(--color-accent);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-16);
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+.imageWrap {
+  aspect-ratio: 1 / 1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.houseName {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--color-accent);
+  transition: color var(--ease-fast);
+}
+
+.houseName:hover { color: var(--color-accent-hover); }
+
+.name {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  font-weight: 400;
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
+}
+
+.meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+}
+
+.price {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.description {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.notesTitle {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: var(--sp-1);
+}
+
+.noteRow {
+  display: flex;
+  gap: var(--sp-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.noteLabel {
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.addBtn {
+  padding: var(--sp-4) var(--sp-10);
+  background: var(--color-accent);
+  color: #000;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  transition: background var(--ease-fast), transform var(--ease-fast);
+}
+
+.addBtn:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.addBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.addedBtn {
+  background: var(--color-success) !important;
+}
+
+.stock {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.houseCard {
+  padding: var(--sp-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.houseCardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.houseLogo {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  background: var(--color-surface-raised);
+}
+
+.houseCardName {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  transition: color var(--ease-fast);
+}
+
+.houseCardName:hover { color: var(--color-accent); }
+
+.houseLocation {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.houseDesc {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-normal);
+}
+
+.houseLink {
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+  letter-spacing: 0.04em;
+  transition: color var(--ease-fast);
+}
+
+.houseLink:hover { color: var(--color-accent-hover); }

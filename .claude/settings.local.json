@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --prefix backend install bcryptjs jsonwebtoken)",
+      "Bash(npm --prefix frontend install react-router-dom jwt-decode)",
+      "Bash(\"C:/Users/21ret/OneDrive/Desktop/omre-platform/backend/.env\")",
+      "Bash(node --check backend/server.js)",
+      "Bash(node --check backend/routes/orders.js)",
+      "Bash(node --check backend/routes/brandApplications.js)",
+      "Bash(node --check backend/models/User.js)",
+      "Bash(node --check backend/models/Order.js)",
+      "Bash(node --check backend/models/BrandOrder.js)",
+      "Bash(node --check backend/middleware/auth.js)"
+    ]
+  }
+}

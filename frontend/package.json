@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "jwt-decode": "^4.0.0",
     "omre-platform": "file:..",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.14.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
