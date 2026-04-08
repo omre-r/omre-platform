@@ -76,6 +76,9 @@ app.get("/", controllers.getServerHTML);
 // users
 
 // path: PUT /users/last-login
+app.put("/users/:id/store_credit/add", [verifyToken], controllers.addStoreCredit);
+app.put("/users/:id/store_credit/reduce", [verifyToken], controllers.reduceStoreCredit);
+
 app.put("/users/:id/preferrednotes", [verifyToken], controllers.updatePreferredNotes);
 app.put("/users/:id/last-login", [verifyToken], controllers.updateLastLogin);
 

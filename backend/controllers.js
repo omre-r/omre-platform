@@ -142,6 +142,28 @@ async function getFilteredUsers(req, res) {
   return res.json(result)
 }
 
+// path: PUT /users/:id/store_credit/add
+async function addStoreCredit(req, res) {
+    const {id} = req.params;
+    const {credit} = req.body;
+    const result = await users.addStoreCredit(id, credit);
+    if (!result.success){
+        return res.status(result.status || 400).json(result);
+    }
+    return res.json(result);
+}
+
+// path: PUT /users/:id/store_credit/reduce
+async function reduceStoreCredit(req, res) {
+    const {id} = req.params;
+    const {credit} = req.body;
+    const result = await users.reduceStoreCredit(id, credit);
+    if (!result.success){
+        return res.status(result.status || 400).json(result);
+    }
+    return res.json(result);
+}
+
 
 
 
@@ -785,6 +807,8 @@ deleteUser = handleError(deleteUser);
 updateLastLogin = handleError(updateLastLogin);
 getFilteredUsers= handleError(getFilteredUsers);
 updatePreferredNotes = handleError(updatePreferredNotes);
+addStoreCredit = handleError(addStoreCredit);
+reduceStoreCredit = handleError(reduceStoreCredit);
 
 
 getProduct = handleError(getProduct);
@@ -839,7 +863,7 @@ sendContactEmail = handleError(sendContactEmail);
 
 module.exports = {
   getServerHTML,
-  getUser, getUsers, createUser, deleteUser, updateLastLogin, getFilteredUsers, updatePreferredNotes,
+  getUser, getUsers, createUser, deleteUser, updateLastLogin, getFilteredUsers, updatePreferredNotes, addStoreCredit, reduceStoreCredit,
   getProduct, getRelatedProducts, updateProduct, updateProductStock, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts, 
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview, respondToReview,
   cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders, getFilteredOrders,

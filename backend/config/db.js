@@ -439,6 +439,49 @@ class Users{
         }
         return { success: true, data: { user } };
     }
+
+    async addStoreCredit(id, credit, client) {
+        if (!client){
+            return prepareRollback((c) => this.addStoreCredit(id, amount, c));
+        }
+
+        try{
+            const query = `UPDATE users SET store_credit = store_credit+$1 WHERE cognito_sub = $2;`;
+            const res = await client.query(query, [credit, id]);
+            if (!res?.rows?.[0]){
+                throw new DBError("Failed to add store credit");
+            }
+        }
+        catch(err) {
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to add store credit");
+        }
+        return { success: true };
+    }
+
+    async reduceStoreCredit(id, credit, client) {
+        if (!client){
+            return prepareRollback((c) => this.addStoreCredit(id, amount, c));
+        }
+
+        try{
+            const query = `UPDATE users SET store_credit = store_credit-$1 WHERE cognito_sub = $2 RETURNING store_credit;`;
+            const res = await client.query(query, [credit, id]);
+            if (!res?.rows?.[0]){
+                throw new DBError("Failed to reduce store credit");
+            }
+            if (res.rows[0].store_credit < 0){
+                throw new DBError("Not enough store credit / store credit can not be negative");
+            }
+        }
+        catch(err) {
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to reduce store credit");
+        }
+        return { success: true };
+    }
 }
 
 /*
@@ -2265,4 +2308,5 @@ class Recommendations {
         }
     }
 }
+
 module.exports = { Users, Products, Reviews, Orders, Blends, CartItems, SavedItems, Recommendations }

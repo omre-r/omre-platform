@@ -102,6 +102,40 @@ async function updatePreferredNotesReq(id, preferrednotes) {
     return data;
 }
 
+async function addStoreCreditReq(id, credit) {
+    const response = await fetch(backendURL + `/users/${id}/store_credit/add`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ credit })
+    });
+
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed");
+    }
+    return data;
+}
+
+async function reduceStoreCreditReq(id, credit) {
+    const response = await fetch(backendURL + `/users/${id}/store_credit/reduce`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ credit })
+    });
+
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed");
+    }
+    return data;
+}
+
 
 
 // products
@@ -754,6 +788,8 @@ deleteUserReq = handleError(deleteUserReq);
 updateLastLoginReq = handleError(updateLastLoginReq);
 getFilteredUsersReq = handleError(getFilteredUsersReq);
 updatePreferredNotesReq = handleError(updatePreferredNotesReq);
+addStoreCreditReq = handleError(addStoreCreditReq);
+reduceStoreCreditReq = handleError(reduceStoreCreditReq);
 
 // Products
 getProductReq = handleError(getProductReq);
@@ -819,7 +855,7 @@ createProductAWSReq = handleError(createProductAWSReq);
 createProductAWSFlowReq = handleError(createProductAWSFlowReq);
 
 export {
-    getUserReq, getUsersReq, createUserReq, deleteUserReq, updateLastLoginReq, getFilteredUsersReq, updatePreferredNotesReq,
+    getUserReq, getUsersReq, createUserReq, deleteUserReq, updateLastLoginReq, getFilteredUsersReq, updatePreferredNotesReq, addStoreCreditReq, reduceStoreCreditReq,
     getProductReq, getRelatedProductsReq, updateProductReq, updateProductStockReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq, respondToReviewReq,
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq, getOrdersReq, getFilteredOrdersReq,
