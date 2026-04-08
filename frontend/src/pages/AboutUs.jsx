@@ -47,7 +47,6 @@ export default function AboutUs() {
         }}
       >
         <div style={{ maxWidth: "680px", margin: "0 auto" }}>
-
           {/* PHILOSOPHY */}
           <Text style={headingStyle} marginBottom="1rem" marginTop="2rem">
             Our Philosophy
@@ -55,11 +54,13 @@ export default function AboutUs() {
           <hr style={dividerStyle} />
 
           <Text style={bodyStyle} marginBottom="0.75rem">
-            Derived from the Arabic word ʿomr—meaning life—OMRÉ translates to <em>my life</em>.
+            Derived from the Arabic word ʿomr—meaning life—OMRÉ translates to{" "}
+            <em>my life</em>.
           </Text>
 
           <Text style={bodyStyle} marginBottom="0.75rem">
-            At OMRÉ, fragrance is not a final touch. It is the beginning. The first impression. The lasting presence. The unseen signature.
+            At OMRÉ, fragrance is not a final touch. It is the beginning. The
+            first impression. The lasting presence. The unseen signature.
           </Text>
 
           <Text style={bodyStyle} marginBottom="0.75rem">
@@ -67,7 +68,9 @@ export default function AboutUs() {
           </Text>
 
           <Text style={bodyStyle} marginBottom="0.75rem">
-            We design with purpose. Every blend is made using high concentrations of extrait de parfum oils, crafted to last, made to move with you.
+            We design with purpose. Every blend is made using high
+            concentrations of extrait de parfum oils, crafted to last, made to
+            move with you.
           </Text>
 
           <Text style={bodyStyle} marginBottom="0.25rem">
@@ -88,16 +91,21 @@ export default function AboutUs() {
           </Text>
           <hr style={dividerStyle} />
 
-          <Text style={{ ...bodyStyle, fontStyle: "italic", color: "#555" }} marginBottom="1rem">
+          <Text
+            style={{ ...bodyStyle, fontStyle: "italic", color: "#555" }}
+            marginBottom="1rem"
+          >
             A letter from the Founder
           </Text>
 
           <Text style={bodyStyle} marginBottom="0.75rem">
-            Fragrance has always meant more to me than just scent. It's memory. It's presence. It's connection.
+            Fragrance has always meant more to me than just scent. It's memory.
+            It's presence. It's connection.
           </Text>
 
           <Text style={bodyStyle} marginBottom="0.75rem">
-            For as long as I can remember, I've loved giving perfume as a gift...
+            For as long as I can remember, I've loved giving perfume as a
+            gift...
           </Text>
 
           <Text style={bodyStyle} marginBottom="0.75rem">
@@ -112,7 +120,10 @@ export default function AboutUs() {
             The name naturally came to me, from the Arabic word ʿomr—life.
           </Text>
 
-          <Text style={{ ...bodyStyle, fontWeight: 700 }} marginBottom="0.75rem">
+          <Text
+            style={{ ...bodyStyle, fontWeight: 700 }}
+            marginBottom="0.75rem"
+          >
             OMRÉ means my life.
           </Text>
 
@@ -121,7 +132,8 @@ export default function AboutUs() {
           </Text>
 
           <Text style={bodyStyle} marginBottom="0.75rem">
-            I'm building OMRÉ into a house. One rooted in memory. Designed with intention. Made to last.
+            I'm building OMRÉ into a house. One rooted in memory. Designed with
+            intention. Made to last.
           </Text>
 
           <Text style={bodyStyle} marginBottom="0.25rem">
@@ -142,7 +154,6 @@ export default function AboutUs() {
           <Text style={{ ...bodyStyle, fontStyle: "italic", color: "#444" }}>
             "You don't just wear OMRÉ — you live in it."
           </Text>
-
         </div>
       </View>
     </>

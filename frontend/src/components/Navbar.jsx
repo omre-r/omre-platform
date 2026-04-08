@@ -7,7 +7,7 @@ Explaining only necessary imports
     - logout : reimplemented within auth context and able to call from there to log out of the platform, sets information as null and/or false
     - isAdmin : will check if you have admin priviledge to access admin dashboard
     - loadingAuth : To make sure authentication is done
-*/ 
+*/
 
 import { NavLink, useNavigate } from "react-router-dom";
 import logo from "../assets/Logo.png";
@@ -20,7 +20,7 @@ import { useEffect } from "react";
 const luxuryBodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 400,
-  fontSize: "1.3rem",   
+  fontSize: "1.3rem",
   letterSpacing: "0.3px",
 };
 
@@ -34,13 +34,15 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout, isAdmin, loadingAuth, userInfo } = useAuth();
   async function handleLogout() {
-    await logout(); 
-    navigate("/Auth"); 
+    await logout();
+    navigate("/Auth");
   }
 
   return (
-    <header className="navbar"
-    style={{position: "sticky", top: "0", zIndex: "10000"}}>
+    <header
+      className="navbar"
+      style={{ position: "sticky", top: "0", zIndex: "10000" }}
+    >
       <div className="nav-left">
         {/* Navbar Logo ------------------------------------------------------------------------------------------ */}
         {/* On click will take user back to home page */}
@@ -54,107 +56,132 @@ const Navbar = () => {
             isActive ? "nav-item active-nav" : "nav-item"
           }
           style={luxuryBodyStyle}
-          >
+        >
           Fragrances
         </NavLink>
 
-
         {/* {!isAdmin && (  */}
-          <>
-            <NavLink
-              to="/AboutUs"
-              className={({ isActive }) =>
-                isActive ? "nav-item active-nav" : "nav-item"
-              }
-              style={luxuryBodyStyle}
-              >
-              About
-            </NavLink>
+        <>
+          <NavLink
+            to="/AboutUs"
+            className={({ isActive }) =>
+              isActive ? "nav-item active-nav" : "nav-item"
+            }
+            style={luxuryBodyStyle}
+          >
+            About
+          </NavLink>
 
-            <NavLink
-              to="/ContactUs"
-              className={({ isActive }) =>
-                isActive ? "nav-item active-nav" : "nav-item"
-              }
-              style={luxuryBodyStyle}
-              >
-              Contact
-            </NavLink>
-        </> 
+          <NavLink
+            to="/ContactUs"
+            className={({ isActive }) =>
+              isActive ? "nav-item active-nav" : "nav-item"
+            }
+            style={luxuryBodyStyle}
+          >
+            Contact
+          </NavLink>
+        </>
       </div>
 
       {/* Navbar Links ---------------------------------------------------------------------------------------- */}
       {/* Link to auth is shown if loadingAuth false & is not authenticated */}
       <nav className="nav-links">
         {!loadingAuth && !isAuthenticated && (
-          <NavLink to="/Auth" 
-          className={({ isActive }) =>
-            isActive ? "nav-item active-nav" : "nav-item"
-          }
-          style={luxuryBodyStyle} >Sign In</NavLink>
+          <NavLink
+            to="/Auth"
+            className={({ isActive }) =>
+              isActive ? "nav-item active-nav" : "nav-item"
+            }
+            style={luxuryBodyStyle}
+          >
+            Sign In
+          </NavLink>
         )}
 
-        {!loadingAuth && isAuthenticated && isAdmin && (  
-          <NavLink to="/AdminDashboard" 
-          className={({ isActive }) =>
-            isActive ? "nav-item active-nav" : "nav-item"
-          }
-          style={luxuryBodyStyle}>Admin Dashboard</NavLink>
+        {!loadingAuth && isAuthenticated && isAdmin && (
+          <NavLink
+            to="/AdminDashboard"
+            className={({ isActive }) =>
+              isActive ? "nav-item active-nav" : "nav-item"
+            }
+            style={luxuryBodyStyle}
+          >
+            Admin Dashboard
+          </NavLink>
         )}
 
         {!loadingAuth && isAuthenticated && (
-          <NavLink to="/Mixology" 
-          className={({ isActive }) =>
-            isActive ? "nav-item active-nav" : "nav-item"
-          }
-          style={luxuryBodyStyle} >Mixology</NavLink>
+          <NavLink
+            to="/Mixology"
+            className={({ isActive }) =>
+              isActive ? "nav-item active-nav" : "nav-item"
+            }
+            style={luxuryBodyStyle}
+          >
+            Mixology
+          </NavLink>
         )}
 
         {/* If loadingAuth is false (complete) and user is authenticated, will have ability to log out */}
         {!loadingAuth && isAuthenticated && (
-          <NavLink 
-            color="#F5F5F5" 
-            style={luxuryBodyStyle}                       
-            variation="primary"                                                                
-            loadingText=""                                           
-            onClick={() => handleLogout()}           
-            >
+          <NavLink
+            color="#F5F5F5"
+            style={luxuryBodyStyle}
+            variation="primary"
+            loadingText=""
+            onClick={() => handleLogout()}
+          >
             Sign Out
           </NavLink>
         )}
         {!loadingAuth && isAuthenticated && (
-          <NavLink to="/Cart" 
-          className={({ isActive }) =>
-            isActive ? "nav-item active-nav" : "nav-item"
-          }>
+          <NavLink
+            to="/Cart"
+            className={({ isActive }) =>
+              isActive ? "nav-item active-nav" : "nav-item"
+            }
+          >
             <img src={cartIcon} alt="Cart" className="cart-icon" />
           </NavLink>
         )}
 
         {!loadingAuth && isAuthenticated && (
-            <NavLink to="/Profile" 
+          <NavLink
+            to="/Profile"
             className={({ isActive }) =>
               isActive ? "nav-item active-nav" : "nav-item"
-            }>
-              <div style={{
+            }
+          >
+            <div
+              style={{
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
-                alignItems: "center"
-              }}>
-                <section
+                alignItems: "center",
+              }}
+            >
+              <section
                 style={{
                   width: "40px",
                   height: "40px",
                   overflow: "hidden",
-
-                  }}>
-                  <img src={profileIcon} style={{width:"100%", height: "100%"}} alt="Profile" className="cart-icon" />
-                </section>
-                {userInfo?.hasOwnProperty("store_credit") && <span style={{fontSize: ".7rem"}}>${userInfo.store_credit}</span>}
-
-              </div>
-            </NavLink>
+                }}
+              >
+                <img
+                  src={profileIcon}
+                  style={{ width: "100%", height: "100%" }}
+                  alt="Profile"
+                  className="cart-icon"
+                />
+              </section>
+              {userInfo?.hasOwnProperty("store_credit") && (
+                <span style={{ fontSize: ".7rem" }}>
+                  ${userInfo.store_credit}
+                </span>
+              )}
+            </div>
+          </NavLink>
         )}
       </nav>
     </header>
@@ -162,7 +189,6 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
 
 // Notes on future improvements:
 // TODO: Use amplify instead of regular css

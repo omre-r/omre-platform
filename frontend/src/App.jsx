@@ -15,8 +15,7 @@ import Product from "./pages/Product";
 import Profile from "./pages/Profile";
 import { ToastProvider } from "./components/ToastContext";
 
-
-import './App.css'
+import "./App.css";
 
 function App() {
   return (
@@ -33,7 +32,7 @@ function App() {
             <Route path="/AboutUs" element={<AboutUs />} />
             <Route path="/ContactUs" element={<ContactUs />} />
             <Route path="/Cart" element={<Cart />} />
-            <Route path="/Fragrances/:parentid" element={<Product/>}/>
+            <Route path="/Fragrances/:parentid" element={<Product />} />
             <Route path="/Profile" element={<Profile />} />
           </Routes>
         </Router>
@@ -42,4 +41,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

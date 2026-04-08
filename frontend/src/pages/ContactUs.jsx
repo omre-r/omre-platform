@@ -53,7 +53,12 @@ const dividerStyle = {
 };
 
 export default function ContactUs() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -67,7 +72,7 @@ export default function ContactUs() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!form.name || !form.email || !form.message) return;
     if (!emailRegex.test(form.email)) {
-        toast("Please enter a valid email address.", "error");
+      toast("Please enter a valid email address.", "error");
       return;
     }
     setSending(true);
@@ -98,21 +103,29 @@ export default function ContactUs() {
           backgroundRepeat: "repeat",
         }}
       >
-        <div style={{ maxWidth: "780px", margin: "0 auto", paddingTop: "2rem" }}>
-
+        <div
+          style={{ maxWidth: "780px", margin: "0 auto", paddingTop: "2rem" }}
+        >
           <Text style={headingStyle} marginBottom="0.5rem">
             Contact Us
           </Text>
           <hr style={dividerStyle} />
 
           {submitted ? (
-            <Text style={{ ...bodyStyle, fontStyle: "italic", marginTop: "2rem" }}>
+            <Text
+              style={{ ...bodyStyle, fontStyle: "italic", marginTop: "2rem" }}
+            >
               Thank you for reaching out. We'll get back to you soon.
             </Text>
           ) : (
             <div style={{ marginTop: "1.5rem" }}>
-
-              <div style={{ display: "flex", gap: "1.25rem", marginBottom: "1.25rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "1.25rem",
+                  marginBottom: "1.25rem",
+                }}
+              >
                 <div style={{ flex: 1 }}>
                   <label style={labelStyle}>Name</label>
                   <input
@@ -165,24 +178,28 @@ export default function ContactUs() {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 style={{
-                    ...bodyStyle,
-                    fontSize: "1rem",
-                    padding: "0.9rem 2.2rem",
-                    border: "1px solid rgba(255,255,255,0.35)",
-                    borderRadius: "28px",
-                    background: isHovered ? "linear-gradient(145deg,  #c23434, rgba(20,20,20,0.9))" : "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
-                    color: "#FFFFFF",
-                    cursor: sending ? "not-allowed" : "pointer",
-                    opacity: sending ? 0.7 : 1,
-                    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                    transform: isHovered ? "translateY(-5px)" : "translateY(0px)",
-                    transition: "all 1s ease",
-                }}>
-                <Text style={{...bodyStyle, color: "#FFFFFF"}}>{sending ? "Sending..." : "Send"}</Text>
+                  ...bodyStyle,
+                  fontSize: "1rem",
+                  padding: "0.9rem 2.2rem",
+                  border: "1px solid rgba(255,255,255,0.35)",
+                  borderRadius: "28px",
+                  background: isHovered
+                    ? "linear-gradient(145deg,  #c23434, rgba(20,20,20,0.9))"
+                    : "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
+                  color: "#FFFFFF",
+                  cursor: sending ? "not-allowed" : "pointer",
+                  opacity: sending ? 0.7 : 1,
+                  boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                  transform: isHovered ? "translateY(-5px)" : "translateY(0px)",
+                  transition: "all 1s ease",
+                }}
+              >
+                <Text style={{ ...bodyStyle, color: "#FFFFFF" }}>
+                  {sending ? "Sending..." : "Send"}
+                </Text>
               </button>
             </div>
           )}
-
         </div>
       </View>
     </>
