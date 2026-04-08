@@ -7,6 +7,8 @@ import { getUserSavedBlendsReq, getActiveProductsReq,deleteUserBlendReq, createC
 import SearchIcon from "../assets/search_icon.png";
 import CustomMixImage from "../assets/CustomMixImage.png";
 import { useToast } from "../components/ToastContext";
+import {useAuth} from "../context/AuthContext"
+import { useContext } from "react";
 
 // Fonts ----------------------------------------------
 const luxuryHeadingStyle = {
@@ -100,6 +102,7 @@ const buttonStyling = {
 
 export default function Profile() {
    const { toast } = useToast();
+   const {refreshAuth} = useAuth();
     const [activeTab, setActiveTab] = useState("overview");    
     const [selectedNotes, setSelectedNotes] = useState([]); 
     const [loadedBlends, setLoadedBlends] = useState([]);
@@ -1570,6 +1573,7 @@ async function cancelOrder(orderId, reason) {
                                                 }
 
                                                 await cancelOrder(confirmCancelOrder, cancelReason.trim());
+                                                refreshAuth();
                                                 setConfirmCancelOrder(null);
                                             }}
                                             style={{...buttonStyling,  

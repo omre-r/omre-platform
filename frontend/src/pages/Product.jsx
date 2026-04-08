@@ -4,7 +4,7 @@ import styles from "../styles/Product.module.css"
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken, createCartItemReq, getProductReviewsReq, createReviewReq, uploadAndGetURlsReq, getAccessToken, respondToReviewReq, deleteReviewReq } from "../requests";
+import { getProductReq, getRelatedProductsReq, getRecommendationsReq, getIDToken, createCartItemReq, getProductReviewsReq, createReviewReq, uploadAndGetURlsReq, getAccessToken, respondToReviewReq, deleteReviewReq, getUserRecentOrdersReq, addStoreCreditReq } from "../requests";
 
 import {isProfane} from "no-profanity";
 import Navbar from "../components/Navbar";
@@ -12,6 +12,7 @@ import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
 import ProfileIcon from "../assets/profileIconClean.png";
 import { useToast } from "../components/ToastContext";
+import { useAuth } from "../context/AuthContext";
 
 import rating0 from "../assets/ratings/0.png";
 import rating1 from "../assets/ratings/1.png";
@@ -43,13 +44,17 @@ const headingStyle = {
 };
 
 export default function Product(){
-    const params = useParams()
-    const [searchParams, setSearchParams] = useSearchParams()
+    const params = useParams();
+    const {refreshAuth} = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    const [products, setProducts] = useState([])
-    const [selectedProduct, setSelectedProduct] = useState(null)
+    const [products, setProducts] = useState([]);
+    const [selectedProduct, setSelectedProduct] = useState(null);
     const [loadingProduct, setLoadingProduct] = useState(true);
     const [loadingRecommendations, setLoadingRecommendations] = useState(true);    
+    const [loadingReviews, setLoadingReviews] = useState(false);
+    const [loadingRecentOrders, setLoadingRecentOrders] = useState(false);
+
     const [recommendations, setRecommendations] = useState([]);
 
     const [displayedImage, setDisplayedImage] = useState(0)
@@ -59,7 +64,6 @@ export default function Product(){
     const [addToCartText, setAddToCartText] = useState("Add To Cart");
 
     const [reviews, setReviews] = useState([]);
-    const [loadingReviews, setLoadingReviews] = useState(false);
     const [newReviewMessage, setNewReviewMessage] = useState("");
     const [attachedImages, setAttachedImages] = useState([]);
     const [userInfo, setUserInfo] = useState(null);
@@ -67,6 +71,8 @@ export default function Product(){
     const [replyMessage, setReplyMessage] = useState("")
     const [selectedRating, setSelectedRating] = useState(0);
     const [averageRating, setAverageRating] = useState(0);
+
+    const [recentOrders, setRecentOrders] = useState([]);
 
     const { toast } = useToast();
     
@@ -85,9 +91,7 @@ export default function Product(){
     }, [])
 
     useEffect(() => {
-        loadProduct();
-        loadRecommendations();
-        loadReviews();
+        loadAll()
     },[params.parentid])
 
 
@@ -130,6 +134,12 @@ export default function Product(){
         }, 2500);
     }
 
+    async function loadAll() {
+        loadRecommendations();
+        Promise.all([loadProduct(), loadReviews()])
+        .then(([prods, revs]) => loadRecentOrders(prods, revs));
+    }
+
     async function loadProduct() {
         setLoadingProduct(true);
         const data = await getRelatedProductsReq(params.parentid);
@@ -145,7 +155,9 @@ export default function Product(){
 
         const variation = searchParams.get("variation");
         setSelectedProduct(prods.find(p => p.variation === variation));
+        return prods
     }
+
     async function loadRecommendations() {
         const idToken = getIDToken();
         if (!idToken || !idToken?.sub){
@@ -157,6 +169,7 @@ export default function Product(){
         setLoadingRecommendations(false);
         setRecommendations(data?.data?.recommendations || []);
     }
+
     async function loadReviews() {
         setLoadingReviews(true);
         const data = await getProductReviewsReq(params.parentid);
@@ -172,7 +185,43 @@ export default function Product(){
         }
         const average = total / data.data.reviews.length;
         setAverageRating(Math.round((average * 10)) / 10);
+        return data.data.reviews;
     }
+
+    async function loadRecentOrders(prods, revs) {
+        const sub = getIDToken()?.sub
+        if (!prods || !revs || !sub) return;
+
+        const sevenDaysAgo = Date.now() - (7 * 24 * 3600 * 1000);
+        for (const review of revs){
+            if (review.customerid !== sub) continue;
+            if ((Date.now() - new Date(review.created).getTime()) < sevenDaysAgo){
+                setRecentOrders([])
+                return
+            }
+        }
+        setLoadingRecentOrders(true);
+        const recents = await getUserRecentOrdersReq(sub);
+        setLoadingRecentOrders(false)
+        if (!recents.success){
+            return;
+        }
+        const prodIds = prods.map(p => p.id);
+        const filteredRecents = recents.data.orders.filter(odr => {
+            for (const item of odr.items){
+                if (item.type === "blend") continue;
+                if (prodIds.includes(item.itemid)){
+                    return true
+                };
+            }
+            return false
+        })
+
+        setRecentOrders(filteredRecents);
+    }
+
+
+
 
     async function submitReview(){
         const idToken = getIDToken();
@@ -199,16 +248,29 @@ export default function Product(){
                 return;
             }
         }
+
+        let earnedCredit = 0;
+        if (recentOrders.length > 0){
+            const prodIds = products.map(p => p.id);
+            for (const item of recentOrders[0].items){
+                if (prodIds.includes(item.itemid)){
+                    earnedCredit = ((Number(item.item.price) * Number(item.quantity)) * .05).toFixed(2);
+                    break;
+                }
+            }
+        }
+
         const reviewForm = {
             customerid: idToken.sub,
             productid: params.parentid,
             message: newReviewMessage,
             rating: selectedRating * .5,
-            images: imageUrls
+            images: imageUrls,
+            credit_gained: earnedCredit
         }
         const result = await createReviewReq(reviewForm);
         if (!result.success){
-            toast(result.message, "error")
+            toast(result.message, "error");
             return;
         }
         setNewReviewMessage("");
@@ -217,7 +279,13 @@ export default function Product(){
             URL.revokeObjectURL(f.url);
         }
         setAttachedImages([]);
-        loadReviews()
+        toast("Thank you for your review!", "success");
+        if (earnedCredit > 0){
+            toast(`You've earned $${earnedCredit} in store credit!`, "success");
+            refreshAuth();     
+        }
+
+        loadAll();
     }
     function applyRating(e){
         const ratingRect = e.target.getBoundingClientRect();
@@ -236,7 +304,7 @@ export default function Product(){
         }
         const result = await respondToReviewReq(replyID, {message: replyMessage, isadmin: (userInfo.isAdmin && userInfo.sub !== review.customerid)})
         if (!result.success){
-           toast(result.message, "error")
+            toast(result.message, "error")
             return;
         }
         loadReviews()
@@ -246,7 +314,14 @@ export default function Product(){
 
     async function removeReview(id) {
         const result = await deleteReviewReq(id);
-        loadReviews()
+        if (!result.success){
+            toast(result.message, "error");
+            toast("You may have already spent credit gained from this review!", "info");
+            return;
+        }
+        toast("Review deleted!", "success");
+        refreshAuth();
+        loadAll();
     }
 
     function addImages(e){
@@ -777,6 +852,9 @@ export default function Product(){
             <View
             textAlign={"left"}>
                 <h2 style={{marginBottom: "0"}}> Leave a Review!</h2>
+                {recentOrders.length > 0 &&
+                    <h3 style={{margin: "0", color: "green"}}>Review your recent order of {selectedProduct.name} to earn 5% of its price in store credit!</h3>
+                }
                 <Flex
                 border={"1px solid rgba(161, 45, 27, 0.29)"}
                 borderRadius={"15px"}

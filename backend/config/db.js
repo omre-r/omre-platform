@@ -473,11 +473,10 @@ class Users{
             const query = `UPDATE users SET store_credit = store_credit-$1 WHERE cognito_sub = $2 RETURNING store_credit;`;
             res = await client.query(query, [credit, id]);
             if (!res?.rows?.[0]){
-                throw new DBError("Failed to reduce store credit");
+                throw new DBError("Failed to reduce store credit.");
             }
             if (res.rows[0].store_credit < 0){
-                console.log("it is negative", res.rows[0].store_credit, credit)
-                throw new DBError("Not enough store credit / store credit can not be negative");
+                throw new DBError("Store credit can not be negative.");
             }
         }
         catch(err) {
@@ -980,6 +979,7 @@ class Reviews{
             // responses JSONB DEFAULT '[]'::JSONB,
 
     constructor(){
+        this.users = new Users();
         this.products = new Products();
     }
     
@@ -987,7 +987,7 @@ class Reviews{
         if (!client){
             return prepareRollback((c) => this.createReview(options, c));
         }
-        const {customerid, productid, message, rating, images} = options;
+        const {customerid, productid, message, rating, images, credit_gained} = options;
         const id = uuidv4();
 
         if (rating < 0 || rating > 5){
@@ -1017,9 +1017,16 @@ class Reviews{
         
 
         let result;
-        const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
+        const query = `INSERT INTO reviews (id, customerid, productid, message, rating, images, credit_gained) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`;
         try{
-            result = await client.query(query, [id, customerid, productid, message, rating, JSON.stringify(images)]);
+            result = await client.query(query, [id, customerid, productid, message, rating, JSON.stringify(images), credit_gained]);
+
+            if (credit_gained > 0){
+                const addCredit = await this.users.addStoreCredit(customerid, credit_gained, client);
+                if (!addCredit?.success){
+                    throw new DBError(addCredit.message);
+                }
+            }
         }catch(err){
             console.error(err)
             if (err instanceof DBError) throw err;
@@ -1056,6 +1063,13 @@ class Reviews{
             const result = (await client.query(query, [id]))?.rows?.[0];
             if (!result){
                 throw new DBError("Failed to delete review");
+            }
+
+            if (result.credit_gained > 0){
+                const reduceCredit = await this.users.reduceStoreCredit(result.customerid, result.credit_gained, client);
+                if (!reduceCredit?.success){
+                    throw new DBError(reduceCredit.message);
+                }
             }
 
             // update product rating
@@ -1356,10 +1370,10 @@ class Orders{
             if (!order){
                 throw new DBError("Order does not exist or already canceled.");
             }
-            if (order.store_credit > 0){
-                const reduceCredit = await this.users.reduceStoreCredit(order.customerid, order.store_credit, client);
-                if (!reduceCredit?.success){
-                    throw new DBError(reduceCredit.message);
+            if (order?.store_credit && order.store_credit > 0){
+                const addCredit = await this.users.addStoreCredit(order.customerid, order.store_credit, client);
+                if (!addCredit?.success){
+                    throw new DBError(addCredit.message);
                 }
             }
 

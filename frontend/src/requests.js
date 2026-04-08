@@ -274,11 +274,11 @@ async function updateReviewReq(id, updatedFields){
 }
 
 
-async function createReviewReq({customerid, productid, message, rating, images}){
+async function createReviewReq({customerid, productid, message, rating, images, credit_gained = 0}){
     const response = await fetch(backendURL + `/reviews`, {
         method: "POST",
         headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
-        body: JSON.stringify({customerid, productid, message, rating, images})
+        body: JSON.stringify({customerid, productid, message, rating, images, credit_gained})
     });
     const data = await response.json();
     if (!data.success){

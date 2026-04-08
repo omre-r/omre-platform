@@ -381,14 +381,7 @@ async function checkout() {
     return;
   }
 
-  let earnedCredit = total;
-  if (usingStoreCredit && userInfo.store_credit){
-    earnedCredit -= userInfo.store_credit
-  }
-  earnedCredit = (earnedCredit * .05).toFixed(2);
-
   try {
-
     const response = await createOrderReq({ customerid, storeCredit: usingStoreCredit && userInfo?.store_credit ? userInfo?.store_credit : 0 });
     if (!response?.success) {
       const backendMessage = response?.message || "";
@@ -401,16 +394,6 @@ async function checkout() {
       return;
     }
     await clearCartReq(customerid);
-
-    if (earnedCredit > 0){
-      const addCredit = await addStoreCreditReq(getIDToken()?.sub, earnedCredit);
-      if (!addCredit.success){
-        toast("Failed to add store credit.");
-      }else{
-        toast(`You've earned $${earnedCredit} in store credit!`, "success");
-      }
-      
-    }
     
     setCart([]);
     toast("Order placed successfully!", "success");   
