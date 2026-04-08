@@ -371,11 +371,22 @@ async function getUserOrdersReq(customerid){
     return data;
 }
 
+async function getUserRecentOrdersReq(customerid){
+    const response = await fetch(backendURL + `/orders/user/${customerid}/recent`, {
+        headers: {"Authorization": `Bearer ${getToken()}`}
+    });
+    const data = await response.json();
+    if (!data.success){
+        console.error(data.message || "req failed");
+    }
+    return data;
+}
+
 async function createOrderReq({customerid, storeCredit = 0}){
     const response = await fetch(backendURL + `/orders`, {
         method: "POST",
         headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
-        body: JSON.stringify({customerid})
+        body: JSON.stringify({customerid, storeCredit})
     });
     const data = await response.json();
     if (!data.success){
@@ -819,6 +830,7 @@ createOrderReq = handleError(createOrderReq);
 deleteOrderReq = handleError(deleteOrderReq);
 getUserOrdersReq = handleError(getUserOrdersReq);
 getOrdersReq = handleError(getOrdersReq);
+getUserRecentOrdersReq = handleError(getUserRecentOrdersReq);
 
 // Blends
 saveBlendReq = handleError(saveBlendReq);
@@ -855,7 +867,7 @@ createProductAWSReq = handleError(createProductAWSReq);
 createProductAWSFlowReq = handleError(createProductAWSFlowReq);
 
 export {
-    getUserReq, getUsersReq, createUserReq, deleteUserReq, updateLastLoginReq, getFilteredUsersReq, updatePreferredNotesReq, addStoreCreditReq, reduceStoreCreditReq,
+    getUserReq, getUsersReq, createUserReq, deleteUserReq, updateLastLoginReq, getFilteredUsersReq, updatePreferredNotesReq, addStoreCreditReq, reduceStoreCreditReq, getUserRecentOrdersReq,
     getProductReq, getRelatedProductsReq, updateProductReq, updateProductStockReq, deleteProductReq, getActiveProductsReq, createProductReq, getProductsReq, getFilteredProductsReq,
     getProductReviewsReq, getUserReviewsReq, updateReviewReq, createReviewReq, getReviewsReq, deleteReviewReq, respondToReviewReq,
     cancelOrderReq, updateOrderStatusReq, getOrderReq, createOrderReq, deleteOrderReq, getUserOrdersReq, getOrdersReq, getFilteredOrdersReq,

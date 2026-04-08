@@ -443,12 +443,15 @@ class Users{
 
     async addStoreCredit(id, credit, client) {
         if (!client){
-            return prepareRollback((c) => this.addStoreCredit(id, amount, c));
+            return prepareRollback((c) => this.addStoreCredit(id, credit, c));
         }
-
+        if (isNaN(credit)){
+            throw new DBError("Credit is not a number")
+        }
+        let res;
         try{
-            const query = `UPDATE users SET store_credit = store_credit+$1 WHERE cognito_sub = $2;`;
-            const res = await client.query(query, [credit, id]);
+            const query = `UPDATE users SET store_credit = store_credit+$1 WHERE cognito_sub = $2 RETURNING store_credit;`;
+            res = await client.query(query, [Number(credit), id]);
             if (!res?.rows?.[0]){
                 throw new DBError("Failed to add store credit");
             }
@@ -458,21 +461,22 @@ class Users{
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to add store credit");
         }
-        return { success: true };
+        return { success: true, store_credit: res.rows[0].store_credit };
     }
 
     async reduceStoreCredit(id, credit, client) {
         if (!client){
-            return prepareRollback((c) => this.addStoreCredit(id, amount, c));
+            return prepareRollback((c) => this.reduceStoreCredit(id, credit, c));
         }
-
+        let res;
         try{
             const query = `UPDATE users SET store_credit = store_credit-$1 WHERE cognito_sub = $2 RETURNING store_credit;`;
-            const res = await client.query(query, [credit, id]);
+            res = await client.query(query, [credit, id]);
             if (!res?.rows?.[0]){
                 throw new DBError("Failed to reduce store credit");
             }
             if (res.rows[0].store_credit < 0){
+                console.log("it is negative", res.rows[0].store_credit, credit)
                 throw new DBError("Not enough store credit / store credit can not be negative");
             }
         }
@@ -481,7 +485,7 @@ class Users{
             if (err instanceof DBError) throw err;
             throw new DBError("Failed to reduce store credit");
         }
-        return { success: true };
+        return { success: true, store_credit: res.rows[0].store_credit };
     }
 }
 
@@ -1296,7 +1300,7 @@ class Orders{
             }
             
             if (storeCredit > 0){
-                const reduceCredit = this.users.reduceStoreCredit(customerid, Math.min(storeCredit, total), client);
+                const reduceCredit = await this.users.reduceStoreCredit(customerid, Math.min(storeCredit, total), client);
                 if (!reduceCredit?.success){
                     throw new DBError(reduceCredit.message);
                 }
@@ -1304,7 +1308,7 @@ class Orders{
             
 
             const id = uuidv4()
-            const query = `INSERT INTO orders (id, customerid, items, total, store_credit) VALUES ($1, $2, $3, $4) RETURNING *;`;
+            const query = `INSERT INTO orders (id, customerid, items, total, store_credit) VALUES ($1, $2, $3, $4, $5) RETURNING *;`;
             order = (await client.query(query, [id, customerid, JSON.stringify(items), total, storeCredit])).rows[0];
         }catch(err){
             console.error(err)
@@ -1353,9 +1357,9 @@ class Orders{
                 throw new DBError("Order does not exist or already canceled.");
             }
             if (order.store_credit > 0){
-                const addCredit = this.users.addStoreCredit(customerid, order.store_credit, client);
-                if (!addCredit?.success){
-                    throw new DBError(addCredit.message);
+                const reduceCredit = await this.users.reduceStoreCredit(order.customerid, order.store_credit, client);
+                if (!reduceCredit?.success){
+                    throw new DBError(reduceCredit.message);
                 }
             }
 
@@ -1440,6 +1444,32 @@ class Orders{
         FROM orders 
         JOIN users ON orders.customerid = users.cognito_sub 
         WHERE orders.customerid = $1`
+        let orders;
+
+        try{
+            const res = await client.query(query, [customerid]);
+            orders = res.rows
+        }catch(err){
+            console.error(err);
+            if (err instanceof DBError) throw err;
+            throw new DBError("Failed to get customer orders")
+        }
+        return {success: true, data: {orders}}
+    }
+
+    async getUserRecentOrders(customerid, client){
+        if (!client){
+            return prepareRollback((c) => this.getUserRecentOrders(customerid, c));
+        }
+
+        const query = `
+        SELECT orders.*, users.email
+        FROM orders 
+        JOIN users ON orders.customerid = users.cognito_sub 
+        WHERE orders.customerid = $1 AND 
+        orders.created >  NOW() - INTERVAL '7 days' AND 
+        orders.status = 'fulfilled'
+        LIMIT 10`
         let orders;
 
         try{

@@ -122,6 +122,8 @@ app.get("/reviews", controllers.getReviews)
 
 
 // orders
+app.get("/orders/user/:customerid/recent", [verifyToken], controllers.getUserRecentOrders)
+
 app.put("/orders/cancel/:id", [verifyToken], controllers.cancelOrder)
 app.get("/orders/user/:customerid", [verifyToken], controllers.getUserOrders)
 

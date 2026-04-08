@@ -401,6 +401,18 @@ async function getUserOrders(req, res) {
   return res.json(result);
 }
 
+
+// path: GET /orders/user/:customerid/recent
+async function getUserRecentOrders(req, res) {
+  const {customerid} = req.params;
+  const result = await orders.getUserRecentOrders(customerid);
+  if (!result.success){
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+
 // path: POST /orders
 async function createOrder(req, res) {
   const {customerid, storeCredit} = req.body
@@ -836,6 +848,7 @@ createOrder = handleError(createOrder);
 deleteOrder = handleError(deleteOrder);
 updateOrderStatus = handleError(updateOrderStatus);
 getUserOrders = handleError(getUserOrders);
+getUserRecentOrders = handleError(getUserRecentOrders);
 getFilteredOrders = handleError(getFilteredOrders);
 getOrders = handleError(getOrders);
 
@@ -866,7 +879,7 @@ module.exports = {
   getUser, getUsers, createUser, deleteUser, updateLastLogin, getFilteredUsers, updatePreferredNotes, addStoreCredit, reduceStoreCredit,
   getProduct, getRelatedProducts, updateProduct, updateProductStock, deleteProduct, getActiveProducts, createProduct, getProducts, getFilteredProducts, 
   getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview, respondToReview,
-  cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders, getFilteredOrders,
+  cancelOrder, getOrder, createOrder, deleteOrder, updateOrderStatus,getUserOrders, getOrders, getFilteredOrders, getUserRecentOrders,
   saveBlend, getUserBlends, deleteUserBlend, getBlendById,
   createCartItem, deleteCartItem, getCart, clearCart, updateCart, sendContactEmail,
   createSavedItem, deleteSavedItem, getSavedItems, clearSavedItems, updateSavedItems,
