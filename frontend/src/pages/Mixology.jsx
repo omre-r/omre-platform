@@ -26,6 +26,7 @@ import LuxuryBackground from "../assets/Luxury Background2.png";
 import Omre2 from "../assets/Mixology/OMRE2.png";
 import BottleFill from "../components/BottleFill";
 import { useToast } from "../components/ToastContext";
+import LoadingScreen from "../components/LoadingScreen";
 
 /*
 Custom Styles ------------------------------------------------------------------------------------------------
@@ -127,6 +128,9 @@ const buttonStyling = {
 export default function Mixology() {
   const { toast } = useToast();
   const [blendLoading, setBlendLoading] = useState(false); // prevents double clicks
+
+  //showLoaderState
+  const [showLoader, setShowLoader] = useState(true);
 
   // Set cologne choices --------------------------------------------------------
   const [cologne1Id, setCologne1Id] = useState("");
@@ -481,6 +485,8 @@ export default function Mixology() {
   const sortedProducts = [...products].sort((a, b) =>
     a.name.localeCompare(b.name),
   );
+
+  if (showLoader) return <LoadingScreen onDone={() => setShowLoader(false)} />;
 
   return (
     <>
