@@ -13,6 +13,7 @@ import ContactUs from "./pages/ContactUs";
 import Cart from "./pages/Cart";
 import Product from "./pages/Product";
 import Profile from "./pages/Profile";
+import ScrollToTop from "./components/ScrollToTop";
 import { ToastProvider } from "./components/ToastContext";
 
 import "./App.css";
@@ -22,6 +23,7 @@ function App() {
     <ToastProvider>
       <div>
         <Router>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/Auth" element={<Auth />} />
