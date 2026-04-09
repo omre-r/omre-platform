@@ -959,6 +959,7 @@ export default function Cart() {
             {recommendations.map((prod) => (
               <Card
                 key={prod.id}
+                className="product-card-hover"
                 variation="elevated"
                 width="13.5rem"
                 padding="1rem"

@@ -615,6 +615,7 @@ export default function Home() {
               return (
                 <Card
                   key={prod.id}
+                  className="product-card-hover"
                   variation="elevated"
                   width="16rem"
                   minHeight="26rem"
