@@ -486,10 +486,9 @@ export default function Mixology() {
     a.name.localeCompare(b.name),
   );
 
-  if (showLoader) return <LoadingScreen onDone={() => setShowLoader(false)} />;
-
   return (
     <>
+      {showLoader && <LoadingScreen onDone={() => setShowLoader(false)} />}
       <Navbar />
       <View
         width="100%"
