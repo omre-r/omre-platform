@@ -34,9 +34,8 @@ import SearchIcon from "../assets/search_icon.png";
 import CustomMixImage from "../assets/CustomMixImage.png";
 import { useToast } from "../components/ToastContext";
 import { useAuth } from "../context/AuthContext";
-import { useContext } from "react";
 
-// Fonts ----------------------------------------------
+// Fonts with custom sizing and weights ----------------------------------------------
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 800,
@@ -49,6 +48,12 @@ const luxuryHeadingStyle2 = {
   fontSize: "2.0rem",
   letterSpacing: "0.5px",
 };
+
+const whiteLuxuryHeadingStyle2 = {
+  ...luxuryHeadingStyle2,
+  color: "#FFFFFF",
+};
+
 const luxurySubheadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 600,
@@ -87,6 +92,8 @@ const tableBodyStyle = {
   color: "#ffffff",
 };
 
+// Other styles for the page ------------------------------------------------
+// Card style used for overview section and other places on the page, has luxury feel with dark background and shadows
 const cardStyle = {
   background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
   borderRadius: "14px",
@@ -97,6 +104,7 @@ const cardStyle = {
   border: "1px solid rgba(255, 255, 255, 0.25)",
 };
 
+// Creating the view style of the table to reuse the style
 const tableViewStyle = {
   padding: "1.2rem 1.5rem",
   border: "1px solid rgba(255,255,255,0.35)",
@@ -113,6 +121,7 @@ const tableViewStyle = {
   boxSizing: "border-box",
 };
 
+// Styling of buttons across pages, used for things like add to cart, save notes, cancel order, etc. Has luxury feel with dark background and shadows
 const buttonStyling = {
   ...luxuryBodyStyle,
   fontSize: "1.2rem",
@@ -124,6 +133,23 @@ const buttonStyling = {
   cursor: "pointer",
   boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
   transition: "all 0.2s ease",
+};
+
+// Style for order items
+const orderItemStyle = {
+  width: "220px",
+  padding: "0.9rem",
+  borderRadius: "16px",
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.15)",
+  boxShadow: "0 4px 10px rgba(0,0,0,0.18)",
+  textAlign: "left",
+};
+
+const imageStyling = {
+  borderRadius: "14px",
+  overflow: "hidden",
+  border: "2px solid rgba(0,0,0,0.55)",
 };
 
 export default function Profile() {
@@ -140,9 +166,9 @@ export default function Profile() {
   const [ordersLoading, setOrdersLoading] = useState(false);
 
   // User information states -----------------------------
-  const [firstName, setfirstName] = useState("");
-  const [lastName, setlastName] = useState("");
-  const [email, setemailName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [createdAt, setCreatedAt] = useState("");
 
   // Grabbing user order statistics --------------------------------------------
@@ -186,6 +212,7 @@ export default function Profile() {
   const [orderIdSearch, setOrderIdSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  // Fragrances notes user can select, can add or remove any amount of notes -------------------------------------------------------
   const fragranceNotes = [
     "Almond",
     "Amber",
@@ -222,6 +249,7 @@ export default function Profile() {
     "Yuzu",
   ];
 
+  // Helper function to get customer ID from auth session, used in multiple places to know which user information to load or update when making requests to the backend --------------------------------------
   async function getCustomerId() {
     try {
       const session = await fetchAuthSession();
@@ -248,18 +276,9 @@ export default function Profile() {
     }
   }
 
+  // Load user created blends from backend --------------------------------
   async function loadBlends() {
-    let userid;
-    for (let key of Object.keys(localStorage)) {
-      if (key.includes("idToken")) {
-        const idToken = localStorage.getItem(key);
-        const base64 = idToken.split(".")[1];
-        const decoded = JSON.parse(atob(base64));
-        userid = decoded.sub;
-        break;
-      }
-    }
-
+    const userid = await getCustomerId();
     try {
       const data = await getUserSavedBlendsReq(userid);
       if (!data.success) {
@@ -271,18 +290,9 @@ export default function Profile() {
     }
   }
 
+  // Delete a user created blend --------------------------------
   async function handleDeleteBlend(blendId) {
-    let userid;
-    for (let key of Object.keys(localStorage)) {
-      if (key.includes("idToken")) {
-        const idToken = localStorage.getItem(key);
-        const base64 = idToken.split(".")[1];
-        const decoded = JSON.parse(atob(base64));
-        userid = decoded.sub;
-        break;
-      }
-    }
-
+    const userid = await getCustomerId();
     try {
       const data = await deleteUserBlendReq(userid, blendId);
       if (!data.success) {
@@ -303,18 +313,8 @@ export default function Profile() {
   // Making sure that we create the payload, check userid, product stock,
   async function handleAddSavedBlendToCart(savedBlend) {
     setBlendLoading(true);
-
     try {
-      let userid;
-      for (let key of Object.keys(localStorage)) {
-        if (key.includes("idToken")) {
-          const idToken = localStorage.getItem(key);
-          const base64 = idToken.split(".")[1];
-          const decoded = JSON.parse(atob(base64));
-          userid = decoded.sub;
-          break;
-        }
-      }
+      const userid = await getCustomerId();
       if (!userid) {
         toast("User not found. Please log in again.", "error");
         return;
@@ -347,17 +347,7 @@ export default function Profile() {
 
   // function to save user selected fragrances to profile ------------------------------------------
   async function saveFragranceToProfile() {
-    let userid;
-    for (let key of Object.keys(localStorage)) {
-      if (key.includes("idToken")) {
-        const idToken = localStorage.getItem(key);
-        const base64 = idToken.split(".")[1];
-        const decoded = JSON.parse(atob(base64));
-        userid = decoded.sub;
-        break;
-      }
-    }
-
+    const userid = await getCustomerId();
     // update preferred notes sending the selectedNotes array with userId
     try {
       const data = await updatePreferredNotesReq(userid, selectedNotes);
@@ -372,16 +362,7 @@ export default function Profile() {
 
   // Function to clear notes from user profile --------------------------------------------------------------------
   async function clearAllNotes() {
-    let userid;
-    for (let key of Object.keys(localStorage)) {
-      if (key.includes("idToken")) {
-        const idToken = localStorage.getItem(key);
-        const base64 = idToken.split(".")[1];
-        const decoded = JSON.parse(atob(base64));
-        userid = decoded.sub;
-        break;
-      }
-    }
+    const userid = await getCustomerId();
 
     try {
       // Clear the users selected notes with empty array
@@ -400,16 +381,7 @@ export default function Profile() {
   // Will have them displayed on overview and favorite notes ta
   // Favorite notes tab will have buttons pressed because the array will be loaded
   async function loadUserInformation() {
-    let userid;
-    for (let key of Object.keys(localStorage)) {
-      if (key.includes("idToken")) {
-        const idToken = localStorage.getItem(key);
-        const base64 = idToken.split(".")[1];
-        const decoded = JSON.parse(atob(base64));
-        userid = decoded.sub;
-        break;
-      }
-    }
+    const userid = await getCustomerId();
     try {
       const data = await getUserReq(userid);
 
@@ -419,9 +391,9 @@ export default function Profile() {
 
       const user = data.data.user;
 
-      setfirstName(user.first_name || "Null");
-      setlastName(user.last_name || "");
-      setemailName(user.email || "Null");
+      setFirstName(user.first_name || "Null");
+      setLastName(user.last_name || "");
+      setEmail(user.email || "Null");
       setCreatedAt(user.created_at || "Null");
 
       const notesString = user.favorite_notes || "";
@@ -438,20 +410,12 @@ export default function Profile() {
     }
   }
 
+  // Load user orders ---------------------------------
   async function loadUserOrders() {
-    let userid;
-    for (let key of Object.keys(localStorage)) {
-      if (key.includes("idToken")) {
-        const idToken = localStorage.getItem(key);
-        const base64 = idToken.split(".")[1];
-        const decoded = JSON.parse(atob(base64));
-        userid = decoded.sub;
-        break;
-      }
-    }
-
+    const userid = await getCustomerId();
     setOrdersLoading(true);
     try {
+      // Call getUserOrdersReq with user id that specifies specific user orders to load
       const orders = await getUserOrdersReq(userid);
       if (!orders.success) {
         throw new Error(orders.message);
@@ -473,6 +437,7 @@ export default function Profile() {
           items: parsedItems || [],
         };
       });
+      // Sort orders by date created with most recent first
       parsedOrders.sort((a, b) => new Date(b.created) - new Date(a.created));
       setUserOrders(parsedOrders);
     } catch (error) {
@@ -482,14 +447,16 @@ export default function Profile() {
     }
   }
 
-  // load users saved items -------------------------------------------
+  // Load users saved items --------------------------------------------------------------
   async function loadSavedItems() {
+    // Grab customer id to know which saved items to load
     const customerid = await getCustomerId();
     if (!customerid) {
       setLoadingSavedItems(false);
       return;
     }
     try {
+      // Request to get saved items for that customer id, will return array of saved items with itemid and type (blend or product)
       const response = await getSavedItemsReq(customerid);
       const savedItemRows = response?.data?.savedItems || [];
       if (!Array.isArray(savedItemRows) || savedItemRows.length === 0) {
@@ -497,10 +464,12 @@ export default function Profile() {
         return;
       }
 
+      // Grab full product info of saved item
       const fullSavedItems = await Promise.all(
         savedItemRows.map(async (row) => {
           let item;
 
+          // If saved item is blend we need to grab its specific information
           if (row.type === "blend") {
             const blendRes = await getBlendByIdReq(row.itemid);
             const blend = blendRes?.data?.data?.blend || blendRes?.data?.blend;
@@ -543,7 +512,9 @@ export default function Profile() {
               images: imageArray,
               size_ml: blend.size_ml,
             };
-          } else {
+          }
+          // If saved item is product we just grab the product information
+          else {
             const productRes = await getProductReq(row.itemid);
             item = productRes?.data?.product;
             if (!item || item.ishidden) {
@@ -556,6 +527,7 @@ export default function Profile() {
         }),
       );
 
+      // Set saved items state
       setSavedItems(fullSavedItems.filter(Boolean));
     } catch (err) {
       console.error(err);
@@ -565,7 +537,7 @@ export default function Profile() {
     }
   }
 
-  // Remove a saved item -------------------------------------------
+  // Remove a saved item ----------------------------------------------------------------------
   async function removeSavedItem(savedItem) {
     const deletedItem = await deleteSavedItemReq(savedItem.id);
     if (!deletedItem.success) {
@@ -576,7 +548,7 @@ export default function Profile() {
     toast(deletedItem.message || "Item has been removed.", "success");
   }
 
-  // Add saved item to cart ----------------------------------
+  // Add saved item to cart --------------------------------------------------------------------
   async function addToCart(savedItem) {
     const newCartItem = await createCartItemReq({
       customerid: savedItem.customerid,
@@ -588,10 +560,9 @@ export default function Profile() {
       return;
     }
     toast(newCartItem.message || "Item added to cart.", "success");
-    loadCart();
   }
 
-  // Cancel Order
+  // Cancel Order ------------------------------------------------------------------------------
   async function cancelOrder(orderId, reason) {
     try {
       const data = await cancelOrderReq(orderId, reason);
@@ -608,12 +579,26 @@ export default function Profile() {
     }
   }
 
-  // Get product ID from product object, accounting for different possible key names ---------------------------
+  async function handleOrderSearch() {
+    try {
+      const res = await getFilteredOrdersReq({
+        id: orderIdSearch,
+      });
+      const sortedOrders = [...(res.data.orders || [])].sort(
+        (a, b) => new Date(b.created) - new Date(a.created),
+      );
+      setUserOrders(sortedOrders);
+    } catch (error) {
+      toast(error.message || "Error searching orders.", "error");
+    }
+  }
+
+  // Get product ID from product object, accounting for different possible key names -------------------------------------------
   function getProductId(product) {
     return product.productid || product.product_id || product.id;
   }
 
-  // Grab the product name by using the ID ------------------------------------------
+  // Grab the product name by using the ID ----------------------------------------------------------------------------------
   // Remove the inspired by text splitting the string
   function getProductNameById(productId) {
     if (!productId) {
@@ -649,7 +634,7 @@ export default function Profile() {
     };
   }
 
-  // Toggle Note -----------------------------------------------------------
+  // Toggle Note ---------------------------------------------------------------------------------------------
   // Once note is toggled you take that note and add/remove it from selectedNotes array
   // Can toggle multiple notes
   // Toggles a note in selectedNotes
@@ -660,6 +645,7 @@ export default function Profile() {
     });
   };
 
+  // Based on status color will change to one of these -------------------------------------------------------
   const statusStyles = {
     pending: "#ff6117",
     mixing: "#d3006d",
@@ -749,7 +735,7 @@ export default function Profile() {
               </Text>
               <Grid templateColumns="repeat(2, 1fr)" gap="1.5rem">
                 <View style={cardStyle}>
-                  <Text style={{ ...luxuryHeadingStyle2, color: "#FFFFFF" }}>
+                  <Text style={{ ...whiteLuxuryHeadingStyle2 }}>
                     Account Information
                   </Text>
 
@@ -769,7 +755,7 @@ export default function Profile() {
                   </Text>
                 </View>
                 <View style={cardStyle}>
-                  <Text style={{ ...luxuryHeadingStyle2, color: "#FFFFFF" }}>
+                  <Text style={{ ...whiteLuxuryHeadingStyle2 }}>
                     Order Statistics
                   </Text>
                   <Text
@@ -783,7 +769,7 @@ export default function Profile() {
                   </Text>
                 </View>
                 <View style={cardStyle}>
-                  <Text style={{ ...luxuryHeadingStyle2, color: "#FFFFFF" }}>
+                  <Text style={{ ...whiteLuxuryHeadingStyle2 }}>
                     Mixology Statistics
                   </Text>
                   <Text
@@ -797,7 +783,7 @@ export default function Profile() {
                   </Text>
                 </View>
                 <View style={cardStyle}>
-                  <Text style={{ ...luxuryHeadingStyle2, color: "#FFFFFF" }}>
+                  <Text style={{ ...whiteLuxuryHeadingStyle2 }}>
                     Favorite Notes:
                   </Text>
 
@@ -829,14 +815,9 @@ export default function Profile() {
                     value={orderIdSearch}
                     onChange={(e) => setOrderIdSearch(e.target.value)}
                     onKeyDown={async (e) => {
-                      if (e.key !== "Enter") return;
-                      const res = await getFilteredOrdersReq({
-                        id: orderIdSearch,
-                      });
-                      const sortedOrders = [...(res.data.orders || [])].sort(
-                        (a, b) => new Date(b.created) - new Date(a.created),
-                      );
-                      setUserOrders(sortedOrders);
+                      if (e.key !== "Enter") {
+                        await handleOrderSearch();
+                      }
                     }}
                     style={{
                       width: "300px",
@@ -885,14 +866,10 @@ export default function Profile() {
                       transform: "translateY(-50%)",
                       cursor: "pointer",
                     }}
-                    onClick={async () => {
-                      const res = await getFilteredOrdersReq({
-                        id: orderIdSearch,
-                      });
-                      const sortedOrders = [...(res.data.orders || [])].sort(
-                        (a, b) => new Date(b.created) - new Date(a.created),
-                      );
-                      setUserOrders(sortedOrders);
+                    onKeyDown={async (e) => {
+                      if (e.key !== "Enter") {
+                        await handleOrderSearch();
+                      }
                     }}
                   >
                     <img
@@ -1039,25 +1016,13 @@ export default function Profile() {
                                           <View
                                             key={index}
                                             style={{
-                                              width: "220px",
-                                              padding: "0.9rem",
-                                              borderRadius: "16px",
-                                              background:
-                                                "rgba(255,255,255,0.06)",
-                                              border:
-                                                "1px solid rgba(255,255,255,0.15)",
-                                              boxShadow:
-                                                "0 4px 10px rgba(0,0,0,0.18)",
-                                              textAlign: "left",
+                                              ...orderItemStyle,
                                             }}
                                           >
                                             {orderItem.item.images?.[0] && (
                                               <View
                                                 style={{
-                                                  borderRadius: "14px",
-                                                  overflow: "hidden",
-                                                  border:
-                                                    "2px solid rgba(0,0,0,0.55)",
+                                                  ...imageStyling,
                                                   marginBottom: "0.75rem",
                                                 }}
                                               >
@@ -1097,24 +1062,12 @@ export default function Profile() {
                                           <View
                                             key={index}
                                             style={{
-                                              width: "220px",
-                                              padding: "0.9rem",
-                                              borderRadius: "16px",
-                                              background:
-                                                "rgba(255,255,255,0.06)",
-                                              border:
-                                                "1px solid rgba(255,255,255,0.15)",
-                                              boxShadow:
-                                                "0 4px 10px rgba(0,0,0,0.18)",
-                                              textAlign: "left",
+                                              ...orderItemStyle,
                                             }}
                                           >
                                             <View
                                               style={{
-                                                borderRadius: "14px",
-                                                overflow: "hidden",
-                                                border:
-                                                  "2px solid rgba(0,0,0,0.55)",
+                                                ...imageStyling,
                                                 marginBottom: "0.75rem",
                                               }}
                                             >
@@ -1344,9 +1297,7 @@ export default function Profile() {
                           >
                             <View
                               style={{
-                                borderRadius: "14px",
-                                overflow: "hidden",
-                                border: "2px solid rgba(0,0,0,0.55)",
+                                ...imageStyling,
                               }}
                             >
                               <img
@@ -1557,10 +1508,7 @@ export default function Profile() {
                                       {matchedProduct.images?.[0] && (
                                         <View
                                           style={{
-                                            borderRadius: "14px",
-                                            overflow: "hidden",
-                                            border:
-                                              "2px solid rgba(0,0,0,0.55)",
+                                            ...imageStyling,
                                             marginBottom: "0.75rem",
                                           }}
                                         >
@@ -1789,7 +1737,7 @@ export default function Profile() {
                   textAlign: "center",
                 }}
               >
-                <Text style={{ ...luxuryHeadingStyle2, color: "White" }}>
+                <Text style={{ ...whiteLuxuryHeadingStyle2 }}>
                   Cancel Order?
                 </Text>
                 <Text
