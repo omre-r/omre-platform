@@ -158,3 +158,10 @@ button.amplify-togglebutton {
 .toast-exit {
   animation: toast-slide-out 0.3s ease-in forwards;
 }
+
+.product-card-hover {
+  transition: transform 0.22s ease !important;
+}
+.product-card-hover:hover {
+  transform: translateY(-8px) !important;
+}

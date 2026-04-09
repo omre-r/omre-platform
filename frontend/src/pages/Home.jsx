@@ -222,6 +222,7 @@ export default function Home() {
               return (
                 <Card
                   key={prod.id}
+                  className="product-card-hover"
                   variation="elevated"
                   width="16rem"
                   padding="1.75rem"
@@ -337,6 +338,7 @@ export default function Home() {
             mostPopularProducts.map((prod) => (
               <Card
                 key={prod.id}
+                className="product-card-hover"
                 variation="elevated"
                 minHeight="15rem"
                 width="16rem"
@@ -430,6 +432,7 @@ export default function Home() {
             newestProducts.map((prod) => (
               <Card
                 key={prod.id}
+                className="product-card-hover"
                 variation="elevated"
                 minHeight="15rem"
                 width="16rem"
