@@ -522,52 +522,87 @@ export default function Mixology() {
         </Flex>
         {showInstructions && (
           <Flex justifyContent="center" marginTop="1rem" marginBottom="1rem">
-            <Card
-              width="820px"
-              maxWidth="90%"
-              padding="1.75rem 2rem"
-              backgroundColor="rgba(255, 255, 255, 0.55)"
-              borderRadius="14px"
+            <View
+              style={{
+                width: "820px",
+                maxWidth: "90%",
+                padding: "2rem 2.5rem",
+                background:
+                  "linear-gradient(145deg, #480e0ee2, rgba(20,20,20,0.88))",
+                borderRadius: "18px",
+                border: "1px solid rgba(255,255,255,0.12)",
+                boxShadow: "0 12px 32px rgba(0,0,0,0.35)",
+              }}
             >
-              <View>
-                <Text
-                  style={{
-                    ...luxurySubheadingStyle,
-                    fontSize: "1.35rem",
-                    textDecoration: "underline",
-                  }}
+              <Text
+                style={{
+                  ...luxurySubheadingStyle,
+                  fontSize: "1.5rem",
+                  color: "#f0e6dc",
+                  textAlign: "center",
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  marginBottom: "1.5rem",
+                  display: "block",
+                  borderBottom: "1px solid rgba(255,255,255,0.15)",
+                  paddingBottom: "0.75rem",
+                }}
+              >
+                How to Use Mixology
+              </Text>
+
+              {[
+                "Choose a bottle size — 30ML or 50ML.",
+                "Select your first two fragrances from the dropdown menus.",
+                "Adjust the sliders to control how much of each fragrance is used.",
+                '(Optional) Click "Add 3rd Fragrance" for a more complex blend.',
+                'Click "Add to Cart" to purchase or "Save Fragrance" to store it in your profile.',
+                'Click "Load Blends" to view or reuse blends you previously saved.',
+              ].map((step, i) => (
+                <Flex
+                  key={i}
+                  alignItems="flex-start"
+                  gap="1rem"
+                  marginBottom="1rem"
                 >
-                  Instructions
-                  <br />
-                </Text>
-                <Text
-                  style={{
-                    ...luxurySubheadingStyle,
-                    fontSize: "1.25rem",
-                    textAlign: "Left",
-                  }}
-                >
-                  <br></br>
-                  1. Choose a bottle size (30ML or 50ML). <br></br>
-                  <br></br>
-                  2. Select your first two fragrances from the dropdown menus.{" "}
-                  <br></br>
-                  <br></br>
-                  3. Adjust the sliders to control how much of each fragrance is
-                  used. <br></br>
-                  <br></br>
-                  4. (Optional) Click "Add 3rd Fragrance" if you want a more
-                  complex blend. <br></br>
-                  <br></br>
-                  5. When you are happy with the blend, click "Add to Cart" to
-                  purchase it or "Save Fragrance" to store it in your profile.
-                  <br></br>
-                  <br></br>
-                  6. Click "Load Blends" to view or reuse blends you previously
-                  saved.<br></br>
-                </Text>
-              </View>
-            </Card>
+                  <View
+                    style={{
+                      minWidth: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      background: "rgba(151,33,0,0.72)",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        ...luxuryBodyStyle,
+                        color: "#fff",
+                        fontSize: "1rem",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {i + 1}
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      ...luxuryBodyStyle,
+                      color: "rgba(240,230,220,0.9)",
+                      fontSize: "1.15rem",
+                      lineHeight: "1.6",
+                      paddingTop: "0.2rem",
+                    }}
+                  >
+                    {step}
+                  </Text>
+                </Flex>
+              ))}
+            </View>
           </Flex>
         )}
         <Flex direction="column" alignItems="center" gap="1.25rem">
