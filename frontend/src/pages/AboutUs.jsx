@@ -1,8 +1,9 @@
+// imports
 import { View, Text } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import Navbar from "../components/Navbar";
 import LuxuryBackground from "../assets/Luxury Background2.png";
-
+// styling for texts and buttons
 const headingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 800,
@@ -29,9 +30,10 @@ const dividerStyle = {
 };
 
 export default function AboutUs() {
+  // all the text is written in the code for About us, can not be changed by the admins
   return (
     <>
-      <Navbar />
+      <Navbar /> // navbar import
       <View
         width="100%"
         minHeight="100vh"
@@ -47,9 +49,10 @@ export default function AboutUs() {
         }}
       >
         <div style={{ maxWidth: "680px", margin: "0 auto" }}>
-          {/* PHILOSOPHY */}
+          {/* philosophy */}
           <Text style={headingStyle} marginBottom="1rem" marginTop="2rem">
-            Our Philosophy
+            {" "}
+            // header Our Philosophy
           </Text>
           <hr style={dividerStyle} />
 
@@ -85,9 +88,10 @@ export default function AboutUs() {
             It's what you leave behind.
           </Text>
 
-          {/* STORY */}
+          {/* story */}
           <Text style={headingStyle} marginBottom="1rem" marginTop="2.5rem">
-            Our Story
+            {" "}
+            // story Our Story
           </Text>
           <hr style={dividerStyle} />
 
@@ -148,11 +152,12 @@ export default function AboutUs() {
             The House of OMRÉ
           </Text>
 
-          {/* CLOSING */}
+          {/* closing */}
           <hr style={dividerStyle} />
 
           <Text style={{ ...bodyStyle, fontStyle: "italic", color: "#444" }}>
-            "You don't just wear OMRÉ — you live in it."
+            {" "}
+            // closing remark "You don't just wear OMRÉ — you live in it."
           </Text>
         </div>
       </View>
