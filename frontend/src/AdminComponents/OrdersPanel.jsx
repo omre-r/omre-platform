@@ -1,3 +1,4 @@
+// imports
 import { useEffect, useState } from "react";
 import {
   Card,
@@ -21,7 +22,7 @@ import { RefreshCw } from "lucide-react";
 import SearchIcon from "../assets/search_icon.png";
 import { useToast } from "../components/ToastContext";
 
-// ---------------- STYLES ----------------
+// styles for buttons and texts
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 800,
@@ -50,7 +51,7 @@ const buttonStyling = {
   boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
   transition: "all 0.2s ease",
 };
-
+// statuses
 const statusStyles = {
   pending: "#ff6117",
   mixing: "#d3006d",
@@ -59,7 +60,7 @@ const statusStyles = {
   canceled: "#e22424",
 };
 
-// ---------------- COMPONENT ----------------
+// components
 export default function OrdersPanel() {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -72,7 +73,7 @@ export default function OrdersPanel() {
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   const [emailSearch, setEmailSearch] = useState("");
-
+  // tokens for orders
   async function getToken() {
     try {
       const session = await fetchAuthSession();
@@ -81,7 +82,7 @@ export default function OrdersPanel() {
       return null;
     }
   }
-
+  // loads the orders in from the database
   async function loadOrders() {
     setLoadingOrders(true);
     try {
@@ -93,7 +94,7 @@ export default function OrdersPanel() {
       setLoadingOrders(false);
     }
   }
-
+  // when order selected, it will show the order
   async function viewOrder(orderId) {
     setLoadingOrder(true);
     setSelectedOrder(null);
@@ -118,7 +119,7 @@ export default function OrdersPanel() {
       setLoadingOrder(false);
     }
   }
-
+  // lets admin update order status
   async function updateStatus() {
     if (!selectedOrder) return;
     const token = await getToken();
@@ -126,7 +127,7 @@ export default function OrdersPanel() {
     await viewOrder(selectedOrder.id);
     await loadOrders();
   }
-
+  // lets admin cancel order, if canceled can not be canceled again
   async function cancelOrder(orderId) {
     if (!cancelReason) {
       toast("Please enter a cancellation reason.", "error");
@@ -145,6 +146,7 @@ export default function OrdersPanel() {
   }, []);
 
   if (loadingOrders) {
+    // loads orders
     return (
       <Text style={{ ...luxuryBodyStyle, color: "white" }}>
         Loading orders...
@@ -155,7 +157,7 @@ export default function OrdersPanel() {
   return (
     <Flex direction="column" height="100%">
       <Flex direction="row" gap="1rem" flex="1">
-        {/* LEFT CARD */}
+        {/* left Card, contains list of orders as well as order filters */}
         <Card
           flex="1.2"
           padding="1rem"
@@ -170,10 +172,9 @@ export default function OrdersPanel() {
           }}
         >
           <Flex direction="column">
-            {/* HEADER */}
             <Flex justifyContent="space-between" alignItems="center">
               <Flex gap="10px" alignItems="center">
-                {/* SEARCH */}
+                {/* Order search */}
                 <Flex
                   padding={"10px"}
                   alignItems={"center"}
@@ -262,7 +263,7 @@ export default function OrdersPanel() {
                   </View>
                 </Flex>
 
-                <select
+                <select // filter for products list
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   style={{
@@ -297,7 +298,7 @@ export default function OrdersPanel() {
                   ))}
                 </select>
 
-                <View
+                <View // orders list
                   onClick={loadOrders}
                   style={{
                     width: "50px",
@@ -316,7 +317,7 @@ export default function OrdersPanel() {
                 </View>
               </Flex>
             </Flex>
-            {/* LIST */}
+            {/* list */}
             <View
               className="orders-scroll"
               style={{
@@ -330,6 +331,8 @@ export default function OrdersPanel() {
               }}
             >
               <Flex wrap="wrap" gap="0.6rem">
+                {" "}
+                // color coded and sorted
                 {orders
                   .filter(
                     (o) => statusFilter === "all" || o.status === statusFilter,
@@ -390,7 +393,7 @@ export default function OrdersPanel() {
           </Flex>
         </Card>
 
-        {/* RIGHT CARD */}
+        {/* right card containing the order information, customer, name, total, status, and items */}
         <Card
           flex="1.0"
           height="100%"
@@ -491,7 +494,7 @@ export default function OrdersPanel() {
                     Total: ${selectedOrder.total}
                   </Text>
                 </View>
-                {/* ITEMS SECTION */}
+                {/* items from the order */}
                 <View
                   style={{
                     background:
@@ -590,7 +593,7 @@ export default function OrdersPanel() {
                   </View>
                 </View>
 
-                {/*STATUS*/}
+                {/*status*/}
                 <Flex
                   direction="row"
                   alignItems="center"
@@ -649,7 +652,7 @@ export default function OrdersPanel() {
                   </Button>
                 </Flex>
 
-                {/*CANCEL*/}
+                {/*cancel*/}
                 <Flex
                   direction="row"
                   alignItems="center"
@@ -709,7 +712,7 @@ export default function OrdersPanel() {
                   </View>
                 </Flex>
 
-                {confirmCancel && (
+                {confirmCancel && ( // cancel item with reason, also does not let you cancel again
                   <Card
                     style={{
                       marginTop: "1rem",
