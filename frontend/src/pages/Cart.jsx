@@ -1,3 +1,4 @@
+// Imported functions
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -33,7 +34,7 @@ import {
 import { useToast } from "../components/ToastContext";
 import { useAuth } from "../context/AuthContext";
 
-// custom styles
+// custom styles for text/buttons
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 800,
@@ -61,7 +62,6 @@ const buttonViewStyle = {
   padding: "0.9rem 2.2rem",
   border: "1px solid rgba(255,255,255,0.35)",
   borderRadius: "28px",
-  // navbar color for later reference :  #300a0a
   background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
   cursor: "pointer",
   boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
@@ -89,7 +89,7 @@ export default function Cart() {
     loadSavedItems();
     loadRecommendations();
   }, []);
-
+  // to get the customers cart
   async function getCustomerId() {
     try {
       const session = await fetchAuthSession();
@@ -102,7 +102,7 @@ export default function Cart() {
       return null;
     }
   }
-
+  // to load the items into the cart
   async function loadCart() {
     const customerid = await getCustomerId();
     if (!customerid) {
@@ -129,8 +129,8 @@ export default function Cart() {
               return null;
             }
             let price = 0;
-            if (blend.size_ml === 30) price = 50;
-            if (blend.size_ml === 50) price = 75;
+            if (blend.size_ml === 30) price = 50; // general price
+            if (blend.size_ml === 50) price = 75; // general price
             const frag1Res = await getProductReq(blend.frag1_productid);
             const frag2Res = await getProductReq(blend.frag2_productid);
             const frag1 =
@@ -139,6 +139,7 @@ export default function Cart() {
               frag2Res?.data?.data?.product || frag2Res?.data?.product;
             let frag3 = null;
             if (blend.frag3_productid) {
+              // Only if third fragrance selected
               const frag3Res = await getProductReq(blend.frag3_productid);
               frag3 = frag3Res?.data?.data?.product || frag3Res?.data?.product;
             }
@@ -186,7 +187,7 @@ export default function Cart() {
       setLoadingCart(false);
     }
   }
-
+  // Loads items saved for later
   async function loadSavedItems() {
     const customerid = await getCustomerId();
     if (!customerid) {
@@ -268,7 +269,7 @@ export default function Cart() {
       setLoadingSavedItems(false);
     }
   }
-
+  // loads recommended products based on user info
   async function loadRecommendations() {
     const idToken = getIDToken();
     if (!idToken || !idToken?.sub) {
@@ -280,7 +281,7 @@ export default function Cart() {
     setLoadingRecommendations(false);
     setRecommendations(data?.data?.recommendations || []);
   }
-
+  // moves items into saved for later on click
   async function moveToSaved(cartitem) {
     const savedItem = await createSavedItemReq({
       customerid: cartitem.customerid,
@@ -303,7 +304,7 @@ export default function Cart() {
     loadCart();
     loadSavedItems();
   }
-
+  // moves saved for later items back into the cart
   async function addToCart(savedItem) {
     const newCartItem = await createCartItemReq({
       customerid: savedItem.customerid,
@@ -316,7 +317,7 @@ export default function Cart() {
     }
     loadCart();
   }
-
+  // deletes the saved for later item from the saved for later database
   async function removeSavedItem(savedItem) {
     const deletedItem = await deleteSavedItemReq(savedItem.id);
     if (!deletedItem.success) {
@@ -325,7 +326,7 @@ export default function Cart() {
     }
     loadSavedItems();
   }
-
+  // removes item from cart
   async function removeItem(id) {
     try {
       await deleteCartItemReq(id);
@@ -335,6 +336,7 @@ export default function Cart() {
       toast("Failed to remove item.", "error");
     }
   }
+  // increases item quantity, limit of 10
   async function increaseQuantity(id) {
     const customerid = await getCustomerId();
     if (!customerid) return;
@@ -356,7 +358,7 @@ export default function Cart() {
       })),
     );
   }
-
+  // decreases item quantity
   async function decreaseQuantity(id) {
     const customerid = await getCustomerId();
     if (!customerid) return;
@@ -376,7 +378,7 @@ export default function Cart() {
       })),
     );
   }
-
+  // items are purchased and sent to the orders database
   async function checkout() {
     const customerid = await getCustomerId();
     if (!customerid) return;
@@ -421,8 +423,7 @@ export default function Cart() {
 
   return (
     <>
-      <Navbar />
-
+      <Navbar /> // imports and places the nav bar
       <View
         width="100%"
         minHeight="100vh"
@@ -471,7 +472,7 @@ export default function Cart() {
               gap="2rem"
               style={{ minWidth: "1050px" }}
             >
-              {/* LEFT 67% */}
+              {/* LEFT 67% of the card, order information including item, quantity, price, and picture, also increase and decrease buttons */}
               <Flex width="67%" direction={"column"}>
                 <View>
                   {cart.map((cartItem) => (
@@ -496,6 +497,8 @@ export default function Cart() {
                           alignItems="center"
                         >
                           <Flex alignItems="center" gap="1.5rem">
+                            {" "}
+                            // Cart items
                             {cartItem.item?.images?.[0] && (
                               <img
                                 src={cartItem.item.images[0]}
@@ -513,8 +516,9 @@ export default function Cart() {
                                 }}
                               />
                             )}
-
                             <View textAlign={"left"}>
+                              {" "}
+                              // cart items information
                               <Text
                                 style={{
                                   ...luxuryBodyStyle,
@@ -567,7 +571,7 @@ export default function Cart() {
                               </Text>
                             </View>
 
-                            <View
+                            <View // cart item quantity
                               style={{
                                 ...buttonViewStyle,
                                 borderRadius: "10px",
@@ -615,6 +619,8 @@ export default function Cart() {
                           </Flex>
                         </Flex>
                         <View>
+                          {" "}
+                          // save for later button
                           <View width={"fit-content"} marginLeft={"auto"}>
                             {savedItems.some(
                               (saved) => cartItem.itemid === saved.itemid,
@@ -663,7 +669,7 @@ export default function Cart() {
                 </View>
               </Flex>
 
-              {/* RIGHT 33% */}
+              {/* RIGHT 33% including checkout, total, items list. */}
               <View
                 width="33%"
                 backgroundColor="rgba(255,255,255,0.18)"
@@ -677,7 +683,7 @@ export default function Cart() {
                   Order Summary
                 </Text>
 
-                {/* Each item mapped above the total -------------------------------------- */}
+                {/* Each item organized above the total */}
                 {cart.map((cartItem) => (
                   <Flex
                     key={cartItem.id}
@@ -801,6 +807,8 @@ export default function Cart() {
         )}
 
         <View minWidth={"500px"} maxWidth={"67%"} margin={"auto"}>
+          {" "}
+          // saved for later items
           <Text
             style={{
               ...luxuryHeadingStyle,
@@ -907,7 +915,8 @@ export default function Cart() {
                         }}
                         onClick={() => removeSavedItem(savedItem)}
                       >
-                        <Text style={luxuryBodyStyle}>Remove saved item</Text>
+                        <Text style={luxuryBodyStyle}>Remove saved item</Text>{" "}
+                        // remove saved for later
                       </Button>
                       <Button
                         onMouseEnter={(e) => {
@@ -934,7 +943,8 @@ export default function Cart() {
                         }}
                         onClick={() => addToCart(savedItem)}
                       >
-                        <Text style={luxuryBodyStyle}>Add to cart</Text>
+                        <Text style={luxuryBodyStyle}>Add to cart</Text> // add
+                        back to cart
                       </Button>
                     </Flex>
                   </View>
@@ -956,6 +966,8 @@ export default function Cart() {
             You May Also Like
           </Text>
           <Flex wrap="wrap" justifyContent="center">
+            {" "}
+            // recommended products
             {recommendations.map((prod) => (
               <Card
                 key={prod.id}
