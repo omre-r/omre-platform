@@ -10,9 +10,6 @@ import {
   SwitchField,
   Grid,
   SelectField,
-  Input,
-  ToggleButtonGroup,
-  ToggleButton,
 } from "@aws-amplify/ui-react";
 
 import {
@@ -875,126 +872,262 @@ export default function ProductsPanel() {
                       top={"110%"}
                       left={"50%"}
                       transform={"translateX(-50%)"}
-                      border={"1px solid"}
-                      borderRadius={"10px"}
+                      borderRadius={"18px"}
                       onClick={(e) => e.stopPropagation()}
+                      style={{
+                        background:
+                          "linear-gradient(160deg, rgba(52,6,6,0.98), rgba(12,7,7,0.99))",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        boxShadow: "0 24px 60px rgba(0,0,0,0.65)",
+                        backdropFilter: "blur(14px)",
+                        minWidth: "310px",
+                        zIndex: 9999,
+                        padding: "1.25rem 1.5rem",
+                      }}
                     >
                       <Flex direction={"column"} gap={0}>
                         {priceErrorMsg && (
                           <Text
-                            color={"red"}
-                            lineHeight={"17px"}
-                            marginBottom={"5px"}
+                            style={{
+                              color: "#ff8080",
+                              lineHeight: "17px",
+                              marginBottom: "8px",
+                              fontFamily: "'Cormorant Garamond', serif",
+                              fontSize: "0.95rem",
+                            }}
                           >
                             {priceErrorMsg}
                           </Text>
                         )}
+
                         {/* price container */}
-                        <Flex alignItems={"center"}>
-                          <Text marginRight={"auto"}>Price: </Text>
-                          <Input
+                        <Flex alignItems={"center"} gap={"8px"}>
+                          <Text
+                            marginRight={"auto"}
+                            style={{
+                              color: "#F8F4F0",
+                              fontFamily: "'Cormorant Garamond', serif",
+                              fontSize: "1.1rem",
+                              letterSpacing: "0.3px",
+                            }}
+                          >
+                            Price:
+                          </Text>
+                          <input
                             min={0}
                             max={200}
                             type={"number"}
-                            placeholder="Minimum"
-                            padding={0}
-                            width={"100px"}
+                            placeholder="Min"
                             value={minimum}
+                            onChange={(e) => setMinimum(e.target.value)}
                             style={{
-                              outline:
+                              width: "78px",
+                              padding: "7px 8px",
+                              borderRadius: "9px",
+                              border:
                                 maximum !== "" &&
                                 Number(minimum) > Number(maximum)
-                                  ? "2px solid red"
-                                  : "none",
+                                  ? "1.5px solid #ff6b6b"
+                                  : "1px solid rgba(255,255,255,0.2)",
+                              background: "rgba(255,248,244,0.1)",
+                              color: "#F8F4F0",
+                              fontFamily: "'Cormorant Garamond', serif",
+                              fontSize: "1rem",
+                              outline: "none",
+                              textAlign: "center",
                             }}
-                            onChange={(e) => setMinimum(e.target.value)}
-                          ></Input>
-                          <Input
+                          />
+                          <input
                             min={0}
                             max={200}
                             type={"number"}
-                            placeholder="Maximum"
-                            padding={0}
-                            width={"100px"}
+                            placeholder="Max"
                             value={maximum}
+                            onChange={(e) => setMaximum(e.target.value)}
                             style={{
-                              outline:
+                              width: "78px",
+                              padding: "7px 8px",
+                              borderRadius: "9px",
+                              border:
                                 maximum !== "" &&
                                 Number(minimum) > Number(maximum)
-                                  ? "2px solid red"
-                                  : "none",
+                                  ? "1.5px solid #ff6b6b"
+                                  : "1px solid rgba(255,255,255,0.2)",
+                              background: "rgba(255,248,244,0.1)",
+                              color: "#F8F4F0",
+                              fontFamily: "'Cormorant Garamond', serif",
+                              fontSize: "1rem",
+                              outline: "none",
+                              textAlign: "center",
                             }}
-                            onChange={(e) => setMaximum(e.target.value)}
-                          ></Input>
+                          />
                         </Flex>
-                        <hr style={{ width: "100%", marginBlock: "10px" }} />
+                        <hr
+                          style={{
+                            width: "100%",
+                            marginBlock: "12px",
+                            border: "none",
+                            borderTop: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        />
 
                         {/* size container */}
                         <Flex alignItems={"center"}>
-                          <Text marginRight={"auto"}>Size:</Text>
-                          <ToggleButtonGroup
-                            value={selectedSizes}
-                            onChange={(v) => setSelectedSizes(v)}
-                            isExclusive={false}
-                            gap={"5px"}
+                          <Text
+                            marginRight={"auto"}
+                            style={{
+                              color: "#F8F4F0",
+                              fontFamily: "'Cormorant Garamond', serif",
+                              fontSize: "1.1rem",
+                            }}
                           >
-                            <ToggleButton padding={"6px"} value="30ml">
-                              30 ml
-                            </ToggleButton>
-                            <ToggleButton padding={"6px"} value="50ml">
-                              50 ml
-                            </ToggleButton>
-                          </ToggleButtonGroup>
+                            Size:
+                          </Text>
+                          <Flex gap={"6px"}>
+                            {["30ml", "50ml"].map((size) => (
+                              <button
+                                key={size}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedSizes((prev) =>
+                                    prev.includes(size)
+                                      ? prev.filter((s) => s !== size)
+                                      : [...prev, size],
+                                  );
+                                }}
+                                style={{
+                                  padding: "5px 14px",
+                                  borderRadius: "20px",
+                                  cursor: "pointer",
+                                  fontFamily: "'Cormorant Garamond', serif",
+                                  fontSize: "1rem",
+                                  border: "1px solid rgba(255,255,255,0.3)",
+                                  background: selectedSizes.includes(size)
+                                    ? "rgba(210,175,140,0.88)"
+                                    : "rgba(255,255,255,0.08)",
+                                  color: selectedSizes.includes(size)
+                                    ? "#2B1E1A"
+                                    : "#F8F4F0",
+                                  fontWeight: selectedSizes.includes(size)
+                                    ? 700
+                                    : 400,
+                                  transition: "all 0.15s ease",
+                                }}
+                              >
+                                {size === "30ml" ? "30 ml" : "50 ml"}
+                              </button>
+                            ))}
+                          </Flex>
                         </Flex>
-                        <hr style={{ width: "100%", marginBlock: "10px" }} />
+                        <hr
+                          style={{
+                            width: "100%",
+                            marginBlock: "12px",
+                            border: "none",
+                            borderTop: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        />
 
                         {/* featured container */}
                         <Flex alignItems={"center"}>
-                          <Text marginRight={"auto"}>Only Featured:</Text>
+                          <Text
+                            marginRight={"auto"}
+                            style={{
+                              color: "#F8F4F0",
+                              fontFamily: "'Cormorant Garamond', serif",
+                              fontSize: "1.1rem",
+                            }}
+                          >
+                            Only Featured:
+                          </Text>
                           <SwitchField
                             isChecked={onlyFeatured}
                             onChange={(e) => setOnlyFeatured(e.target.checked)}
-                          ></SwitchField>
+                          />
                         </Flex>
-                        <hr style={{ width: "100%", marginBlock: "10px" }} />
+                        <hr
+                          style={{
+                            width: "100%",
+                            marginBlock: "12px",
+                            border: "none",
+                            borderTop: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        />
 
-                        {/* "include search" container */}
+                        {/* include search container */}
                         <Flex
                           direction={"column"}
                           gap={"3px"}
                           alignItems={"center"}
                         >
                           <Flex width={"100%"}>
-                            <Text marginRight={"auto"}>Include Search:</Text>
+                            <Text
+                              marginRight={"auto"}
+                              style={{
+                                color: "#F8F4F0",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.1rem",
+                              }}
+                            >
+                              Include Search:
+                            </Text>
                             <SwitchField
                               isChecked={includeSearch}
                               onChange={(e) =>
                                 setIncludeSearch(e.target.checked)
                               }
-                            ></SwitchField>
+                            />
                           </Flex>
                           {includeSearch && (
-                            <Text style={{ fontSize: ".8rem" }}>
+                            <Text
+                              style={{
+                                fontSize: ".85rem",
+                                color: "rgba(210,175,140,0.9)",
+                                fontStyle: "italic",
+                                fontFamily: "'Cormorant Garamond', serif",
+                              }}
+                            >
                               "{search}"
                             </Text>
                           )}
                         </Flex>
-                        <hr style={{ width: "100%", marginBlock: "10px" }} />
+                        <hr
+                          style={{
+                            width: "100%",
+                            marginBlock: "12px",
+                            border: "none",
+                            borderTop: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        />
 
                         {/* notes container */}
-                        <Flex direction={"column"}>
+                        <Flex direction={"column"} gap={"6px"}>
                           <Flex alignItems={"center"}>
-                            <Text marginRight={"auto"}>Notes:</Text>
+                            <Text
+                              marginRight={"auto"}
+                              style={{
+                                color: "#F8F4F0",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.1rem",
+                              }}
+                            >
+                              Notes:
+                            </Text>
                             <select
                               name="notes"
                               id="notes"
                               style={{
-                                padding: "4px",
-                                height: "100%",
-                                justifySelf: "flex-start",
-                                fontWeight: "bold",
+                                padding: "6px 10px",
                                 borderRadius: "10px",
                                 textAlign: "center",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1rem",
+                                fontWeight: "600",
+                                background: "rgba(255,248,244,0.1)",
+                                color: "#F8F4F0",
+                                border: "1px solid rgba(255,255,255,0.25)",
+                                cursor: "pointer",
+                                outline: "none",
                               }}
                               onChange={(e) =>
                                 setSelectedNotes((prev) =>
@@ -1005,39 +1138,84 @@ export default function ProductsPanel() {
                                 )
                               }
                             >
-                              <option value="">Notes</option>
+                              <option
+                                value=""
+                                style={{
+                                  background: "#3a0808",
+                                  color: "#F8F4F0",
+                                }}
+                              >
+                                Notes
+                              </option>
                               {fragranceOptions.map((f) => (
                                 <option
                                   key={f}
                                   disabled={selectedNotes.includes(f)}
                                   value={f}
+                                  style={{
+                                    background: "#3a0808",
+                                    color: "#F8F4F0",
+                                  }}
                                 >
                                   {f}
                                 </option>
                               ))}
                             </select>
                           </Flex>
-                          <Flex wrap={"wrap"} gap={0}>
-                            {selectedNotes.map((note) => {
-                              return (
-                                <Button
-                                  key={note}
-                                  padding={"3px"}
-                                  fontSize={".7rem"}
-                                  onClick={(e) =>
-                                    setSelectedNotes((prev) =>
-                                      prev.filter((n) => note !== n),
-                                    )
-                                  }
-                                >
-                                  {note}
-                                </Button>
-                              );
-                            })}
+                          <Flex wrap={"wrap"} gap={"4px"}>
+                            {selectedNotes.map((note) => (
+                              <button
+                                key={note}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedNotes((prev) =>
+                                    prev.filter((n) => note !== n),
+                                  );
+                                }}
+                                style={{
+                                  padding: "3px 10px",
+                                  borderRadius: "16px",
+                                  background: "rgba(210,175,140,0.18)",
+                                  color: "#F8F4F0",
+                                  border: "1px solid rgba(210,175,140,0.4)",
+                                  cursor: "pointer",
+                                  fontFamily: "'Cormorant Garamond', serif",
+                                  fontSize: "0.88rem",
+                                }}
+                              >
+                                {note} ×
+                              </button>
+                            ))}
                           </Flex>
                         </Flex>
-                        <hr style={{ width: "100%", marginBlock: "10px" }} />
-                        <Button onClick={handleFilterSubmit}>Filter</Button>
+                        <hr
+                          style={{
+                            width: "100%",
+                            marginBlock: "12px",
+                            border: "none",
+                            borderTop: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        />
+
+                        <button
+                          onClick={handleFilterSubmit}
+                          style={{
+                            width: "100%",
+                            padding: "10px",
+                            background:
+                              "linear-gradient(135deg, rgba(210,175,140,0.92), rgba(180,140,100,0.8))",
+                            color: "#2B1E1A",
+                            border: "none",
+                            borderRadius: "10px",
+                            fontFamily: "'Cormorant Garamond', serif",
+                            fontSize: "1.2rem",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            letterSpacing: "1px",
+                          }}
+                        >
+                          Filter
+                        </button>
                       </Flex>
                     </Card>
                   )}
