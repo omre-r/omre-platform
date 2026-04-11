@@ -1,69 +1,53 @@
-# omre-platform
-This repository hosts the OMRÉ platform, a system designed for iterative development across multiple semesters.
-The platform focuses on scalable architecture, evolving features, and real-world business workflows rather than one-off implementations.
+# Welcome to the web platform of OMRE Fragrances!
 
-# Tech-stack
-Frontend - React (with Vite) - used for building the user interface and fast development server and modern tooling
+OMRE Fragrances is a company that sells colognes, perfumes, and similar products. This repository is used to run its website.
 
-Download: 
-Vite: https://vite.dev/
-React: https://react.dev/
+## How do I set it up?
 
-#Backend - Node.js + Express.js - node runs the backend server and express handles routing, middleware, and APIs\
+### Prerequisites
 
-Download: 
-Node.js: https://nodejs.org/en
-Express: https://expressjs.com/
+1. Install [Git](https://www.atlassian.com/git/tutorials/install-git).
 
-#Database:
-MongoDB (Via mongoDB atlas) - cloud hosted noSQL database, flexible schema and easy to set up for development
+2. Install [Node and npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
 
-Download/Setup: 
-MongoDB atlas (free): https://www.mongodb.com/products/platform
-Mongoose (ODM): https://mongoosejs.com/
+3. Reach out to a former developer for the required ".env" file that contains all credentials needed for the various APIs being used. Note that the existing ".env.example" file shows what this file looks like, but all values are empty.
 
-#Authentication:
-JSON Web Tokens (JWT): Used for user authentication and protected routes - Tokens are signed using a secret stored in environment variables
+4. [OPTIONAL] Install [PostGreSQL](https://www.postgresql.org/download/) to run local DB queries and something like [DBeaver](https://dbeaver.io/download/) to view te database. All database credentials are within the .env.
 
-#Hosting/Deployment
-AWS
+### Instructions
 
-#Docs: 
-JWT: https://www.jwt.io/
-Jsonwebtoken (NODE LIBRARY): https://github.com/auth0/node-jsonwebtoken
+1. Open a terminal and navigate to the directory you'd like to work in.
+2. Enter the following commands:
 
- #Tooling: 
-npm - dependency management (comes w node.js)
-github - version control and collaboration
-nodemon - auto restarts backend during development 
+   git clone https://github.com/omre-r/omre-platform.git \
+   cd omre-platform \
+   npm run install:all
 
- # Environment Variables: 
-Sensitive values (database URI, jwt secret) are stored in .env files
-.env files are never committed to GIT
-Use .env.example as a template
+3. Place the .env file in the backend directory.
 
- # NOTES TO CONTRIBUTORS:
-- You do not need to install MomhoDB locally
-- A free mongoDB atlas account is sufficient
-- Frontend and Backend run together using: npm run dev
+4. Run the project and visit "http://localhost:5173".
 
+## Additional Notes
 
-# Git Workflow 
-- dev is the main development branch
-- do not push directly to dev
-- create a feature branch for all work 
-- open a pull request when finished
+The main dependencies are AWS services. It may be difficult to troubleshoot at times without access to various services, so you may at times need to ask your team member with administrator privileges on AWS to grant you the appropriate IAM permissions to access a specific service.
 
-# project structure 
-frontend/ react application (UI)
-backend/ node + express API
-docs/ Documentation
+For Example:
 
-# common commands
-npm run install: all  #install frontend and backend deps 
-npm run dev: #run frontend and backend together
+"Hey [Blank], I would like unrestricted AWS S3 access. Would you please assign me the 'AmazonS3FullAccess' policy?"
 
-# FAQ/ Common issues
-**mongoDB connection error**
-- check your .env file 
-- ensure your atlas IP access allows your connection
+## Dependencies
+
+- AWS S3
+  - Images
+- AWS Cognito
+  - Used for all authentication/authorization
+- AWS Lambda
+  - For some useful triggers, such as creating a user on the website immediately after creating a user in the Cognito pool
+- AWS SES
+  - Emails
+- AWS Amplify
+  - To help configure Cognito on frontend
+- AWS CloudFront
+  - Image CDN
+- AWS RDS
+  - Database
