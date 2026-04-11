@@ -101,6 +101,9 @@ export default function Home() {
   const [priceErrorMsg, setPriceErrorMsg] = useState("");
   const priceErrorTimer = useRef(null);
 
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+
   const [search, setSearch] = useState("");
 
   const fragranceOptions = [
@@ -273,69 +276,234 @@ export default function Home() {
               "linear-gradient(145deg,  #480e0e76, rgba(20, 20, 20, 0.05))",
           }}
         >
-          <View height={"40px"} margin={"5px"}>
-            <select
-              name="type-filter"
-              id="type-filter"
+          <View margin={"5px"} style={{ position: "relative" }}>
+            <button
+              onBlur={() => setShowTypeDropdown(false)}
+              onClick={() => setShowTypeDropdown((prev) => !prev)}
               style={{
-                ...bodyStyle2,
-                height: "120%",
                 minWidth: "190px",
-                padding: "0.75rem 1rem",
+                padding: "0.75rem 2.5rem 0.75rem 1.2rem",
+                fontFamily: "'Cormorant Garamond', serif",
                 fontWeight: "600",
+                fontSize: "1.3rem",
+                letterSpacing: "0.4px",
                 borderRadius: "16px",
-                textAlign: "center",
                 border: "1px solid rgba(255,255,255,0.18)",
                 background:
-                  "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
+                  "linear-gradient(145deg, #9a2424, rgba(20,20,20,0.9))",
                 color: "#F8F4F0",
                 boxShadow: "0 8px 18px rgba(0,0,0,0.22)",
                 cursor: "pointer",
+                textAlign: "left",
+                position: "relative",
+                whiteSpace: "nowrap",
               }}
-              onChange={(e) => setTab(e.target.value)}
             >
-              <option style={{ color: "black" }} value="All">
-                All
-              </option>
-              <option style={{ color: "black" }} value="Men's Cologne">
-                Men's Cologne
-              </option>
-              <option style={{ color: "black" }} value="Women's Perfume">
-                Women's Perfume
-              </option>
-            </select>
+              {tab}
+              <span
+                style={{
+                  position: "absolute",
+                  right: "14px",
+                  top: "50%",
+                  transform: showTypeDropdown
+                    ? "translateY(-50%) rotate(180deg)"
+                    : "translateY(-50%)",
+                  transition: "transform 0.2s ease",
+                  fontSize: "0.9rem",
+                }}
+              >
+                ▾
+              </span>
+            </button>
+            {showTypeDropdown && (
+              <ul
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 6px)",
+                  left: 0,
+                  minWidth: "100%",
+                  listStyle: "none",
+                  margin: 0,
+                  padding: "6px 0",
+                  borderRadius: "14px",
+                  background: "#FDF6EE",
+                  border: "1px solid rgba(151,33,0,0.2)",
+                  boxShadow: "0 12px 32px rgba(100,20,20,0.18)",
+                  zIndex: 9999,
+                  overflow: "hidden",
+                }}
+              >
+                {["All", "Men's Cologne", "Women's Perfume"].map((opt) => (
+                  <li
+                    key={opt}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      setTab(opt);
+                      setShowTypeDropdown(false);
+                    }}
+                    style={{
+                      padding: "10px 18px 10px 14px",
+                      fontFamily: "'Cormorant Garamond', serif",
+                      fontSize: "1.15rem",
+                      letterSpacing: "0.3px",
+                      color: tab === opt ? "#9a2424" : "#4a1010",
+                      fontWeight: tab === opt ? 700 : 500,
+                      cursor: "pointer",
+                      background: "transparent",
+                      borderLeft:
+                        tab === opt
+                          ? "3px solid #9a2424"
+                          : "3px solid transparent",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(151,33,0,0.06)";
+                      e.currentTarget.style.borderLeft = "3px solid #9a2424";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.borderLeft =
+                        tab === opt
+                          ? "3px solid #9a2424"
+                          : "3px solid transparent";
+                    }}
+                  >
+                    {tab === opt && (
+                      <span
+                        style={{
+                          color: "rgba(210,175,140,1)",
+                          fontSize: "0.7rem",
+                        }}
+                      >
+                        ●
+                      </span>
+                    )}
+                    {opt}
+                  </li>
+                ))}
+              </ul>
+            )}
           </View>
-          <View height={"40px"} margin={"5px"}>
-            <select
-              name="simple-filter"
-              id="simple-filter"
+
+          <View margin={"5px"} style={{ position: "relative" }}>
+            <button
+              onBlur={() => setShowSortDropdown(false)}
+              onClick={() => setShowSortDropdown((prev) => !prev)}
               style={{
-                ...bodyStyle2,
-                height: "120%",
                 minWidth: "190px",
-                padding: "0.75rem 1rem",
+                padding: "0.75rem 2.5rem 0.75rem 1.2rem",
+                fontFamily: "'Cormorant Garamond', serif",
                 fontWeight: "600",
+                fontSize: "1.3rem",
+                letterSpacing: "0.4px",
                 borderRadius: "16px",
-                textAlign: "center",
                 border: "1px solid rgba(255,255,255,0.18)",
                 background:
-                  "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
+                  "linear-gradient(145deg, #9a2424, rgba(20,20,20,0.9))",
                 color: "#F8F4F0",
                 boxShadow: "0 8px 18px rgba(0,0,0,0.22)",
+                cursor: "pointer",
+                textAlign: "left",
+                position: "relative",
+                whiteSpace: "nowrap",
               }}
-              value={simpleFilter}
-              onChange={(e) => setSimpleFilter(e.target.value)}
             >
-              <option style={{ color: "black" }} value="featured">
-                Featured
-              </option>
-              <option style={{ color: "black" }} value="pricehighlow">
-                Price: High to Low
-              </option>
-              <option style={{ color: "black" }} value="pricelowhigh">
-                Price: Low to High
-              </option>
-            </select>
+              {simpleFilter === "featured"
+                ? "Featured"
+                : simpleFilter === "pricehighlow"
+                  ? "Price: High to Low"
+                  : "Price: Low to High"}
+              <span
+                style={{
+                  position: "absolute",
+                  right: "14px",
+                  top: "50%",
+                  transform: showSortDropdown
+                    ? "translateY(-50%) rotate(180deg)"
+                    : "translateY(-50%)",
+                  transition: "transform 0.2s ease",
+                  fontSize: "0.9rem",
+                }}
+              >
+                ▾
+              </span>
+            </button>
+            {showSortDropdown && (
+              <ul
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 6px)",
+                  left: 0,
+                  minWidth: "100%",
+                  listStyle: "none",
+                  margin: 0,
+                  padding: "6px 0",
+                  borderRadius: "14px",
+                  background: "#FDF6EE",
+                  border: "1px solid rgba(151,33,0,0.2)",
+                  boxShadow: "0 12px 32px rgba(100,20,20,0.18)",
+                  zIndex: 9999,
+                  overflow: "hidden",
+                }}
+              >
+                {[
+                  { value: "featured", label: "Featured" },
+                  { value: "pricehighlow", label: "Price: High to Low" },
+                  { value: "pricelowhigh", label: "Price: Low to High" },
+                ].map((opt) => (
+                  <li
+                    key={opt.value}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      setSimpleFilter(opt.value);
+                      setShowSortDropdown(false);
+                    }}
+                    style={{
+                      padding: "10px 18px 10px 14px",
+                      fontFamily: "'Cormorant Garamond', serif",
+                      fontSize: "1.15rem",
+                      letterSpacing: "0.3px",
+                      color: simpleFilter === opt.value ? "#9a2424" : "#4a1010",
+                      fontWeight: simpleFilter === opt.value ? 700 : 500,
+                      cursor: "pointer",
+                      background: "transparent",
+                      borderLeft:
+                        simpleFilter === opt.value
+                          ? "3px solid #9a2424"
+                          : "3px solid transparent",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(151,33,0,0.06)";
+                      e.currentTarget.style.borderLeft = "3px solid #9a2424";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.borderLeft =
+                        simpleFilter === opt.value
+                          ? "3px solid #9a2424"
+                          : "3px solid transparent";
+                    }}
+                  >
+                    {simpleFilter === opt.value && (
+                      <span
+                        style={{
+                          color: "rgba(210,175,140,1)",
+                          fontSize: "0.7rem",
+                        }}
+                      >
+                        ●
+                      </span>
+                    )}
+                    {opt.label}
+                  </li>
+                ))}
+              </ul>
+            )}
           </View>
           <View
             position="relative"
