@@ -671,8 +671,8 @@ export default function Mixology() {
                   value={sizeMl}
                   onChange={(e) => setSizeMl(e.target.value)}
                 >
-                  <option value="30">30ML</option>
-                  <option value="50">50ML</option>
+                  <option value="30">30 mL</option>
+                  <option value="50">50 mL</option>
                 </SelectField>
               </View>
 

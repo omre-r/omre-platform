@@ -33,7 +33,7 @@ export default function AboutUs() {
   // all the text is written in the code for About us, can not be changed by the admins
   return (
     <>
-      <Navbar /> // navbar import
+      <Navbar />
       <View
         width="100%"
         minHeight="100vh"
@@ -52,7 +52,7 @@ export default function AboutUs() {
           {/* philosophy */}
           <Text style={headingStyle} marginBottom="1rem" marginTop="2rem">
             {" "}
-            // header Our Philosophy
+            Our Philosophy
           </Text>
           <hr style={dividerStyle} />
 
@@ -91,7 +91,7 @@ export default function AboutUs() {
           {/* story */}
           <Text style={headingStyle} marginBottom="1rem" marginTop="2.5rem">
             {" "}
-            // story Our Story
+            Our Story
           </Text>
           <hr style={dividerStyle} />
 
@@ -157,7 +157,7 @@ export default function AboutUs() {
 
           <Text style={{ ...bodyStyle, fontStyle: "italic", color: "#444" }}>
             {" "}
-            // closing remark "You don't just wear OMRÉ — you live in it."
+            "You don't just wear OMRÉ — you live in it."
           </Text>
         </div>
       </View>
