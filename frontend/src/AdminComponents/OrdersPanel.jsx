@@ -332,7 +332,7 @@ export default function OrdersPanel() {
             >
               <Flex wrap="wrap" gap="0.6rem">
                 {" "}
-                // color coded and sorted
+                {/* color coded and sorted */}
                 {orders
                   .filter(
                     (o) => statusFilter === "all" || o.status === statusFilter,

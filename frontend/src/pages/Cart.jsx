@@ -423,7 +423,8 @@ export default function Cart() {
 
   return (
     <>
-      <Navbar /> // imports and places the nav bar
+      {/* imports and places the nav bar */}
+      <Navbar />
       <View
         width="100%"
         minHeight="100vh"
@@ -498,7 +499,7 @@ export default function Cart() {
                         >
                           <Flex alignItems="center" gap="1.5rem">
                             {" "}
-                            // Cart items
+                            {/* Cart items */}
                             {cartItem.item?.images?.[0] && (
                               <img
                                 src={cartItem.item.images[0]}
@@ -518,7 +519,7 @@ export default function Cart() {
                             )}
                             <View textAlign={"left"}>
                               {" "}
-                              // cart items information
+                              {/* cart items information */}
                               <Text
                                 style={{
                                   ...luxuryBodyStyle,
@@ -620,7 +621,7 @@ export default function Cart() {
                         </Flex>
                         <View>
                           {" "}
-                          // save for later button
+                          {/* save for later button */}
                           <View width={"fit-content"} marginLeft={"auto"}>
                             {savedItems.some(
                               (saved) => cartItem.itemid === saved.itemid,
@@ -808,7 +809,7 @@ export default function Cart() {
 
         <View minWidth={"500px"} maxWidth={"67%"} margin={"auto"}>
           {" "}
-          // saved for later items
+          {/* saved for later items */}
           <Text
             style={{
               ...luxuryHeadingStyle,
@@ -916,7 +917,7 @@ export default function Cart() {
                         onClick={() => removeSavedItem(savedItem)}
                       >
                         <Text style={luxuryBodyStyle}>Remove saved item</Text>{" "}
-                        // remove saved for later
+                        {/* remove saved for later */}
                       </Button>
                       <Button
                         onMouseEnter={(e) => {
@@ -943,8 +944,8 @@ export default function Cart() {
                         }}
                         onClick={() => addToCart(savedItem)}
                       >
-                        <Text style={luxuryBodyStyle}>Add to cart</Text> // add
-                        back to cart
+                        {/* Add product back to cart */}
+                        <Text style={luxuryBodyStyle}>Add to cart</Text>
                       </Button>
                     </Flex>
                   </View>
@@ -967,7 +968,7 @@ export default function Cart() {
           </Text>
           <Flex wrap="wrap" justifyContent="center">
             {" "}
-            // recommended products
+            {/* recommended products */}
             {recommendations.map((prod) => (
               <Card
                 key={prod.id}
