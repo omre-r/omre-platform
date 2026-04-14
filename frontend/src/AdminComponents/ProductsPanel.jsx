@@ -13,14 +13,12 @@ import {
 } from "@aws-amplify/ui-react";
 
 import {
-  getProductReq,
   getFilteredProductsReq,
   updateProductReq,
   updateProductStockReq,
   deleteProductReq,
   getProductsReq,
   createProductReq,
-  createProductFlowReq_LOCAL,
   uploadAndGetURlsReq,
 } from "../requests.js";
 
@@ -31,14 +29,6 @@ import { RefreshCw } from "lucide-react";
 import { useToast } from "../components/ToastContext";
 
 // Custom Styling for fonts and amplify ui --------------------------------------
-const bodyStyle2 = {
-  fontFamily: "'Cormorant Garamond', serif",
-  fontWeight: 400,
-  fontSize: "1.3rem",
-  letterSpacing: "0.5px",
-  color: "#000000",
-};
-
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 700,
@@ -56,13 +46,6 @@ const compactStyle = {
   fontWeight: 200,
   fontSize: "1rem",
   letterSpacing: "0.1px",
-};
-const MODES = {
-  IDLE: "idle",
-  ADD: "add",
-  APPEND: "append",
-  EDIT: "edit",
-  REMOVE: "remove",
 };
 
 const buttonStyling = {
@@ -89,6 +72,15 @@ const inputLuxuryStyle = {
   borderRadius: "10px",
   padding: "8px 12px",
   boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
+};
+
+// UI Modes for switching between different actions ---------------------------------------
+const MODES = {
+  IDLE: "idle",
+  ADD: "add",
+  APPEND: "append",
+  EDIT: "edit",
+  REMOVE: "remove",
 };
 
 // Default Product Draft   ---------------------------------------
@@ -136,7 +128,7 @@ export default function ProductsPanel() {
   const [files, setFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
 
-  //search and filter
+  //search and filter ---------------------------------------------------------
   const [search, setSearch] = useState("");
   const [minimum, setMinimum] = useState("");
   const [maximum, setMaximum] = useState("");
@@ -146,9 +138,11 @@ export default function ProductsPanel() {
   const [onlyFeatured, setOnlyFeatured] = useState(false);
   const [includeSearch, setIncludeSearch] = useState(false);
 
+  // For error messages that appear when there is an issue with the price filter inputs, will disappear after 4 seconds or when user changes input again -------------------------
   const [priceErrorMsg, setPriceErrorMsg] = useState("");
   const priceErrorTimer = useRef(null);
 
+  // Options for the select fields in the filter section ------------------------------------------------------
   const fragranceOptions = [
     "Vanilla",
     "Cinnamon",
@@ -240,6 +234,7 @@ export default function ProductsPanel() {
     setFiles((prev) => [...prev, ...validFiles]);
   }
 
+  // Uploads images and gets urls from backend, then adds those urls to the draft to be saved when creating or editing a product ------------------------------------------------------
   async function uploadImages() {
     if (files.length === 0) return;
 
@@ -267,7 +262,7 @@ export default function ProductsPanel() {
     setFiles([]);
   }
 
-  //Used when rearranging images
+  // Used when rearranging images when creating or editing product -----------------------------------------------
   async function handleImageDrag(event, i) {
     event.preventDefault();
     const elem = event.currentTarget;
@@ -390,21 +385,25 @@ export default function ProductsPanel() {
     return null;
   }
 
-  function resetToIdle() {
+  // When switching between products or modes, we want to clear any pending files to avoid memory leaks and confusion with which images are being uploaded ----------------------------
+  function clearPendingFiles() {
     for (const file of files) {
-      URL.revokeObjectURL(file.url);
+      if (file.url) {
+        URL.revokeObjectURL(file.url);
+      }
     }
     setFiles([]);
+  }
+
+  function resetToIdle() {
+    clearPendingFiles();
     setSelectedProduct(null);
     setDraft(defaultProductDraft);
     setActiveMode(MODES.IDLE);
   }
 
   function resetToAdd() {
-    for (const file of files) {
-      URL.revokeObjectURL(file.url);
-    }
-    setFiles([]);
+    clearPendingFiles();
     setSelectedProduct(null);
     setDraft(defaultProductDraft);
     setActiveMode(MODES.ADD);
@@ -412,10 +411,7 @@ export default function ProductsPanel() {
 
   //Prefills fields. For when we want a new product based off another and of a different variation
   function resetToAppend(prod) {
-    for (const file of files) {
-      URL.revokeObjectURL(file.url);
-    }
-    setFiles([]);
+    clearPendingFiles();
     setDraft({
       ...makeDraftFromProduct(prod),
       variation: "",
@@ -425,16 +421,13 @@ export default function ProductsPanel() {
   }
 
   function resetToEdit(prod) {
-    for (const file of files) {
-      URL.revokeObjectURL(file.url);
-    }
-    setFiles([]);
+    clearPendingFiles();
     setSelectedProduct(prod);
     setDraft(makeDraftFromProduct(prod));
     setActiveMode(MODES.EDIT);
   }
 
-  function groupRelevantElements(productList) {
+  function groupProductsByParentId(productList) {
     const parents = {};
     for (const p of productList) {
       parents?.[p.parentid]
@@ -460,7 +453,7 @@ export default function ProductsPanel() {
       if (!data.success) {
         throw Error(data.message || "Error getting filtered products");
       }
-      setProducts(groupRelevantElements(data.data.products));
+      setProducts(groupProductsByParentId(data.data.products));
     } catch (error) {
       toast(error.message || "Failed to get filtered products.", "error");
     } finally {
@@ -514,7 +507,7 @@ export default function ProductsPanel() {
       if (!data.success) {
         throw new Error(data.message);
       }
-      setProducts(groupRelevantElements(data.data.products));
+      setProducts(groupProductsByParentId(data.data.products));
     } catch (error) {
       toast(error.message || "Error loading products.", "error");
     } finally {
@@ -847,6 +840,7 @@ export default function ProductsPanel() {
                     />
                   </section>
                 </View>
+                {/* Filter button ------------------------------ */}
                 <View
                   position={"relative"}
                   padding="8px"
@@ -876,7 +870,7 @@ export default function ProductsPanel() {
                     }}
                   />
 
-                  {/* Filter section ----------------------------------------------------------- */}
+                  {/* Filter section when button is clicked ----------------------------------------------------------- */}
                   {showFilters && (
                     <Card
                       position={"absolute"}
