@@ -79,6 +79,18 @@ const buttonStyling = {
   transition: "all 0.2s ease",
 };
 
+const inputLuxuryStyle = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontSize: "1rem",
+  color: "#FFFFFF",
+  background:
+    "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+  border: "2px solid rgba(0,0,0,0.6)",
+  borderRadius: "10px",
+  padding: "8px 12px",
+  boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
+};
+
 // Default Product Draft   ---------------------------------------
 // When adding we set our draft to start with this where it holds no information
 // When cancelling an add or finishing an add will set the draft to default after to remove any data being saved
@@ -837,8 +849,7 @@ export default function ProductsPanel() {
                 </View>
                 <View
                   position={"relative"}
-                  padding={"8px"}
-                  backgroundColor={"white"}
+                  padding="8px"
                   borderRadius={"10px"}
                   style={{
                     ...buttonStyling,
@@ -1528,13 +1539,14 @@ export default function ProductsPanel() {
                 style={{ minWidth: 0 }}
               >
                 <TextField
-                  style={compactStyle}
+                  className="luxury-input"
+                  style={{ ...inputLuxuryStyle, color: "#FFFFFF" }}
                   placeholder="Name"
                   value={draft.name}
                   onChange={(e) => setDraftField("name", e.target.value)}
                 />
                 <SelectField
-                  style={compactStyle}
+                  style={{ ...inputLuxuryStyle }}
                   value={draft.type}
                   onChange={(e) => setDraftField("type", e.target.value)}
                 >
@@ -1553,7 +1565,7 @@ export default function ProductsPanel() {
 
                 {/* Includes an invalid variation as a disabled option, so admin can see the invalid state but not reselect it */}
                 <SelectField
-                  style={compactStyle}
+                  style={{ ...inputLuxuryStyle }}
                   value={draft.variation}
                   onChange={(e) => setDraftField("variation", e.target.value)}
                 >
@@ -1568,8 +1580,8 @@ export default function ProductsPanel() {
                     )}
                   {activeMode === MODES.ADD || !selectedProduct ? (
                     <>
-                      <option value="30ml">30ml</option>
-                      <option value="50ml">50ml</option>
+                      <option value="30ml">30 mL</option>
+                      <option value="50ml">50 mL</option>
                     </>
                   ) : (
                     ["30ml", "50ml"].map((size) => {
@@ -1597,7 +1609,8 @@ export default function ProductsPanel() {
                   )}
                 </SelectField>
                 <TextField
-                  style={compactStyle}
+                  className="luxury-input"
+                  style={{ ...inputLuxuryStyle }}
                   placeholder="Price"
                   type="number"
                   value={draft.price}
@@ -1605,8 +1618,9 @@ export default function ProductsPanel() {
                 />
                 {/* Entering Top, Heart, and Base notes ------------------------------------------------------------*/}
                 <TextField
+                  className="luxury-input"
                   columnSpan={2}
-                  style={compactStyle}
+                  style={{ ...inputLuxuryStyle }}
                   placeholder="Notes Top (, separated)"
                   // If array exists for top use it and separate by commas
                   value={(draft.notes.top || []).join(",")}
@@ -1619,8 +1633,9 @@ export default function ProductsPanel() {
                   }}
                 />
                 <TextField
+                  className="luxury-input"
                   columnSpan={2}
-                  style={compactStyle}
+                  style={{ ...inputLuxuryStyle }}
                   placeholder="Notes Heart (, separated)"
                   value={(draft.notes.heart || []).join(",")}
                   onChange={(e) => {
@@ -1632,8 +1647,9 @@ export default function ProductsPanel() {
                   }}
                 />
                 <TextField
+                  className="luxury-input"
                   columnSpan={2}
-                  style={compactStyle}
+                  style={{ ...inputLuxuryStyle }}
                   placeholder="Notes Base (, separated)"
                   value={(draft.notes.base || []).join(",")}
                   onChange={(e) => {
@@ -1646,8 +1662,9 @@ export default function ProductsPanel() {
                 />
                 <View columnSpan={2}>
                   <TextAreaField
+                    className="luxury-input"
                     textAlign={"left"}
-                    style={{ ...compactStyle, height: "50px" }}
+                    style={{ ...inputLuxuryStyle, height: "50px" }}
                     placeholder={"Description"}
                     value={draft.description}
                     onChange={(e) => {
@@ -1684,7 +1701,11 @@ export default function ProductsPanel() {
                   />
                 </Flex>
                 <View columnSpan={2}>
-                  <Text marginBottom="2rem" fontSize={".9em"}>
+                  <Text
+                    style={{ ...compactStyle }}
+                    marginBottom="2rem"
+                    fontSize={"1.3em"}
+                  >
                     Images: {draft.images.length}
                   </Text>
 
@@ -1885,6 +1906,7 @@ export default function ProductsPanel() {
               )}
           </Flex>
         </Card>
+        {/* Image display for uploading and moving images that have been uploaded for a product */}
         {showImages && (
           <View
             position={"fixed"}

@@ -291,6 +291,7 @@ export default function UsersPanel() {
                     setShowFilters((prev) => !prev);
                   }}
                 >
+                  {/* Image for the filter icon ------------------------------------------------------ */}
                   <img
                     src={OptionsIcon}
                     alt="options"
@@ -301,6 +302,7 @@ export default function UsersPanel() {
                       filter: "brightness(0) invert(1)",
                     }}
                   />
+                  {/* If filter button is pressed ------------------------------------------------------ */}
                   {showFilters && (
                     <Card
                       position={"absolute"}
