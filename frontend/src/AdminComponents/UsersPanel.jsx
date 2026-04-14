@@ -309,16 +309,33 @@ export default function UsersPanel() {
                       top={"110%"}
                       left={"50%"}
                       transform={"translateX(-50%)"}
-                      border={"1px solid"}
-                      borderRadius={"10px"}
+                      borderRadius={"18px"}
                       minWidth={"420px"}
                       onClick={(e) => e.stopPropagation()}
+                      style={{
+                        background:
+                          "linear-gradient(160deg, rgba(52,6,6,0.98), rgba(12,7,7,0.99))",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        boxShadow: "0 24px 60px rgba(0,0,0,0.65)",
+                        backdropFilter: "blur(14px)",
+                        zIndex: 9999,
+                        padding: "1.25rem 1.5rem",
+                      }}
                     >
                       <Flex direction={"column"} gap={0}>
                         <Flex>
                           {/* first name container */}
                           <Flex alignItems={"center"}>
-                            <Text marginRight={"auto"}>First name: </Text>
+                            <Text
+                              marginRight={"auto"}
+                              style={{
+                                color: "#F8F4F0",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.1rem",
+                              }}
+                            >
+                              First name:{" "}
+                            </Text>
                             <TextField
                               value={firstname}
                               onChange={(e) => setFirstname(e.target.value)}
@@ -326,18 +343,43 @@ export default function UsersPanel() {
                           </Flex>
                           {/* last name container */}
                           <Flex alignItems={"center"}>
-                            <Text marginRight={"auto"}>Last name: </Text>
+                            <Text
+                              marginRight={"auto"}
+                              style={{
+                                color: "#F8F4F0",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.1rem",
+                              }}
+                            >
+                              Last name:{" "}
+                            </Text>
                             <TextField
                               value={lastname}
                               onChange={(e) => setLastname(e.target.value)}
                             />
                           </Flex>
                         </Flex>
-                        <hr style={{ width: "100%", marginBlock: "10px" }} />
+                        <hr
+                          style={{
+                            width: "100%",
+                            marginBlock: "12px",
+                            border: "none",
+                            borderTop: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        />
                         <Flex>
                           {/* get logged in container */}
                           <Flex alignItems={"center"}>
-                            <Text marginRight={"auto"}>Show logged in:</Text>
+                            <Text
+                              marginRight={"auto"}
+                              style={{
+                                color: "#F8F4F0",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.1rem",
+                              }}
+                            >
+                              Show logged in:
+                            </Text>
                             <SwitchField
                               isChecked={getLoggedIn}
                               onChange={(e) => setGetLoggedIn(e.target.checked)}
@@ -346,7 +388,14 @@ export default function UsersPanel() {
 
                           {/* get not logged in container */}
                           <Flex alignItems={"center"}>
-                            <Text marginRight={"auto"}>
+                            <Text
+                              marginRight={"auto"}
+                              style={{
+                                color: "#F8F4F0",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.1rem",
+                              }}
+                            >
                               Show never logged in:
                             </Text>
                             <SwitchField
@@ -357,11 +406,27 @@ export default function UsersPanel() {
                             ></SwitchField>
                           </Flex>
                         </Flex>
-                        <hr style={{ width: "100%", marginBlock: "10px" }} />
+                        <hr
+                          style={{
+                            width: "100%",
+                            marginBlock: "12px",
+                            border: "none",
+                            borderTop: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        />
                         <Flex>
                           {/* get is admin container */}
                           <Flex alignItems={"center"}>
-                            <Text marginRight={"auto"}>Show admins:</Text>
+                            <Text
+                              marginRight={"auto"}
+                              style={{
+                                color: "#F8F4F0",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.1rem",
+                              }}
+                            >
+                              Show admins:
+                            </Text>
                             <SwitchField
                               isChecked={getAdmins}
                               onChange={(e) => setGetAdmins(e.target.checked)}
@@ -370,7 +435,16 @@ export default function UsersPanel() {
 
                           {/* get nonadmins container */}
                           <Flex alignItems={"center"}>
-                            <Text marginRight={"auto"}>Show normal users:</Text>
+                            <Text
+                              marginRight={"auto"}
+                              style={{
+                                color: "#F8F4F0",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.1rem",
+                              }}
+                            >
+                              Show normal users:
+                            </Text>
                             <SwitchField
                               isChecked={getNonadmins}
                               onChange={(e) =>
@@ -380,7 +454,14 @@ export default function UsersPanel() {
                           </Flex>
                         </Flex>
 
-                        <hr style={{ width: "100%", marginBlock: "10px" }} />
+                        <hr
+                          style={{
+                            width: "100%",
+                            marginBlock: "12px",
+                            border: "none",
+                            borderTop: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        />
 
                         {/* "include search" container */}
                         <Flex
@@ -389,7 +470,14 @@ export default function UsersPanel() {
                           alignItems={"center"}
                         >
                           <Flex width={"100%"}>
-                            <Text marginRight={"auto"}>
+                            <Text
+                              marginRight={"auto"}
+                              style={{
+                                color: "#F8F4F0",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                fontSize: "1.1rem",
+                              }}
+                            >
                               Include Email Search:
                             </Text>
                             <SwitchField
@@ -400,14 +488,46 @@ export default function UsersPanel() {
                             ></SwitchField>
                           </Flex>
                           {includeSearch && (
-                            <Text style={{ fontSize: ".8rem" }}>
+                            <Text
+                              style={{
+                                fontSize: ".85rem",
+                                color: "rgba(210,175,140,0.9)",
+                                fontStyle: "italic",
+                                fontFamily: "'Cormorant Garamond', serif",
+                              }}
+                            >
                               "{search}"
                             </Text>
                           )}
                         </Flex>
-                        <hr style={{ width: "100%", marginBlock: "10px" }} />
+                        <hr
+                          style={{
+                            width: "100%",
+                            marginBlock: "12px",
+                            border: "none",
+                            borderTop: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        />
 
-                        <Button onClick={handleFilterSubmit}>Filter</Button>
+                        <button
+                          onClick={handleFilterSubmit}
+                          style={{
+                            width: "100%",
+                            padding: "10px",
+                            background:
+                              "linear-gradient(135deg, rgba(210,175,140,0.92), rgba(180,140,100,0.8))",
+                            color: "#2B1E1A",
+                            border: "none",
+                            borderRadius: "10px",
+                            fontFamily: "'Cormorant Garamond', serif",
+                            fontSize: "1.2rem",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            letterSpacing: "1px",
+                          }}
+                        >
+                          Filter
+                        </button>
                       </Flex>
                     </Card>
                   )}
