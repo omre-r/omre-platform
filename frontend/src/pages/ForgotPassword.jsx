@@ -265,7 +265,7 @@ const ForgotPassword = () => {
                         pointerEvents: "auto",
                       }}
                     >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                     </View>
                   }
                 />
@@ -320,9 +320,9 @@ const ForgotPassword = () => {
                       }}
                     >
                       {showConfirmPassword ? (
-                        <EyeOff size={20} />
-                      ) : (
                         <Eye size={20} />
+                      ) : (
+                        <EyeOff size={20} />
                       )}
                     </View>
                   }
@@ -365,11 +365,24 @@ const ForgotPassword = () => {
                 <Button
                   variation="primary"
                   marginTop="1rem"
-                  color="#2B1E1A"
-                  style={luxuryBodyStyle}
+                  style={{
+                    ...luxuryBodyStyle,
+                    fontSize: "1rem",
+                    padding: "0.9rem 2.2rem",
+                    border: "1px solid rgba(255,255,255,0.35)",
+                    borderRadius: "28px",
+                    background:
+                      "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
+                    color: "#FFFFFF",
+                    cursor: "pointer",
+                    boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                    transition: "all 0.2s ease",
+                  }}
                   onClick={handleNewPassword}
                 >
-                  Submit
+                  <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
+                    Submit
+                  </Text>
                 </Button>
               </>
             ) : (

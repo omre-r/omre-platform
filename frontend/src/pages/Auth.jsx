@@ -550,9 +550,9 @@ export default function Auth() {
                         }}
                       >
                         {showPassword ? (
-                          <EyeOff size={20} />
-                        ) : (
                           <Eye size={20} />
+                        ) : (
+                          <EyeOff size={20} />
                         )}
                       </View>
                     }
@@ -617,9 +617,9 @@ export default function Auth() {
                             }}
                           >
                             {showConfirmPassword ? (
-                              <EyeOff size={20} />
-                            ) : (
                               <Eye size={20} />
+                            ) : (
+                              <EyeOff size={20} />
                             )}
                           </View>
                         }
