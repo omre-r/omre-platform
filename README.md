@@ -19,17 +19,19 @@ OMRE Fragrances is a company that sells colognes, perfumes, and similar products
 ### Instructions
 
 1. Open a terminal and navigate to the directory you'd like to work in.
-2. Enter the following commands:
-3. Clone the repository into the directory you are in using:
-   - git clone https://github.com/omre-r/omre-platform.git
-4. Navigate into the cloned directory using:
-   - cd omre-platform
-5. Install all required libraries using:
-   - npm run install:all
+2. Clone the repository into the directory you are in using:
+   - `git clone https://github.com/omre-r/omre-platform.git`
+3. Navigate into the cloned directory using:
+   - `cd omre-platform`
+4. Install all required libraries using:
+   - `npm run install:all`
 
-6. Place the .env file in the backend directory.
+5. Place the .env file (see prerequisite 3) in the backend directory.
 
-7. Run the project and visit "http://localhost:5173".
+6. Run the project using:
+   - `npm run dev`
+
+7. Visit "http://localhost:5173".
 
 ## Explanation of project directories
 
@@ -101,7 +103,7 @@ For Example:
 #### S3 related
 
 - "CLOUDFRONT_DOMAIN"
-  - This is the beginning of any image's URL used throughout the site.
+  - This is the beginning of any image's URL used throughout the site. It is the CDN that serves images.
 - "BUCKET_NAME"
   - This is the name of the "bucket" used for storing images on S3.
 - "S3_SECRET_ACCESS_KEY"
@@ -126,3 +128,38 @@ For Example:
   - This is the email that:
     1. All emails will be sent to from the "Contact Us" form.
     2. The "Sender" for all emails sent from the website (besides Cognito verification codes)
+
+## Main Tech Stack and Versions
+
+1. Frontend: React (19.2.0)
+2. Backend: Express.js (5.2.1)
+3. Database: PostgreSQL (16)
+4. Image Storage: AWS S3
+5. Image CDN: AWS CloudFront
+6. Auth: AWS Cognito
+7. Emails: AWS SES
+8. Database hosting: AWS RDS
+
+Additionally, AWS Lambda is used for some useful triggers such as creating a user on sign up.
+
+# Additional Notes
+
+- To run the backend separately:
+  1. Navigate into backend directory with:
+
+     `cd backend`
+
+  2. Start the backend server.
+
+     `npm start`
+
+- To run the frontend:
+  1. Navigate into frontend directory with:
+
+     `cd frontend`
+
+  2. Start the frontend server.
+
+     `npm run dev`
+
+- AWS S3 has a "lifecycle rule" that deletes any uploaded images after a period of time (currently set to 3 days). However, only images with a "status" tag (with the value set to "temporary" for semantics) will be removed.
