@@ -56,6 +56,22 @@ const luxuryCompactStyle = {
   fontSize: "1.1rem",
   letterSpacing: "0.15px",
 };
+const inputStyle = {
+  ...luxuryBodyStyle,
+  borderRadius: "12px",
+  color: "#2B1E1A",
+  padding: ".75rem .75rem",
+};
+const eyeStyling = {
+  all: "unset",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  paddingRight: "0.5rem",
+  height: "100%",
+  pointerEvents: "auto",
+};
 
 export default function Auth() {
   // Routing between pages ----------------------------------------------------
@@ -78,7 +94,6 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstname, setFirstName] = useState("");
   const [lastname, setLastName] = useState("");
-  const [selectedNotes, setSelectedNotes] = useState([]); // MAY NOT BE SIGN UP ONLY LATER !!!
   const [passwordRequirements, setPasswordRequirements] = useState({
     length: false,
     uppercase: false,
@@ -127,7 +142,6 @@ export default function Auth() {
   // Handle Sign Up ---------------------------------------------------------------
   // Initially clear previous messages if testing before
   // Make sure that everything is filled out for sign up form and that passwords match
-  // Creates a comma separated string of the selected notes, will be sent to backend with other user information
   async function handleSignUpSubmit() {
     setAuthError("");
     setAuthSuccess("");
@@ -141,7 +155,6 @@ export default function Auth() {
       setAuthError("Passwords do not match.");
       return;
     }
-    const favoriteNotesString = selectedNotes.join(", ");
     try {
       // Calling sign up function from Amplify Auth
       // {isSignUpComplete, userId, nextStep } these are returned from the signUp function
@@ -233,7 +246,7 @@ export default function Auth() {
         setAuthUI("verify");
 
         await handleResendCode(email);
-        setMessage("Please verify your email before signing in.");
+        setAuthError("Please verify your email before signing in.");
         return;
       }
       await refreshAuth();
@@ -399,10 +412,7 @@ export default function Auth() {
                     <TextField
                       color="#2B1E1A"
                       style={{
-                        ...luxuryBodyStyle,
-                        borderRadius: "12px",
-                        color: "#2B1E1A",
-                        padding: ".75rem .75rem",
+                        ...inputStyle,
                       }}
                       label={
                         <span>
@@ -429,10 +439,7 @@ export default function Auth() {
                     <TextField
                       color="#2B1E1A"
                       style={{
-                        ...luxuryBodyStyle,
-                        borderRadius: "12px",
-                        color: "#2B1E1A",
-                        padding: ".75rem .75rem",
+                        ...inputStyle,
                       }}
                       label={
                         <span>
@@ -461,10 +468,7 @@ export default function Auth() {
 
                 <TextField
                   style={{
-                    ...luxuryBodyStyle,
-                    borderRadius: "12px",
-                    color: "#2B1E1A",
-                    padding: ".75rem .75rem",
+                    ...inputStyle,
                   }}
                   label={
                     <span>
@@ -501,10 +505,7 @@ export default function Auth() {
                   <TextField
                     color="#2B1E1A"
                     style={{
-                      ...luxuryBodyStyle,
-                      borderRadius: "12px",
-                      color: "#2B1E1A",
-                      padding: ".75rem .75rem",
+                      ...inputStyle,
                     }}
                     label={
                       <span>
@@ -539,14 +540,7 @@ export default function Auth() {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         style={{
-                          all: "unset",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          paddingRight: "0.5rem",
-                          height: "100%",
-                          pointerEvents: "auto",
+                          ...eyeStyling,
                         }}
                       >
                         {showPassword ? (
@@ -570,10 +564,7 @@ export default function Auth() {
                       <TextField
                         color="#2B1E1A"
                         style={{
-                          ...luxuryBodyStyle,
-                          borderRadius: "12px",
-                          color: "#2B1E1A",
-                          padding: ".75rem .75rem",
+                          ...inputStyle,
                         }}
                         label={
                           <span>
@@ -606,14 +597,7 @@ export default function Auth() {
                               setShowConfirmPassword(!showConfirmPassword)
                             }
                             style={{
-                              all: "unset",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              paddingRight: "0.5rem",
-                              height: "100%",
-                              pointerEvents: "auto",
+                              ...eyeStyling,
                             }}
                           >
                             {showConfirmPassword ? (
@@ -626,6 +610,7 @@ export default function Auth() {
                       />
                     </Flex>
 
+                    {/* When on the login tab will display criteria for user password -------------------------------------- */}
                     {!isLogin && (
                       <View marginTop="-.6rem">
                         <Text style={luxuryBodyStyle}>
@@ -676,6 +661,7 @@ export default function Auth() {
                   </>
                 )}
 
+                {/* If logging in will display the button to handleSignIn */}
                 {isLogin && (
                   <Button
                     style={{
