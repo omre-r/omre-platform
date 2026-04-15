@@ -860,7 +860,7 @@ export default function Mixology() {
                           style={{
                             ...tableViewStyle,
                             margin: "0 auto",
-                            width: "75%",
+                            width: "100%",
                             textAlign: "left",
                             alignItems: "flex-start",
                             justifyContent: "flex-start",
