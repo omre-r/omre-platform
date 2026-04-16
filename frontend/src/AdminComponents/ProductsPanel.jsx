@@ -1547,14 +1547,19 @@ export default function ProductsPanel() {
                   <option value="" disabled>
                     Type
                   </option>
-                  {!["Men's Cologne", "Women's Perfume"].includes(draft.type) &&
+
+                  {!["Men's Cologne", "Women's Perfume", "Unisex"].includes(
+                    draft.type,
+                  ) &&
                     ![MODES.ADD, MODES.APPEND].includes(activeMode) && (
                       <option value={draft.type} disabled>
                         {draft.type}
                       </option>
                     )}
+
                   <option value="Men's Cologne">Men's Cologne</option>
                   <option value="Women's Perfume">Women's Perfume</option>
+                  <option value="Unisex">Unisex</option>
                 </SelectField>
 
                 {/* Includes an invalid variation as a disabled option, so admin can see the invalid state but not reselect it */}
