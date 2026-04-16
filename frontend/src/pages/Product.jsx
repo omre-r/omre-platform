@@ -28,6 +28,7 @@ import ProfileIcon from "../assets/profileIconClean.png";
 import { useToast } from "../components/ToastContext";
 import { useAuth } from "../context/AuthContext";
 
+// Gets all images used for ratings
 import rating0 from "../assets/ratings/0.png";
 import rating1 from "../assets/ratings/1.png";
 import rating2 from "../assets/ratings/2.png";
@@ -53,6 +54,8 @@ const ratings = [
   rating10,
 ];
 
+// some styles that frequently appear
+
 const bodyStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 400,
@@ -70,26 +73,21 @@ const headingStyle = {
 };
 
 export default function Product() {
-  const params = useParams();
   const { refreshAuth } = useAuth();
+  const { toast } = useToast();
+  const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!getIDToken());
 
+  //product related varaibles
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loadingProduct, setLoadingProduct] = useState(true);
-  const [loadingRecommendations, setLoadingRecommendations] = useState(true);
-  const [loadingReviews, setLoadingReviews] = useState(false);
-  const [loadingRecentOrders, setLoadingRecentOrders] = useState(false);
-
-  const [recommendations, setRecommendations] = useState([]);
-
   const [displayedImage, setDisplayedImage] = useState(0);
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!getIDToken());
-
-  const [addToCartText, setAddToCartText] = useState("Add To Cart");
-
+  // review related variables
   const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
   const [newReviewMessage, setNewReviewMessage] = useState("");
   const [attachedImages, setAttachedImages] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
@@ -98,10 +96,14 @@ export default function Product() {
   const [selectedRating, setSelectedRating] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
 
+  // miscellaneous variables
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(true);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [loadingRecentOrders, setLoadingRecentOrders] = useState(false);
+  const [addToCartText, setAddToCartText] = useState("Add To Cart");
 
-  const { toast } = useToast();
-
+  // set user info on mount
   useEffect(() => {
     const decodedAccessToken = getAccessToken();
     const decodedIdToken = getIDToken();
@@ -115,10 +117,12 @@ export default function Product() {
     }
   }, []);
 
+  // load everything again whenever the parent id parameter in the url changes
   useEffect(() => {
     loadAll();
   }, [params.parentid]);
 
+  // Whenever selected product changes, create new interval for changing images
   useEffect(() => {
     if (!selectedProduct) return;
     setSearchParams((prev) => ({
@@ -134,6 +138,7 @@ export default function Product() {
     };
   }, [selectedProduct]);
 
+  // Add to cart button handler
   async function handleAddToCart() {
     if (!isAuthenticated) {
       toast("Please create an account first.", "error");
@@ -159,6 +164,7 @@ export default function Product() {
     }, 2500);
   }
 
+  // Loads recommendations, products, reviews, and recent orders
   async function loadAll() {
     loadRecommendations();
     Promise.all([loadProduct(), loadReviews()]).then(([prods, revs]) =>
@@ -166,6 +172,7 @@ export default function Product() {
     );
   }
 
+  // Loads all products with given parent id
   async function loadProduct() {
     setLoadingProduct(true);
     const data = await getRelatedProductsReq(params.parentid);
@@ -188,6 +195,7 @@ export default function Product() {
     return prods;
   }
 
+  // Loads all recommendations
   async function loadRecommendations() {
     const idToken = getIDToken();
     if (!idToken || !idToken?.sub) {
@@ -200,6 +208,7 @@ export default function Product() {
     setRecommendations(data?.data?.recommendations || []);
   }
 
+  // Loads all reviews
   async function loadReviews() {
     setLoadingReviews(true);
     const data = await getProductReviewsReq(params.parentid);
@@ -209,6 +218,7 @@ export default function Product() {
     }
     setReviews(data.data.reviews);
 
+    // calculate average review score
     let total = 0;
     for (const review of data.data.reviews) {
       total += Number(review.rating);
@@ -218,6 +228,7 @@ export default function Product() {
     return data.data.reviews;
   }
 
+  // Loads recent orders (past 7 days) that contain the selected product
   async function loadRecentOrders(prods, revs) {
     const sub = getIDToken()?.sub;
     if (!prods || !revs || !sub) return;
@@ -236,6 +247,8 @@ export default function Product() {
     if (!recents.success) {
       return;
     }
+
+    // set recent orders to be ones that contain the selected product
     const prodIds = prods.map((p) => p.id);
     const filteredRecents = recents.data.orders.filter((odr) => {
       for (const item of odr.items) {
@@ -250,6 +263,7 @@ export default function Product() {
     setRecentOrders(filteredRecents);
   }
 
+  // Create a review handler
   async function submitReview() {
     const idToken = getIDToken();
     if (!idToken || !idToken?.sub) {
@@ -263,10 +277,13 @@ export default function Product() {
       toast("Please select a rating!", "error");
       return;
     }
+    // rejects inappropriate messages
     if (isProfane(newReviewMessage)) {
       toast("Please keep your message appropriate!", "error");
       return;
     }
+
+    // Upload any images included / retrieve urls
     let imageUrls = [];
     if (attachedImages.length > 0) {
       imageUrls = await uploadAndGetURlsReq(attachedImages, "reviews");
@@ -276,6 +293,7 @@ export default function Product() {
       }
     }
 
+    // calculate earned credit gained IF this is review is eligible for credit
     let earnedCredit = 0;
     if (recentOrders.length > 0) {
       const prodIds = products.map((p) => p.id);
@@ -291,6 +309,7 @@ export default function Product() {
       }
     }
 
+    // create the review
     const reviewForm = {
       customerid: idToken.sub,
       productid: params.parentid,
@@ -304,6 +323,8 @@ export default function Product() {
       toast(result.message, "error");
       return;
     }
+
+    // clean up
     setNewReviewMessage("");
     setSelectedRating(0);
     for (const f of attachedImages) {
@@ -318,21 +339,28 @@ export default function Product() {
 
     loadAll();
   }
+
+  // handler to change rating when clicking anywhere inside rating input
   function applyRating(e) {
     const ratingRect = e.target.getBoundingClientRect();
     const amountSelected = (e.clientX - ratingRect.left) / ratingRect.width;
     setSelectedRating(Math.floor(amountSelected * ratings.length));
   }
 
+  // "reply" handler
   async function submitReply(review) {
     if (replyMessage === "") {
       toast("Please enter a message!", "error");
       return;
     }
+
+    // rejects inappropriate messages
     if (isProfane(replyMessage)) {
       toast("Please keep your reply appropriate!", "error");
       return;
     }
+
+    // responds to review
     const result = await respondToReviewReq(replyID, {
       message: replyMessage,
       isadmin: userInfo.isAdmin && userInfo.sub !== review.customerid,
@@ -341,26 +369,36 @@ export default function Product() {
       toast(result.message, "error");
       return;
     }
+
+    // cleanup
     loadReviews();
     setReplyMessage("");
     setReplyID(null);
   }
 
+  // delete a review handler
   async function removeReview(id) {
+    // delete review
     const result = await deleteReviewReq(id);
     if (!result.success) {
       toast(result.message, "error");
+
+      // Am expected case of a failed review deletion is when a user gained credit from the review they wish to delete but already spent it
       toast(
         "You may have already spent credit gained from this review!",
         "info",
       );
       return;
     }
+
+    //clean up
     toast("Review deleted!", "success");
     refreshAuth();
     loadAll();
   }
 
+  // runs whenever images are added
+  // max of 2 images, 5MB per image
   function addImages(e) {
     const MAX_SIZE = 1024 * 1024 * 5;
     const numAllowedFiles = 2 - attachedImages.length;
