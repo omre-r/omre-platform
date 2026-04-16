@@ -72,6 +72,19 @@ const eyeStyling = {
   height: "100%",
   pointerEvents: "auto",
 };
+const buttonStyling = {
+  ...luxuryBodyStyle,
+  fontSize: "1.2rem",
+  padding: "0.5rem 1.2rem",
+  border: "2px solid rgba(0, 0, 0)",
+  borderRadius: "28px",
+  background:
+    "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
+  color: "#FFFFFF",
+  cursor: "pointer",
+  boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+  transition: "all 0.2s ease",
+};
 
 export default function Auth() {
   // Routing between pages ----------------------------------------------------
@@ -160,7 +173,7 @@ export default function Auth() {
       // {isSignUpComplete, userId, nextStep } these are returned from the signUp function
       // Email is treated as the username
       // UserAttributes are very simple, custom attribute is the custom favorite notes string
-      const { isSignUpComplete, userId, nextStep } = await signUp({
+      await signUp({
         username: email,
         password: password,
         options: {
@@ -168,7 +181,8 @@ export default function Auth() {
             email,
             given_name: firstname,
             family_name: lastname,
-            "custom:favorite_notes": favoriteNotesString || "",
+            // Leaving this here just in case if I remove it it breaks
+            "custom:favorite_notes": "",
           },
         },
       });
@@ -206,7 +220,7 @@ export default function Auth() {
       return;
     }
     try {
-      const result = await confirmSignUp({
+      await confirmSignUp({
         username: verifyEmail,
         confirmationCode: verificationCode,
       });
@@ -310,7 +324,7 @@ export default function Auth() {
           width="30rem"
           margin="1rem auto"
           padding="2rem"
-          marginTop={isVerify ? "-38rem" : isLogin ? "-23rem" : "-5rem"}
+          marginTop={isVerify ? "-30rem" : isLogin ? "-23rem" : "-5rem"}
           backgroundColor="#f6f1ec2a"
           border="none"
           boxShadow="0 14px 36px rgba(75, 15, 15, 0.15)"
@@ -353,24 +367,37 @@ export default function Auth() {
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value)}
                 />
-                <Flex direction="row" justifyContent="space-between" gap="1rem">
+                <Flex
+                  direction="row"
+                  justifyContent="space-between"
+                  gap="1rem"
+                  marginTop="1.2rem"
+                >
                   <Button
                     variation="primary"
                     color="#2B1E1A"
-                    style={luxuryBodyStyle}
-                    marginTop="1rem"
-                    onClick={handleVerifyCode}
-                  >
-                    Verify
-                  </Button>
-                  <Button
-                    variation="primary"
-                    color="#2B1E1A"
-                    style={luxuryBodyStyle}
-                    marginTop=".5rem"
+                    style={{
+                      ...buttonStyling,
+                      padding: "1.8rem 1.5rem",
+                    }}
                     onClick={() => handleResendCode(verifyEmail)}
                   >
-                    Resend Code
+                    <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
+                      Resend Code
+                    </Text>
+                  </Button>
+                  <Button
+                    style={{
+                      ...buttonStyling,
+                      padding: "1.8rem 3rem",
+                    }}
+                    variation="primary"
+                    color="#2B1E1A"
+                    onClick={handleVerifyCode}
+                  >
+                    <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
+                      Verify
+                    </Text>
                   </Button>
                 </Flex>
               </>
