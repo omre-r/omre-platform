@@ -395,6 +395,7 @@ export default function ProductsPanel() {
     setFiles([]);
   }
 
+  // Clears selected product and draft info when switching modes ------------------------------------------------
   function resetToIdle() {
     clearPendingFiles();
     setSelectedProduct(null);
@@ -402,6 +403,7 @@ export default function ProductsPanel() {
     setActiveMode(MODES.IDLE);
   }
 
+  // When clicking add product clear selected product ------------------------------------------------
   function resetToAdd() {
     clearPendingFiles();
     setSelectedProduct(null);
@@ -420,6 +422,7 @@ export default function ProductsPanel() {
     setActiveMode(MODES.APPEND);
   }
 
+  //  Prefills fields with selected product info for editing --------------------------------------------
   function resetToEdit(prod) {
     clearPendingFiles();
     setSelectedProduct(prod);
@@ -427,6 +430,7 @@ export default function ProductsPanel() {
     setActiveMode(MODES.EDIT);
   }
 
+  // Group products by parentID for easier display of variations ---------------------------------------
   function groupProductsByParentId(productList) {
     const parents = {};
     for (const p of productList) {
@@ -446,6 +450,7 @@ export default function ProductsPanel() {
     return Object.values(parents);
   }
 
+  // When filtering products based on search or filters, will send request to backend with the relevant information and get back the filtered products to display ---------------------------------------
   async function filterProducts(filters) {
     setLoadingProducts(true);
     try {
@@ -461,6 +466,7 @@ export default function ProductsPanel() {
     }
   }
 
+  // Handles the submission of the filters and includes error handling --------------------------------
   function handleFilterSubmit() {
     const filters = {};
     if (minimum !== "" || maximum !== "") {
