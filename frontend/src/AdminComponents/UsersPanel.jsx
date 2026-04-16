@@ -13,20 +13,11 @@ import AdminIcon from "../assets/admin_icon.png";
 import SearchIcon from "../assets/search_icon.png";
 import OptionsIcon from "../assets/options_icon.png";
 
-import { getFilteredUsersReq } from "../requests";
-import { data } from "react-router-dom";
+import { getFilteredUsersReq, getUsersReq, getUserReq } from "../requests";
 import { RefreshCw } from "lucide-react";
 import { useToast } from "../components/ToastContext";
 
 // Custom Styling for fonts and amplify ui --------------------------------------
-const bodyStyle2 = {
-  fontFamily: "'Cormorant Garamond', serif",
-  fontWeight: 400,
-  fontSize: "1.3rem",
-  letterSpacing: "0.5px",
-  color: "#000000",
-};
-
 const luxuryHeadingStyle = {
   fontFamily: "'Cormorant Garamond', serif",
   fontWeight: 800,
@@ -54,9 +45,6 @@ const buttonStyling = {
   transition: "all 0.2s ease",
 };
 
-// API URL to reach user information -----------------------------------------------
-const API_URL = "https://6180u0u9xf.execute-api.us-east-1.amazonaws.com/prod";
-
 // Users panel, a component used in admin dashboard --------------------------------------
 // Will be called by admin dashboard and shown if users button is pressed
 // Will show user email, when clicking will show deeper information on right card
@@ -78,16 +66,16 @@ export default function UsersPanel() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Load users ------------------------------------------------------------------
-  // Pull user information from API URL and if fails show error message
+  // Pull user information from backend and display in left card, includes error handling and loading state
   async function loadUsers() {
     setLoadingUsers(true);
     try {
-      const response = await fetch(`${API_URL}/admin/users`);
-      if (!response.ok) {
-        throw new Error(`Issue with load response: ${response.status}`);
+      // use backend request to get users, if unsuccessful show toast error message
+      const response = await getUsersReq();
+      if (!response.success) {
+        throw new Error(response.message || "Error loading users.");
       }
-      const data = await response.json();
-      setUsers(data.users);
+      setUsers(response.data.users || []);
     } catch (error) {
       toast(error.message || "Error loading users.", "error");
     } finally {
@@ -95,6 +83,7 @@ export default function UsersPanel() {
     }
   }
 
+  //  Filter users ----------------------------------------------------------------
   async function filterUsers(filters) {
     setLoadingUsers(true);
     try {
@@ -112,17 +101,17 @@ export default function UsersPanel() {
 
   // View user ------------------------------------------------------
   // After user information is loaded one can click on an email and show deeper information on card to the right
-  // Will use API URL to get to user information
   async function viewUser(userId) {
     setLoadingUser(true);
     setSelectedUser(null);
     try {
-      const response = await fetch(`${API_URL}/admin/users/${userId}`);
-      if (!response.ok) {
-        throw new Error(`Issue with load response: ${response.status}`);
+      // use backend request to get user information, if unsuccessful show toast error message
+      // userId in this case is the cognito_sub since that is what is used in the backend to identify users, user_id is just used for the frontend to keep track of which user is which and does not necessarily have to match with backend
+      const response = await getUserReq(userId);
+      if (!response.success) {
+        throw new Error(response.message || "Error viewing user.");
       }
-      const data = await response.json();
-      setSelectedUser(data.user);
+      setSelectedUser(response.data.user);
     } catch (error) {
       toast(error.message || "Error viewing user.", "error");
     } finally {
@@ -130,6 +119,8 @@ export default function UsersPanel() {
     }
   }
 
+  // Handle filter submit ------------------------------------------------------
+  // When user presses filter button, this function will be called and will decide which filters to send to backend based on user input
   function handleFilterSubmit() {
     const filters = {};
     if (firstname !== "") filters.first_name = firstname;
@@ -155,10 +146,12 @@ export default function UsersPanel() {
     filterUsers(filters);
   }
 
+  // When component is loaded, load users from API URL --------------------------------------
   useEffect(() => {
     loadUsers();
   }, []);
 
+  // If loading user show a loading message for a moment ------------------------------------------
   if (loadingUsers) {
     return (
       <Text style={{ ...luxuryBodyStyle, color: "white" }}>
@@ -203,6 +196,7 @@ export default function UsersPanel() {
                 gap={"15px"}
                 style={{ zIndex: "2000", background: "#ffffff00" }}
               >
+                {/* Search Input ---------------------------------------------- */}
                 <View position={"relative"}>
                   <input
                     type="text"
@@ -230,6 +224,7 @@ export default function UsersPanel() {
                       boxSizing: "border-box",
                     }}
                   />
+                  {/* Placeholder text for when searching by email */}
                   {!search && (
                     <Text
                       style={{
@@ -257,6 +252,7 @@ export default function UsersPanel() {
                       top: "50%",
                       transform: "translateY(-50%)",
                     }}
+                    // When search is used search by email and show results in left card
                     onClick={async (e) => {
                       const res = await getFilteredUsersReq({ email: search });
                       setUsers(res.data.users);
@@ -508,7 +504,7 @@ export default function UsersPanel() {
                             borderTop: "1px solid rgba(255,255,255,0.1)",
                           }}
                         />
-
+                        {/* Filter Button */}
                         <button
                           onClick={handleFilterSubmit}
                           style={{
@@ -532,6 +528,7 @@ export default function UsersPanel() {
                     </Card>
                   )}
                 </View>
+                {/* Refresh button ----------------------------------------------- */}
                 <View
                   position={"relative"}
                   onClick={async () => {
@@ -557,6 +554,7 @@ export default function UsersPanel() {
               </Flex>
             </Flex>
             <View
+              // Scrollable container for user emails
               className="users-scroll"
               style={{ overflowY: "auto" }}
               height={"25rem"}
@@ -565,14 +563,17 @@ export default function UsersPanel() {
             >
               {sortedUsers.length === 0 && <Text>No users found!</Text>}
               {sortedUsers.map((currentUser) => (
+                // Loads user information displaying email, can click each email to display more information in right card, if user is admin will have different styling and show admin badge on right card when clicked
                 <Button
                   key={currentUser.user_id}
-                  onClick={() => viewUser(currentUser.user_id)}
+                  // Use cognito_sub as identifier for viewing user information since that is what is used in the backend to identify users, user_id is just used for the frontend to keep track of which user is which and does not necessarily have to match with backend
+                  onClick={() => viewUser(currentUser.cognito_sub)}
                   style={{
                     ...buttonStyling,
                     width: "100%",
                     justifyContent: "flex-start",
                     marginBottom: ".8rem",
+                    // Different styling for selected user and admin users -----------------------------------------
                     border:
                       selectedUser?.user_id === currentUser.user_id
                         ? "2px solid gold"
@@ -641,6 +642,7 @@ export default function UsersPanel() {
               margin: "0 auto",
             }}
           >
+            {/* Title of right card -------------------------------------------------------------- */}
             <Text
               style={{
                 ...luxuryHeadingStyle,
@@ -715,6 +717,7 @@ export default function UsersPanel() {
                     "linear-gradient(145deg, rgba(90, 20, 20, 0.92), rgba(40, 35, 35, 0.82))",
                 }}
               >
+                {/* Within this view display relevant user information such as email, name, etc. ----------------------------------------- */}
                 <View
                   style={{
                     flex: 1,
@@ -776,6 +779,7 @@ export default function UsersPanel() {
                   </Text>
                 </View>
               </View>
+              {/* Button to close user information and clear the right card ------------------------------------------------ */}
               <Button
                 style={buttonStyling}
                 onClick={() => setSelectedUser(null)}
