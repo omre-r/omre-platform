@@ -163,3 +163,7 @@ Additionally, AWS Lambda is used for some useful triggers such as creating a use
      `npm run dev`
 
 - AWS S3 has a "lifecycle rule" that deletes any uploaded images after a period of time (currently set to 3 days). However, only images with a "status" tag (with the value set to "temporary" for semantics) will be removed.
+
+- OMRE Fragrances Testing Account:
+  - Email: OmreFragrancesTesting@gmail.com
+  - Password: OmreTesting123!
