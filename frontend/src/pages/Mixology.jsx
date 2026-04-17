@@ -125,6 +125,23 @@ const buttonStyling = {
   transition: "all 0.2s ease",
 };
 
+function getUserIdFromToken() {
+  for (const key of Object.keys(localStorage)) {
+    if (key.includes("idToken")) {
+      const idToken = localStorage.getItem(key);
+      try {
+        const base64 = idToken.split(".")[1];
+        const decoded = JSON.parse(atob(base64));
+        return decoded.sub;
+      } catch (error) {
+        console.error("Failed to decode idToken:", error);
+        return undefined;
+      }
+    }
+  }
+  return undefined;
+}
+
 export default function Mixology() {
   const { toast } = useToast();
   const [blendLoading, setBlendLoading] = useState(false); // prevents double clicks
@@ -153,17 +170,9 @@ export default function Mixology() {
   // Loading blends -------------------------------------------------------
   // Calling load blends on button click, getting user saved blends from backend and setting.
   const [loadedBlends, setLoadedBlends] = useState([]);
+
   async function loadBlends() {
-    let userid;
-    for (let key of Object.keys(localStorage)) {
-      if (key.includes("idToken")) {
-        const idToken = localStorage.getItem(key);
-        const base64 = idToken.split(".")[1];
-        const decoded = JSON.parse(atob(base64));
-        userid = decoded.sub;
-        break;
-      }
-    }
+    const userid = getUserIdFromToken();
 
     try {
       const data = await getUserSavedBlendsReq(userid);
@@ -299,16 +308,7 @@ export default function Mixology() {
   }
 
   async function handleDeleteBlend(blendId) {
-    let userid;
-    for (let key of Object.keys(localStorage)) {
-      if (key.includes("idToken")) {
-        const idToken = localStorage.getItem(key);
-        const base64 = idToken.split(".")[1];
-        const decoded = JSON.parse(atob(base64));
-        userid = decoded.sub;
-        break;
-      }
-    }
+    const userid = getUserIdFromToken();
 
     try {
       const data = await deleteUserBlendReq(userid, blendId);
@@ -328,16 +328,8 @@ export default function Mixology() {
 
   // Builds the blend payload from current state to send to backend
   function buildBlendPayload() {
-    let userid;
-    for (let key of Object.keys(localStorage)) {
-      if (key.includes("idToken")) {
-        const idToken = localStorage.getItem(key);
-        const base64 = idToken.split(".")[1];
-        const decoded = JSON.parse(atob(base64));
-        userid = decoded.sub;
-        break;
-      }
-    }
+    const userid = getUserIdFromToken();
+
     return {
       userid,
       frag1_productid: cologne1Id,
@@ -431,16 +423,8 @@ export default function Mixology() {
     setBlendLoading(true);
 
     try {
-      let userid;
-      for (let key of Object.keys(localStorage)) {
-        if (key.includes("idToken")) {
-          const idToken = localStorage.getItem(key);
-          const base64 = idToken.split(".")[1];
-          const decoded = JSON.parse(atob(base64));
-          userid = decoded.sub;
-          break;
-        }
-      }
+      const userid = getUserIdFromToken();
+
       if (!userid) {
         toast("User not found. Please log in again.", "error");
         return;
