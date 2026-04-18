@@ -142,6 +142,193 @@ function getUserIdFromToken() {
   return undefined;
 }
 
+// Get product ID from product object, accounting for different possible key names
+function getProductId(product) {
+  return product.productid || product.product_id || product.id;
+}
+
+// Clean product name — some products use - and – so we split by them to remove the "inspired by" stuff
+function cleanProductName(name) {
+  if (!name) return "Unknown";
+  return name.replace(/\s*[-–]\s*Inspired by.*$/i, "").trim();
+}
+
+// Sub-component: renders a single saved blend row in the "Your Saved Blends" table.
+// Extracted from the main Mixology render for readability. Receives blend data,
+// the products list (for lookups), and handlers for add-to-cart / delete.
+function SavedBlendRow({ blend, products, onAddToCart, onDelete }) {
+  // Build list of fragrances in this blend. Fragrance 3 is optional.
+  const fragrances = [
+    { productId: blend.frag1_productid, pct: blend.frag1_pct },
+    { productId: blend.frag2_productid, pct: blend.frag2_pct },
+    ...(blend.frag3_productid
+      ? [{ productId: blend.frag3_productid, pct: blend.frag3_pct }]
+      : []),
+  ];
+
+  return (
+    <TableRow style={{ borderTop: "1px solid rgba(0,0,0,0.15)" }}>
+      <TableCell style={tableBodyStyle}>
+        <View
+          style={{
+            ...tableViewStyle,
+            margin: "0 auto",
+            width: "100%",
+            textAlign: "left",
+            alignItems: "flex-start",
+            justifyContent: "flex-start",
+            minHeight: "unset",
+            padding: "1.8rem",
+          }}
+        >
+          <View width="100%">
+            <View marginBottom="2rem">
+              <Flex
+                direction="row"
+                gap="1rem"
+                justifyContent="flex-start"
+                alignItems="stretch"
+                wrap="wrap"
+                marginBottom="1.25rem"
+              >
+                {/* Loop through fragrances in this blend and look up their product info */}
+                {fragrances.map((frag, index) => {
+                  const matchedProduct = products.find(
+                    (p) => String(getProductId(p)) === String(frag.productId),
+                  );
+                  if (!matchedProduct) return null;
+                  return (
+                    <View
+                      key={index}
+                      style={{
+                        width: "200px",
+                        padding: "1rem",
+                        borderRadius: "16px",
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.15)",
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.18)",
+                        textAlign: "left",
+                      }}
+                    >
+                      {matchedProduct.images?.[0] && (
+                        <View
+                          style={{
+                            borderRadius: "14px",
+                            overflow: "hidden",
+                            border: "2px solid rgba(0,0,0,0.55)",
+                            marginBottom: "0.75rem",
+                          }}
+                        >
+                          <img
+                            src={matchedProduct.images[0]}
+                            alt={matchedProduct.name}
+                            style={{
+                              width: "120%",
+                              height: "160px",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+                        </View>
+                      )}
+
+                      <Text
+                        style={{
+                          ...luxuryBodyStyle,
+                          color: "#FFFFFF",
+                          fontSize: "1.2rem",
+                          lineHeight: "1.35",
+                        }}
+                      >
+                        ✦ {matchedProduct.name}
+                      </Text>
+
+                      <Text
+                        style={{
+                          ...luxuryBodyStyle,
+                          color: "#FFFFFF",
+                          fontSize: "1.2rem",
+                          marginTop: "0.2rem",
+                        }}
+                      >
+                        Percentage: {frag.pct}%
+                      </Text>
+                    </View>
+                  );
+                })}
+              </Flex>
+
+              <Text
+                style={{
+                  ...luxuryBodyStyle,
+                  color: "#FFFFFF",
+                  fontSize: "1.5rem",
+                }}
+              >
+                Size: {blend.size_ml}ml
+              </Text>
+            </View>
+          </View>
+
+          {/* Add to cart / delete buttons for this saved blend */}
+          <Flex
+            direction="row"
+            gap="2rem"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+          >
+            <View
+              style={{
+                ...buttonStyling,
+                border: "2px solid #000000",
+                cursor: "pointer",
+                background:
+                  "linear-gradient(145deg, #00ff91, rgba(40, 35, 35, 0.82))",
+                padding: ".5rem 1rem",
+              }}
+              onClick={() => onAddToCart(blend)}
+            >
+              <Text
+                style={{
+                  ...luxuryBodyStyle,
+                  color: "#ffffff",
+                  fontSize: "1.5rem",
+                  fontWeight: 500,
+                }}
+              >
+                Add to Cart
+              </Text>
+            </View>
+            <View
+              style={{
+                ...buttonStyling,
+                border: "2px solid #8f0000",
+                cursor: "pointer",
+                padding: ".5rem 1rem",
+                background:
+                  "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))",
+              }}
+              onClick={() => onDelete(blend.id)}
+            >
+              <Text
+                style={{
+                  ...luxuryBodyStyle,
+                  color: "#ffffff",
+                  fontSize: "1.5rem",
+                  fontWeight: 500,
+                }}
+              >
+                Delete Blend
+              </Text>
+            </View>
+          </Flex>
+        </View>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export default function Mixology() {
   const { toast } = useToast();
   const [blendLoading, setBlendLoading] = useState(false); // prevents double clicks
@@ -265,17 +452,6 @@ export default function Mixology() {
     // Returns true or false if the product id is in the list of picked colognes for the other slots
     return picked.includes(productId);
   };
-
-  // Get product ID from product object, accounting for different possible key names ---------------------------
-  function getProductId(product) {
-    return product.productid || product.product_id || product.id;
-  }
-
-  // Clean product name some products use - and – so we need to split by them to remove the inspired by stuff -------------------
-  function cleanProductName(name) {
-    if (!name) return "Unknown";
-    return name.replace(/\s*[-–]\s*Inspired by.*$/i, "").trim();
-  }
 
   // Grab the product name by using the ID ------------------------------------------
   // Remove the inspired by text splitting the string
@@ -833,196 +1009,13 @@ export default function Mixology() {
                     </TableRow>
                   </TableHead>
                   {loadedBlends.map((blend) => (
-                    <TableRow
+                    <SavedBlendRow
                       key={blend.id}
-                      style={{
-                        borderTop: "1px solid rgba(0,0,0,0.15)",
-                      }}
-                    >
-                      <TableCell style={tableBodyStyle}>
-                        <View
-                          style={{
-                            ...tableViewStyle,
-                            margin: "0 auto",
-                            width: "100%",
-                            textAlign: "left",
-                            alignItems: "flex-start",
-                            justifyContent: "flex-start",
-                            minHeight: "unset",
-                            padding: "1.8rem",
-                          }}
-                        >
-                          <View width="100%">
-                            <View marginBottom="2rem">
-                              <Flex
-                                direction="row"
-                                gap="1rem"
-                                justifyContent="flex-start"
-                                alignItems="stretch"
-                                wrap="wrap"
-                                marginBottom="1.25rem"
-                              >
-                                {/* Building a list of the fragrances by productID and percetange ------------------------------------------ */}
-                                {[
-                                  {
-                                    productId: blend.frag1_productid,
-                                    pct: blend.frag1_pct,
-                                  },
-                                  {
-                                    productId: blend.frag2_productid,
-                                    pct: blend.frag2_pct,
-                                  },
-                                  // if fragrance 3 exists then add it to the array otherwise skip it
-                                  ...(blend.frag3_productid
-                                    ? [
-                                        {
-                                          productId: blend.frag3_productid,
-                                          pct: blend.frag3_pct,
-                                        },
-                                      ]
-                                    : []),
-                                ].map((frag, index) => {
-                                  // Then we loop through every item of our previously created array
-                                  const matchedProduct = products.find(
-                                    // Look through products array to find matching product id to get the fragrance name and image for each fragrance in the blend
-                                    (p) =>
-                                      String(getProductId(p)) ===
-                                      String(frag.productId),
-                                  );
-                                  if (!matchedProduct) return null;
-                                  return (
-                                    <View
-                                      key={index}
-                                      style={{
-                                        width: "200px",
-                                        padding: "1rem",
-                                        borderRadius: "16px",
-                                        background: "rgba(255,255,255,0.06)",
-                                        border:
-                                          "1px solid rgba(255,255,255,0.15)",
-                                        boxShadow:
-                                          "0 4px 10px rgba(0,0,0,0.18)",
-                                        textAlign: "left",
-                                      }}
-                                    >
-                                      {matchedProduct.images?.[0] && (
-                                        <View
-                                          style={{
-                                            borderRadius: "14px",
-                                            overflow: "hidden",
-                                            border:
-                                              "2px solid rgba(0,0,0,0.55)",
-                                            marginBottom: "0.75rem",
-                                          }}
-                                        >
-                                          <img
-                                            src={matchedProduct.images[0]}
-                                            alt={matchedProduct.name}
-                                            style={{
-                                              width: "120%",
-                                              height: "160px",
-                                              objectFit: "cover",
-                                              display: "block",
-                                            }}
-                                          />
-                                        </View>
-                                      )}
-
-                                      <Text
-                                        style={{
-                                          ...luxuryBodyStyle,
-                                          color: "#FFFFFF",
-                                          fontSize: "1.2rem",
-                                          lineHeight: "1.35",
-                                        }}
-                                      >
-                                        ✦ {matchedProduct.name}
-                                      </Text>
-
-                                      <Text
-                                        style={{
-                                          ...luxuryBodyStyle,
-                                          color: "#FFFFFF",
-                                          fontSize: "1.2rem",
-                                          marginTop: "0.2rem",
-                                        }}
-                                      >
-                                        Percentage: {frag.pct}%
-                                      </Text>
-                                    </View>
-                                  );
-                                })}
-                              </Flex>
-
-                              <Text
-                                style={{
-                                  ...luxuryBodyStyle,
-                                  color: "#FFFFFF",
-                                  fontSize: "1.5rem",
-                                }}
-                              >
-                                Size: {blend.size_ml}ml
-                              </Text>
-                            </View>
-                          </View>
-                          {/* Ability to add blend to cart or delete from profile -------------------------------------------------- */}
-                          <Flex
-                            direction="row"
-                            gap="2rem"
-                            justifyContent="center"
-                            alignItems="center"
-                            width="100%"
-                          >
-                            <View
-                              style={{
-                                ...buttonStyling,
-                                border: "2px solid #000000",
-                                cursor: "pointer",
-                                background:
-                                  "linear-gradient(145deg, #00ff91, rgba(40, 35, 35, 0.82))",
-                                padding: ".5rem 1rem",
-                              }}
-                              onClick={() => handleAddSavedBlendToCart(blend)}
-                            >
-                              <Text
-                                style={{
-                                  ...luxuryBodyStyle,
-                                  color: "#ffffff",
-                                  fontSize: "1.5rem",
-                                  fontWeight: 500,
-                                }}
-                              >
-                                Add to Cart
-                              </Text>
-                            </View>
-                            <View
-                              style={{
-                                ...buttonStyling,
-                                border: "2px solid #8f0000",
-                                cursor: "pointer",
-                                padding: ".5rem 1rem",
-                                background:
-                                  "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))",
-                              }}
-                              onClick={() => {
-                                handleDeleteBlend(blend.id);
-                              }}
-                            >
-                              <Text
-                                style={{
-                                  ...luxuryBodyStyle,
-                                  color: "#ffffff",
-                                  fontSize: "1.5rem",
-                                  fontWeight: 500,
-                                }}
-                              >
-                                Delete Blend
-                              </Text>
-                            </View>
-                          </Flex>
-                        </View>
-                      </TableCell>
-                    </TableRow>
+                      blend={blend}
+                      products={products}
+                      onAddToCart={handleAddSavedBlendToCart}
+                      onDelete={handleDeleteBlend}
+                    />
                   ))}
                 </Table>
               )}
