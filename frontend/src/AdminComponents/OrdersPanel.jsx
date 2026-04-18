@@ -122,6 +122,14 @@ export default function OrdersPanel() {
   // lets admin update order status
   async function updateStatus() {
     if (!selectedOrder) return;
+
+    const blockedStatuses = ["fulfilled", "canceled"];
+
+    if (blockedStatuses.includes(selectedOrder.status?.toLowerCase())) {
+      toast("This order can no longer be updated.", "error");
+      return;
+    }
+
     const token = await getToken();
     await updateOrderStatusReq(selectedOrder.id, status, token);
     await viewOrder(selectedOrder.id);
@@ -133,6 +141,12 @@ export default function OrdersPanel() {
       toast("Please enter a cancellation reason.", "error");
       return;
     }
+    const blockedStatuses = ["fulfilled", "canceled"];
+
+    if (blockedStatuses.includes(selectedOrder?.status?.toLowerCase())) {
+      toast("This order cannot be canceled.", "error");
+      return;
+    }
 
     const token = await getToken();
     await cancelOrderReq(orderId, cancelReason, token);
@@ -140,6 +154,10 @@ export default function OrdersPanel() {
     setCancelReason("");
     loadOrders();
   }
+
+  const isLockedOrder = ["fulfilled", "canceled"].includes(
+    selectedOrder?.status?.toLowerCase(),
+  );
 
   useEffect(() => {
     loadOrders();
@@ -634,6 +652,7 @@ export default function OrdersPanel() {
 
                   <Button
                     onClick={updateStatus}
+                    disabled={isLockedOrder}
                     style={{
                       ...buttonStyling,
                       marginTop: "1px",
@@ -644,6 +663,10 @@ export default function OrdersPanel() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+
+                      opacity: isLockedOrder ? 0.4 : 1,
+                      cursor: isLockedOrder ? "not-allowed" : "pointer",
+                      filter: isLockedOrder ? "grayscale(100%)" : "none",
                     }}
                   >
                     <Text style={{ ...luxuryBodyStyle, color: "#FFFFFF" }}>
@@ -671,8 +694,10 @@ export default function OrdersPanel() {
 
                   <View
                     onClick={() => {
-                      if (!selectedOrder || selectedOrder.status === "canceled")
+                      if (!selectedOrder || isLockedOrder) {
+                        toast("This order cannot be modified.", "error");
                         return;
+                      }
                       setConfirmCancel(true);
                     }}
                     style={{
@@ -682,30 +707,23 @@ export default function OrdersPanel() {
                       minWidth: "150px",
                       borderRadius: "10px",
 
-                      color:
-                        selectedOrder && selectedOrder.status !== "canceled"
-                          ? "#ffffff"
-                          : "#999",
+                      color: isLockedOrder ? "#999" : "#ffffff",
 
-                      border:
-                        selectedOrder && selectedOrder.status !== "canceled"
-                          ? "2px solid #8f0000"
-                          : "2px solid #808080",
+                      border: isLockedOrder
+                        ? "2px solid #808080"
+                        : "2px solid #8f0000",
 
-                      background:
-                        selectedOrder && selectedOrder.status !== "canceled"
-                          ? "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))"
-                          : "linear-gradient(145deg, #9f9f9f, rgba(20,20,20,0.92))",
+                      background: isLockedOrder
+                        ? "linear-gradient(145deg, #9f9f9f, rgba(20,20,20,0.92))"
+                        : "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))",
 
-                      cursor:
-                        selectedOrder && selectedOrder.status !== "canceled"
-                          ? "pointer"
-                          : "not-allowed",
+                      cursor: isLockedOrder ? "not-allowed" : "pointer",
 
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       whiteSpace: "nowrap",
+                      opacity: isLockedOrder ? 0.6 : 1,
                     }}
                   >
                     Cancel
