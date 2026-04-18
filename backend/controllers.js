@@ -502,6 +502,18 @@ async function saveBlend(req, res) {
         .json({ success: false, message: "Not authenticated" });
     }
   }
+  // Validate that the total for mixology blend is exactly equal to 100%
+  const total =
+    Number(req.body.frag1_pct || 0) +
+    Number(req.body.frag2_pct || 0) +
+    Number(req.body.frag3_pct || 0);
+  // If total not equal to 100 it fails
+  if (total !== 100) {
+    return res.status(400).json({
+      success: false,
+      message: "Percentages must equal 100%",
+    });
+  }
   const result = await blends.saveBlend(req.body);
   if (!result.success) return res.status(result.status || 400).json(result);
   return res.json(result);
