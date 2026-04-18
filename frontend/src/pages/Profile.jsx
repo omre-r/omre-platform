@@ -331,6 +331,154 @@ function SavedBlendRow({ blend, products, onAddToCart, onDelete }) {
   );
 }
 
+// Sub-component: renders a single saved item card in the "Saved For Later" tab.
+// Handles both product items (with variation) and blend items (with size_ml).
+// Receives the saved item and handlers for remove / add-to-cart.
+function SavedItemRow({ savedItem, onRemove, onAddToCart }) {
+  return (
+    <View
+      style={{
+        ...tableViewStyle,
+        margin: "0 auto 1.5rem auto",
+        width: "35%",
+        textAlign: "left",
+        alignItems: "flex-start",
+        justifyContent: "flex-start",
+        minHeight: "unset",
+        padding: "1.8rem",
+      }}
+    >
+      <View width="100%">
+        <Flex direction="column" alignItems="flex-start" gap="1.2rem">
+          {savedItem.item?.images?.[0] && (
+            <View
+              style={{
+                width: "300px",
+                padding: "0.9rem",
+                borderRadius: "16px",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.18)",
+                alignSelf: "center",
+              }}
+            >
+              <View
+                style={{
+                  ...imageStyling,
+                }}
+              >
+                <img
+                  src={savedItem.item.images[0]}
+                  alt={savedItem.item.name}
+                  style={{
+                    width: "100%",
+                    height: "260px",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+              </View>
+
+              <View style={{ marginTop: "0.9rem" }}>
+                <Text
+                  style={{
+                    ...luxuryBodyStyle,
+                    color: "#FFFFFF",
+                    fontSize: "1.5rem",
+                  }}
+                >
+                  ✦ {savedItem.item?.name}
+                </Text>
+
+                <Text
+                  style={{
+                    ...luxuryBodyStyle,
+                    color: "#FFFFFF",
+                    fontSize: "1.25rem",
+                    marginTop: "0.2rem",
+                  }}
+                >
+                  {savedItem.item?.variation
+                    ? `Size: ${savedItem.item.variation}`
+                    : savedItem.item?.size_ml
+                      ? `Size: ${savedItem.item.size_ml} mL`
+                      : ""}
+                </Text>
+
+                <Text
+                  style={{
+                    ...luxuryBodyStyle,
+                    color: "#FFFFFF",
+                    fontSize: "1.35rem",
+                    marginTop: "0.3rem",
+                  }}
+                >
+                  Price: ${savedItem.item.price}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          <Flex
+            direction="row"
+            gap="2rem"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+            marginTop="0.8rem"
+          >
+            <View
+              style={{
+                ...buttonStyling,
+                border: "2px solid #8f0000",
+                cursor: "pointer",
+                padding: ".5rem 1rem",
+                background:
+                  "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))",
+              }}
+              onClick={() => onRemove(savedItem)}
+            >
+              <Text
+                style={{
+                  ...luxuryBodyStyle,
+                  color: "#ffffff",
+                  fontSize: "1.5rem",
+                  fontWeight: 500,
+                }}
+              >
+                Remove Item
+              </Text>
+            </View>
+
+            <View
+              style={{
+                ...buttonStyling,
+                border: "2px solid #000000",
+                cursor: "pointer",
+                background:
+                  "linear-gradient(145deg, #00ff91, rgba(40, 35, 35, 0.82))",
+                padding: ".5rem 1rem",
+              }}
+              onClick={() => onAddToCart(savedItem)}
+            >
+              <Text
+                style={{
+                  ...luxuryBodyStyle,
+                  color: "#ffffff",
+                  fontSize: "1.5rem",
+                  fontWeight: 500,
+                }}
+              >
+                Add to Cart
+              </Text>
+            </View>
+          </Flex>
+        </Flex>
+      </View>
+    </View>
+  );
+}
+
 export default function Profile() {
   const { toast } = useToast();
   const { refreshAuth } = useAuth();
@@ -1438,151 +1586,12 @@ export default function Profile() {
                   </Text>
                 )}
                 {savedItems.map((savedItem) => (
-                  <View
+                  <SavedItemRow
                     key={savedItem.id}
-                    style={{
-                      ...tableViewStyle,
-                      margin: "0 auto 1.5rem auto",
-                      width: "35%",
-                      textAlign: "left",
-                      alignItems: "flex-start",
-                      justifyContent: "flex-start",
-                      minHeight: "unset",
-                      padding: "1.8rem",
-                    }}
-                  >
-                    <View width="100%">
-                      <Flex
-                        direction="column"
-                        alignItems="flex-start"
-                        gap="1.2rem"
-                      >
-                        {savedItem.item?.images?.[0] && (
-                          <View
-                            style={{
-                              width: "300px",
-                              padding: "0.9rem",
-                              borderRadius: "16px",
-                              background: "rgba(255,255,255,0.06)",
-                              border: "1px solid rgba(255,255,255,0.15)",
-                              boxShadow: "0 4px 10px rgba(0,0,0,0.18)",
-                              alignSelf: "center",
-                            }}
-                          >
-                            <View
-                              style={{
-                                ...imageStyling,
-                              }}
-                            >
-                              <img
-                                src={savedItem.item.images[0]}
-                                alt={savedItem.item.name}
-                                style={{
-                                  width: "100%",
-                                  height: "260px",
-                                  objectFit: "cover",
-                                  display: "block",
-                                }}
-                              />
-                            </View>
-
-                            <View style={{ marginTop: "0.9rem" }}>
-                              <Text
-                                style={{
-                                  ...luxuryBodyStyle,
-                                  color: "#FFFFFF",
-                                  fontSize: "1.5rem",
-                                }}
-                              >
-                                ✦ {savedItem.item?.name}
-                              </Text>
-
-                              <Text
-                                style={{
-                                  ...luxuryBodyStyle,
-                                  color: "#FFFFFF",
-                                  fontSize: "1.25rem",
-                                  marginTop: "0.2rem",
-                                }}
-                              >
-                                {savedItem.item?.variation
-                                  ? `Size: ${savedItem.item.variation}`
-                                  : savedItem.item?.size_ml
-                                    ? `Size: ${savedItem.item.size_ml} mL`
-                                    : ""}
-                              </Text>
-
-                              <Text
-                                style={{
-                                  ...luxuryBodyStyle,
-                                  color: "#FFFFFF",
-                                  fontSize: "1.35rem",
-                                  marginTop: "0.3rem",
-                                }}
-                              >
-                                Price: ${savedItem.item.price}
-                              </Text>
-                            </View>
-                          </View>
-                        )}
-
-                        <Flex
-                          direction="row"
-                          gap="2rem"
-                          justifyContent="center"
-                          alignItems="center"
-                          width="100%"
-                          marginTop="0.8rem"
-                        >
-                          <View
-                            style={{
-                              ...buttonStyling,
-                              border: "2px solid #8f0000",
-                              cursor: "pointer",
-                              padding: ".5rem 1rem",
-                              background:
-                                "linear-gradient(145deg, #e22424, rgba(20,20,20,0.92))",
-                            }}
-                            onClick={() => removeSavedItem(savedItem)}
-                          >
-                            <Text
-                              style={{
-                                ...luxuryBodyStyle,
-                                color: "#ffffff",
-                                fontSize: "1.5rem",
-                                fontWeight: 500,
-                              }}
-                            >
-                              Remove Item
-                            </Text>
-                          </View>
-
-                          <View
-                            style={{
-                              ...buttonStyling,
-                              border: "2px solid #000000",
-                              cursor: "pointer",
-                              background:
-                                "linear-gradient(145deg, #00ff91, rgba(40, 35, 35, 0.82))",
-                              padding: ".5rem 1rem",
-                            }}
-                            onClick={() => addToCart(savedItem)}
-                          >
-                            <Text
-                              style={{
-                                ...luxuryBodyStyle,
-                                color: "#ffffff",
-                                fontSize: "1.5rem",
-                                fontWeight: 500,
-                              }}
-                            >
-                              Add to Cart
-                            </Text>
-                          </View>
-                        </Flex>
-                      </Flex>
-                    </View>
-                  </View>
+                    savedItem={savedItem}
+                    onRemove={removeSavedItem}
+                    onAddToCart={addToCart}
+                  />
                 ))}
               </View>
             </View>
