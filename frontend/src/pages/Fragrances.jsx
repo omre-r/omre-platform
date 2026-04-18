@@ -1,4 +1,4 @@
-// Imports for all data and commands
+// Imports for all data and commandsish
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -947,83 +947,87 @@ export default function Home() {
           margin="0 auto"
         >
           {!loadingProducts &&
-            getFilteredParents(products).map((prodList) => {
-              if (prodList.length === 0) return null;
-              const prod = prodList?.[0];
-              if (!prod) {
-                return null;
-              }
-              return (
-                <Card
-                  key={prod.id}
-                  className="product-card-hover"
-                  variation="elevated"
-                  width="16rem"
-                  minHeight="26rem"
-                  padding="1.75rem"
-                  border="1px solid rgba(190, 160, 150, 0.18)"
-                  borderRadius="15px"
-                  boxShadow="0 14px 28px rgba(0,0,0,0.22)"
-                  style={{
-                    background:
-                      "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
-                  }}
-                >
-                  <Link
-                    to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
-                    style={{ textDecoration: "none", height: "100%" }}
+            getFilteredParents(products.filter((p) => !p.ishidden)).map(
+              (prodList) => {
+                if (prodList.length === 0) return null;
+                const prod = prodList?.[0];
+                if (!prod) {
+                  return null;
+                }
+                return (
+                  <Card
+                    key={prod.id}
+                    className="product-card-hover"
+                    variation="elevated"
+                    width="16rem"
+                    minHeight="26rem"
+                    padding="1.75rem"
+                    border="1px solid rgba(190, 160, 150, 0.18)"
+                    borderRadius="15px"
+                    boxShadow="0 14px 28px rgba(0,0,0,0.22)"
+                    style={{
+                      background:
+                        "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
+                    }}
                   >
-                    <Flex
-                      direction="column"
-                      justifyContent="space-between"
-                      height="100%"
+                    <Link
+                      to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
+                      style={{ textDecoration: "none", height: "100%" }}
                     >
-                      <View>
-                        <img
-                          src={prod.images?.[0]}
-                          alt={prod.name}
-                          style={{
-                            width: "100%",
-                            objectFit: "cover",
-                            borderRadius: "10px",
-                            display: "block",
-                            marginBottom: "1rem",
-                          }}
-                        />
+                      <Flex
+                        direction="column"
+                        justifyContent="space-between"
+                        height="100%"
+                      >
                         <View>
-                          <Text style={bodyStyle} textAlign="center">
-                            {prod.name}
-                          </Text>
+                          <img
+                            src={prod.images?.[0]}
+                            alt={prod.name}
+                            style={{
+                              width: "100%",
+                              objectFit: "cover",
+                              borderRadius: "10px",
+                              display: "block",
+                              marginBottom: "1rem",
+                            }}
+                          />
+                          <View>
+                            <Text style={bodyStyle} textAlign="center">
+                              {prod.name}
+                            </Text>
+                          </View>
                         </View>
-                      </View>
-                      <View color={"white"}>
-                        {prod.review_count !== 0 ? (
-                          <Flex
-                            gap={"12px"}
-                            alignItems={"center"}
-                            width={"90%"}
-                          >
-                            <img
-                              style={{ width: "100%" }}
-                              src={ratings[Math.round(prod.review_average * 2)]}
-                              alt=""
-                            />
-                            {prod.review_count}
-                          </Flex>
-                        ) : (
-                          <Text style={{ ...bodyStyle, flex: "1" }}>
-                            Be the first to review!
-                          </Text>
-                        )}
-                      </View>
-                      <Text style={{ ...bodyStyle, fontWeight: 600 }}>
-                        ${prod.price}
-                      </Text>
-                    </Flex>
-                  </Link>
-                </Card>
-              );
-            })}
+                        <View color={"white"}>
+                          {prod.review_count !== 0 ? (
+                            <Flex
+                              gap={"12px"}
+                              alignItems={"center"}
+                              width={"90%"}
+                            >
+                              <img
+                                style={{ width: "100%" }}
+                                src={
+                                  ratings[Math.round(prod.review_average * 2)]
+                                }
+                                alt=""
+                              />
+                              {prod.review_count}
+                            </Flex>
+                          ) : (
+                            <Text style={{ ...bodyStyle, flex: "1" }}>
+                              Be the first to review!
+                            </Text>
+                          )}
+                        </View>
+                        <Text style={{ ...bodyStyle, fontWeight: 600 }}>
+                          ${prod.price}
+                        </Text>
+                      </Flex>
+                    </Link>
+                  </Card>
+                );
+              },
+            )}
         </Flex>
 
         <Flex justifyContent="flex-end">

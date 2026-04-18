@@ -378,9 +378,12 @@ export default function ProductsPanel() {
 
   // Form helper for #'s
   function validateNumbers(price, stock_ml) {
-    if (price && (!Number.isFinite(price) || price < 0))
+    if (price && (!Number.isFinite(price) || price < 0 || price > 1000))
       return "Price must be a valid number.";
-    if (stock_ml && (!Number.isFinite(stock_ml) || stock_ml < 0))
+    if (
+      stock_ml &&
+      (!Number.isFinite(stock_ml) || stock_ml < 0 || stock_ml > 10000000)
+    )
       return "Stock must be a valid number.";
     return null;
   }
