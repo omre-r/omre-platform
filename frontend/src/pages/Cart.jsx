@@ -193,6 +193,58 @@ function SavedItemCard({ savedItem, onRemove, onAddToCart }) {
   );
 }
 
+// Sub-component: renders a single recommendation card in the Cart page's
+// "You May Also Like" section. Receives a product and links to its detail
+// page with the matching variation query param.
+function RecommendationCard({ prod }) {
+  return (
+    <Card
+      className="product-card-hover"
+      variation="elevated"
+      width="13.5rem"
+      padding="1rem"
+      border="1px solid rgba(190, 160, 150, 0.18)"
+      borderRadius="20px"
+      boxShadow="0 14px 28px rgba(0,0,0,0.22)"
+      style={{
+        background: "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
+      }}
+    >
+      <Link
+        to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
+        style={{ textDecoration: "none" }}
+      >
+        <img
+          src={prod.images?.[0]}
+          alt={prod.name}
+          style={{
+            width: "100%",
+            height: "200px",
+            objectFit: "cover",
+            borderRadius: "10px",
+            display: "block",
+            marginBottom: "1rem",
+          }}
+        />
+        <View minHeight="7.5rem">
+          <Text
+            style={{ ...luxuryBodyStyle, fontSize: "1.2rem" }}
+            textAlign="center"
+          >
+            {prod.name}
+          </Text>
+        </View>
+        <Text
+          style={{ ...luxuryBodyStyle, fontWeight: 600 }}
+          textAlign="center"
+        >
+          ${prod.price}
+        </Text>
+      </Link>
+    </Card>
+  );
+}
+
 // components
 export default function Cart() {
   const { userInfo, setUserInfo, refreshAuth } = useAuth();
@@ -984,52 +1036,7 @@ export default function Cart() {
             {" "}
             {/* recommended products */}
             {recommendations.map((prod) => (
-              <Card
-                key={prod.id}
-                className="product-card-hover"
-                variation="elevated"
-                width="13.5rem"
-                padding="1rem"
-                border="1px solid rgba(190, 160, 150, 0.18)"
-                borderRadius="20px"
-                boxShadow="0 14px 28px rgba(0,0,0,0.22)"
-                style={{
-                  background:
-                    "linear-gradient(145deg,  #9a2424, rgba(20,20,20,0.9))",
-                }}
-              >
-                <Link
-                  to={`/fragrances/${prod.parentid}?variation=${prod.variation}`}
-                  style={{ textDecoration: "none" }}
-                >
-                  <img
-                    src={prod.images?.[0]}
-                    alt={prod.name}
-                    style={{
-                      width: "100%",
-                      height: "200px",
-                      objectFit: "cover",
-                      borderRadius: "10px",
-                      display: "block",
-                      marginBottom: "1rem",
-                    }}
-                  />
-                  <View minHeight="7.5rem">
-                    <Text
-                      style={{ ...luxuryBodyStyle, fontSize: "1.2rem" }}
-                      textAlign="center"
-                    >
-                      {prod.name}
-                    </Text>
-                  </View>
-                  <Text
-                    style={{ ...luxuryBodyStyle, fontWeight: 600 }}
-                    textAlign="center"
-                  >
-                    ${prod.price}
-                  </Text>
-                </Link>
-              </Card>
+              <RecommendationCard key={prod.id} prod={prod} />
             ))}
           </Flex>
         </View>
