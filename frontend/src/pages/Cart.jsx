@@ -68,6 +68,131 @@ const buttonViewStyle = {
   transition: "all 0.2s ease",
 };
 
+// Sub-component: renders a single saved item card in the Cart page's
+// "Saved For Later" section. Receives the saved item and handlers for
+// remove-saved / add-to-cart. Handles both products (with variation)
+// and blends (with size_ml).
+function SavedItemCard({ savedItem, onRemove, onAddToCart }) {
+  return (
+    <Card
+      marginBottom="1.5rem"
+      borderRadius="24px"
+      padding="1.6rem"
+      border="1px solid rgba(255,255,255,0.18)"
+      boxShadow="0 12px 28px rgba(0,0,0,0.18)"
+      backgroundColor="rgba(255, 255, 255, 0.1)"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(187, 187, 187, 0.05))",
+      }}
+    >
+      <Flex direction={"column"}>
+        <Flex justifyContent="space-between" alignItems="center">
+          <Flex alignItems="center" gap="1.5rem">
+            {savedItem.item?.images?.[0] && (
+              <img
+                src={savedItem.item.images[0]}
+                alt={savedItem.item.name}
+                style={{
+                  width: "120px",
+                  height: "120px",
+                  objectFit: "cover",
+                  borderRadius: "20px",
+                  background:
+                    "linear-gradient(145deg, rgba(45,20,20,0.95), rgba(15,15,15,0.95))",
+                  padding: "2px",
+                  boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              />
+            )}
+
+            <View textAlign={"left"}>
+              <Text
+                style={{
+                  ...luxuryBodyStyle,
+                  color: "black",
+                  fontSize: "1.35rem",
+                }}
+              >
+                {savedItem.item?.name}{" "}
+                {savedItem.item?.variation
+                  ? `(${savedItem.item.variation})`
+                  : savedItem.item?.size_ml
+                    ? `(${savedItem.item.size_ml}ml)`
+                    : ""}
+                <br></br>${savedItem.item?.price}
+              </Text>
+            </View>
+          </Flex>
+        </Flex>
+        <View>
+          <View width={"fit-content"} marginLeft={"auto"}>
+            <Flex>
+              <Button
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-5px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 12px 24px rgba(0,0,0,0.45)";
+                  e.currentTarget.style.opacity = "1";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 8px 18px rgba(0,0,0,0.35)";
+                  e.currentTarget.style.opacity = ".8";
+                }}
+                style={{
+                  ...buttonViewStyle,
+                  opacity: ".8",
+                  color: "white",
+                  borderRadius: "10px",
+                  width: "fit-content",
+                  padding: "15x",
+                  fontSize: "1.2em",
+                  fontWeight: "bold",
+                }}
+                onClick={() => onRemove(savedItem)}
+              >
+                <Text style={luxuryBodyStyle}>Remove saved item</Text>{" "}
+                {/* remove saved for later */}
+              </Button>
+              <Button
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-5px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 12px 24px rgba(0,0,0,0.45)";
+                  e.currentTarget.style.opacity = "1";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 8px 18px rgba(0,0,0,0.35)";
+                  e.currentTarget.style.opacity = ".8";
+                }}
+                style={{
+                  ...buttonViewStyle,
+                  opacity: ".8",
+                  color: "white",
+                  borderRadius: "10px",
+                  width: "fit-content",
+                  padding: "15x",
+                  fontSize: "1.2em",
+                  fontWeight: "bold",
+                }}
+                onClick={() => onAddToCart(savedItem)}
+              >
+                {/* Add product back to cart */}
+                <Text style={luxuryBodyStyle}>Add to cart</Text>
+              </Button>
+            </Flex>
+          </View>
+        </View>
+      </Flex>
+    </Card>
+  );
+}
+
 // components
 export default function Cart() {
   const { userInfo, setUserInfo, refreshAuth } = useAuth();
@@ -835,123 +960,12 @@ export default function Cart() {
             </Text>
           )}
           {savedItems.map((savedItem) => (
-            <Card
+            <SavedItemCard
               key={savedItem.id}
-              marginBottom="1.5rem"
-              borderRadius="24px"
-              padding="1.6rem"
-              border="1px solid rgba(255,255,255,0.18)"
-              boxShadow="0 12px 28px rgba(0,0,0,0.18)"
-              backgroundColor="rgba(255, 255, 255, 0.1)"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(187, 187, 187, 0.05))",
-              }}
-            >
-              <Flex direction={"column"}>
-                <Flex justifyContent="space-between" alignItems="center">
-                  <Flex alignItems="center" gap="1.5rem">
-                    {savedItem.item?.images?.[0] && (
-                      <img
-                        src={savedItem.item.images[0]}
-                        alt={savedItem.item.name}
-                        style={{
-                          width: "120px",
-                          height: "120px",
-                          objectFit: "cover",
-                          borderRadius: "20px",
-                          background:
-                            "linear-gradient(145deg, rgba(45,20,20,0.95), rgba(15,15,15,0.95))",
-                          padding: "2px",
-                          boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                        }}
-                      />
-                    )}
-
-                    <View textAlign={"left"}>
-                      <Text
-                        style={{
-                          ...luxuryBodyStyle,
-                          color: "black",
-                          fontSize: "1.35rem",
-                        }}
-                      >
-                        {savedItem.item?.name}{" "}
-                        {savedItem.item?.variation
-                          ? `(${savedItem.item.variation})`
-                          : savedItem.item?.size_ml
-                            ? `(${savedItem.item.size_ml}ml)`
-                            : ""}
-                        <br></br>${savedItem.item?.price}
-                      </Text>
-                    </View>
-                  </Flex>
-                </Flex>
-                <View>
-                  <View width={"fit-content"} marginLeft={"auto"}>
-                    <Flex>
-                      <Button
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = "translateY(-5px)";
-                          e.currentTarget.style.boxShadow =
-                            "0 12px 24px rgba(0,0,0,0.45)";
-                          e.currentTarget.style.opacity = "1";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0px)";
-                          e.currentTarget.style.boxShadow =
-                            "0 8px 18px rgba(0,0,0,0.35)";
-                          e.currentTarget.style.opacity = ".8";
-                        }}
-                        style={{
-                          ...buttonViewStyle,
-                          opacity: ".8",
-                          color: "white",
-                          borderRadius: "10px",
-                          width: "fit-content",
-                          padding: "15x",
-                          fontSize: "1.2em",
-                          fontWeight: "bold",
-                        }}
-                        onClick={() => removeSavedItem(savedItem)}
-                      >
-                        <Text style={luxuryBodyStyle}>Remove saved item</Text>{" "}
-                        {/* remove saved for later */}
-                      </Button>
-                      <Button
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = "translateY(-5px)";
-                          e.currentTarget.style.boxShadow =
-                            "0 12px 24px rgba(0,0,0,0.45)";
-                          e.currentTarget.style.opacity = "1";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0px)";
-                          e.currentTarget.style.boxShadow =
-                            "0 8px 18px rgba(0,0,0,0.35)";
-                          e.currentTarget.style.opacity = ".8";
-                        }}
-                        style={{
-                          ...buttonViewStyle,
-                          opacity: ".8",
-                          color: "white",
-                          borderRadius: "10px",
-                          width: "fit-content",
-                          padding: "15x",
-                          fontSize: "1.2em",
-                          fontWeight: "bold",
-                        }}
-                        onClick={() => addToCart(savedItem)}
-                      >
-                        {/* Add product back to cart */}
-                        <Text style={luxuryBodyStyle}>Add to cart</Text>
-                      </Button>
-                    </Flex>
-                  </View>
-                </View>
-              </Flex>
-            </Card>
+              savedItem={savedItem}
+              onRemove={removeSavedItem}
+              onAddToCart={addToCart}
+            />
           ))}
         </View>
         <View
