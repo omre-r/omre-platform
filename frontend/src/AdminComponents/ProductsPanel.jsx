@@ -1631,7 +1631,7 @@ export default function ProductsPanel() {
                   style={{ ...inputLuxuryStyle }}
                   placeholder="Notes Top (, separated)"
                   // If array exists for top use it and separate by commas
-                  value={(draft.notes.top || []).join(",")}
+                  value={(draft.notes.top || []).join(", ").trim()}
                   onChange={(e) => {
                     const arr = e.target.value.split(",").map((s) => s.trim());
                     setDraft((prev) => ({
@@ -1645,7 +1645,7 @@ export default function ProductsPanel() {
                   columnSpan={2}
                   style={{ ...inputLuxuryStyle }}
                   placeholder="Notes Heart (, separated)"
-                  value={(draft.notes.heart || []).join(",")}
+                  value={(draft.notes.heart || []).join(", ").trim()}
                   onChange={(e) => {
                     const arr = e.target.value.split(",").map((s) => s.trim());
                     setDraft((prev) => ({
@@ -1659,7 +1659,7 @@ export default function ProductsPanel() {
                   columnSpan={2}
                   style={{ ...inputLuxuryStyle }}
                   placeholder="Notes Base (, separated)"
-                  value={(draft.notes.base || []).join(",")}
+                  value={(draft.notes.base || []).join(", ").trim()}
                   onChange={(e) => {
                     const arr = e.target.value.split(",").map((s) => s.trim());
                     setDraft((prev) => ({
