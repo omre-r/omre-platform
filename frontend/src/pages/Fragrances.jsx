@@ -103,14 +103,39 @@ export default function Home() {
   const [search, setSearch] = useState("");
 
   const fragranceOptions = [
-    "Vanilla",
-    "Cinnamon",
-    "Marshmallow",
-    "Ice Cream",
-    "Brown Sugar",
-    "Jasmine",
+    "Almond",
     "Amber",
+    "Benzoin",
+    "Bergamot",
+    "Cedarwood",
+    "Chocolate",
+    "Cinnamon",
+    "Clove",
+    "Coconut",
+    "Coffee",
+    "Eucalyptus",
+    "Fig",
+    "Gardenia",
+    "Ginger",
+    "Honey",
+    "Jasmine",
+    "Leather",
+    "Lemon",
+    "Mandarin",
+    "Mint",
+    "Musk",
+    "Oak",
+    "Oud",
+    "Patchouli",
+    "Peony",
+    "Pine",
+    "Rose",
     "Saffron",
+    "Sandalwood",
+    "Suede",
+    "Tobacco",
+    "Vanilla",
+    "Yuzu",
   ];
 
   useEffect(() => {
@@ -329,56 +354,59 @@ export default function Home() {
                   overflow: "hidden",
                 }}
               >
-                {["All", "Men's Cologne", "Women's Perfume"].map((opt) => (
-                  <li
-                    key={opt}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      setTab(opt);
-                      setShowTypeDropdown(false);
-                    }}
-                    style={{
-                      padding: "10px 18px 10px 14px",
-                      fontFamily: "'Cormorant Garamond', serif",
-                      fontSize: "1.15rem",
-                      letterSpacing: "0.3px",
-                      color: tab === opt ? "#9a2424" : "#4a1010",
-                      fontWeight: tab === opt ? 700 : 500,
-                      cursor: "pointer",
-                      background: "transparent",
-                      borderLeft:
-                        tab === opt
-                          ? "3px solid #9a2424"
-                          : "3px solid transparent",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(151,33,0,0.06)";
-                      e.currentTarget.style.borderLeft = "3px solid #9a2424";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.borderLeft =
-                        tab === opt
-                          ? "3px solid #9a2424"
-                          : "3px solid transparent";
-                    }}
-                  >
-                    {tab === opt && (
-                      <span
-                        style={{
-                          color: "rgba(210,175,140,1)",
-                          fontSize: "0.7rem",
-                        }}
-                      >
-                        ●
-                      </span>
-                    )}
-                    {opt}
-                  </li>
-                ))}
+                {["All", "Men's Cologne", "Women's Perfume", "Unisex"].map(
+                  (opt) => (
+                    <li
+                      key={opt}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setTab(opt);
+                        setShowTypeDropdown(false);
+                      }}
+                      style={{
+                        padding: "10px 18px 10px 14px",
+                        fontFamily: "'Cormorant Garamond', serif",
+                        fontSize: "1.15rem",
+                        letterSpacing: "0.3px",
+                        color: tab === opt ? "#9a2424" : "#4a1010",
+                        fontWeight: tab === opt ? 700 : 500,
+                        cursor: "pointer",
+                        background: "transparent",
+                        borderLeft:
+                          tab === opt
+                            ? "3px solid #9a2424"
+                            : "3px solid transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background =
+                          "rgba(151,33,0,0.06)";
+                        e.currentTarget.style.borderLeft = "3px solid #9a2424";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.borderLeft =
+                          tab === opt
+                            ? "3px solid #9a2424"
+                            : "3px solid transparent";
+                      }}
+                    >
+                      {tab === opt && (
+                        <span
+                          style={{
+                            color: "rgba(210,175,140,1)",
+                            fontSize: "0.7rem",
+                          }}
+                        >
+                          ●
+                        </span>
+                      )}
+                      {opt}
+                    </li>
+                  ),
+                )}
               </ul>
             )}
           </View>
