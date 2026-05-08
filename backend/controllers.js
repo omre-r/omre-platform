@@ -1,42 +1,67 @@
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { v4: uuidv4 } = require("uuid");
-const {Users, Products, Reviews, Orders} = require("./config/db.js")
+const {
+  Users,
+  Products,
+  Reviews,
+  Orders,
+  Blends,
+  CartItems,
+  Recommendations,
+  SavedItems,
+} = require("./config/db.js");
 
 const dotenv = require("dotenv");
 dotenv.config();
 
+// Storing environment variables
 const BUCKET_NAME = process.env.BUCKET_NAME;
 const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN;
 const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
 const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
+const USE_ACCESS_TOKENS = process.env.USE_ACCESS_TOKENS === "true";
 
-// working with images 
-const s3Client = new S3Client({ 
-  region: 'us-east-1',
+// working with images
+const s3Client = new S3Client({
+  region: "us-east-1",
   credentials: {
     secretAccessKey: S3_SECRET_ACCESS_KEY,
-    accessKeyId: S3_ACCESS_KEY_ID
-  }
+    accessKeyId: S3_ACCESS_KEY_ID,
+  },
 });
 
 // access db resources
-const users = new Users()
-const products = new Products()
-const reviews = new Reviews()
-const orders = new Orders()
+const users = new Users();
+const products = new Products();
+const reviews = new Reviews();
+const orders = new Orders();
+const blends = new Blends();
+const cartItems = new CartItems();
+const savedItems = new SavedItems();
+const recommendations = new Recommendations();
 
+// used for sending emails
+const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
+const SES_FROM_EMAIL = process.env.SES_FROM_EMAIL;
 
+const sesClient = new SESClient({
+  region: "us-east-1",
+  credentials: {
+    secretAccessKey: S3_SECRET_ACCESS_KEY,
+    accessKeyId: S3_ACCESS_KEY_ID,
+  },
+});
 
 // General wrapper to prevent server crashing
-function handleError(fn){
+function handleError(fn) {
   return async (...args) => {
-    try{
+    try {
       return await fn(...args);
-    }catch(err){
+    } catch (err) {
       console.error(err);
-      const [req, res] = args
-      return res.status(500).json({success: false});
+      const [req, res] = args;
+      return res.status(500).json({ success: false });
     }
   };
 }
@@ -44,36 +69,47 @@ function handleError(fn){
 // app.put("/users/login/:id", placeholder)
 
 // path: GET /
-function getServerHTML(req, res){
-    res.send("Welcome to the server!");
-};
+function getServerHTML(req, res) {
+  res.send("Welcome to the server!");
+}
 
+/*
+Almost all controllers use this exact format:
+
+      const result = await (some instance).(some method)();
+
+      if (!result.success){
+        return res.status(result.status).json(result);
+      }
+      return res.json(result);
+
+*/
 
 // users
 
 // path: GET /users/:id
-async function getUser(req, res){
-  const {id} = req.params;
+async function getUser(req, res) {
+  const { id } = req.params;
   const result = await users.getUser(id);
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
   return res.json(result);
 }
 
 // path: GET /users
-async function getUsers(req, res){
+async function getUsers(req, res) {
   const result = await users.getUsers();
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
   return res.json(result);
 }
 
 // path: POST /users
-async function createUser(req, res){
+async function createUser(req, res) {
   const result = await users.createUser(req.body);
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
   return res.json(result);
@@ -81,87 +117,181 @@ async function createUser(req, res){
 
 // path: DELETE /users/:id
 async function deleteUser(req, res) {
-  const {id} = req.params;
+  const { id } = req.params;
   const result = await users.deleteUser(id);
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
-  return res.json(result)
+  return res.json(result);
 }
 
+// path: PUT /users/:id/last-login
+async function updateLastLogin(req, res) {
+  const { id } = req.params;
+  const result = await users.updateLastLogin(id);
 
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
 
+  return res.json(result);
+}
+
+// path: PUT /users/:id/preferrednotes
+async function updatePreferredNotes(req, res) {
+  const { id } = req.params;
+  const { preferrednotes } = req.body;
+  const result = await users.updatePreferredNotes(id, preferrednotes);
+  if (!result.success) {
+    return res.status(result.status || 400).json(result);
+  }
+  return res.json(result);
+}
+
+// path: GET /users/filter
+async function getFilteredUsers(req, res) {
+  if (!req.query?.filters) {
+    throw new Error("No filters query param");
+  }
+  const filters = JSON.parse(req.query.filters);
+  const result = await users.getFilteredUsers(filters);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: PUT /users/:id/store_credit/add
+async function addStoreCredit(req, res) {
+  const { id } = req.params;
+  const { credit } = req.body;
+  const result = await users.addStoreCredit(id, credit);
+  if (!result.success) {
+    return res.status(result.status || 400).json(result);
+  }
+  return res.json(result);
+}
+
+// path: PUT /users/:id/store_credit/reduce
+async function reduceStoreCredit(req, res) {
+  const { id } = req.params;
+  const { credit } = req.body;
+  const result = await users.reduceStoreCredit(id, credit);
+  if (!result.success) {
+    return res.status(result.status || 400).json(result);
+  }
+  return res.json(result);
+}
 
 //products
 
 // path: GET /products/:id
 async function getProduct(req, res) {
-  const {id} = req.params;
+  const { id } = req.params;
   const result = await products.getProduct(id);
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
-  return res.json(result)
+  return res.json(result);
+}
+
+// path: GET /products/related/:parentid
+async function getRelatedProducts(req, res) {
+  const { parentid } = req.params;
+  const result = await products.getRelatedProducts(parentid);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
 }
 
 // path: PUT /products/:id
 async function updateProduct(req, res) {
-  const {id} = req.params;
+  const { id } = req.params;
   const result = await products.updateProduct(id, req.body);
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
-  return res.json(result)
+  return res.json(result);
+}
+
+// path: PUT /products/stock/:parentid
+async function updateProductStock(req, res) {
+  const { parentid } = req.params;
+  const { stock_ml } = req.body;
+  const result = await products.updateProductStock(parentid, stock_ml);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
 }
 
 // path: DELETE /products/:id
 async function deleteProduct(req, res) {
-  const {id} = req.params;
+  const { id } = req.params;
   const result = await products.deleteProduct(id);
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
-  return res.json(result)
+  return res.json(result);
 }
 
 // path: GET /products/active
 async function getActiveProducts(req, res) {
   const result = await products.getActiveProducts();
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
-  return res.json(result)
+  return res.json(result);
+}
+
+// path: GET /products/filter
+async function getFilteredProducts(req, res) {
+  if (!req.query?.filters) {
+    throw new Error("No filters query param");
+  }
+  const filters = JSON.parse(req.query.filters);
+  filters.ishidden = false;
+  if (
+    !USE_ACCESS_TOKENS ||
+    (req.tokenPayload &&
+      req.tokenPayload?.["cognito:groups"]?.includes("admin"))
+  ) {
+    delete filters.ishidden;
+  }
+  const result = await products.getFilteredProducts(filters);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
 }
 
 // path: POST /products
 async function createProduct(req, res) {
   const result = await products.createProduct(req.body);
 
-  // this function includes logic from Ayman's lambda function that he made following his own pattern.
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
-  return res.json(result)
+  return res.json(result);
 }
 
 // path: GET /products
 async function getProducts(req, res) {
   const result = await products.getProducts();
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
-  return res.json(result)
+  return res.json(result);
 }
-
-
 
 // reviews
 
 // path: GET /reviews/product/:productid
 async function getProductReviews(req, res) {
-  const {productid} = req.params;
-  const result = await reviews.getProductReviews(productid);
-  if (!result.success){
+  const { parentid } = req.params;
+  const result = await reviews.getProductReviews(parentid);
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
   return res.json(result);
@@ -169,9 +299,9 @@ async function getProductReviews(req, res) {
 
 // path: GET /reviews/user/:customerid
 async function getUserReviews(req, res) {
-  const {customerid} = req.params;
+  const { customerid } = req.params;
   const result = await reviews.getUserReviews(customerid);
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
   return res.json(result);
@@ -179,9 +309,9 @@ async function getUserReviews(req, res) {
 
 // path: PUT /reviews/:id
 async function updateReview(req, res) {
-  const {id} = req.params;
+  const { id } = req.params;
   const result = await reviews.updateReview(id, req.body);
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
   return res.json(result);
@@ -190,7 +320,7 @@ async function updateReview(req, res) {
 // path: GET /reviews
 async function getReviews(req, res) {
   const result = await reviews.getReviews();
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
   return res.json(result);
@@ -199,7 +329,7 @@ async function getReviews(req, res) {
 // path: POST /reviews
 async function createReview(req, res) {
   const result = await reviews.createReview(req.body);
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
   return res.json(result);
@@ -207,43 +337,98 @@ async function createReview(req, res) {
 
 // path: DELETE /reviews/:id
 async function deleteReview(req, res) {
-  const {id} = req.params;
+  const { id } = req.params;
   const result = await reviews.deleteReview(id);
-  if (!result.success){
-    return res.status(result.status).json(result);
-  }
-  return res.json(result)
-}
-
-
-// orders
-
-//path: PUT /orders/cancel/:id
-async function cancelOrder(req, res) {
-  const {id} = req.params;
-  const {cancelreason} = req.body;
-  const result = await orders.cancelOrder(id, cancelreason);
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
   return res.json(result);
 }
 
-//path: PUT /orders/complete/:id
-async function completeOrder(req, res) {
-  const {id} = req.params;
-  const result = await orders.completeOrder(id);
-  if (!result.success){
+// path: POST /reviews/response/:id
+async function respondToReview(req, res) {
+  const { id } = req.params;
+  const { response } = req.body;
+
+  if (
+    USE_ACCESS_TOKENS &&
+    response.isadmin === true &&
+    !req.tokenPayload?.["cognito:groups"]?.includes("admin")
+  ) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Not authenticated" });
+  }
+
+  const result = await reviews.respondToReview(id, response);
+  if (!result.success) {
     return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// orders
+
+//path: PUT /orders/cancel/:id
+async function cancelOrder(req, res) {
+  const { id } = req.params;
+  const { cancelreason } = req.body;
+  const result = await orders.cancelOrder(id, cancelreason);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: PUT /orders/:id
+async function updateOrderStatus(req, res) {
+  const { id } = req.params;
+  const { status } = req.body;
+  const result = await orders.updateOrderStatus(id, status);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+
+  // if order status update was successful, get order details and send email to customer notifying them of the update
+  // If fails to send email, we still want to return success for the order status update — we don't want a failed email to prevent the order from being updated
+  try {
+    const orderResult = await orders.getOrder(id);
+    const order = orderResult?.data?.order;
+
+    if (order?.email && order?.id) {
+      await sendOrderStatusUpdateEmail(order.email, order);
+    }
+  } catch (err) {
+    console.error("Failed to send order status update email:", err);
   }
   return res.json(result);
 }
 
 // path: GET /orders/:id
 async function getOrder(req, res) {
-  const {id} = req.params;
+  const { id } = req.params;
   const result = await orders.getOrder(id);
-  if (!result.success){
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: GET /orders/user/:customerid
+async function getUserOrders(req, res) {
+  const { customerid } = req.params;
+  const result = await orders.getUserOrders(customerid);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: GET /orders/user/:customerid/recent
+async function getUserRecentOrders(req, res) {
+  const { customerid } = req.params;
+  const result = await orders.getUserRecentOrders(customerid);
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
   return res.json(result);
@@ -251,21 +436,140 @@ async function getOrder(req, res) {
 
 // path: POST /orders
 async function createOrder(req, res) {
-  const result = await orders.createOrder(req.body);
-  if (!result.success){
+  const { customerid, storeCredit } = req.body;
+  const result = await orders.createOrder(customerid, storeCredit);
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
+  try {
+    const userResult = await users.getUser(customerid);
+    const user = userResult?.data?.user;
+    const order = result?.data?.order;
+
+    if (user?.email && order?.id) {
+      await sendOrderPlacedEmail(user.email, order);
+    }
+  } catch (err) {
+    console.error("Failed to send order confirmation email:", err);
+  }
+
   return res.json(result);
 }
 
 // path: DELETE /orders/:id
 async function deleteOrder(req, res) {
-  const {id} = req.params;
+  const { id } = req.params;
   const result = await orders.deleteOrder(id);
-  if (!result.success){
+  if (!result.success) {
     return res.status(result.status).json(result);
   }
-  return res.json(result)
+  return res.json(result);
+}
+
+// path: GET /orders
+async function getOrders(req, res) {
+  const result = await orders.getOrders();
+
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+
+  return res.json(result);
+}
+
+// path: GET /orders/filter
+async function getFilteredOrders(req, res) {
+  if (!req.query?.filters) {
+    throw new Error("No filters query param");
+  }
+  const filters = JSON.parse(req.query.filters);
+  const result = await orders.getFilteredOrders(filters);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// blends
+
+// path: POST /blends/save
+async function saveBlend(req, res) {
+  if (USE_ACCESS_TOKENS) {
+    const { userid } = req.body;
+    if (userid !== req.tokenPayload.sub) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Not authenticated" });
+    }
+  }
+  // Validate that the total for mixology blend is exactly equal to 100%
+  const total =
+    Number(req.body.frag1_pct || 0) +
+    Number(req.body.frag2_pct || 0) +
+    Number(req.body.frag3_pct || 0);
+  // If total not equal to 100 it fails
+  if (total !== 100) {
+    return res.status(400).json({
+      success: false,
+      message: "Percentages must equal 100%",
+    });
+  }
+  const result = await blends.saveBlend(req.body);
+  if (!result.success) return res.status(result.status || 400).json(result);
+  return res.json(result);
+}
+
+// path: GET /blends
+async function getUserBlends(req, res) {
+  const { userid } = req.params;
+  if (USE_ACCESS_TOKENS) {
+    if (userid !== req.tokenPayload.sub) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Not authenticated" });
+    }
+  }
+  const result = await blends.getUserBlends(userid);
+  if (!result.success) return res.status(result.status || 400).json(result);
+  return res.json(result);
+}
+
+// path: GET /blends/item/:id
+async function getBlendById(req, res) {
+  const { id } = req.params; // blend id
+
+  // Call the DB method
+  const result = await blends.getBlendById(id);
+
+  if (!result.success) {
+    return res.status(result.status || 404).json(result);
+  }
+
+  return res.json(result);
+}
+
+// path: DELETE /blends/:blendid
+// Gets logged in user, pulls blend id from params, calls db function with userid and blendid
+async function deleteUserBlend(req, res) {
+  const { userid } = req.body;
+  if (USE_ACCESS_TOKENS) {
+    if (userid !== req.tokenPayload.sub) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Not authenticated" });
+    }
+  }
+
+  const { blendid } = req.params;
+  if (!blendid)
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing blend id" });
+
+  const result = await blends.deleteUserBlend(userid, blendid);
+
+  if (!result.success) return res.status(result.status || 400).json(result);
+  return res.json(result);
 }
 
 // miscellaneous
@@ -274,48 +578,282 @@ async function deleteOrder(req, res) {
 // path: GET /uploadurl
 async function getUploadURL(req, res) {
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-  const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
   const PRESIGNED_URL_EXPIRATION = 1800; // 30 minutes
 
-  const { filename, contentType, fileSize } = req.query;
-    
+  const { filename, contentType, fileSize, bucketDirectory } = req.query;
+  if (!["products", "reviews"].includes(bucketDirectory)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid bucket directory" });
+  }
+
   // Validation
   if (!filename || !contentType) {
-    return res.status(400).json({success: false, message: "Missing filename or content type"});
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing filename or content type" });
   }
-  
+
   if (!ALLOWED_TYPES.includes(contentType.toLowerCase())) {
-    return res.status(400).json({success: false, message: "Invalid file type. Allowed: jpg, jpeg, png, webp"});
+    return res.status(400).json({
+      success: false,
+      message: "Invalid file type. Allowed: jpg, jpeg, png, webp",
+    });
   }
-  
+
   if (fileSize && fileSize > MAX_FILE_SIZE) {
-    return res.status(400).json({success: false, message: `File too large. Max size: ${MAX_FILE_SIZE / 1024 / 1024}MB`});
+    return res.status(400).json({
+      success: false,
+      message: `File too large. Max size: ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+    });
   }
-  
+
   // Generate unique S3 key
   const timestamp = Date.now();
   const randomId = uuidv4().split("-").join("");
-  const sanitizedFilename = filename.replace(/[^a-z0-9.]/gi, '-').toLowerCase();
-  const s3Key = `products/${timestamp}-${randomId}-${sanitizedFilename}`;
-      
+  const sanitizedFilename = filename.replace(/[^a-z0-9.]/gi, "-").toLowerCase();
+  const s3Key = `${bucketDirectory}/${timestamp}-${randomId}-${sanitizedFilename}`;
+
   // Create presigned URL with temporary tagging
   const command = new PutObjectCommand({
     Bucket: BUCKET_NAME,
     Key: s3Key,
     ContentType: contentType,
-    Tagging: 'status=temporary' // Auto-tag as temporary
+    Tagging: "status=temporary", // Auto-tag as temporary
   });
-  
+
   const uploadUrl = await getSignedUrl(s3Client, command, {
-    expiresIn: PRESIGNED_URL_EXPIRATION
+    expiresIn: PRESIGNED_URL_EXPIRATION,
   });
-  
+
   // Construct CloudFront public URL
   const publicUrl = `${CLOUDFRONT_DOMAIN}/${s3Key}`;
-    
-  return res.json({success: true, data: {uploadUrl, publicUrl, expiresIn: PRESIGNED_URL_EXPIRATION}});
-};
 
+  return res.json({
+    success: true,
+    data: { uploadUrl, publicUrl, expiresIn: PRESIGNED_URL_EXPIRATION },
+  });
+}
+
+// cart items
+// path: POST /cartitems
+async function createCartItem(req, res) {
+  const result = await cartItems.createCartItem(req.body);
+  // stockUnavailable is a valid business response, not a server error — always 200
+  if (!result.success && !result.stockUnavailable) {
+    return res.status(result.status || 400).json(result);
+  }
+  return res.json(result);
+}
+
+// path: DELETE /cartitems/:id
+async function deleteCartItem(req, res) {
+  const { id } = req.params;
+  const result = await cartItems.deleteCartItem(id);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: GET /cartitems/:customerid
+async function getCart(req, res) {
+  const { customerid } = req.params;
+  const result = await cartItems.getCart(customerid);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: DELETE /cartitems/clear/:customerid
+async function clearCart(req, res) {
+  const { customerid } = req.params;
+  const result = await cartItems.clearCart(customerid);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: PUT /cartitems/:customerid
+async function updateCart(req, res) {
+  const { customerid } = req.params;
+  const { items } = req.body;
+  const result = await cartItems.updateCart(customerid, items);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// "saved for later" items
+// path: POST /saveditems
+async function createSavedItem(req, res) {
+  const result = await savedItems.createSavedItem(req.body);
+  if (!result.success) {
+    return res.status(result.status || 400).json(result);
+  }
+  return res.json(result);
+}
+
+// path: DELETE /saveditems/:id
+async function deleteSavedItem(req, res) {
+  const { id } = req.params;
+  const result = await savedItems.deleteSavedItem(id);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: GET /saveditems/:customerid
+async function getSavedItems(req, res) {
+  const { customerid } = req.params;
+  const result = await savedItems.getSavedItems(customerid);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: DELETE /saveditems/clear/:customerid
+async function clearSavedItems(req, res) {
+  const { customerid } = req.params;
+  const result = await savedItems.clearSavedItems(customerid);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: PUT /saveditems/:customerid
+async function updateSavedItems(req, res) {
+  const { customerid } = req.params;
+  const { items } = req.body;
+  const result = await savedItems.updateSavedItems(customerid, items);
+  if (!result.success) {
+    return res.status(result.status).json(result);
+  }
+  return res.json(result);
+}
+
+// path: GET /recommendations/:userid
+async function getRecommendations(req, res) {
+  const { userid } = req.params;
+  if (USE_ACCESS_TOKENS) {
+    if (userid !== req.tokenPayload.sub) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Not authenticated" });
+    }
+  }
+  if (!userid) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Missing user identifier" });
+  }
+  const result = await recommendations.getRecommendations(userid);
+  if (!result.success) {
+    return res.status(result.status || 500).json(result);
+  }
+  return res.json(result);
+}
+
+// Function to send an email to users email after they place an order, with order details ------------------------------------------------------
+async function sendOrderPlacedEmail(toEmail, order) {
+  // Build the items text for the email body based on product or blend
+  const itemsText = order.items
+    .map((item) => {
+      if (item.type === "product") {
+        return `- ${item.item?.name || "Product"} (x${item.quantity})`;
+      }
+      if (item.type === "blend") {
+        return `- Custom Blend (x${item.quantity})`;
+      }
+      return `- Item (x${item.quantity})`;
+    })
+    .join("\n");
+
+  // Send the email using AWS SES
+  const command = new SendEmailCommand({
+    Source: SES_FROM_EMAIL,
+    Destination: { ToAddresses: [toEmail] },
+    // TODO: we can make this HTML and add some styling down the line, but for now we'll keep it simple with plain text
+    Message: {
+      Subject: {
+        Data: `OMRÉ Order Confirmation — Order #${order.id.slice(0, 8)}`,
+      },
+      Body: {
+        Text: {
+          Data: `Thank you for your order with OMRÉ!
+
+Order ID: ${order.id.slice(0, 8)}
+Total: $${Number(order.total).toFixed(2)}
+
+Items:
+${itemsText}
+
+We'll notify you when your order status updates!`,
+        },
+      },
+    },
+  });
+  await sesClient.send(command);
+}
+
+// Function to send an email to users email after their order status updates, with new status and order details ------------------------------------------------------
+async function sendOrderStatusUpdateEmail(toEmail, order) {
+  const command = new SendEmailCommand({
+    Source: SES_FROM_EMAIL,
+    Destination: { ToAddresses: [toEmail] },
+    // TODO: we can make this HTML and add some styling down the line, but for now we'll keep it simple with plain text
+    Message: {
+      Subject: {
+        Data: `OMRÉ Order Update — Order #${order.id.slice(0, 8)} is ${order.status}!`,
+      },
+      Body: {
+        Text: {
+          Data: `Your order with OMRÉ has been updated.
+Order ID: ${order.id.slice(0, 8)}
+New Status: ${order.status}
+
+If you have any questions, please contact our support team.
+
+Thank you for shopping with OMRÉ!`,
+        },
+      },
+    },
+  });
+  await sesClient.send(command);
+}
+
+// path: POST /contact
+async function sendContactEmail(req, res) {
+  const { name, email, phone, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({
+      success: false,
+      message: "Name, email, and message are required",
+    });
+  }
+  const command = new SendEmailCommand({
+    Source: SES_FROM_EMAIL,
+    Destination: { ToAddresses: [SES_FROM_EMAIL] },
+    Message: {
+      Subject: { Data: `OMRÉ Contact Form — ${name}` },
+      Body: {
+        Text: {
+          Data: `Name: ${name}\nEmail: ${email}\nPhone: ${phone || "Not provided"}\n\nMessage:\n${message}`,
+        },
+      },
+    },
+    ReplyToAddresses: [email],
+  });
+  await sesClient.send(command);
+  return res.json({ success: true });
+}
 
 /* 
 Though probably not needed, we can use wrappers down the line that
@@ -328,19 +866,30 @@ function handleOtherService(fn){
   }
 }
 */
+
+// JavaScript does not have decorators so we manually wrap like this
+
 getServerHTML = handleError(getServerHTML);
 
 getUser = handleError(getUser);
 getUsers = handleError(getUsers);
 createUser = handleError(createUser);
 deleteUser = handleError(deleteUser);
+updateLastLogin = handleError(updateLastLogin);
+getFilteredUsers = handleError(getFilteredUsers);
+updatePreferredNotes = handleError(updatePreferredNotes);
+addStoreCredit = handleError(addStoreCredit);
+reduceStoreCredit = handleError(reduceStoreCredit);
 
 getProduct = handleError(getProduct);
+getRelatedProducts = handleError(getRelatedProducts);
 updateProduct = handleError(updateProduct);
+updateProductStock = handleError(updateProductStock);
 deleteProduct = handleError(deleteProduct);
 getActiveProducts = handleError(getActiveProducts);
 createProduct = handleError(createProduct);
 getProducts = handleError(getProducts);
+getFilteredProducts = handleError(getFilteredProducts);
 
 getProductReviews = handleError(getProductReviews);
 getUserReviews = handleError(getUserReviews);
@@ -348,22 +897,89 @@ updateReview = handleError(updateReview);
 getReviews = handleError(getReviews);
 createReview = handleError(createReview);
 deleteReview = handleError(deleteReview);
+respondToReview = handleError(respondToReview);
 
-cancelOrder = handleError(cancelOrder)
-completeOrder = handleError(completeOrder);
+cancelOrder = handleError(cancelOrder);
 getOrder = handleError(getOrder);
 createOrder = handleError(createOrder);
 deleteOrder = handleError(deleteOrder);
+updateOrderStatus = handleError(updateOrderStatus);
+getUserOrders = handleError(getUserOrders);
+getUserRecentOrders = handleError(getUserRecentOrders);
+getFilteredOrders = handleError(getFilteredOrders);
+getOrders = handleError(getOrders);
+
+saveBlend = handleError(saveBlend);
+getUserBlends = handleError(getUserBlends);
+getRecommendations = handleError(getRecommendations);
+deleteUserBlend = handleError(deleteUserBlend);
+
+createCartItem = handleError(createCartItem);
+deleteCartItem = handleError(deleteCartItem);
+getCart = handleError(getCart);
+clearCart = handleError(clearCart);
+updateCart = handleError(updateCart);
+
+createSavedItem = handleError(createSavedItem);
+deleteSavedItem = handleError(deleteSavedItem);
+getSavedItems = handleError(getSavedItems);
+clearSavedItems = handleError(clearSavedItems);
+updateSavedItems = handleError(updateSavedItems);
 
 getUploadURL = handleError(getUploadURL);
-
-
+sendContactEmail = handleError(sendContactEmail);
 
 module.exports = {
   getServerHTML,
-  getUser, getUsers, createUser, deleteUser,
-  getProduct, updateProduct, deleteProduct, getActiveProducts, createProduct, getProducts,
-  getProductReviews, getUserReviews, updateReview, getReviews, createReview, deleteReview,
-  cancelOrder, completeOrder, getOrder, createOrder, deleteOrder,
-  getUploadURL
+  getUser,
+  getUsers,
+  createUser,
+  deleteUser,
+  updateLastLogin,
+  getFilteredUsers,
+  updatePreferredNotes,
+  addStoreCredit,
+  reduceStoreCredit,
+  getProduct,
+  getRelatedProducts,
+  updateProduct,
+  updateProductStock,
+  deleteProduct,
+  getActiveProducts,
+  createProduct,
+  getProducts,
+  getFilteredProducts,
+  getProductReviews,
+  getUserReviews,
+  updateReview,
+  getReviews,
+  createReview,
+  deleteReview,
+  respondToReview,
+  cancelOrder,
+  getOrder,
+  createOrder,
+  deleteOrder,
+  updateOrderStatus,
+  getUserOrders,
+  getOrders,
+  getFilteredOrders,
+  getUserRecentOrders,
+  saveBlend,
+  getUserBlends,
+  deleteUserBlend,
+  getBlendById,
+  createCartItem,
+  deleteCartItem,
+  getCart,
+  clearCart,
+  updateCart,
+  sendContactEmail,
+  createSavedItem,
+  deleteSavedItem,
+  getSavedItems,
+  clearSavedItems,
+  updateSavedItems,
+  getUploadURL,
+  getRecommendations,
 };

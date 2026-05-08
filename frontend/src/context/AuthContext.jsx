@@ -19,94 +19,91 @@ Explaining only necessary imports
     - amplify Auth
         - getCurrentUser checks if someone is signed in rn
         - fetchAuthSession gets current session/tokens so we can read things like groups or roles
-*/ 
+*/
 import { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser, fetchAuthSession, signOut } from "aws-amplify/auth";
+import { getUserReq } from "../requests";
 
 // Creating global context container for app ----------------------------------------
 const AuthContext = createContext(null);
 
-
 export function AuthProvider({ children }) {
-    // Auth State -------------------------------------------------------
-    // LoadingAuth will block UI until initial check complete, starts as true will end as false
-    // If isAuthenticated means user is signed in and will become true
-    // Flag to notify if admin has logged in
-    const [loadingAuth, setLoadingAuth] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState(null); 
-    const [isAdmin, setIsAdmin] = useState(false);
+  // Auth State -------------------------------------------------------
+  // LoadingAuth will block UI until initial check complete, starts as true will end as false
+  // If isAuthenticated means user is signed in and will become true
+  // Flag to notify if admin has logged in
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-    // RefreshAuth, checks status ----------------------------------------------------
-    // Will set current user and make sure to setAuthentification, if invalid will throw and set info false or null
-    // Temporary debug checks to see in console if tokens are there
-    async function refreshAuth() {
-        try {
-            const currentUser = await getCurrentUser(); 
-            setUser(currentUser);
-            setIsAuthenticated(true);
-            // TEMP DEBUG CHECK CONSOLE LOG
-            //console.log("CURRENT USER:", currentUser);
+  // RefreshAuth, checks status ----------------------------------------------------
+  // Will set current user and make sure to setAuthentification, if invalid will throw and set info false or null
+  // Temporary debug checks to see in console if tokens are there
+  async function refreshAuth() {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+      setIsAuthenticated(true);
 
-            // Check to see if admin or within specific group ------------------------------------
-            try {
-                
-                const session = await fetchAuthSession();
-                // TEMP DEBUG CHECK CONSOLE LOG
-                //console.log("AUTH SESSION:", session);
-                //console.log("ID TOKEN PAYLOAD:", session?.tokens?.idToken?.payload);
-                //console.log("ACCESS TOKEN PAYLOAD:", session?.tokens?.accessToken?.payload);
-
-                const groups = session?.tokens?.idToken?.payload?.["cognito:groups"] || [];
-                setIsAdmin(Array.isArray(groups) && groups.includes("admin"));
-            } 
-            // If fails, user is not an admin
-            catch {
-                setIsAdmin(false);
-                }
-        } 
-        // Not logged in? Null user, not authenticated, not an admin -------------------------------------------
-        catch {
-            setUser(null);
-            setIsAuthenticated(false);
-            setIsAdmin(false);
-        } 
-        // Authorization has been complete, setting to false ----------------------------------------------
-        finally {
-            setLoadingAuth(false);
+      // Check if admin
+      try {
+        const session = await fetchAuthSession();
+        const sub = session?.tokens?.idToken?.payload?.sub;
+        if (sub) {
+          getUserReq(sub).then((info) => {
+            info.success && setUserInfo(info.data.user);
+          });
         }
-    }
 
-    // Logout function -----------------------------------------
-    // If signed out sets user to null and any further authentification to false
-    async function logout() {
-        await signOut();
-        setUser(null);
-        setIsAuthenticated(false);
+        const groups =
+          session?.tokens?.accessToken?.payload?.["cognito:groups"] || [];
+        setIsAdmin(Array.isArray(groups) && groups.includes("admin"));
+      } catch {
         setIsAdmin(false);
+      }
+    } catch {
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsAdmin(false);
+    } finally {
+      setLoadingAuth(false);
     }
+  }
 
-    // RefreshAuth ------------------
-    // Run initial check on load
-    useEffect(() => {
-        refreshAuth();
-    }, []);
+  // Logout function -----------------------------------------
+  // If signed out sets user to null and any further authentification to false
+  async function logout() {
+    await signOut();
+    setUser(null);
+    setIsAuthenticated(false);
+    setIsAdmin(false);
+  }
 
-    // Context Provider -------------------------------------------------------
-    // Exposes authentication state and helpers to the entire application
-    return (
-        <AuthContext.Provider
-        value={{
-            loadingAuth,
-            isAuthenticated,
-            user,
-            isAdmin,
-            refreshAuth,
-            logout,
-        }}
-        >
-        {children}
-        </AuthContext.Provider>
+  // RefreshAuth ------------------
+  // Run initial check on load
+  useEffect(() => {
+    refreshAuth();
+  }, []);
+
+  // Context Provider -------------------------------------------------------
+  // Exposes authentication state and helpers to the entire application
+  return (
+    <AuthContext.Provider
+      value={{
+        loadingAuth,
+        isAuthenticated,
+        user,
+        setUserInfo,
+        userInfo,
+        isAdmin,
+        refreshAuth,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
 }
 
@@ -114,7 +111,7 @@ export function AuthProvider({ children }) {
 // Convenience hook to consume AuthContext safely.
 // Throws if used outside of <AuthProvider>.
 export function useAuth() {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
-    return ctx;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
+  return ctx;
 }
